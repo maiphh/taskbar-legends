@@ -12,7 +12,7 @@ export function createState(seed = 1): GameState {
   const normalized = normalizeSeed(seed);
   const starters = CONFIG.heroes.filter(hero => hero.starter);
   const state: GameState = {
-    version: 1, balance: CONFIG.version, tick: 0, rng: normalized, seed: normalized, gold: 0,
+    version: 2, balance: CONFIG.version, tick: 0, rng: normalized, seed: normalized, gold: 0,
     tickets: CONFIG.rewards.startingTickets, pity: 0, highestCleared: 0, progress: { kind: 'PUSHING', stage: 1 },
     phase: { kind: 'battle' }, wave: 1, encounter: 0, stageStartedTick: 0, attemptPower: 0,
     roster: starters.map(hero => ({ id: hero.id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() })),

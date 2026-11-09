@@ -68,6 +68,7 @@ export type EventData = z.infer<typeof eventDataSchema>;
 const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSchema }).strict();
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
+  // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
   version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0')]).transform(() => CONFIG.version), tick: natural,
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
