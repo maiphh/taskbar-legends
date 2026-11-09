@@ -1,33 +1,33 @@
 {
-  "version": "1.1.0",
-  "sha256": "529080c22c11dff4c8a4075780c73afd971f3027d419b691217017dc74194450",
+  "version": "1.2.0",
+  "sha256": "6e9afc12efd1eeb1d7e11127e1899935cc637a8d84d096eb5395b68f7d284ef2",
   "final": {
-    "balanceVersion": "1.1.0",
+    "balanceVersion": "1.2.0",
     "tick": 3024000,
     "simulatedOpenSeconds": 151200,
     "seed": 1,
     "stage": "2-10",
     "highestCleared": "2-10",
     "status": "Campaign clear \u00b7 Farming 2-10",
-    "gold": 15933311,
+    "gold": 9141806,
     "tickets": 0,
-    "partyPower": 6525,
+    "partyPower": 6118,
     "ownedHeroes": 18,
     "inventory": 50,
     "party": [
       {
         "id": "mk2",
-        "level": 52,
-        "stars": 3
+        "level": 35,
+        "stars": 6
       },
       {
         "id": "mw1",
-        "level": 53,
+        "level": 35,
         "stars": 6
       },
       {
         "id": "priest",
-        "level": 53,
+        "level": 35,
         "stars": 6
       }
     ],
@@ -36,87 +36,87 @@
       "stage": 20
     },
     "stats": {
-      "clears": 4701,
-      "losses": 24,
-      "retries": 26,
-      "bossFailures": 24,
-      "goldEarned": 16027920,
-      "pulls": 126,
-      "chests": 764,
-      "offlineClears": 5317,
+      "clears": 4562,
+      "losses": 76,
+      "retries": 78,
+      "bossFailures": 76,
+      "goldEarned": 9256100,
+      "pulls": 288,
+      "chests": 741,
+      "offlineClears": 5278,
       "offlineSeconds": 172800
     },
     "metrics": {
       "firstAttemptTicks": {
         "1": 0,
-        "2": 401,
-        "3": 791,
-        "4": 1268,
-        "5": 1811,
-        "6": 2340,
-        "7": 2913,
-        "8": 3544,
-        "9": 4186,
-        "10": 4704,
-        "11": 148620,
-        "12": 149015,
-        "13": 149410,
-        "14": 149883,
-        "15": 150408,
-        "16": 151029,
-        "17": 151687,
-        "18": 152402,
-        "19": 153137,
-        "20": 153792
+        "2": 425,
+        "3": 906,
+        "4": 1434,
+        "5": 2025,
+        "6": 2586,
+        "7": 3267,
+        "8": 3938,
+        "9": 4910,
+        "10": 5762,
+        "11": 259912,
+        "12": 260441,
+        "13": 260970,
+        "14": 261531,
+        "15": 262123,
+        "16": 262805,
+        "17": 263517,
+        "18": 264258,
+        "19": 265037,
+        "20": 265718
       },
       "firstClearTicks": {
-        "1": 301,
-        "2": 691,
-        "3": 1168,
-        "4": 1711,
-        "5": 2240,
-        "6": 2813,
-        "7": 3444,
-        "8": 4086,
-        "9": 4704,
-        "10": 148520,
-        "11": 148915,
-        "12": 149310,
-        "13": 149783,
-        "14": 150308,
-        "15": 150929,
-        "16": 151587,
-        "17": 152302,
-        "18": 153037,
-        "19": 153792,
-        "20": 1590293
+        "1": 305,
+        "2": 786,
+        "3": 1314,
+        "4": 1905,
+        "5": 2466,
+        "6": 3147,
+        "7": 3818,
+        "8": 4790,
+        "9": 5762,
+        "10": 259792,
+        "11": 260321,
+        "12": 260850,
+        "13": 261411,
+        "14": 262003,
+        "15": 262685,
+        "16": 263397,
+        "17": 264138,
+        "18": 264917,
+        "19": 265718,
+        "20": 2482806
       },
-      "fullRosterTick": 1116377,
+      "fullRosterTick": 2482806,
       "farmClearSeconds": [
-        28.15,
-        28.15,
-        28.15,
-        28.15,
-        28.15,
-        28.15,
-        28.15,
-        28.15,
-        28.15,
-        28.15
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15
       ],
-      "farmMinSeconds": 22.75,
-      "farmMaxSeconds": 37.75,
-      "farmSamples": 4681,
-      "maxNonBossStallSeconds": 32.75
+      "farmMinSeconds": 25.15,
+      "farmMaxSeconds": 46.05,
+      "farmSamples": 4542,
+      "maxNonBossStallSeconds": 42.6
     },
-    "totalEvents": 684297
+    "totalEvents": 660833
   },
   "targets": [
     {
       "id": 1,
       "target": "Clear 1-5 within 600 open seconds; >=95% of seeds 1..100",
       "measured": {
-        "openSeconds": 112
+        "openSeconds": 123.3
       },
       "pass": true,
       "aggregatePass": null,
@@ -126,9 +126,9 @@
       "id": 2,
       "target": "Median chapter 1 boss clear between 1.5 and 2.5 open hours",
       "measured": {
-        "openHours": 2.062777777777778
+        "openHours": 3.6082222222222224
       },
-      "pass": true,
+      "pass": false,
       "aggregatePass": null,
       "requiredCohort": 100
     },
@@ -136,7 +136,7 @@
       "id": 3,
       "target": "Median chapter 2 boss clear day 4..6",
       "measured": {
-        "day": 4
+        "day": 6
       },
       "pass": true,
       "aggregatePass": null,
@@ -165,9 +165,9 @@
           "epic": 0.13088257068862919,
           "legendary": 0.040336729591024266
         },
-        "referenceRosterDay": 3
+        "referenceRosterDay": 6
       },
-      "pass": false,
+      "pass": true,
       "status": "measured",
       "gachaPass": true,
       "referenceAggregatePass": null
@@ -176,7 +176,7 @@
       "id": 5,
       "target": "No-input starters never clear 1-8 in 1 open hour",
       "measured": {
-        "highestCleared": 6,
+        "highestCleared": 7,
         "firstClear1_8OpenSeconds": null
       },
       "pass": true
@@ -185,17 +185,17 @@
       "id": 6,
       "target": "Every farm clear takes 20..40 seconds",
       "measured": {
-        "minSeconds": 22.75,
-        "maxSeconds": 37.75,
-        "samples": 4681
+        "minSeconds": 25.15,
+        "maxSeconds": 46.05,
+        "samples": 4542
       },
-      "pass": true
+      "pass": false
     },
     {
       "id": 7,
       "target": "Every non-boss clears within 2700 open seconds of first attempt",
       "measured": {
-        "maxSeconds": 32.75,
+        "maxSeconds": 42.6,
         "pending": []
       },
       "pass": true

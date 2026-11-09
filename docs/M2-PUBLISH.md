@@ -15,17 +15,17 @@ Native host is160/488logical pixels. Pixel art stays1:1physical, bottom-anchored
 
 Designer edits the canonical config and original working tree concurrently. Verification therefore runs in a separate git worktree with a fixed verbatim import. No developer balance tuning. Every simulation now records its input SHA256, and aggregate mode additionally embeds the full loaded config. Module-load mismatch fails rather than silently labeling different inputs.
 
-Latest imported seed-1 snapshot (2026-11-09 12:51 Asia/Saigon (UTC+7)): version1.1.0, SHA256`529080c22c11dff4c8a4075780c73afd971f3027d419b691217017dc74194450`. Later deliveries require another import/run. These are diagnostics, not population medians:
+Latest imported seed-1 snapshot (2026-11-09 12:51 Asia/Saigon (UTC+7)): version1.1.0, SHA256`6e9afc12efd1eeb1d7e11127e1899935cc637a8d84d096eb5395b68f7d284ef2`. Later deliveries require another import/run. These are diagnostics, not population medians:
 
 | Target | Latest seed-1 measurement | Diagnostic |
 |---|---|---|
-| 1 | `{"openSeconds":112}` | PASS |
-| 2 | `{"openHours":2.062777777777778}` | PASS |
-| 3 | `{"day":4}` | PASS |
-| 4 | `{"seeds":10000,"initialRoster":"3 starter heroes","medianPullsToFullRoster":124,"minPulls":25,"maxPulls":803,"pullDistribution":{"count":10000,"observed":10000,"censored":0,"p10":65,"median":124,"p90":246},"observedRarityRates":{"common":0.49954182649192747,"rare":0.32923887322841905,"epic":0.13088257068862919,"legendary":0.040336729591024266},"referenceRosterDay":3}` | FAIL |
-| 5 | `{"highestCleared":6,"firstClear1_8OpenSeconds":null}` | PASS |
-| 6 | `{"minSeconds":22.75,"maxSeconds":37.75,"samples":4681}` | PASS |
-| 7 | `{"maxSeconds":32.75,"pending":[]}` | PASS |
+| 1 | `{"openSeconds":123.3}` | PASS |
+| 2 | `{"openHours":3.6082222222222224}` | FAIL |
+| 3 | `{"day":6}` | PASS |
+| 4 | `{"seeds":10000,"initialRoster":"3 starter heroes","medianPullsToFullRoster":124,"minPulls":25,"maxPulls":803,"pullDistribution":{"count":10000,"observed":10000,"censored":0,"p10":65,"median":124,"p90":246},"observedRarityRates":{"common":0.49954182649192747,"rare":0.32923887322841905,"epic":0.13088257068862919,"legendary":0.040336729591024266},"referenceRosterDay":6}` | PASS |
+| 5 | `{"highestCleared":7,"firstClear1_8OpenSeconds":null}` | PASS |
+| 6 | `{"minSeconds":25.15,"maxSeconds":46.05,"samples":4542}` | FAIL |
+| 7 | `{"maxSeconds":42.6,"pending":[]}` | PASS |
 
 ## Completed100-seed reference cohort
 
