@@ -8,6 +8,8 @@ import { bossSecondsRemaining, createState, step } from '../src/core/game';
 import type { GameState } from '../src/core/model';
 import { partyPower } from '../src/core/economy';
 import { beginEncounter, spawnWave } from '../src/core/combat';
+import { referencePolicy } from '../src/core/policy';
+import { affordability, stageCue, upgradePopups } from '../src/core/selectors';
 import '../src/debug';
 
 execFileSync('npm', ['run', 'build'], { stdio: 'inherit' });
@@ -119,6 +121,37 @@ try {
     return { topAlpha: ctx?.getImageData(0, 0, 1, 1).data[3], coreAlpha: ctx?.getImageData(0, 100, 1, 1).data[3] };
   });
   if (alphaCheck.topAlpha !== 0 || alphaCheck.coreAlpha !== 255) throw new Error('Transparent ceiling / opaque strip invariant failed');
+  // Core-loop feedback cues (renderer-only, derived from state + event log).
+  const playUntil = (seed: number, done: (state: GameState) => boolean): GameState => {
+    const state = createState(seed), cursor = { revision: -1 };
+    for (let tick = 0; tick < ticksForSeconds(4 * 3600) && !done(state); tick += 1) { referencePolicy(state, cursor); step(state); }
+    if (!done(state)) throw new Error('Shot scenario not reached'); return state;
+  };
+  const rich = playUntil(1, state => state.highestCleared >= 3 && state.inventory.length >= 3);
+  step(rich, ticksForSeconds(CONFIG.view.stageCueSeconds)); rich.gold = 50_000; rich.tickets = CONFIG.gacha.costTickets;
+  await page.evaluate((state: GameState) => window.__game.load(state), rich);
+  await page.screenshot({ path: 'shots/15-affordable-badges-1280.png', omitBackground: true });
+  const equippedWeapon = rich.inventory.find(item => rich.roster.some(hero => rich.partyIds.includes(hero.id) && hero.equipment[item.slot] === item.id));
+  if (!equippedWeapon) throw new Error('No equipped gear for upgrade shot');
+  const upgraded = await page.evaluate(id => { window.__game.input({ type: 'upgrade', gearId: id }); return window.__game.step(4); }, equippedWeapon.id);
+  await page.screenshot({ path: 'shots/16-upgrade-popup-1280.png', omitBackground: true });
+  await page.setViewportSize({ width: 1280, height: 488 });
+  await page.evaluate(() => { window.__game.openPanel('gear'); });
+  const gearPanelUpgrade = await page.evaluate(id => { window.__game.input({ type: 'upgrade', gearId: id }); return window.__game.step(4); }, equippedWeapon.id);
+  await page.screenshot({ path: 'shots/17-upgrade-popup-gear-panel-1280.png', omitBackground: true });
+  await page.evaluate(() => { window.__game.openPanel(null); });
+  await page.setViewportSize({ width: 1280, height: 160 });
+  const cleared = createState(1); for (let tick = 0; tick < ticksForSeconds(600) && cleared.highestCleared < 1; tick += 1) step(cleared);
+  step(cleared, 6);
+  await page.evaluate((state: GameState) => window.__game.load(state), cleared);
+  await page.screenshot({ path: 'shots/18-stage-clear-1280.png', omitBackground: true });
+  const bossReady = playUntil(1, state => state.progress.kind === 'BOSS_READY'); step(bossReady, 6);
+  await page.evaluate((state: GameState) => window.__game.load(state), bossReady);
+  await page.screenshot({ path: 'shots/19-boss-ready-1280.png', omitBackground: true });
+  const feedback = { badges: affordability(rich), popup: upgradePopups(upgraded)[0]?.delta ?? null, panelPopup: upgradePopups(gearPanelUpgrade).at(-1)?.delta ?? null,
+    stageClear: stageCue(cleared), bossReady: stageCue(bossReady) };
+  if (!feedback.badges.heroes || !feedback.badges.gear || !feedback.badges.recruit || !feedback.popup?.heroId || feedback.stageClear?.kind !== 'clear' || feedback.bossReady?.kind !== 'boss') throw new Error(`Feedback cue missing: ${JSON.stringify(feedback)}`);
+  await writeFile('shots/feedback-state.json', JSON.stringify(feedback, null, 2));
   const dpiChecks = [];
   for (const dpr of [1, 1.25, 1.5]) {
     const context = await browser.newContext({ viewport: { width: Math.round(1920 / dpr), height: Math.ceil(160 / dpr) }, deviceScaleFactor: dpr });
@@ -137,7 +170,7 @@ try {
     uniformHitFlash: { durationMs: CONFIG.view.hitFlashMs, color: CONFIG.view.hitFlashColor, flashWhitePixels, recoveredWhitePixels, pass: true },
     fontsReady: panelState.layout.ui.fontsReady, assetErrors: assets, dpiChecks }, nativeWindows: 'NOT TESTED: real desktop click-through, OS docking, monitor transfer, work-area/fullscreen handling and Windows 100/125/150% pixel appearance require M2 Tauri/Windows.' }, null, 2));
   if (errors.length) throw new Error(errors.join('\n'));
-  process.stdout.write(JSON.stringify({ screenshots: ['01-pushing-1280.png', '02-baseline-1h-1280.png', '03-farming-1280.png', '04-farming-640.png', '05-heroes-panel-1280.png', '06-gear-panel-1280.png', '07-recruit-panel-1280.png', '08-strip-reference-1920.png', '09-dpi125-canvas.png', '10-hit-flash-1280.png', '11-hit-recovered-1280.png', '12-boss-countdown-1280.png', '13-boss-countdown-640.png', '14-boss-final-five-1280.png'], finalState: 'shots/final-state.json', browserErrors: errors, assetErrors: assets }, null, 2) + '\n');
+  process.stdout.write(JSON.stringify({ screenshots: ['01-pushing-1280.png', '02-baseline-1h-1280.png', '03-farming-1280.png', '04-farming-640.png', '05-heroes-panel-1280.png', '06-gear-panel-1280.png', '07-recruit-panel-1280.png', '08-strip-reference-1920.png', '09-dpi125-canvas.png', '10-hit-flash-1280.png', '11-hit-recovered-1280.png', '12-boss-countdown-1280.png', '13-boss-countdown-640.png', '14-boss-final-five-1280.png', '15-affordable-badges-1280.png', '16-upgrade-popup-1280.png', '17-upgrade-popup-gear-panel-1280.png', '18-stage-clear-1280.png', '19-boss-ready-1280.png'], finalState: 'shots/final-state.json', browserErrors: errors, assetErrors: assets }, null, 2) + '\n');
 } finally {
   await browser.close();
   await new Promise<void>((resolve, reject) => { server.httpServer.close(error => error ? reject(error) : resolve()); });

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { CONFIG, TICK_MS, slotSchema, stageConfig } from '../config';
 import { chest, grantXp } from './economy';
 import { emit, goldChange } from './events';
-import { cloneState, gearSchema, gearTemplateId, gearV1Schema, itemId, stateSchema } from './model';
+import { cloneState, gearSchema, gearTemplateId, gearV1Schema, itemId, parseState, stateSchema } from './model';
 import type { GameState, Gear } from './model';
 
 /** What a SaveStore persists: the game state plus the wall-clock bookkeeping for offline catch-up. */
@@ -43,7 +43,7 @@ export function migrateV1(value: unknown): SaveData {
     const gearId = event.data.gearId;
     return typeof gearId === 'number' && (event.data.type === 'gear' || event.data.type === 'upgrade') ? { ...event, data: { ...event.data, gearId: newId(gearId) } } : event;
   });
-  const state = stateSchema.parse({ ...save.state, version: 2, inventory, roster, events });
+  const state = parseState({ ...save.state, version: 2, inventory, roster, events });
   return { savedAtMs: save.savedAtMs, remainderMs: save.remainderMs, state };
 }
 /** Accepts v2 or v1 (migrated). Anything else throws, so a caller never mistakes a bad save for "no save". */
@@ -51,7 +51,7 @@ export function decodeSave(value: unknown): SaveData {
   const format = typeof value === 'object' && value !== null && 'format' in value ? value.format : undefined;
   if (format === 'taskbar-legends-save-v1') return migrateV1(value);
   const save = saveV2Schema.parse(value);
-  const state = stateSchema.parse({ ...save.state, ...save.wallet, inventory: save.inventory });
+  const state = parseState({ ...save.state, ...save.wallet, inventory: save.inventory });
   return { savedAtMs: save.savedAtMs, remainderMs: save.remainderMs, state };
 }
 export function makeSave(state: GameState, savedAtMs: number, remainderMs = 0): string {
@@ -70,7 +70,8 @@ export function expectedFarmRewards(stageNumber: number) {
 }
 export function applyOffline(state: GameState, elapsedMs: number) {
   if (!Number.isFinite(elapsedMs)) throw new Error('Invalid elapsed time');
-  const seconds = Math.min(Math.max(0, elapsedMs / 1000), CONFIG.idle.offlineCapHours * 3600);
+  const rawSeconds = Math.max(0, elapsedMs / 1000);
+  const seconds = Math.min(rawSeconds, CONFIG.idle.offlineCapHours * 3600);
   const samples = state.metrics.nativeFarmClearSeconds ?? state.metrics.farmClearSeconds;
   const average = samples.length ? samples.reduce((a, b) => a + b, 0) / samples.length : CONFIG.idle.avgFarmClearSecDefault;
   const clears = Math.floor(seconds / average);
@@ -79,12 +80,13 @@ export function applyOffline(state: GameState, elapsedMs: number) {
   const gold = Math.floor(rewards.gold * clears * CONFIG.idle.offlineEfficiency);
   const xp = Math.floor(rewards.xp * clears * CONFIG.idle.offlineEfficiency);
   const chests = Math.min(CONFIG.idle.offlineChestMax, Math.floor(seconds / (CONFIG.idle.offlineChestEveryHours * 3600)));
-  goldChange(state, gold, 'offline'); grantXp(state, xp, state.partyIds);
+  goldChange(state, gold, 'offline');
+  const heroes = xp ? grantXp(state, xp, state.partyIds) : state.partyIds.map(id => { const level = state.roster.find(hero => hero.id === id)?.level ?? 1; return { id, levelBefore: level, levelAfter: level }; });
   for (let index = 0; index < chests; index += 1) chest(state, stage);
   state.stats.offlineClears += clears; state.stats.offlineSeconds += Math.floor(seconds);
   // Offline does not advance open ticks, progression, retry deadlines, or summon tickets.
-  if (seconds) emit(state, { type: 'offline', seconds, clears, gold, xp, chests });
-  return { seconds, clears, gold, xp, chests, capped: elapsedMs > CONFIG.idle.offlineCapHours * 3_600_000 };
+  if (seconds) emit(state, { type: 'offline', seconds, rawSeconds, clears, gold, xp, chests, heroes });
+  return { seconds, rawSeconds, clears, gold, xp, chests, heroes, capped: elapsedMs > CONFIG.idle.offlineCapHours * 3_600_000 };
 }
 /** Applies offline catch-up for the wall-clock time since the save was written. */
 export function resumeSave(data: SaveData, nowMs: number) {

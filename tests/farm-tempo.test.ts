@@ -124,11 +124,17 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
   });
   it('offline uses frozen native averages identically for8h/12h regardless of tempo/floor', () => {
     tempo(3, 20); const frozen = controlled(); step(frozen); frozen.metrics.farmClearSeconds = [20, 20]; frozen.metrics.nativeFarmClearSeconds = [30, 40];
-    const results = [];
+    const results = [], raw: number[] = [];
     for (const [scale, floor] of [[1, 0], [3, 20]]) {
       tempo(scale ?? 1, floor ?? 0);
-      for (const hours of [8, 12]) { const state = load(snapshot(frozen)); const report = applyOffline(state, hours * 3600000); results.push({ state, report: { ...report, capped: false } }); }
+      for (const hours of [8, 12]) {
+        const state = load(snapshot(frozen)); const report = applyOffline(state, hours * 3600000); raw.push(report.rawSeconds);
+        // rawSeconds (pre-cap time, #8) legitimately differs between 8h and 12h; everything credited must not.
+        for (const event of state.events) if (event.data.type === 'offline') event.data.rawSeconds = event.data.seconds;
+        results.push({ state, report: { ...report, rawSeconds: report.seconds, capped: false } });
+      }
     }
+    expect(raw).toEqual([28800, 43200, 28800, 43200]);
     expect(results[1]).toEqual(results[0]); expect(results[2]).toEqual(results[0]); expect(results[3]).toEqual(results[0]);
     expect(results[0]?.report.clears).toBe(Math.floor(28800 / 35));
     const legacyAverage = load(snapshot(frozen)); delete legacyAverage.metrics.nativeFarmClearSeconds;

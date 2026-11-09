@@ -87,5 +87,494 @@
     "closedY": 74,
     "expandedY": 402,
     "clickThrough": true
+  },
+  "rarity": {
+    "order": [
+      "common",
+      "rare",
+      "epic",
+      "legendary"
+    ],
+    "source": "tl-v12 src/design-config.json rarity.order; design.md section 11 grey/blue/purple/gold",
+    "common": {
+      "frame": "#b0bcc8",
+      "fill": "#2a333e",
+      "floor": "#3a4552",
+      "label": "#b0bcc8",
+      "rimAlphaMax": 0,
+      "particles": {
+        "count": 6,
+        "sizePx": [
+          2,
+          1
+        ],
+        "speedPxPerSec": [
+          40,
+          70
+        ],
+        "lifeMs": 240,
+        "startRadiusPx": 24,
+        "colors": [
+          "#b0bcc8",
+          "#f2e9cf"
+        ]
+      },
+      "flash": {
+        "count": 0,
+        "atMs": 0,
+        "durationMs": 0
+      },
+      "shake": {
+        "amplitudePx": 0,
+        "patternPx": [],
+        "stepMs": 40
+      }
+    },
+    "rare": {
+      "frame": "#8dbfe3",
+      "fill": "#1f3347",
+      "floor": "#2b4a62",
+      "label": "#8dbfe3",
+      "rimAlphaMax": 153,
+      "particles": {
+        "count": 10,
+        "sizePx": [
+          2,
+          1
+        ],
+        "speedPxPerSec": [
+          50,
+          90
+        ],
+        "lifeMs": 280,
+        "startRadiusPx": 28,
+        "colors": [
+          "#8dbfe3",
+          "#f2e9cf"
+        ]
+      },
+      "flash": {
+        "count": 0,
+        "atMs": 0,
+        "durationMs": 0
+      },
+      "shake": {
+        "amplitudePx": 0,
+        "patternPx": [],
+        "stepMs": 40
+      }
+    },
+    "epic": {
+      "frame": "#c19cd9",
+      "fill": "#33264a",
+      "floor": "#4a3866",
+      "label": "#c19cd9",
+      "rimAlphaMax": 204,
+      "motes": {
+        "count": 6,
+        "sizePx": 1,
+        "risePx": 40,
+        "periodMs": 640
+      },
+      "particles": {
+        "count": 16,
+        "sizePx": [
+          3,
+          2
+        ],
+        "speedPxPerSec": [
+          60,
+          110
+        ],
+        "lifeMs": 320,
+        "startRadiusPx": 32,
+        "colors": [
+          "#c19cd9",
+          "#f2e9cf"
+        ]
+      },
+      "flash": {
+        "count": 0,
+        "atMs": 0,
+        "durationMs": 0
+      },
+      "shake": {
+        "amplitudePx": 0,
+        "patternPx": [],
+        "stepMs": 40
+      }
+    },
+    "legendary": {
+      "frame": "#e9bd68",
+      "fill": "#4a3818",
+      "floor": "#6a5124",
+      "label": "#e9bd68",
+      "rimAlphaMax": 255,
+      "motes": {
+        "count": 10,
+        "sizePx": 2,
+        "risePx": 56,
+        "periodMs": 560
+      },
+      "particles": {
+        "count": 24,
+        "sizePx": [
+          3,
+          2
+        ],
+        "speedPxPerSec": [
+          70,
+          130
+        ],
+        "lifeMs": 360,
+        "startRadiusPx": 36,
+        "colors": [
+          "#e9bd68",
+          "#f2e9cf",
+          "#fff0ac"
+        ]
+      },
+      "flash": {
+        "count": 1,
+        "atMs": 0,
+        "durationMs": 80
+      },
+      "shake": {
+        "amplitudePx": 1,
+        "patternPx": [
+          1,
+          -1,
+          1,
+          -1,
+          0
+        ],
+        "stepMs": 40
+      }
+    }
+  },
+  "badges": {
+    "new": {
+      "fill": "#90c99b",
+      "ink": "#0d121b",
+      "label": "NEW"
+    },
+    "duplicateStar": {
+      "fill": "#8dbfe3",
+      "ink": "#0d121b",
+      "label": "+1★"
+    },
+    "duplicateGold": {
+      "fill": "#e9bd68",
+      "ink": "#0d121b",
+      "label": "+{gold}G"
+    },
+    "pity": {
+      "fill": "#c19cd9",
+      "ink": "#0d121b",
+      "label": "PITY"
+    },
+    "heightPx": 16
+  },
+  "gacha": {
+    "frameStepMs": 40,
+    "labelRarityDelayMs": 80,
+    "skipGuardMs": 120,
+    "particleSeed": 7,
+    "flashLimiter": {
+      "minGapMs": 400,
+      "maxPerSecond": 2,
+      "hardLimitPerSecond": 3,
+      "maxPerTenPull": 2
+    },
+    "single": {
+      "stageRect": [
+        176,
+        96,
+        368,
+        200
+      ],
+      "cardRect": [
+        312,
+        100,
+        96,
+        128
+      ],
+      "nameY": 236,
+      "rarityY": 256,
+      "againRect": [
+        400,
+        364,
+        152,
+        28
+      ],
+      "okRect": [
+        560,
+        364,
+        144,
+        28
+      ]
+    },
+    "tiers": {
+      "common": {
+        "totalMs": 1000,
+        "silhouette": false,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            360
+          ],
+          "flip": [
+            360,
+            520
+          ],
+          "burst": [
+            520,
+            640
+          ],
+          "labels": [
+            640,
+            1000
+          ]
+        }
+      },
+      "rare": {
+        "totalMs": 1280,
+        "silhouette": false,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            560
+          ],
+          "flip": [
+            560,
+            720
+          ],
+          "burst": [
+            720,
+            880
+          ],
+          "labels": [
+            880,
+            1280
+          ]
+        }
+      },
+      "epic": {
+        "totalMs": 1600,
+        "silhouette": true,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            760
+          ],
+          "flip": [
+            760,
+            920
+          ],
+          "silhouetteHold": [
+            920,
+            1120
+          ],
+          "burst": [
+            1120,
+            1280
+          ],
+          "labels": [
+            1280,
+            1600
+          ]
+        }
+      },
+      "legendary": {
+        "totalMs": 2000,
+        "silhouette": true,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            960
+          ],
+          "flip": [
+            960,
+            1120
+          ],
+          "silhouetteHold": [
+            1120,
+            1360
+          ],
+          "burst": [
+            1360,
+            1520
+          ],
+          "labels": [
+            1520,
+            2000
+          ]
+        }
+      }
+    },
+    "audio": {
+      "pull": "gacha_pull",
+      "reveal": "gacha_reveal_{rarity}",
+      "click": "ui_click",
+      "open": "ui_open",
+      "close": "ui_close"
+    },
+    "tenPull": {
+      "staggerMs": 120,
+      "backsInMs": 120,
+      "flipMs": 160,
+      "highlightHoldMs": 400,
+      "cardRects": [
+        [
+          24,
+          100,
+          128,
+          120
+        ],
+        [
+          160,
+          100,
+          128,
+          120
+        ],
+        [
+          296,
+          100,
+          128,
+          120
+        ],
+        [
+          432,
+          100,
+          128,
+          120
+        ],
+        [
+          568,
+          100,
+          128,
+          120
+        ],
+        [
+          24,
+          228,
+          128,
+          120
+        ],
+        [
+          160,
+          228,
+          128,
+          120
+        ],
+        [
+          296,
+          228,
+          128,
+          120
+        ],
+        [
+          432,
+          228,
+          128,
+          120
+        ],
+        [
+          568,
+          228,
+          128,
+          120
+        ]
+      ],
+      "againRect": [
+        400,
+        364,
+        152,
+        28
+      ],
+      "okRect": [
+        560,
+        364,
+        144,
+        28
+      ]
+    }
+  },
+  "offlineRewards": {
+    "minSecondsToShow": 60,
+    "capHours": 8,
+    "adBonus": null,
+    "countUp": {
+      "goldStartMs": 160,
+      "xpStartMs": 260,
+      "durationMs": 900,
+      "easing": "easeOutCubic",
+      "updateStepMs": 40,
+      "chestFirstMs": 1160,
+      "chestStaggerMs": 120,
+      "chestPopMs": 80,
+      "doneMs": 1640,
+      "collectSnapHoldMs": 240
+    },
+    "layout": {
+      "capBar": [
+        16,
+        66,
+        688,
+        6
+      ],
+      "goldRow": [
+        16,
+        80,
+        440,
+        64
+      ],
+      "xpRow": [
+        16,
+        152,
+        440,
+        64
+      ],
+      "chestRow": [
+        16,
+        224,
+        440,
+        120
+      ],
+      "chestSlot": {
+        "x": 32,
+        "y": 256,
+        "size": 40,
+        "stride": 48
+      },
+      "partyPanel": [
+        464,
+        80,
+        240,
+        264
+      ],
+      "collectRect": [
+        536,
+        364,
+        168,
+        28
+      ]
+    }
   }
 }
