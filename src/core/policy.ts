@@ -3,6 +3,7 @@ import { autoEquip, autoParty, cheapestEquippedUpgrade, drawHero, partyPower, pu
 import { createState, input, step, summary } from './game';
 import type { GameState } from './model';
 import { applyOffline } from './save';
+import { distribution } from './statistics';
 
 export interface PolicyCursor { revision: number }
 export function referencePolicy(state: GameState, cursor: PolicyCursor): void {
@@ -57,6 +58,7 @@ export function gachaCohort(count: number) {
   const left = pulls[Math.floor((count - 1) / 2)] ?? 0, right = pulls[Math.floor(count / 2)] ?? 0;
   return { seeds: count, initialRoster: '3 starter heroes', medianPullsToFullRoster: (left + right) / 2,
     minPulls: pulls[0] ?? null, maxPulls: pulls.at(-1) ?? null,
+    pullDistribution: distribution(pulls),
     observedRarityRates: Object.fromEntries(Object.entries(rates).map(([key, value]) => [key, value / total])) };
 }
 export function balanceReport(run: ReturnType<typeof runReference>, gachaSeeds = 10_000) {

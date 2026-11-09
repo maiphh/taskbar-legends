@@ -115,3 +115,13 @@ CI runs typecheck, ESLint, Vitest (core, million-pull distribution/pity, determi
 See [M2 architecture](docs/M2-ARCHITECTURE.md) and the [real-Windows checklist](docs/M2-WINDOWS-TESTS.md). `npm run desktop:dev` runs Tauri2; `npm run shot:desktop` verifies the adapter against emulated OS IPC, not native click-through. The Windows artifact workflow is ready but has not run while M2 push is on hold. Linux native compilation is blocked by unreachable apt prerequisites.
 
 M1 browser preview: https://maiphh.github.io/taskbar-legends/ ; M1 PR: https://github.com/maiphh/taskbar-legends/pull/1 (not merged). M2 source does not alter that deployed M1 build.
+
+### Population balance report (M2)
+
+```sh
+npm run --silent sim -- --policy reference --days 7 --seeds 100 > sim-ref-100seeds.json
+```
+
+Runs consecutive reference seeds 1..100 (change starting seed with `--seed`). The gacha-only target remains a **separate 10,000-seed cohort**, evaluated once, not 100 repeated gacha cohorts. `--gacha-seeds` can override that diagnostic cohort. Aggregate mode defaults to 7 days and requires `--policy reference`; it cannot combine with `--hours`, `--ticks`, or scripted inputs. Progress goes to stderr; stdout is JSON.
+
+Each of the seven targets has p10/median/p90, observation/censor counts, and its actual design pass criterion. Target 4 also includes gacha pull percentiles; target 6 reports both per-seed farm minimum and maximum distributions and applies universal bounds, not a median-only pass. Quantiles use R-7 linear interpolation. Unreached milestones rank above reached ones; censored quantiles stay `null` rather than quietly excluding unsuccessful seeds. A day-7 roster not yet acquired remains pending through day 8. Per-seed measurements and the exact designer-config SHA256 are retained for auditing. Target 1 uses its >=95% criterion; targets 5/6/7 require every sampled seed/clear to satisfy the bound. No balance numbers are changed.

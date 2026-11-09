@@ -6,7 +6,7 @@
     "tick": 80,
     "rng": 1,
     "seed": 1,
-    "gold": 130,
+    "gold": 135,
     "tickets": 10,
     "pity": 0,
     "highestCleared": 7,
@@ -29,7 +29,7 @@
       {
         "id": "mw2",
         "level": 1,
-        "xp": 5,
+        "xp": 10,
         "stars": 1,
         "equipment": {
           "weapon": null,
@@ -40,7 +40,7 @@
       {
         "id": "hu1",
         "level": 1,
-        "xp": 5,
+        "xp": 10,
         "stars": 1,
         "equipment": {
           "weapon": null,
@@ -51,7 +51,7 @@
       {
         "id": "wiz",
         "level": 1,
-        "xp": 5,
+        "xp": 10,
         "stars": 1,
         "equipment": {
           "weapon": null,
@@ -114,13 +114,13 @@
         "maxHp": 120,
         "atk": 30,
         "def": 5,
-        "cooldown": 1,
-        "attackTicks": 20,
+        "cooldown": 11,
+        "attackTicks": 18,
         "range": 400,
         "x": 50,
         "slot": 2,
         "boss": false,
-        "attacks": 4,
+        "attacks": 5,
         "shield": 0,
         "shieldUntilTick": 0,
         "bornTick": 0
@@ -138,7 +138,7 @@
         "cooldown": 0,
         "attackTicks": 24,
         "range": 30,
-        "x": 236,
+        "x": 252,
         "slot": 0,
         "boss": false,
         "attacks": 0,
@@ -150,11 +150,11 @@
         "id": "enemy-2-1-1",
         "sourceId": "grunt",
         "side": "enemy",
-        "hp": 18,
+        "hp": 0,
         "maxHp": 113,
         "atk": 26,
         "def": 14,
-        "cooldown": 14,
+        "cooldown": 21,
         "attackTicks": 24,
         "range": 30,
         "x": 170,
@@ -224,13 +224,13 @@
       }
     ],
     "retryFailures": 0,
-    "economyRevision": 2,
+    "economyRevision": 4,
     "stats": {
       "clears": 0,
       "losses": 0,
       "retries": 0,
       "bossFailures": 0,
-      "goldEarned": 5,
+      "goldEarned": 10,
       "pulls": 0,
       "chests": 0,
       "offlineClears": 0,
@@ -249,16 +249,16 @@
       "farmSamples": 0,
       "maxNonBossStallSeconds": 0
     },
-    "eventSeq": 40,
+    "eventSeq": 44,
     "eventCounts": {
       "spawn": 14,
       "stage": 2,
       "wave": 2,
-      "hit": 17,
+      "hit": 18,
       "skill": 2,
-      "death": 1,
-      "gold": 1,
-      "xp": 1
+      "death": 2,
+      "gold": 2,
+      "xp": 2
     },
     "events": [
       {
@@ -486,7 +486,7 @@
       },
       {
         "seq": 22,
-        "tick": 21,
+        "tick": 19,
         "data": {
           "type": "hit",
           "attackerId": "hero-wiz",
@@ -519,7 +519,7 @@
       },
       {
         "seq": 25,
-        "tick": 41,
+        "tick": 37,
         "data": {
           "type": "skill",
           "unitId": "hero-wiz",
@@ -528,7 +528,7 @@
       },
       {
         "seq": 26,
-        "tick": 41,
+        "tick": 37,
         "data": {
           "type": "hit",
           "attackerId": "hero-wiz",
@@ -539,7 +539,7 @@
       },
       {
         "seq": 27,
-        "tick": 41,
+        "tick": 37,
         "data": {
           "type": "death",
           "unitId": "enemy-2-1-0",
@@ -548,7 +548,7 @@
       },
       {
         "seq": 28,
-        "tick": 41,
+        "tick": 37,
         "data": {
           "type": "gold",
           "amount": 5,
@@ -558,7 +558,7 @@
       },
       {
         "seq": 29,
-        "tick": 41,
+        "tick": 37,
         "data": {
           "type": "xp",
           "amount": 5,
@@ -571,7 +571,7 @@
       },
       {
         "seq": 30,
-        "tick": 41,
+        "tick": 37,
         "data": {
           "type": "hit",
           "attackerId": "hero-wiz",
@@ -604,7 +604,7 @@
       },
       {
         "seq": 33,
-        "tick": 61,
+        "tick": 55,
         "data": {
           "type": "hit",
           "attackerId": "hero-wiz",
@@ -679,6 +679,49 @@
       },
       {
         "seq": 40,
+        "tick": 73,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-2-1-1",
+          "damage": 18,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 41,
+        "tick": 73,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-2-1-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 42,
+        "tick": 73,
+        "data": {
+          "type": "gold",
+          "amount": 5,
+          "total": 135,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 43,
+        "tick": 73,
+        "data": {
+          "type": "xp",
+          "amount": 5,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 44,
         "tick": 78,
         "data": {
           "type": "hit",
@@ -969,7 +1012,7 @@
     },
     {
       "seq": 22,
-      "tick": 21,
+      "tick": 19,
       "data": {
         "type": "hit",
         "attackerId": "hero-wiz",
@@ -1002,7 +1045,7 @@
     },
     {
       "seq": 25,
-      "tick": 41,
+      "tick": 37,
       "data": {
         "type": "skill",
         "unitId": "hero-wiz",
@@ -1011,7 +1054,7 @@
     },
     {
       "seq": 26,
-      "tick": 41,
+      "tick": 37,
       "data": {
         "type": "hit",
         "attackerId": "hero-wiz",
@@ -1022,7 +1065,7 @@
     },
     {
       "seq": 27,
-      "tick": 41,
+      "tick": 37,
       "data": {
         "type": "death",
         "unitId": "enemy-2-1-0",
@@ -1031,7 +1074,7 @@
     },
     {
       "seq": 28,
-      "tick": 41,
+      "tick": 37,
       "data": {
         "type": "gold",
         "amount": 5,
@@ -1041,7 +1084,7 @@
     },
     {
       "seq": 29,
-      "tick": 41,
+      "tick": 37,
       "data": {
         "type": "xp",
         "amount": 5,
@@ -1054,7 +1097,7 @@
     },
     {
       "seq": 30,
-      "tick": 41,
+      "tick": 37,
       "data": {
         "type": "hit",
         "attackerId": "hero-wiz",
@@ -1087,7 +1130,7 @@
     },
     {
       "seq": 33,
-      "tick": 61,
+      "tick": 55,
       "data": {
         "type": "hit",
         "attackerId": "hero-wiz",
@@ -1162,6 +1205,49 @@
     },
     {
       "seq": 40,
+      "tick": 73,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-wiz",
+        "targetId": "enemy-2-1-1",
+        "damage": 18,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 41,
+      "tick": 73,
+      "data": {
+        "type": "death",
+        "unitId": "enemy-2-1-1",
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 42,
+      "tick": 73,
+      "data": {
+        "type": "gold",
+        "amount": 5,
+        "total": 135,
+        "reason": "kill"
+      }
+    },
+    {
+      "seq": 43,
+      "tick": 73,
+      "data": {
+        "type": "xp",
+        "amount": 5,
+        "heroIds": [
+          "mw2",
+          "hu1",
+          "wiz"
+        ]
+      }
+    },
+    {
+      "seq": 44,
       "tick": 78,
       "data": {
         "type": "hit",

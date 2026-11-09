@@ -52,7 +52,18 @@ jobs:
       - run: npm run typecheck && npm run lint && npm run test && npm run build
       - run: npm run native:check
       - run: npm run native:test
-      - run: npm run desktop:build -- --bundles nsis,msi
+      - name: Build Windows installers (retry transient upstream downloads)
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            npm run desktop:build -- --bundles nsis,msi 2>&1 | Tee-Object -FilePath installer-build.log
+            $buildExit = $LASTEXITCODE
+            if ($buildExit -eq 0) { exit 0 }
+            $transient = Select-String -Path installer-build.log -Pattern 'http status: (429|5[0-9][0-9])|operation timed out|connection reset' -Quiet
+            if (!$transient -or $attempt -eq 3) { exit $buildExit }
+            Write-Output "Transient installer-tool download failure; retrying attempt $($attempt + 1)/3"
+            Start-Sleep -Seconds ($attempt * 15)
+          }
       - name: Require both installer formats
         shell: pwsh
         run: |

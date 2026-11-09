@@ -1,5 +1,7 @@
 # M2 local verification
 
+> Historical local checkpoint. M2 is now draft PR #2. Current native CI and later designer snapshots are in [M2-PUBLISH.md](M2-PUBLISH.md) and M2-RETUNE.json. Measurements below identify an older snapshot.
+
 Verified 2026-11-09 12:26 Asia/Saigon (UTC+7). M2 remains local only; no M2 push, PR, CI execution or Windows artifact.
 
 ## Published M1 is separate
