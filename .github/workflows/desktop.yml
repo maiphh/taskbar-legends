@@ -117,7 +117,7 @@ jobs:
           ROOT=src-tauri/target/universal-apple-darwin/release/bundle
           APP="$ROOT/macos/Taskbar Legends.app"
           test -d "$APP"
-          lipo -verify_arch arm64 x86_64 "$APP/Contents/MacOS/taskbar-legends"
+          lipo "$APP/Contents/MacOS/taskbar-legends" -verify_arch arm64 x86_64
           codesign --verify --deep --strict "$APP"
           mkdir -p mac-artifacts
           # upload-artifact does not preserve executable bits or app symlinks.
