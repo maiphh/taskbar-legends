@@ -49,7 +49,7 @@ jobs:
         with:
           workspaces: src-tauri -> target
       - run: npm ci
-      - run: npm run typecheck && npm run lint && npm run test
+      - run: npm run typecheck && npm run lint && npm run test && npm run build
       - run: npm run native:check
       - run: npm run native:test
       - run: npm run desktop:build -- --bundles nsis,msi
