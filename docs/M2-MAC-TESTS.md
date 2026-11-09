@@ -30,7 +30,9 @@ or:
 TASKBAR_LEGENDS_OPAQUE=1 "/Applications/Taskbar Legends.app/Contents/MacOS/taskbar-legends"
 ```
 
-Fallback is an 800×488 logical-pixel, opaque, decorated, resizable normal window, with a Dock icon and normal focus. It is not always-on-top; native docking, monitor selection and cursor click-through polling are disabled. Panels stay inside this ordinary window. The native window itself is created with transparency **off**, not merely covered with opaque CSS. The flag is Mac-only and does not change Windows behavior. Quit and reopen without the flag to restore overlay mode.
+Fallback is an 800×488 logical-pixel, opaque, decorated, resizable normal window, with a Dock icon and normal focus. It is not always-on-top; native docking, monitor selection and cursor click-through polling are disabled. Panels stay inside this ordinary window. The native window itself is created with transparency **off**, not merely covered with opaque CSS. The same fallback (flag and tray checkbox) now also exists on Windows; the default Windows overlay is unchanged. Quit and reopen without the flag to restore overlay mode.
+
+The menu-bar **Opaque window** checkbox is the persistent way to switch: it saves the choice to `shell.json` in the app config directory (`~/Library/Application Support/com.taskbarlegends.desktop/`), flushes the game save, and relaunches into the chosen mode (transparency cannot change on a live window). The flag/env var only forces opaque for that one launch and is dropped on relaunch, so the saved choice then applies.
 
 ## Overlay behavior and deliberate limits
 
@@ -41,7 +43,7 @@ Fallback is an 800×488 logical-pixel, opaque, decorated, resizable normal windo
 - Left/right Dock positions use the excluded work-area width and origin; the strip remains horizontal at the bottom of the usable area. Bottom Dock uses the work-area bottom. No fixed Dock-height assumption.
 - Auto-hide follows the work area macOS actually reports. Click-through outer gutters permit reaching the Dock activation edge. Some macOS versions do not shrink `visibleFrame` when an auto-hidden Dock is temporarily revealed; in that case the Dock can cover the strip temporarily. No Dock preferences are changed, no extra global input permissions are requested, and no private Dock-size heuristics are used. This behavior needs real-device review.
 - WebKit background throttling is disabled on supported macOS 14+; verify actual idle/Spaces behavior, rather than claiming the game remains active from compilation alone.
-- No menu-bar/tray controls or global quit shortcut were added. Quit via Activity Monitor if the hidden-Dock overlay cannot be focused. The normal fallback has standard window controls.
+- Menu-bar icon (template image, adapts to light/dark menu bar) with **Show/Hide**, **Opaque window** and **Save and quit**. Clicking the icon opens the menu (standard macOS behavior). The desktop HUD also has an **X** button (left of pause) that runs the same save-then-exit path; it is part of `getHitRegions()` so it stays clickable through click-through. No global quit shortcut.
 
 ## Manual checklist — all require a real Mac
 
@@ -55,6 +57,10 @@ Fallback is an 800×488 logical-pixel, opaque, decorated, resizable normal windo
 - [ ] Multiple monitors with negative origins/different scaling; select a display through `__shell.selectMonitor(index)` in a dev build, hotplug, and change primary display. Check fallback can be dragged normally without being forced back.
 - [ ] Switch ordinary Spaces and Mission Control; check the all-Spaces request. Enter/leave another app's fullscreen Space and record the known NSWindow limitation. Also test Stage Manager if used.
 - [ ] Let the overlay idle in the background; confirm simulation/save/load and offline catch-up, with no duplicate app process writing the same save.
+- [ ] Menu-bar icon is visible and crisp in light and dark menu bars (template tinting), including on a notched display with a crowded menu bar.
+- [ ] Show/Hide hides and restores the overlay; label flips between Hide and Show. Game saves on hide and catches up on show.
+- [ ] Opaque window checkbox: toggling relaunches into the other mode within a few seconds, with progress intact; the checkbox state matches the mode after relaunch, and the choice survives a normal quit/relaunch.
+- [ ] Save and quit (menu-bar and HUD X): app exits within ~3 s; relaunch shows the progress from the moment of quitting (not the last 5 s autosave). Exactly one process remains after relaunch (Activity Monitor).
 - [ ] Quit/relaunch in overlay and fallback modes. Windows acceptance checklist remains separate in `M2-WINDOWS-TESTS.md`.
 
 ## What CI and emulation prove

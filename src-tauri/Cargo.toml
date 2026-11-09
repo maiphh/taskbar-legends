@@ -13,10 +13,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # macOS-only API; tauri-build requires this feature/config pair on every target.
-tauri = { version = "2", features = ["macos-private-api"] }
+tauri = { version = "2", features = ["macos-private-api", "tray-icon"] }
 serde = { version = "1", features = ["derive"] }
-
-[dev-dependencies]
 serde_json = "1"
 
 [target.'cfg(windows)'.dependencies]

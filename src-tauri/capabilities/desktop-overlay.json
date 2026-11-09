@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "desktop-overlay",
-  "description": "Only local overlay docking, cursor hit testing and lifecycle; no filesystem, network, shell or remote URL grants.",
+  "description": "Only local overlay docking, cursor hit testing, visibility and the save-then-exit lifecycle; no filesystem, network, shell or remote URL grants.",
   "windows": [
     "main"
   ],
@@ -19,6 +19,9 @@
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "core:window:allow-inner-size",
-    "allow-set-overlay-bounds"
+    "allow-set-overlay-bounds",
+    "allow-shell-mode",
+    "allow-quit-app",
+    "allow-relaunch-app"
   ]
 }

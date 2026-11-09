@@ -7,7 +7,7 @@ Status: NOT executed on real Windows. Browser IPC emulation and TS math tests ar
 1. On Windows 10/11 x64, install stable Rust/MSVC, Visual Studio C++ build tools and the Evergreen WebView2 runtime. Run `npm ci`, `npm run typecheck`, `npm run lint`, `npm run test`, `npm run native:check`, `npm run native:test`.
 2. Run `npm run desktop:dev`. For installers run `npm run desktop:build -- --bundles nsis,msi`. MSI may require the Windows VBSCRIPT optional feature. Once M2 may be pushed, `.github/workflows/desktop.yml` builds both formats on windows-latest and uploads `taskbar-legends-windows-x64`; it does not create a release.
 3. Install/uninstall both packages on a test account. The build is unsigned: expect SmartScreen; no signing certificate is included. Check `licenses/` includes CREDITS and all third-party notices.
-4. Launch: no title bar, rounded/shadow border or taskbar icon; transparent upper region, opaque bottom80 source px; always on top of ordinary desktop windows; no focus steal while idle. Alt+F4 while the HUD has focus closes the app. Verify the last save restores after restart.
+4. Launch: no title bar, rounded/shadow border or taskbar icon; transparent upper region, opaque bottom80 source px; always on top of ordinary desktop windows; no focus steal while idle. Alt+F4 while the HUD has focus closes the app; the tray Save and quit and the HUD **X** button are the normal quit paths. Verify the last save restores after restart.
 
 ## Docking / panels
 
@@ -51,3 +51,11 @@ Expanded native heights are488/610/732 physical px at those scales; source canva
 - [ ] Validate ordinary always-on-top behavior versus Task Manager/system dialogs; secure-desktop/UAC and exclusive fullscreen are not promised.
 
 Record OS build, WebView2 version, monitor/work-area rectangles, scale factors, screenshots, diagnostics and pass/fail for every unchecked item. Native acceptance remains blocked until this checklist is run.
+
+## Tray icon and quit
+
+- [ ] Notification-area icon (sword) appears, including in the overflow flyout; tooltip reads Taskbar Legends. Crisp at 100/125/150/200% scaling.
+- [ ] Left-click toggles the overlay (Show/Hide); right-click opens the menu with Show/Hide, Opaque window, Save and quit. The Show/Hide label tracks the current state.
+- [ ] Opaque window checkbox relaunches into a normal opaque, decorated window with a taskbar button (and back), keeping progress; the choice persists across quit/relaunch (`%APPDATA%\com.taskbarlegends.desktop\shell.json`). `--opaque-window` / `TASKBAR_LEGENDS_OPAQUE=1` force opaque for one launch only.
+- [ ] Save and quit (tray) and the HUD **X** button (left of pause; clickable through click-through) exit within ~3 s; relaunch restores progress from the moment of quitting. No leftover process in Task Manager; the tray icon disappears (no ghost icon after hovering the area).
+- [ ] Hidden via tray, then Save and quit: progress resumes with offline catch-up for the hidden time.

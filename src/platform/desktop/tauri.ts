@@ -1,22 +1,28 @@
 import { invoke, isTauri } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { z } from 'zod';
 import { availableMonitors, currentMonitor, cursorPosition, getCurrentWindow, primaryMonitor } from '@tauri-apps/api/window';
 import type { Monitor } from '@tauri-apps/api/window';
 import { CONFIG } from '../../config';
 import type { GameDebug } from '../../debug';
 import { DesktopController } from './controller';
+import { createExit } from './lifecycle';
 import { monitorSchema } from './math';
 import type { DesktopMonitor } from './math';
 
-type ShellMode = 'window' | 'overlay';
+const shellModeSchema = z.enum(['window', 'overlay']);
+type ShellMode = z.infer<typeof shellModeSchema>;
+export interface DesktopHooks { flushSave(): void; setQuit(handler: (() => void) | null): void }
 function describe(monitor: Monitor): DesktopMonitor {
   return monitorSchema.parse({ key: `${monitor.name ?? 'display'}:${monitor.position.x},${monitor.position.y}`, scaleFactor: monitor.scaleFactor,
     workArea: { x: monitor.workArea.position.x, y: monitor.workArea.position.y, width: monitor.workArea.size.width, height: monitor.workArea.size.height } });
 }
-export async function startDesktop(game: GameDebug, redraw: () => void): Promise<void> {
+export async function startDesktop(game: GameDebug, redraw: () => void, hooks: DesktopHooks): Promise<void> {
   if (!isTauri()) return;
   document.body.classList.add('native-shell');
   const win = getCurrentWindow();
-  const mode: ShellMode = window.__TASKBAR_SHELL_MODE__ === 'window' ? 'window' : 'overlay';
+  const mode: ShellMode = shellModeSchema.parse(await invoke('shell_mode'));
+  const exit = createExit(() => hooks.flushSave(), command => invoke(command));
   if (mode === 'window') document.body.classList.add('native-window');
   let stopped = false, timer = 0, nextMonitorPoll = 0, dockDirty = true, lastHeight = 0;
   let selected: Monitor | undefined;
@@ -43,7 +49,10 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
     try { await win.hide(); } catch (failure) { record(failure); }
   }
   const dirty = (): void => { dockDirty = true; redraw(); };
-  const unlisten = await Promise.all([win.onScaleChanged(dirty), win.onMoved(dirty)]);
+  const unlisten = await Promise.all([win.onScaleChanged(dirty), win.onMoved(dirty),
+    // Tray/menu-bar requests: flush the save, then let the native side exit or relaunch.
+    listen('shell://quit', () => { void exit('quit_app'); }), listen('shell://relaunch', () => { void exit('relaunch_app'); })]);
+  hooks.setQuit(() => { void exit('quit_app'); });
   const stop = (): void => { stopped = true; clearTimeout(timer); for (const off of unlisten) off(); };
   window.addEventListener('pagehide', stop, { once: true });
   window.__shell = {
@@ -55,7 +64,7 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
       if (!Number.isInteger(index) || !monitor) throw new Error('Monitor index out of range');
       selected = monitor; dockDirty = true;
     },
-    quit: () => win.close(),
+    quit: () => exit('quit_app'),
   };
   async function poll(): Promise<void> {
     if (stopped) return;
@@ -86,7 +95,6 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
 }
 declare global {
   interface Window {
-    __TASKBAR_SHELL_MODE__?: 'window' | 'overlay';
     __shell?: {
       getDiagnostics(): { mode: 'window' | 'overlay'; active: boolean; ignoring: boolean; dockCount: number; hitTests: number; monitor: string; logicalHeight: number; errors: { at: number; message: string }[]; config: typeof CONFIG.desktop };
       monitors(): Promise<DesktopMonitor[]>; selectMonitor(index: number): Promise<void>; quit(): Promise<void>;

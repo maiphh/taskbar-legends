@@ -11,10 +11,10 @@ The original browser renderer still uses a native-pixel framebuffer. The Tauri C
 - `npm run desktop:dev`: Tauri + Vite; `npm run desktop:build -- --bundles nsis,msi`: Windows installers.
 - `npm run native:check`, `npm run native:test`, `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`.
 - `window.__game` remains unchanged except hit regions now correctly include canvas placement within the native host.
-- Native only: `__shell.getDiagnostics()`, `await __shell.monitors()`, `await __shell.selectMonitor(1)`, `await __shell.quit()`.
+- Native only: `__shell.getDiagnostics()`, `await __shell.monitors()`, `await __shell.selectMonitor(1)`, `await __shell.quit()` (save then exit, same path as the tray/menu-bar Quit and the desktop-only HUD X button).
 - `npm run shot:desktop`: Playwright runs the actual production adapter/UI with an explicitly emulated native IPC boundary at100/125/150%; validates logical host heights, one-time panel resize, tab stability, hit transitions, drift correction and fail-safe hiding. This is NOT real OS click-through proof.
 
-Native capabilities are limited to the local main window's monitor/geometry, cursor, ignore-input, visibility and close operations plus listener registration and the main-window-only bounds command. That command validates dimensions and is explicitly gated by its generated app permission. There is no filesystem/shell/plugin/remote-origin grant. License texts and credits are bundled as application resources. The generated app icon is original geometric placeholder art.
+Native capabilities are limited to the local main window's monitor/geometry, cursor, ignore-input, visibility and close operations plus listener registration, the main-window-only bounds command, and the shell mode/save-then-exit commands (`shell_mode`, `quit_app`, `relaunch_app`). The tray/menu-bar menu (Show/Hide, Opaque window, Save and quit) is native; it asks the page to flush localStorage before exiting and force-exits after 3 s if the page never answers. The opaque-window choice persists in `shell.json` in the app config directory and applies on relaunch. That command validates dimensions and is explicitly gated by its generated app permission. There is no filesystem/shell/plugin/remote-origin grant. License texts and credits are bundled as application resources. The generated app icon is original geometric placeholder art.
 
 ## Build limitation on this box
 

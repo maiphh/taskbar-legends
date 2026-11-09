@@ -64,7 +64,7 @@ const debug: GameDebug = {
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
 };
 window.__game = debug;
-void startDesktop(debug, resize).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));
+void startDesktop(debug, resize, { flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler) }).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
 void debug.whenReady().then(() => { if (debug.getAssetErrors().length) showNotice('Some UI/art unavailable; see __game.getAssetErrors().'); });
 function frame(now: number): void {
