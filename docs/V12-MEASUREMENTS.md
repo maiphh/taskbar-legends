@@ -41,3 +41,5 @@ Shots: shots/12-boss-countdown-1280.png, shots/13-boss-countdown-640.png, shots/
 ## Earlier M2 Windows deliverable
 
 Draft PRhttps://github.com/maiphh/taskbar-legends/pull/2, base m1-prototype, never merged; all standard/native PR checks pass. Artifact https://github.com/maiphh/taskbar-legends/actions/runs/42569924005/artifacts/13652871616 — taskbar-legends-windows-x64; raw .exe, NSIS .exe and MSI headers downloaded/verified. Unsigned, GitHub sign-in,14-day retention. This artifact is M2commit57e15b2 and does **not** contain this separate balance branch. Real Windows interaction/DPI/installer acceptance remains pending docs/M2-WINDOWS-TESTS.md on M2. M1preview remains unchanged.
+
+CI verified: https://github.com/maiphh/taskbar-legends/actions/runs/42572119299 (PR) and https://github.com/maiphh/taskbar-legends/actions/runs/42572098696 (push). Both pass. No PR was merged.

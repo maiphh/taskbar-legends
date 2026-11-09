@@ -5,7 +5,7 @@
 - [x] Sketch two alternatives; choose explicit clocks.
 - [x] Agree: autonomous implementation requested; no human checkpoint.
 - [x] Implement, test, measure25 seeds over9 days, and inspect boss countdown shot.
-- [ ] Verify CI and report; scrap/re-design only if invariants fail.
+- [x] Verify CI and report; scrap/re-design only if invariants fail.
 
 ## Grounding
 The20Hz wall step owns retries and encounter/stage transitions. Combat currently uses wall tick for shields, births/enrage and timeout, and rest/wave gaps share the same phase. Clear rewards happen at final kill followed by a normal stage gap. Offline averages currently read the last10reported farm durations. The reference policy runs before each global step and never automatically starts a boss without its own input action.
