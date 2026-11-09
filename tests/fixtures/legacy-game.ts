@@ -97,6 +97,7 @@ export function input(state: GameState, action: Action): void {
     case 'upgrade': upgrade(state, action.gearId); return;
     case 'equip': equip(state, action.heroId, action.gearId); return;
     case 'party': setParty(state, action.heroIds); return;
+    case 'chooseChest': return; // not in the legacy (pre-v1.4) game
     default: { const exhaustive: never = action; return exhaustive; }
   }
 }

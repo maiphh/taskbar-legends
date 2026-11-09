@@ -1,0 +1,73 @@
+{
+  "fixture": "seed 1, 40 open min reference play (1.3.0), then 2 chests with chestChoice on",
+  "checks": {
+    "960": {
+      "keepButtonsInsideHitRegions": [
+        {
+          "id": "chest-keep-0",
+          "inside": true
+        },
+        {
+          "id": "chest-keep-1",
+          "inside": true
+        }
+      ],
+      "pendingBefore": 2,
+      "afterKeep": {
+        "pending": 1,
+        "lastEvent": {
+          "type": "chestChoice",
+          "options": [
+            "itm_36deb503_00000013",
+            "itm_36deb503_00000014"
+          ],
+          "kept": "itm_36deb503_00000014"
+        },
+        "rules": [
+          "chestChoice",
+          "farmChest"
+        ]
+      },
+      "headingHotspot": {
+        "present": true,
+        "inside": true
+      },
+      "hotspotOpens": "gear"
+    },
+    "1280": {
+      "keepButtonsInsideHitRegions": [
+        {
+          "id": "chest-keep-0",
+          "inside": true
+        },
+        {
+          "id": "chest-keep-1",
+          "inside": true
+        }
+      ],
+      "pendingBefore": 2,
+      "afterKeep": {
+        "pending": 1,
+        "lastEvent": {
+          "type": "chestChoice",
+          "options": [
+            "itm_36deb503_00000013",
+            "itm_36deb503_00000014"
+          ],
+          "kept": "itm_36deb503_00000014"
+        },
+        "rules": [
+          "chestChoice",
+          "farmChest"
+        ]
+      },
+      "headingHotspot": {
+        "present": true,
+        "inside": true
+      },
+      "hotspotOpens": "gear"
+    }
+  },
+  "ok": true,
+  "errors": []
+}

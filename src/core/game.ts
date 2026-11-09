@@ -1,6 +1,6 @@
 import { CONFIG, stageConfig, ticksForSeconds } from '../config';
 import { beginEncounter, combatTick, spawnWave } from './combat';
-import { autoEquip, autoParty, blankEquipment, chest, equip, grantXp, partyPower, pull, setParty, upgrade } from './economy';
+import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setParty, upgrade } from './economy';
 import { emit, goldChange } from './events';
 import { cloneState, parseState } from './model';
 import type { Action, GameState } from './model';
@@ -88,7 +88,7 @@ function awardClear(state: GameState, duration: number, nativeDuration = duratio
     state.metrics.farmMinSeconds = Math.min(state.metrics.farmMinSeconds ?? duration, duration);
     state.metrics.farmMaxSeconds = Math.max(state.metrics.farmMaxSeconds ?? duration, duration);
     state.metrics.farmSamples += 1;
-    if (random(state) < CONFIG.rewards.farmChestChance) chest(state, stage.index);
+    farmChestRoll(state, stage.index);
     if (random(state) < CONFIG.rewards.farmTicketChance) { state.tickets += 1; state.economyRevision += 1; emit(state, { type: 'tickets', amount: 1, total: state.tickets }); }
   }
 }
@@ -125,6 +125,7 @@ export function input(state: GameState, action: Action): void {
     case 'upgrade': upgrade(state, action.gearId); powerRetry(state); return;
     case 'equip': equip(state, action.heroId, action.gearId); powerRetry(state); return;
     case 'party': setParty(state, action.heroIds); powerRetry(state); return;
+    case 'chooseChest': chooseChest(state, action.keep); powerRetry(state); return;
     default: { const exhaustive: never = action; return exhaustive; }
   }
 }

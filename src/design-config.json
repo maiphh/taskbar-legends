@@ -1211,5 +1211,79 @@
       "spend all gold on cheapest upgrade among equipped items",
       "start boss fight as soon as BOSS_READY and partyPower >= power at last boss loss * 1.03 (first attempt immediately)"
     ]
+  },
+  "v14": {
+    "status": "SPEC ONLY for balance 1.4.0. No code reads this block yet; live values above stay 1.3.0. Developer: implement docs/design.md section 18 (CR-14-01..CR-14-12); each new key's default reproduces 1.3.0. Projections in design.md section 17 come from a scratch prototype, not shipped code.",
+    "targetVersion": "1.4.0",
+    "gacha": {
+      "legendaryPityEvery": 60,
+      "legendaryPityPrefersUnowned": true,
+      "newHeroGuaranteeEvery": 20,
+      "counterRules": "pity (Epic+) resets on epic|legendary; pityLegendary resets on legendary; pityNewHero resets on a new hero; all frozen once the roster is complete"
+    },
+    "gearPity": {
+      "legendaryEvery": 100,
+      "firstLegendaryBy": 40,
+      "rollUnits": {
+        "chest": 1,
+        "expeditionChest": 4,
+        "goldChest": 3
+      }
+    },
+    "chestChoice": {
+      "options": 2,
+      "fromStage": 1,
+      "loserSalvage": "salvageBase * rarityMult gold"
+    },
+    "farmChest": {
+      "baseChance": 0.03,
+      "guaranteeEvery": 9,
+      "fromStage": 10,
+      "note": "replaces rewards.farmChestChance from stage 10; below stage 10 farmChestChance applies"
+    },
+    "offline": {
+      "expeditionChestsPerHour": 2,
+      "expeditionBestOf": 4,
+      "expeditionChestMax": 16,
+      "ticketRateVsOnline": 0.5,
+      "goblinRateVsOnline": 0.6,
+      "note": "replaces idle.offlineChestEveryHours/offlineChestMax; all capped by idle.offlineCapHours"
+    },
+    "goblin": {
+      "chancePerFarmClear": 0.00625,
+      "guaranteeWithinClears": 300,
+      "hpMultOfGrunt": 15,
+      "def": 0,
+      "atk": 0,
+      "speedPxPerSec": 55,
+      "startX": 400,
+      "endX": -40,
+      "escapeSec": 8,
+      "goldMultOfFarmClear": 10,
+      "escapeGoldShare": 0.5,
+      "ticketChance": 0.25,
+      "chestOdds": {
+        "common": 0,
+        "rare": 0.6,
+        "epic": 0.32,
+        "legendary": 0.08
+      },
+      "gapSec": 2,
+      "note": "bonus run after a repeat farm clear; native 20 Hz (not tempo-scaled); not a farm clear for T6"
+    },
+    "goldenWave": {
+      "enabled": false,
+      "chancePerFarmClear": 0.00333,
+      "clears": 3,
+      "goldMult": 2,
+      "guaranteedChest": true,
+      "note": "optional, cheap; not in v1.4 projections"
+    },
+    "economyOverrides": {
+      "rewards.startingTickets": 6,
+      "rewards.farmTicketChance": 0.0042,
+      "stages[*].firstClearTickets": 1,
+      "note": "apply together with gacha/offline/goblin keys; applying alone makes the roster late"
+    }
   }
 }

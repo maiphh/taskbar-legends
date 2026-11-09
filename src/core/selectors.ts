@@ -23,7 +23,7 @@ export function affordability(state: GameState): Affordability {
   const heroUpgrade = cheapestEquippedUpgrade(state);
   return {
     heroes: heroUpgrade !== undefined && upgradable(state, heroUpgrade),
-    gear: state.inventory.some(item => upgradable(state, item)) || betterUnequippedGear(state) !== undefined,
+    gear: !!state.pendingChoice?.length || state.inventory.some(item => upgradable(state, item)) || betterUnequippedGear(state) !== undefined,
     recruit: state.tickets >= CONFIG.gacha.costTickets,
     boss: state.progress.kind === 'BOSS_READY',
   };

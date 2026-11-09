@@ -24,8 +24,24 @@ const stageDefinition = z.object({ id: z.string(), index: z.number().int().posit
 // Replace design-config.json with the designer's next delivery; config.json wins over prose.
 // Only underspecified implementation/presentation constants are added here.
 export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0) });
+/**
+ * v1.4 code requests (design.md §18). config.json → `v14` carries the designer's *target* values; the game reads them only
+ * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default and the game is 1.3.0.
+ * Implemented here: CR-14-08 chestChoice, CR-14-09 farmChest. Other v14 keys are parsed loosely and stay inert.
+ */
+const v14Schema = z.looseObject({
+  chestChoice: z.looseObject({ options: z.number().int().min(1).max(2), fromStage: z.number().int().positive() }),
+  farmChest: z.looseObject({ baseChance: z.number().min(0).max(1), guaranteeEvery: z.number().int().positive(), fromStage: z.number().int().positive() }),
+});
+export const V14_DESIGN = v14Schema.parse(design.v14);
+export const v14RuleSchema = z.enum(['chestChoice', 'farmChest']);
+export type V14Rule = z.infer<typeof v14RuleSchema>;
+export interface V14Live { chestChoice: { options: number; fromStage: number }; farmChest: { baseChance: number; guaranteeEvery: number; fromStage: number } | null }
+// §18 defaults: options 1 (off) and farmChest null (→ rewards.farmChestChance everywhere).
+const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null });
 export const CONFIG = {
   ...design,
+  v14: v14Defaults(),
   combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
   progression: { ...design.progression, ...z.object({ powerGainRetryMinSec: z.number().finite().nonnegative().default(0) }).parse(design.progression) },
   ui: uiTokens,
@@ -34,7 +50,7 @@ export const CONFIG = {
   runtime: {
     eventLogLimit: 600, saveKey: 'taskbar-legends:v1', autosaveSeconds: 5, maxFrameDeltaSeconds: 0.25,
     maxStepTicks: 20_000_000, damageFloatSeconds: 0.8, minAttackIntervalTicks: 8,
-    hpPower: 0.2, atkPower: 4, defPower: 2, salvageSpentPct: 0.1, salvageBase: 5,
+    hpPower: 0.2, atkPower: 4, defPower: 2, salvageSpentPct: 0.1, salvageBase: 5, chestChoiceQueueMax: 3,
     duplicateGold: 100, pityEpicChance: 0.765, pityLegendaryChance: 0.235,
     percentPrecision: 1000, rewardRounding: 'nearest',
     gearSecondaryPower: 100, maxCampaignWaves: Math.max(...design.stages.map(stage => stage.waves.length)),
@@ -64,6 +80,15 @@ export type OfflineRewardsTokens = UiTokens['offlineRewards'];
 export type CoreLoopFeedbackTokens = UiTokens['coreLoopFeedback'];
 export type RarityDropTokens = UiTokens['rarityDrop'];
 export type FontTokens = UiTokens['font'];
+/** Switches v1.4 rules on (designer values) or back to their 1.3.0 defaults. Rules are not saved; sims and the preview opt in. */
+export function setV14Rules(rules: readonly V14Rule[]): void {
+  const on = new Set(rules.map(rule => v14RuleSchema.parse(rule)));
+  CONFIG.v14.chestChoice = on.has('chestChoice') ? { options: V14_DESIGN.chestChoice.options, fromStage: V14_DESIGN.chestChoice.fromStage } : v14Defaults().chestChoice;
+  CONFIG.v14.farmChest = on.has('farmChest') ? { baseChance: V14_DESIGN.farmChest.baseChance, guaranteeEvery: V14_DESIGN.farmChest.guaranteeEvery, fromStage: V14_DESIGN.farmChest.fromStage } : null;
+}
+export function activeV14Rules(): V14Rule[] {
+  return v14RuleSchema.options.filter(rule => rule === 'chestChoice' ? CONFIG.v14.chestChoice.options > 1 : CONFIG.v14.farmChest !== null);
+}
 export const TICK_MS = 1000 / CONFIG.sim.ticksPerSecond;
 export const ticksForSeconds = (seconds: number): number => Math.round(seconds * CONFIG.sim.ticksPerSecond);
 export function stageConfig(stage: number) {

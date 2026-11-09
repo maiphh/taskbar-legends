@@ -42,6 +42,8 @@ export const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('autoParty') }).strict(),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema }).strict(),
   z.object({ type: z.literal('equip'), heroId: z.string(), gearId: itemIdSchema }).strict(),
+  // CR-14-08: keep option 0 or 1 of the oldest pending chest choice; the other is salvaged.
+  z.object({ type: z.literal('chooseChest'), keep: z.number().int().min(0).max(1) }).strict(),
   z.object({ type: z.literal('party'), heroIds: z.array(z.string()).length(CONFIG.sim.partySize) }).strict(),
 ]);
 export type Action = z.infer<typeof actionSchema>;
@@ -63,6 +65,8 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('retry'), stage: stageNumber, manual: z.boolean() }),
   z.object({ type: z.literal('pull'), heroId: z.string(), rarity: raritySchema, duplicate: z.boolean(), pity: z.boolean() }),
   z.object({ type: z.literal('gear'), gearId: itemIdSchema, slot: slotSchema, rarity: raritySchema }),
+  // CR-14-08: emitted when a pick-1-of-2 chest resolves (by the player, or auto-picked by score when the queue overflows).
+  z.object({ type: z.literal('chestChoice'), options: z.tuple([itemIdSchema, itemIdSchema]), kept: itemIdSchema }),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema, level: positive, cost: positive }),
   z.object({ type: z.literal('tickets'), amount: positive, total: natural }),
   // seconds = applied (capped) time; rawSeconds = uncapped time away; heroes = every hero that received offline XP.
@@ -73,7 +77,7 @@ const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSche
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
   // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
-  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0')]).transform(() => CONFIG.version), tick: natural,
+  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.4.0')]).transform(() => CONFIG.version), tick: natural,
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
   highestCleared: natural.max(CONFIG.stages.length), progress: progressSchema,
@@ -96,6 +100,10 @@ export const stateSchema = z.object({
     farmMinSeconds: finite.nonnegative().nullable(), farmMaxSeconds: finite.nonnegative().nullable(), farmSamples: natural,
     maxNonBossStallSeconds: finite.nonnegative(),
   }).strict(),
+  // v1.4 (CR-14-08/09), optional so 1.3.0 saves load unchanged: unresolved pick-1-of-2 chests (oldest first, ≤ 3)
+  // and repeat farm clears since the last farm chest at stage ≥ farmChest.fromStage.
+  pendingChoice: z.array(z.tuple([gearSchema, gearSchema])).max(CONFIG.runtime.chestChoiceQueueMax).optional(),
+  farmChestDry: natural.optional(),
   eventSeq: natural, eventCounts: z.record(z.string(), natural), events: z.array(eventSchema).max(CONFIG.runtime.eventLogLimit),
 }).strict().superRefine((state, context) => {
   const invalid = (message: string): void => context.addIssue({ code: 'custom', message });
@@ -108,6 +116,10 @@ export const stateSchema = z.object({
   const gearIds = new Set(state.inventory.map(item => item.id));
   if (gearIds.size !== state.inventory.length || state.inventory.some(item => item.id >= itemId(state.seed, state.nextGearId) || !item.id.startsWith(itemId(state.seed, 0).slice(0, 13))
     || item.templateId !== gearTemplateId(item.slot, item.rarity))) invalid('Invalid gear IDs');
+  const pendingIds = (state.pendingChoice ?? []).flat().map(item => item.id);
+  if (new Set(pendingIds).size !== pendingIds.length || pendingIds.some(id => gearIds.has(id) || id >= itemId(state.seed, state.nextGearId) || !id.startsWith(itemId(state.seed, 0).slice(0, 13)))
+    || (state.pendingChoice ?? []).flat().some(item => item.templateId !== gearTemplateId(item.slot, item.rarity))) invalid('Invalid pending chest choice');
+  if (state.farmChestDry !== undefined && CONFIG.v14.farmChest && state.farmChestDry >= CONFIG.v14.farmChest.guaranteeEvery) invalid('Farm chest dry run beyond its guarantee');
   const equipped = new Set<string>();
   for (const hero of state.roster) for (const slot of slotSchema.options) {
     const id = hero.equipment[slot];

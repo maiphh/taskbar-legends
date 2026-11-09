@@ -2,13 +2,13 @@ import { CONFIG, TICK_MS, heroConfig, slotSchema, stageConfig } from './config';
 import { pulseGrowPx } from './motion';
 import { BODY, FONT_FILES, HEADING, LINE_BOX, fitSize, fontFor, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
-import { cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
+import { bestChoice, cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
 import { bossSecondsRemaining, statusText } from './core/game';
 import { affordability } from './core/selectors';
 import type { Action, GameState, Gear, ItemId } from './core/model';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
-const AVAILABLE: Record<PanelTab, string> = { heroes: ': gear upgrade affordable', gear: ': upgrade or better gear available', recruit: ': ticket ready to pull' };
+const AVAILABLE: Record<PanelTab, string> = { heroes: ': gear upgrade affordable', gear: ': upgrade, better gear or a chest choice available', recruit: ': ticket ready to pull' };
 export interface Rect { x: number; y: number; width: number; height: number }
 export interface SourceHitRegion extends Rect { kind: 'hud' | 'panel'; id: string }
 interface Control extends Rect { id: string; label: string; disabled: boolean; click(): void; tooltip: string; cardIndex?: number }
@@ -187,6 +187,13 @@ export class PixelUI {
     this.text(ctx, label, rect.x + labelX, rect.y + Math.floor((rect.height - LINE_BOX) / 2) + (this.pressed === id ? 1 : 0), color, BODY, options.bold ?? false, rect.width - labelX - (options.icon ? 5 : 4), { exactY: true });
     if (focus) { ctx.fillStyle = palette.text; ctx.fillRect(rect.x + 3, rect.y + 3, rect.width - 6, 1); ctx.fillRect(rect.x + 3, rect.y + rect.height - 4, rect.width - 6, 1); ctx.fillRect(rect.x + 3, rect.y + 3, 1, rect.height - 6); ctx.fillRect(rect.x + rect.width - 4, rect.y + 3, 1, rect.height - 6); }
   }
+  /** A clickable region drawn by its caller (no 9-slice); still a real button for focus, aria and hit regions. */
+  private hotspot(ctx: CanvasRenderingContext2D, id: string, rect: Rect, click: () => void, tooltip: string): void {
+    this.controls.set(id, { ...rect, id, label: '', disabled: false, click, tooltip });
+    if (this.focused !== id && this.hovered !== id) return;
+    ctx.fillStyle = this.focused === id ? palette.text : palette.gold;
+    ctx.fillRect(rect.x, rect.y, rect.width, 1); ctx.fillRect(rect.x, rect.y + rect.height - 1, rect.width, 1); ctx.fillRect(rect.x, rect.y, 1, rect.height); ctx.fillRect(rect.x + rect.width - 1, rect.y, 1, rect.height);
+  }
   /**
    * Affordability pip (ui.md §10): 6x6 fill at (x+w-10, y+2) with a 1 px ink rim and a 2x2 highlight; red for the boss.
    * When a pip turns on it grows to 8x8 for 200 ms of each 1000 ms cycle, 3 cycles, then stays static. Hover, focus,
@@ -269,7 +276,14 @@ export class PixelUI {
     // Boss countdown (#3) in the heading row: `BOSS {id}` clipped to leave the timer its fixed slot at islandWidth-80. Galmuri11 Bold 12 px.
     const bossSeconds = bossReady ? null : bossSecondsRemaining(state);
     const heading = progress.kind === 'BOSS_READY' ? boss.heading.replace('{id}', stageConfig(progress.bossStage).id) : bossSeconds !== null ? `BOSS ${stage?.id ?? ''}` : progress.kind === 'PUSHING' ? `GREENWAY / ${stage?.id ?? ''}` : statusText(state).replace(', next try in ', ' / ');
-    this.text(ctx, heading, 20, coreY + island.headingDrawY, palette.gold, BODY, true, islandWidth - (bossSeconds !== null ? 100 : 20), { exactY: true });
+    // CR-14-08 / design.md §16: a pending chest choice takes the heading ("Chest: pick 1 of 2", fallback "Pick 1/2"); a running boss countdown keeps the heading; BOSS_READY keeps its Fight button.
+    const choices = state.pendingChoice?.length ?? 0, prompt = choices > 0 && bossSeconds === null;
+    if (prompt) {
+      const room = islandWidth - 40, full = 'Chest: pick 1 of 2', label = this.measureText(full, BODY, true) <= room ? full : 'Pick 1/2';
+      this.text(ctx, label, 20, coreY + island.headingDrawY, palette.gold, BODY, true, room, { exactY: true });
+      this.icon(ctx, 'chest', islandWidth - 12, coreY + island.headingDrawY - 2);
+      this.hotspot(ctx, 'chest-choice', { x: 16, y: coreY + 10, width: islandWidth - 8, height: 20 }, () => this.setPanel('gear'), `Chest choice: keep 1 of 2 items, the other is salvaged${choices > 1 ? ` (${choices} waiting)` : ''}`);
+    } else this.text(ctx, heading, 20, coreY + island.headingDrawY, palette.gold, BODY, true, islandWidth - (bossSeconds !== null ? 100 : 20), { exactY: true });
     if (bossSeconds !== null) this.text(ctx, `TIME ${Math.floor(bossSeconds / 60)}:${String(bossSeconds % 60).padStart(2, '0')}`, islandWidth - 80, coreY + island.headingDrawY, bossSeconds <= CONFIG.view.bossCountdownWarnSec ? palette.red : palette.gold, BODY, true, undefined, { exactY: true });
     if (!bossReady || !boss.hidesWaveLabel) this.text(ctx, `WAVE ${state.wave}/${stage?.waves.length ?? 3}`, 20, coreY + island.row2DrawY, palette.muted, BODY, false, undefined, { exactY: true });
     this.icon(ctx, 'gold', compact ? 108 : 160, coreY + island.coinIconY); this.text(ctx, short(state.gold), compact ? 128 : 182, coreY + island.row2DrawY, palette.gold, BODY, true, compact ? 70 : 96, { exactY: true });
@@ -366,9 +380,11 @@ export class PixelUI {
   }
   private drawGear(ctx: CanvasRenderingContext2D, state: GameState, panel: Rect): void {
     const x = panel.x, cols = this.gearColumns(), detailX = x + (panel.width >= 720 ? 424 : panel.width - 232), detailWidth = panel.width >= 720 ? 280 : 216;
-    this.text(ctx, `INVENTORY ${state.inventory.length}/${CONFIG.gear.inventoryCap}`, x + 16, 80, palette.text, BODY, true);
+    const choice = state.pendingChoice?.[0];
+    if (choice) this.drawChestChoice(ctx, state, choice, x + 16, detailX - 16, state.pendingChoice?.length ?? 1);
+    else this.text(ctx, `INVENTORY ${state.inventory.length}/${CONFIG.gear.inventoryCap}`, x + 16, 80, palette.text, BODY, true);
     if (!state.inventory.some(item => item.id === this.selectedGear)) this.selectedGear = state.inventory[0]?.id ?? null;
-    for (let visible = 0; visible < cols * 5; visible += 1) {
+    for (let visible = 0; visible < (choice ? 0 : cols * 5); visible += 1) {
       const item = state.inventory[this.gearRow * cols + visible];
       const rect = { x: x + 16 + visible % cols * 48, y: 112 + Math.floor(visible / cols) * 48, width: 40, height: 40 };
       if (!item) { this.frame(ctx, rect, 'button-disabled-9slice.png'); continue; }
@@ -384,6 +400,30 @@ export class PixelUI {
     const cost = item ? upgradeCost(item) : 0;
     this.button(ctx, 'gear-upgrade', item ? `Upgrade ${short(cost)} G` : 'Upgrade', { x: x + panel.width - 184, y: 364, width: 168, height: 28 }, () => { if (item) this.onAction({ type: 'upgrade', gearId: item.id }); }, { disabled: !item || item.level >= CONFIG.gear.upgrade.maxLevel || state.gold < cost, tooltip: item && state.gold < cost ? `Need ${cost - state.gold} more gold` : `${cost} gold; maximum +${CONFIG.gear.upgrade.maxLevel}` });
     this.button(ctx, 'gear-equip', 'Equip', { x: x + panel.width - 288, y: 364, width: 96, height: 28 }, () => { const heroId = state.partyIds[this.targetSlot]; if (item && heroId) this.onAction({ type: 'equip', heroId, gearId: item.id }); }, { disabled: !item, tooltip: `Equip to slot ${this.targetSlot + 1}: ${heroConfig(state.partyIds[this.targetSlot] ?? '').name}` });
+  }
+  /** CR-14-08 pick-1-of-2: the oldest pending chest as two cards with Keep buttons, in the inventory grid's place. */
+  private drawChestChoice(ctx: CanvasRenderingContext2D, state: GameState, options: readonly [Gear, Gear], left: number, right: number, waiting: number): void {
+    this.text(ctx, 'CHEST: PICK 1 OF 2', left, 80, palette.gold, BODY, true);
+    if (waiting > 1) { const label = `${waiting} WAITING`; this.text(ctx, label, right - this.measureText(label), 80, palette.muted, BODY); }
+    const width = Math.floor((right - left - 8) / 2), target = state.roster.find(hero => hero.id === state.partyIds[this.targetSlot]);
+    options.forEach((item, index) => {
+      const card = { x: left + index * (width + 8), y: 104, width, height: 248 }, other = options[index === 0 ? 1 : 0];
+      const tier = CONFIG.ui.rarity[item.rarity];
+      this.frame(ctx, card);
+      ctx.fillStyle = tier.frame; ctx.fillRect(card.x + 4, card.y + 4, card.width - 8, 2);
+      this.text(ctx, `${item.rarity} ${item.slot}`.toUpperCase(), card.x + 12, card.y + 14, tier.label, BODY, true, card.width - 24);
+      this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', card.x + 12, card.y + 40, 3);
+      let row = 0;
+      for (const [key, value] of Object.entries(item.stats)) if (value) this.text(ctx, `+ ${key.toUpperCase()} ${key.endsWith('Pct') ? `${(value * 100).toFixed(1)}%` : value.toFixed(0)}`, card.x + 72, card.y + 44 + row++ * 20, palette.green, BODY, false, card.width - 80);
+      this.text(ctx, `SCORE ${gearScore(item).toFixed(0)}`, card.x + 12, card.y + 104, palette.text, BODY, false, card.width - 24);
+      const equipped = state.inventory.find(gear => gear.id === target?.equipment[item.slot]);
+      const delta = gearScore(item) - (equipped ? gearScore(equipped) : 0);
+      this.text(ctx, `vs slot ${this.targetSlot + 1}: ${delta >= 0 ? '+' : ''}${delta.toFixed(0)}`, card.x + 12, card.y + 128, delta >= 0 ? palette.green : palette.red, BODY, false, card.width - 24);
+      this.text(ctx, `DROP ${CONFIG.stages[item.dropStage - 1]?.id ?? ''}`, card.x + 12, card.y + 152, palette.muted, BODY, false, card.width - 24);
+      this.text(ctx, `Other salvaged +${Math.round(CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[other.rarity])} G`, card.x + 12, card.y + 176, palette.muted, BODY, false, card.width - 24);
+      this.button(ctx, `chest-keep-${index}`, 'Keep', { x: card.x + 12, y: card.y + 204, width: card.width - 24, height: 28 }, () => this.onAction({ type: 'chooseChest', keep: index }),
+        { tooltip: `Keep this ${item.rarity} ${item.slot}; salvage the other`, bold: true, ...(bestChoice(options) === index ? { selected: true } : {}) });
+    });
   }
   private gearDetail(ctx: CanvasRenderingContext2D, state: GameState, item: Gear, x: number, width: number): void {
     this.text(ctx, `${item.rarity} ${item.slot}`, x + 16, 96, palette.gold, BODY, true, width - 32);

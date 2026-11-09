@@ -27,7 +27,19 @@ jobs:
         run: |
           npm run --silent sim -- --policy reference --days 1 --seeds 2 --gacha-seeds 32 > sim-aggregate-smoke.json
           node --input-type=module -e "import fs from 'node:fs'; const s=JSON.parse(fs.readFileSync('sim-aggregate-smoke.json','utf8')); if(s.seedCount!==2 || s.targets.length!==7 || !s.targets.every(t=>'p10' in t.distribution && 'median' in t.distribution && 'p90' in t.distribution)) throw new Error('Invalid aggregate smoke');"
+      - name: v1.4 rules sim smoke (chestChoice + farmChest)
+        run: |
+          npm run --silent sim -- --seed 1 --hours 1 --v14 all > sim-v14-smoke.json
+          node --input-type=module -e "import fs from 'node:fs'; const s=JSON.parse(fs.readFileSync('sim-v14-smoke.json','utf8')); if(s.v14Rules.join()!=='chestChoice,farmChest' || !(s.events.chestChoice>0)) throw new Error('Invalid v14 smoke');"
       - uses: actions/upload-artifact@v4
         with:
           name: sim-smoke
-          path: sim-smoke.json
+          path: |
+            sim-smoke.json
+            sim-v14-smoke.json
+      - name: Build relative-path web preview
+        run: npx vite build --base ./ --outDir web-preview
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-preview
+          path: web-preview
