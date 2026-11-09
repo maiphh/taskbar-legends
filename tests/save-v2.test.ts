@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { CONFIG } from '../src/config';
 import { createState, step } from '../src/core/game';
 import { itemId, itemNamespace } from '../src/core/model';
 import type { GameState } from '../src/core/model';
@@ -37,12 +38,24 @@ describe('save v1 -> v2 migration', () => {
     expect(migrateV1(fixture('save-v1-geared.json'))).toEqual(migrateV1(fixture('save-v1-geared.json')));
   });
   it('matches what v2 itself produces for the same seed and inputs (ids line up; only provenance differs)', () => {
-    const migrated = migrateV1(fixture('save-v1-geared.json')).state;
-    const fresh = referenceRun(11, migrated.tick);
+    // Rebuild a v1-format save from a run under the current balance, so this holds across balance passes.
+    const fresh = referenceRun(11, 20 * 3600 * 2);
+    const serial = (id: string): number => Number.parseInt(id.slice(-8), 16);
+    const v1State = { ...structuredClone(fresh), version: 1,
+      inventory: fresh.inventory.map(item => ({ id: serial(item.id), slot: item.slot, rarity: item.rarity, dropStage: item.dropStage, level: item.level, spent: item.spent, stats: item.stats })),
+      roster: fresh.roster.map(hero => ({ ...hero, equipment: Object.fromEntries(Object.entries(hero.equipment).map(([slot, id]) => [slot, id === null ? null : serial(id)])) })),
+      events: fresh.events.map(event => event.data.type === 'gear' || event.data.type === 'upgrade' ? { ...event, data: { ...event.data, gearId: serial(event.data.gearId) } } : event) };
+    expect(fresh.inventory.length).toBeGreaterThan(10);
+    const migrated = migrateV1({ format: 'taskbar-legends-save-v1', savedAtMs: 0, remainderMs: 0, state: v1State }).state;
     const withoutProvenance = (items: GameState['inventory']) => items.map(item => ({ ...item, acquiredAt: null }));
-    expect(withoutProvenance(fresh.inventory)).toEqual(withoutProvenance(migrated.inventory));
-    expect(fresh.roster).toEqual(migrated.roster);
-    expect({ ...fresh, inventory: [], events: [] }).toEqual({ ...migrated, inventory: [], events: [] });
+    expect(withoutProvenance(migrated.inventory)).toEqual(withoutProvenance(fresh.inventory));
+    expect(migrated.roster).toEqual(fresh.roster);
+    expect(migrated.events).toEqual(fresh.events);
+    expect({ ...migrated, inventory: [] }).toEqual({ ...fresh, inventory: [] });
+  });
+  it('loads v1 fixtures saved under an earlier balance version and restamps them to the current one', () => {
+    expect((fixture('save-v1-geared.json') as { state: { balance: string } }).state.balance).toBe('1.1.0');
+    expect(migrateV1(fixture('save-v1-geared.json')).state.balance).toBe(CONFIG.version);
   });
   it('loads a fresh v1 save through restoreSave, and resaves as v2 with wallet and inventory split out', () => {
     const raw = JSON.stringify(fixture('save-v1-fresh.json'));
