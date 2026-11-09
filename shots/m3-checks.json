@@ -1,0 +1,486 @@
+{
+  "fixture": "seed 3, all v1.4 rules, 40 open min reference play, tickets 21, pityLegendary 59",
+  "ok": true,
+  "checks": {
+    "960": {
+      "audioBeforeGesture": false,
+      "recruit-one": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "recruit-ten": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "sound-toggle": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "volume-down": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "volume-up": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "mutedAfterToggle": true,
+      "audioSettings": {
+        "ui": {
+          "muted": false,
+          "volume": 0.4
+        },
+        "stored": "{\"muted\":false,\"volume\":0.4}",
+        "engine": {
+          "muted": false,
+          "volume": 0.4
+        }
+      },
+      "audioUnlockedAfterGesture": true,
+      "singleReveal": {
+        "count": 1,
+        "pulls": [
+          {
+            "heroId": "mh3",
+            "rarity": "legendary",
+            "pity": true,
+            "badge": "new",
+            "gold": 160
+          }
+        ],
+        "skipped": false,
+        "cued": false,
+        "done": false
+      },
+      "reveal-skip": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "afterSkip": {
+        "count": 1,
+        "pulls": [
+          {
+            "heroId": "mh3",
+            "rarity": "legendary",
+            "pity": true,
+            "badge": "new",
+            "gold": 160
+          }
+        ],
+        "skipped": true,
+        "cued": true,
+        "done": true
+      },
+      "reveal-ok": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "reveal-again": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "afterOk": null,
+      "tenReveal": [
+        "rare/star",
+        "epic/star",
+        "rare/gold",
+        "common/gold",
+        "rare/star",
+        "common/gold",
+        "common/star",
+        "rare/gold",
+        "common/gold",
+        "rare/gold"
+      ],
+      "tenDone": true,
+      "tenAgain": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "afterTabSwitch": null,
+      "cues": [
+        "hit_1",
+        "hit_2",
+        "enemy_death",
+        "coin_pickup_2",
+        "enemy_death",
+        "ui_open",
+        "ui_click",
+        "gacha_pull",
+        "ui_click",
+        "gacha_legendary_sting",
+        "ui_click",
+        "ui_click",
+        "gacha_pull",
+        "gacha_reveal_epic"
+      ],
+      "away": {
+        "seconds": 28800,
+        "rawSeconds": 45600,
+        "clears": 736,
+        "gold": 349600,
+        "xp": 349600,
+        "chests": 16,
+        "heroes": [
+          {
+            "id": "mw2",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "fw",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "priest",
+            "levelBefore": 3,
+            "levelAfter": 10
+          }
+        ],
+        "expeditionChests": 16,
+        "tickets": 5,
+        "capped": true
+      },
+      "welcome-collect": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "welcome-close": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "welcome": {
+        "seconds": 28800,
+        "rawSeconds": 45600,
+        "clears": 736,
+        "gold": 349600,
+        "xp": 349600,
+        "chests": 16,
+        "heroes": [
+          {
+            "id": "mw2",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "fw",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "priest",
+            "levelBefore": 3,
+            "levelAfter": 10
+          }
+        ],
+        "expeditionChests": 16,
+        "tickets": 5,
+        "capped": true,
+        "stage": 19,
+        "best": {
+          "rarity": "legendary",
+          "slot": "armor"
+        },
+        "choices": 3,
+        "closing": false
+      },
+      "afterCollect": null,
+      "closingAfterX": null,
+      "audioAfterReload": {
+        "stored": "{\"muted\":false,\"volume\":0.4}",
+        "engine": {
+          "muted": false,
+          "volume": 0.4
+        }
+      },
+      "loop": {
+        "engine": "chromium",
+        "unlocked": true,
+        "loaded": 22,
+        "loop": {
+          "format": "ogg",
+          "offsetSamples": 0,
+          "loopStart": 0,
+          "loopEnd": 48
+        }
+      }
+    },
+    "1280": {
+      "audioBeforeGesture": false,
+      "recruit-one": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "recruit-ten": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "sound-toggle": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "volume-down": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "volume-up": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "mutedAfterToggle": true,
+      "audioSettings": {
+        "ui": {
+          "muted": false,
+          "volume": 0.4
+        },
+        "stored": "{\"muted\":false,\"volume\":0.4}",
+        "engine": {
+          "muted": false,
+          "volume": 0.4
+        }
+      },
+      "audioUnlockedAfterGesture": true,
+      "singleReveal": {
+        "count": 1,
+        "pulls": [
+          {
+            "heroId": "mh3",
+            "rarity": "legendary",
+            "pity": true,
+            "badge": "new",
+            "gold": 160
+          }
+        ],
+        "skipped": false,
+        "cued": false,
+        "done": false
+      },
+      "reveal-skip": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "afterSkip": {
+        "count": 1,
+        "pulls": [
+          {
+            "heroId": "mh3",
+            "rarity": "legendary",
+            "pity": true,
+            "badge": "new",
+            "gold": 160
+          }
+        ],
+        "skipped": true,
+        "cued": true,
+        "done": true
+      },
+      "reveal-ok": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "reveal-again": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "afterOk": null,
+      "tenReveal": [
+        "rare/star",
+        "epic/star",
+        "rare/gold",
+        "common/gold",
+        "rare/star",
+        "common/gold",
+        "common/star",
+        "rare/gold",
+        "common/gold",
+        "rare/gold"
+      ],
+      "tenDone": true,
+      "tenAgain": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "afterTabSwitch": null,
+      "cues": [
+        "hit_2",
+        "hit_1",
+        "enemy_death",
+        "coin_pickup_2",
+        "enemy_death",
+        "ui_open",
+        "ui_click",
+        "gacha_pull",
+        "gacha_legendary_sting",
+        "ui_click",
+        "ui_click",
+        "ui_click",
+        "gacha_pull",
+        "gacha_reveal_epic"
+      ],
+      "away": {
+        "seconds": 28800,
+        "rawSeconds": 45600,
+        "clears": 736,
+        "gold": 349600,
+        "xp": 349600,
+        "chests": 16,
+        "heroes": [
+          {
+            "id": "mw2",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "fw",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "priest",
+            "levelBefore": 3,
+            "levelAfter": 10
+          }
+        ],
+        "expeditionChests": 16,
+        "tickets": 5,
+        "capped": true
+      },
+      "welcome-collect": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "welcome-close": {
+        "present": true,
+        "disabled": false,
+        "inside": true
+      },
+      "welcome": {
+        "seconds": 28800,
+        "rawSeconds": 45600,
+        "clears": 736,
+        "gold": 349600,
+        "xp": 349600,
+        "chests": 16,
+        "heroes": [
+          {
+            "id": "mw2",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "fw",
+            "levelBefore": 3,
+            "levelAfter": 10
+          },
+          {
+            "id": "priest",
+            "levelBefore": 3,
+            "levelAfter": 10
+          }
+        ],
+        "expeditionChests": 16,
+        "tickets": 5,
+        "capped": true,
+        "stage": 19,
+        "best": {
+          "rarity": "legendary",
+          "slot": "armor"
+        },
+        "choices": 3,
+        "closing": false
+      },
+      "afterCollect": null,
+      "closingAfterX": true,
+      "welcome13": {
+        "seconds": 19200,
+        "rawSeconds": 19200,
+        "clears": 491,
+        "gold": 233225,
+        "xp": 233225,
+        "chests": 2,
+        "heroes": [
+          {
+            "id": "mw2",
+            "levelBefore": 12,
+            "levelAfter": 14
+          },
+          {
+            "id": "fw",
+            "levelBefore": 12,
+            "levelAfter": 14
+          },
+          {
+            "id": "priest",
+            "levelBefore": 12,
+            "levelAfter": 14
+          }
+        ],
+        "capped": false,
+        "stage": 19,
+        "best": {
+          "rarity": "legendary",
+          "slot": "charm"
+        },
+        "choices": 3,
+        "closing": false
+      },
+      "audioAfterReload": {
+        "stored": "{\"muted\":false,\"volume\":0.4}",
+        "engine": {
+          "muted": false,
+          "volume": 0.4
+        }
+      },
+      "loop": {
+        "engine": "chromium",
+        "unlocked": true,
+        "loaded": 22,
+        "loop": {
+          "format": "ogg",
+          "offsetSamples": 0,
+          "loopStart": 0,
+          "loopEnd": 48
+        }
+      }
+    },
+    "webkit": {
+      "engine": "webkit",
+      "unlocked": true,
+      "loaded": 22,
+      "loop": {
+        "format": "ogg",
+        "offsetSamples": 0,
+        "loopStart": 0,
+        "loopEnd": 48
+      },
+      "canPlayType": {
+        "ogg": "probably",
+        "m4a": "probably",
+        "mp3": "maybe"
+      }
+    }
+  },
+  "errors": []
+}

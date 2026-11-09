@@ -12,6 +12,7 @@ interface Group { variants?: string[]; playbackRateJitter?: number; minIntervalM
 const CLIPS = new Map<string, Clip>((manifest.clips as Clip[]).map(clip => [clip.key, clip]));
 const GROUPS = manifest.groups as Record<string, Group>;
 export const AUDIO_STORAGE_KEY = 'taskbar-legends:audio';
+const CUE_WINDOW_TICKS = 20;
 export const DEFAULT_VOLUMES = manifest.defaultVolumes;
 export interface AudioSettings { muted: boolean; volume: number }
 
@@ -154,9 +155,10 @@ export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null
   }
   return {
     consume(events) {
-      const newest = events.at(-1)?.seq ?? 0;
+      const newest = events.at(-1)?.seq ?? 0, now = events.at(-1)?.tick ?? 0;
       if (lastSeq < 0 || newest < lastSeq) { lastSeq = newest; return; }
-      for (const event of events) if (event.seq > lastSeq) for (const key of eventCues(event)) cue(key);
+      // Only events from the last second play: a load, restore or offline catch-up never replays a backlog.
+      for (const event of events) if (event.seq > lastSeq && event.tick >= now - CUE_WINDOW_TICKS) for (const key of eventCues(event)) cue(key);
       lastSeq = newest;
     },
     play: cue,

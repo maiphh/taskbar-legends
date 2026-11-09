@@ -528,7 +528,7 @@ export class PixelUI {
       this.drawShape(ctx, pull.rarity, x + shx, shy, pull.rarity === 'rare' && !this.reducedMotion && frame.burstAge !== null && frame.burstAge < 40);
       if (pull.pity) this.drawBadge(ctx, 'pity', card.x + 4, card.y + 4);
     }
-    const name = heroConfig(pull.heroId).name;
+    const name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
     if (frame.showName) this.text(ctx, name, x + sx + Math.floor((sw - this.measureText(name, BODY, true)) / 2), spec.nameY, palette.text, BODY, true);
     if (frame.showRarity) { const label = pull.rarity.toUpperCase(); this.text(ctx, label, x + sx + Math.floor((sw - this.measureText(label, BODY, true)) / 2), spec.rarityY, tier.label, BODY, true); }
     ctx.restore();
@@ -537,7 +537,7 @@ export class PixelUI {
     const x = panel.x, spec = CONFIG.ui.gacha.tenPull, rarities = reveal.pulls.map(pull => pull.rarity), frame = tenFrame(rarities, ms, this.reducedMotion);
     this.text(ctx, 'RECRUIT x10 RESULTS', x + 16, 80, palette.text, BODY, true);
     const tally = [...raritySchema.options].reverse().map(tier => [tier, rarities.filter(r => r === tier).length] as const).filter(([, n]) => n > 0).map(([tier, n]) => `${n} ${tier.toUpperCase()}`).join(' ');
-    this.text(ctx, tally, x + 704 - this.measureText(tally), 80, palette.muted, BODY);
+    if (frame.done) this.text(ctx, tally, x + 704 - this.measureText(tally), 80, palette.muted, BODY);
     ctx.save(); ctx.translate(reveal.flash ? frame.shakeX : 0, 0);
     reveal.pulls.forEach((pull, index) => {
       const [rx = 24, ry = 100, rw = 128, rh = 120] = spec.cardRects[index] ?? [], cardFrame = frame.cards[index]; if (!cardFrame) return;
@@ -550,7 +550,7 @@ export class PixelUI {
       ctx.fillStyle = tier.fill; ctx.fillRect(rect.x + 1, rect.y + 85, rect.width - 2, 35); ctx.fillStyle = tier.frame; ctx.fillRect(rect.x, rect.y + 84, rect.width, 1);
       if (rect.width < 128) return;
       if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + 64 + dot.x, rect.y + 42 + dot.y, dot.size, dot.size); }
-      let name = heroConfig(pull.heroId).name;
+      let name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
       while (this.measureText(name) > 124 && name.length > 1) name = `${name.slice(0, -2)}…`;
       this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY);
       const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
@@ -592,15 +592,21 @@ export class PixelUI {
     this.text(ctx, rule, x + cx + 16 + this.measureText(title, BODY, true) + 12, cy + 8, palette.muted, BODY, false, cw - 40 - this.measureText(title, BODY, true));
     const slots = Math.max(max, 4), perRow = Math.min(slots, 8), slot = layout.chestSlot;
     for (let i = 0; i < slots; i += 1) {
-      const sxp = x + slot.x + (i % perRow) * slot.stride, syp = slot.y + Math.floor(i / perRow) * slot.stride - (slots > 4 ? 0 : 0), size = slots > 8 ? 36 : slot.size;
+      // 4 slots: the spec's 40 px at stride 48. Expedition (16): two rows of 8 at 28 px, stride 34, 1× chest icon.
+      const dense = slots > 8, stride = dense ? 34 : slot.stride, size = dense ? 28 : slot.size;
+      const sxp = x + slot.x + (i % perRow) * stride, syp = (dense ? cy + 26 : slot.y) + Math.floor(i / perRow) * stride;
       const shown = i < data.chests ? chestSlot(i, ms, rm) : { shown: false, pop: false };
       if (!shown.shown) { ctx.fillStyle = palette.edge; ctx.fillRect(sxp, syp, size, 1); ctx.fillRect(sxp, syp + size - 1, size, 1); ctx.fillRect(sxp, syp, 1, size); ctx.fillRect(sxp + size - 1, syp, 1, size); continue; }
-      const lift = shown.pop ? -1 : 0; this.frame(ctx, { x: sxp, y: syp + lift, width: size, height: size }, 'button-9slice.png'); this.icon(ctx, 'chest', sxp + Math.floor((size - 32) / 2), syp + lift + Math.floor((size - 32) / 2), 2);
+      const lift = shown.pop ? -1 : 0, scale = size >= 40 ? 2 : 1; this.frame(ctx, { x: sxp, y: syp + lift, width: size, height: size }, 'button-9slice.png'); this.icon(ctx, 'chest', sxp + Math.floor((size - 16 * scale) / 2), syp + lift + Math.floor((size - 16 * scale) / 2), scale);
     }
     const sent = data.choices > 0 ? `${data.choices} pick-1-of-2 waiting in Gear` : 'Gear sent to inventory';
     if (slots <= 4) this.text(ctx, sent, x + 232, 262, palette.muted, BODY, false, 216);
     else this.text(ctx, sent, x + cx + 16, cy + chh - 22, palette.muted, BODY, false, cw - 32);
-    if (data.best && data.chests > 0) { const best = `Best: ${data.best.rarity[0]?.toUpperCase()}${data.best.rarity.slice(1)} ${data.best.slot[0]?.toUpperCase()}${data.best.slot.slice(1)}`; this.text(ctx, best, x + cx + cw - 16 - this.measureText(best), cy + chh - 22 - (slots <= 4 ? 0 : 0) - (slots > 4 ? 0 : 0), CONFIG.ui.rarity[data.best.rarity].label, BODY, false, 200); }
+    if (data.best && data.chests > 0) {
+      const full = `Best: ${data.best.rarity[0]?.toUpperCase()}${data.best.rarity.slice(1)} ${data.best.slot[0]?.toUpperCase()}${data.best.slot.slice(1)}`, room = cw - 48 - this.measureText(sent);
+      const best = this.measureText(full) <= room ? full : `Best: ${data.best.rarity.slice(0, 3).toUpperCase()}`;
+      this.text(ctx, best, x + cx + cw - 16 - this.measureText(best), slots <= 4 ? cy + 8 : cy + chh - 22, CONFIG.ui.rarity[data.best.rarity].label, BODY);
+    }
     // Party panel: hero tiles with level before → after.
     const [px = 464, py = 80, pw = 240, ph = 264] = layout.partyPanel, stageId = stageConfig(Math.max(1, data.stage)).id;
     this.frame(ctx, { x: x + px, y: py, width: pw, height: ph });

@@ -32,7 +32,7 @@ async function restore(): Promise<void> {
   try {
     const data = await store.load();
     if (data) { const saved = resumeSave(data, Date.now()); state = saved.state; accumulatorMs = saved.remainderMs;
-      if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq, data.state.pendingChoice?.length ?? 0));
+      if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq));
         if (!renderer.ui.welcome) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears${saved.capped ? ' (8h cap)' : ''}`); }
     }
   } catch { showNotice('Save unavailable or incompatible. Started fresh; old save retained until next save.'); }
@@ -40,12 +40,12 @@ async function restore(): Promise<void> {
 }
 void restore();
 /** Welcome-back data: the offline result plus the farm stage, the best item rolled and the choices waiting. */
-function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number, choicesBefore: number): WelcomeData {
+function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number): WelcomeData {
   let best: WelcomeData['best'] = null;
   const consider = (rarity: (typeof raritySchema.options)[number], slot: string): void => { if (!best || raritySchema.options.indexOf(rarity) > raritySchema.options.indexOf(best.rarity)) best = { rarity, slot }; };
   for (const event of state.events) if (event.seq > beforeSeq && event.data.type === 'gear') consider(event.data.rarity, event.data.slot);
   for (const pair of state.pendingChoice ?? []) for (const item of pair) if (item.acquiredAt.tick === state.tick) consider(item.rarity, item.slot);
-  return { ...result, stage: Math.max(1, state.highestCleared), best, choices: Math.max(0, (state.pendingChoice?.length ?? 0) - (result.chests ? 0 : choicesBefore)) };
+  return { ...result, stage: Math.max(1, state.highestCleared), best, choices: activeV14Rules().includes('chestChoice') && result.chests ? state.pendingChoice?.length ?? 0 : 0 };
 }
 function save(): void {
   if (restoring) return;
@@ -89,7 +89,7 @@ const debug: GameDebug = {
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
   getAudio: () => audio.debug(),
-  away: ms => { const beforeSeq = state.eventSeq, choices = state.pendingChoice?.length ?? 0, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq, choices)); render(); return { ...result }; },
+  away: ms => { const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };
 window.__game = debug;
 void startDesktop(debug, resize, { flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler) }).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));
