@@ -55,6 +55,7 @@ jobs:
       - name: Build Windows installers (retry transient upstream downloads)
         shell: pwsh
         run: |
+          $PSNativeCommandUseErrorActionPreference = $false
           for ($attempt = 1; $attempt -le 3; $attempt++) {
             npm run desktop:build -- --bundles nsis,msi 2>&1 | Tee-Object -FilePath installer-build.log
             $buildExit = $LASTEXITCODE

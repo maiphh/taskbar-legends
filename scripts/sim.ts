@@ -31,7 +31,7 @@ if (values.seeds !== undefined) {
   const gachaSeeds = z.number().int().min(1).max(100000).parse(numberOption(values['gacha-seeds'], 10000, 'gacha-seeds'));
   const report = runReferenceAggregate({ firstSeed: seed, seeds: numberOption(values.seeds, 100, 'seeds'), days: numberOption(values.days, 7, 'days'), gachaSeeds,
     onProgress: (completed, currentSeed) => { if (completed % 10 === 0 || completed === 1) process.stderr.write(`Reference aggregate: ${completed}/${values.seeds} (seed ${currentSeed})\n`); } });
-  process.stdout.write(JSON.stringify({ configSha256,
+  process.stdout.write(JSON.stringify({ configSha256, configSnapshot: design,
     ...report, elapsedRealMs: Math.round(performance.now() - start) }, null, 2) + '\n');
 } else if (values.days !== undefined) {
   const run = runReference(seed, numberOption(values.days, 7, 'days'));
