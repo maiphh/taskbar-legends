@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../src/config';
-import { BOLD_SAFE, FONT_FILES, fontFor } from '../src/font';
+import { BODY, BOLD_SAFE, FONT_FILES, HEADING, SMALL, fontFor, slotOffsetY } from '../src/font';
 
 /** Minimal TrueType cmap reader (formats 4 and 12) — enough to ask "does this face have a glyph for U+xxxx?". */
 function cmap(path: string): Set<number> {
@@ -61,14 +61,15 @@ describe('Galmuri glyph coverage', () => {
     expect(missing('Galmuri11Bold', CYRILLIC).length).toBeGreaterThan(0);
   });
   it('Vietnamese and Cyrillic bold text falls back to Regular, Latin stays Bold', () => {
-    const { bodySize, headingSize, decorativeSize } = CONFIG.ui.font;
-    expect(fontFor('PARTY CAMP', headingSize, true)).toBe('Galmuri11Bold');
-    expect(fontFor('Trại đội', headingSize, true)).toBe('Galmuri11');
-    expect(fontFor('Лагерь', bodySize, true)).toBe('Galmuri11');
-    expect(fontFor('Farming 1-7 ★', bodySize, false)).toBe('Galmuri11');
-    expect(fontFor('Hero Knight 2', decorativeSize, false)).toBe('Galmuri9');
+    expect(fontFor('PARTY CAMP', HEADING, true)).toBe('Galmuri11Bold');
+    expect(fontFor('Trại đội', HEADING, true)).toBe('Galmuri11');
+    expect(fontFor('Лагерь', BODY, true)).toBe('Galmuri11');
+    expect(fontFor('Farming 1-7 ★', BODY, false)).toBe('Galmuri11');
+    expect(fontFor('Hero Knight 2', SMALL, false)).toBe('Galmuri9');
   });
-  it('tokens use the native grid sizes', () => {
-    expect(CONFIG.ui.font).toMatchObject({ family: 'Galmuri11', bodySize: 12, headingSize: 24, decorativeSize: 10, licence: 'OFL-1.1' });
+  it('uses only native grid sizes and the designer slot offsets', () => {
+    expect([BODY, HEADING, SMALL]).toEqual([12, 24, 10]);
+    expect(CONFIG.ui.font.licence).toBe('OFL-1.1');
+    expect([slotOffsetY(BODY, false), slotOffsetY(BODY, true), slotOffsetY(HEADING, true), slotOffsetY(SMALL, false)]).toEqual([2, 2, -1, 0]);
   });
 });

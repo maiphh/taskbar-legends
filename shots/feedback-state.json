@@ -11,7 +11,17 @@
     "maxHp": 0,
     "def": 0,
     "dpsPct": 4.7,
-    "label": "+2 ATK +4.7% DPS"
+    "label": "+2 ATK  +4.7% DPS",
+    "segments": [
+      {
+        "text": "+2 ATK",
+        "kind": "stat"
+      },
+      {
+        "text": "+4.7% DPS",
+        "kind": "dps"
+      }
+    ]
   },
   "panelPopup": {
     "heroId": "mk2",
@@ -19,7 +29,17 @@
     "maxHp": 0,
     "def": 0,
     "dpsPct": 4.4,
-    "label": "+2 ATK +4.4% DPS"
+    "label": "+2 ATK  +4.4% DPS",
+    "segments": [
+      {
+        "text": "+2 ATK",
+        "kind": "stat"
+      },
+      {
+        "text": "+4.4% DPS",
+        "kind": "dps"
+      }
+    ]
   },
   "stageClear": {
     "kind": "clear",

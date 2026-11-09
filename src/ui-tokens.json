@@ -54,15 +54,56 @@
   },
   "font": {
     "family": "Galmuri11",
-    "boldFamily": "Galmuri11 Bold",
-    "decorativeFamily": "Galmuri9",
-    "bodySize": 12,
-    "headingSize": 24,
-    "decorativeSize": 10,
-    "rowHeight": 16,
-    "note": "CSS px = native grid: Galmuri11 em = 12 px (1200 upem / 100-unit pixels), Galmuri9 em = 10 px. Bold only for Latin-1 strings; Vietnamese/Cyrillic use Regular. Text is centred in the 16 px rows the HUD/panels are laid out on; body text that overflows its maxWidth drops to Galmuri9.",
     "licence": "OFL-1.1",
-    "source": "https://github.com/quiple/galmuri"
+    "source": "https://github.com/quiple/galmuri",
+    "files": "../fonts/ (Galmuri11.ttf, Galmuri11-Bold.ttf, Galmuri9.ttf, LICENSE.txt)",
+    "note": "Named sizes are cap/grid heights. Canvas font-size must be the native em: 11 -> 12px, 22 -> 24px, 9 -> 10px. Font-size 11px or 9px is off-grid and antialiases.",
+    "body": {
+      "face": "Galmuri11",
+      "cssPx": 12,
+      "capPx": 11,
+      "capTopPx": 1,
+      "lineBoxPx": 14
+    },
+    "bodyBold": {
+      "face": "Galmuri11 Bold",
+      "cssPx": 12,
+      "capPx": 11,
+      "capTopPx": 1,
+      "lineBoxPx": 14
+    },
+    "heading": {
+      "face": "Galmuri11 Bold",
+      "cssPx": 24,
+      "capPx": 22,
+      "capTopPx": 2,
+      "lineBoxPx": 28
+    },
+    "small": {
+      "face": "Galmuri9",
+      "cssPx": 10,
+      "capPx": 9,
+      "capTopPx": 1,
+      "lineBoxPx": 11,
+      "use": "non-essential hints only"
+    },
+    "render": "textBaseline top; draw at integer x,y; rasterise to an offscreen canvas and threshold alpha >=128 -> 255 else 0",
+    "slotOffsetY": {
+      "body": 2,
+      "bodyBold": 2,
+      "heading": -1,
+      "small": 0
+    },
+    "slotOffsetNote": "Text y positions in ui.md, gacha.md and offline-rewards.md are layout slots from the Pixel Operator era; draw Galmuri at slot y + slotOffsetY to keep the same optical cap centre. New coreLoopFeedback/rarityDrop rects give the real draw y.",
+    "glyphs": {
+      "middot": "U+00B7 present",
+      "plus": "present",
+      "percent": "present",
+      "star": "U+2605 present (12x11 ink at 12px)",
+      "times": "U+00D7 present",
+      "arrow": "U+2192 present"
+    },
+    "boldCoverageWarning": "Galmuri11 Bold lacks Cyrillic and most Vietnamese; localised builds use Regular + colour emphasis."
   },
   "palette": {
     "ink": "#0d121b",
@@ -92,5 +133,1133 @@
     "closedY": 74,
     "expandedY": 402,
     "clickThrough": true
+  },
+  "rarity": {
+    "order": [
+      "common",
+      "rare",
+      "epic",
+      "legendary"
+    ],
+    "source": "tl-v12 src/design-config.json rarity.order; design.md section 11 grey/blue/purple/gold",
+    "common": {
+      "frame": "#b0bcc8",
+      "fill": "#2a333e",
+      "floor": "#3a4552",
+      "label": "#b0bcc8",
+      "rimAlphaMax": 0,
+      "particles": {
+        "count": 6,
+        "sizePx": [
+          2,
+          1
+        ],
+        "speedPxPerSec": [
+          40,
+          70
+        ],
+        "lifeMs": 240,
+        "startRadiusPx": 24,
+        "colors": [
+          "#b0bcc8",
+          "#f2e9cf"
+        ]
+      },
+      "flash": {
+        "count": 0,
+        "atMs": 0,
+        "durationMs": 0
+      },
+      "shake": {
+        "amplitudePx": 0,
+        "patternPx": [],
+        "stepMs": 40
+      }
+    },
+    "rare": {
+      "frame": "#8dbfe3",
+      "fill": "#1f3347",
+      "floor": "#2b4a62",
+      "label": "#8dbfe3",
+      "rimAlphaMax": 153,
+      "particles": {
+        "count": 10,
+        "sizePx": [
+          2,
+          1
+        ],
+        "speedPxPerSec": [
+          50,
+          90
+        ],
+        "lifeMs": 280,
+        "startRadiusPx": 28,
+        "colors": [
+          "#8dbfe3",
+          "#f2e9cf"
+        ]
+      },
+      "flash": {
+        "count": 0,
+        "atMs": 0,
+        "durationMs": 0
+      },
+      "shake": {
+        "amplitudePx": 0,
+        "patternPx": [],
+        "stepMs": 40
+      }
+    },
+    "epic": {
+      "frame": "#c19cd9",
+      "fill": "#33264a",
+      "floor": "#4a3866",
+      "label": "#c19cd9",
+      "rimAlphaMax": 204,
+      "motes": {
+        "count": 6,
+        "sizePx": 1,
+        "risePx": 40,
+        "periodMs": 640
+      },
+      "particles": {
+        "count": 16,
+        "sizePx": [
+          3,
+          2
+        ],
+        "speedPxPerSec": [
+          60,
+          110
+        ],
+        "lifeMs": 320,
+        "startRadiusPx": 32,
+        "colors": [
+          "#c19cd9",
+          "#f2e9cf"
+        ]
+      },
+      "flash": {
+        "count": 0,
+        "atMs": 0,
+        "durationMs": 0
+      },
+      "shake": {
+        "amplitudePx": 0,
+        "patternPx": [],
+        "stepMs": 40
+      }
+    },
+    "legendary": {
+      "frame": "#e9bd68",
+      "fill": "#4a3818",
+      "floor": "#6a5124",
+      "label": "#e9bd68",
+      "rimAlphaMax": 255,
+      "motes": {
+        "count": 10,
+        "sizePx": 2,
+        "risePx": 56,
+        "periodMs": 560
+      },
+      "particles": {
+        "count": 24,
+        "sizePx": [
+          3,
+          2
+        ],
+        "speedPxPerSec": [
+          70,
+          130
+        ],
+        "lifeMs": 360,
+        "startRadiusPx": 36,
+        "colors": [
+          "#e9bd68",
+          "#f2e9cf",
+          "#fff0ac"
+        ]
+      },
+      "flash": {
+        "count": 1,
+        "atMs": 0,
+        "durationMs": 80
+      },
+      "shake": {
+        "amplitudePx": 1,
+        "patternPx": [
+          1,
+          -1,
+          1,
+          -1,
+          0
+        ],
+        "stepMs": 40
+      }
+    }
+  },
+  "badges": {
+    "new": {
+      "fill": "#90c99b",
+      "ink": "#0d121b",
+      "label": "NEW"
+    },
+    "duplicateStar": {
+      "fill": "#8dbfe3",
+      "ink": "#0d121b",
+      "label": "+1★"
+    },
+    "duplicateGold": {
+      "fill": "#e9bd68",
+      "ink": "#0d121b",
+      "label": "+{gold}G"
+    },
+    "pity": {
+      "fill": "#c19cd9",
+      "ink": "#0d121b",
+      "label": "PITY"
+    },
+    "heightPx": 16
+  },
+  "gacha": {
+    "frameStepMs": 40,
+    "labelRarityDelayMs": 80,
+    "skipGuardMs": 120,
+    "particleSeed": 7,
+    "flashLimiter": {
+      "minGapMs": 400,
+      "maxPerSecond": 2,
+      "hardLimitPerSecond": 3,
+      "maxPerTenPull": 2
+    },
+    "single": {
+      "stageRect": [
+        176,
+        84,
+        368,
+        212
+      ],
+      "cardRect": [
+        312,
+        160,
+        96,
+        128
+      ],
+      "nameY": 296,
+      "rarityY": 316,
+      "againRect": [
+        400,
+        364,
+        152,
+        28
+      ],
+      "okRect": [
+        560,
+        364,
+        144,
+        28
+      ],
+      "shapeSlotCenter": [
+        360,
+        152
+      ],
+      "beamRect": [
+        355,
+        88,
+        11,
+        72
+      ]
+    },
+    "tiers": {
+      "common": {
+        "totalMs": 1000,
+        "silhouette": false,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            360
+          ],
+          "flip": [
+            360,
+            520
+          ],
+          "burst": [
+            520,
+            640
+          ],
+          "labels": [
+            640,
+            1000
+          ]
+        }
+      },
+      "rare": {
+        "totalMs": 1280,
+        "silhouette": false,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            560
+          ],
+          "flip": [
+            560,
+            720
+          ],
+          "burst": [
+            720,
+            880
+          ],
+          "labels": [
+            880,
+            1280
+          ]
+        }
+      },
+      "epic": {
+        "totalMs": 1600,
+        "silhouette": true,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            760
+          ],
+          "flip": [
+            760,
+            920
+          ],
+          "silhouetteHold": [
+            920,
+            1120
+          ],
+          "burst": [
+            1120,
+            1280
+          ],
+          "labels": [
+            1280,
+            1600
+          ]
+        }
+      },
+      "legendary": {
+        "totalMs": 2000,
+        "silhouette": true,
+        "timelineMs": {
+          "pull": [
+            0,
+            120
+          ],
+          "anticipation": [
+            120,
+            960
+          ],
+          "flip": [
+            960,
+            1120
+          ],
+          "silhouetteHold": [
+            1120,
+            1360
+          ],
+          "burst": [
+            1360,
+            1520
+          ],
+          "labels": [
+            1520,
+            2000
+          ]
+        }
+      }
+    },
+    "audio": {
+      "pull": "gacha_pull",
+      "reveal": "gacha_reveal_{rarity}",
+      "click": "ui_click",
+      "open": "ui_open",
+      "close": "ui_close",
+      "legendarySting": "gacha_legendary_sting",
+      "legendaryStingFallback": "gacha_reveal_legendary",
+      "pity": "gacha_pity",
+      "burstRule": "legendary -> gacha_legendary_sting (fallback gacha_reveal_legendary); else pity -> gacha_pity; else gacha_reveal_<rarity>"
+    },
+    "tenPull": {
+      "staggerMs": 120,
+      "backsInMs": 120,
+      "flipMs": 160,
+      "highlightHoldMs": 400,
+      "cardRects": [
+        [
+          24,
+          100,
+          128,
+          120
+        ],
+        [
+          160,
+          100,
+          128,
+          120
+        ],
+        [
+          296,
+          100,
+          128,
+          120
+        ],
+        [
+          432,
+          100,
+          128,
+          120
+        ],
+        [
+          568,
+          100,
+          128,
+          120
+        ],
+        [
+          24,
+          228,
+          128,
+          120
+        ],
+        [
+          160,
+          228,
+          128,
+          120
+        ],
+        [
+          296,
+          228,
+          128,
+          120
+        ],
+        [
+          432,
+          228,
+          128,
+          120
+        ],
+        [
+          568,
+          228,
+          128,
+          120
+        ]
+      ],
+      "againRect": [
+        400,
+        364,
+        152,
+        28
+      ],
+      "okRect": [
+        560,
+        364,
+        144,
+        28
+      ],
+      "shapeCueCenterInCard": [
+        12,
+        "h-12"
+      ],
+      "shapeCueNote": "tier shape cue left of the rarity label in the label strip; never over the portrait"
+    },
+    "shapeCue": {
+      "common": "dot",
+      "rare": "diamond glint",
+      "epic": "4-point star",
+      "legendary": "crown + beam",
+      "stampAt": "burst start",
+      "source": "rarityDrop.shapes"
+    },
+    "legendaryBeam": {
+      "growMs": "burst [1360,1520], 18 px per 40 ms",
+      "hold": "static until the reveal is dismissed",
+      "reducedMotion": "static from burst start"
+    }
+  },
+  "offlineRewards": {
+    "minSecondsToShow": 60,
+    "capHours": 8,
+    "adBonus": null,
+    "countUp": {
+      "goldStartMs": 160,
+      "xpStartMs": 260,
+      "durationMs": 900,
+      "easing": "easeOutCubic",
+      "updateStepMs": 40,
+      "chestFirstMs": 1160,
+      "chestStaggerMs": 120,
+      "chestPopMs": 80,
+      "doneMs": 1640,
+      "collectSnapHoldMs": 240
+    },
+    "layout": {
+      "capBar": [
+        16,
+        66,
+        688,
+        6
+      ],
+      "goldRow": [
+        16,
+        80,
+        440,
+        64
+      ],
+      "xpRow": [
+        16,
+        152,
+        440,
+        64
+      ],
+      "chestRow": [
+        16,
+        224,
+        440,
+        120
+      ],
+      "chestSlot": {
+        "x": 32,
+        "y": 256,
+        "size": 40,
+        "stride": 48
+      },
+      "partyPanel": [
+        464,
+        80,
+        240,
+        264
+      ],
+      "collectRect": [
+        536,
+        364,
+        168,
+        28
+      ]
+    }
+  },
+  "coreLoopFeedback": {
+    "source": "review-core-loop-feedback.md (PR #6 answers)",
+    "fontProvisional": "Galmuri11 confirmed 2026-11-09 (OFL-1.1). Sizes measured with the real TTFs.",
+    "stepMs": 40,
+    "badge": {
+      "fill": "#e9bd68",
+      "bossFill": "#de7c80",
+      "rim": "#0d121b",
+      "highlight": "#f2e9cf",
+      "sizePx": 6,
+      "rimPx": 1,
+      "highlightPx": 2,
+      "fillOffsetFromButton": {
+        "right": 10,
+        "top": 2
+      },
+      "labelClearancePx": 12,
+      "shape": "square pip, no count, no glyph",
+      "labelTextX": {
+        "withIcon": 25,
+        "noIcon": 8
+      }
+    },
+    "badgePulse": {
+      "cycleMs": 1000,
+      "grownMs": 200,
+      "cycles": 3,
+      "grownSizePx": 8,
+      "cooldownMs": 60000,
+      "stopOn": [
+        "hover",
+        "focus",
+        "panelOpen",
+        "click"
+      ],
+      "reducedMotion": "static"
+    },
+    "stageBanner": {
+      "nineSlice": "panel",
+      "heightPx": 24,
+      "padXPx": 12,
+      "textYOffsetPx": 5,
+      "font": "Galmuri11 Bold",
+      "sizePx": 12,
+      "windowY": 8,
+      "enterFromY": 12,
+      "enterStepPx": 2,
+      "holdUntilMs": 1600,
+      "fadeStepsMs": [
+        1600,
+        1680,
+        1760,
+        1840
+      ],
+      "fadeAlpha": [
+        204,
+        153,
+        102,
+        51
+      ],
+      "hideAtMs": 1920,
+      "clampMarginPx": 8,
+      "hiddenWhilePanelOpen": true,
+      "stage": {
+        "text": "#e9bd68",
+        "label": "STAGE {id} CLEAR"
+      },
+      "boss": {
+        "text": "#de7c80",
+        "rule": "#de7c80",
+        "ruleRect": [
+          8,
+          -4,
+          -16,
+          2
+        ],
+        "label": "BOSS {id} READY",
+        "replacesStageBanner": true
+      },
+      "reducedMotion": "no slide, no fade: show at y=8 for 1920 ms",
+      "capPx": 11,
+      "textYNote": "draw y (textBaseline top); caps occupy plate rows 6..16"
+    },
+    "upgradePopup": {
+      "font": "Galmuri11 Bold",
+      "sizePx": 12,
+      "statColor": "#90c99b",
+      "dpsColor": "#8dbfe3",
+      "outline": "#0d121b",
+      "outlineMode": "4-neighbour 1px",
+      "segmentGap": "two spaces",
+      "startTopCoreLocal": -22,
+      "risePx": 16,
+      "riseMs": 640,
+      "lifeMs": 1200,
+      "fadeStepsMs": [
+        960,
+        1040,
+        1120
+      ],
+      "fadeAlpha": [
+        192,
+        128,
+        64
+      ],
+      "maxStacked": 2,
+      "stackGapPx": 16,
+      "clampMarginPx": 8,
+      "reducedMotion": "no rise, no fade: static 1200 ms",
+      "panelChip": {
+        "fill": "#293948",
+        "edge": "#536276",
+        "padXPx": 6,
+        "heightPx": 18,
+        "anchorCenterXPanel": 620,
+        "startYPanel": 338,
+        "risePx": 12,
+        "maxVisible": 1,
+        "textYOffsetPx": 3
+      },
+      "lineBoxPx": 14,
+      "drawYNote": "draw y; caps at +1..+11, outline to +12"
+    },
+    "bossButton": {
+      "rectCoreLocal": [
+        16,
+        31,
+        124,
+        24
+      ],
+      "compactRectCoreLocal": [
+        16,
+        31,
+        84,
+        24
+      ],
+      "labels": [
+        "Fight boss",
+        "Retry boss"
+      ],
+      "compactLabels": [
+        "Fight",
+        "Retry"
+      ],
+      "labelColor": "#de7c80",
+      "labelFont": "Galmuri11 Bold",
+      "heading": "BOSS {id} READY",
+      "hidesWaveLabel": true,
+      "badge": "bossFill"
+    },
+    "islandText": {
+      "headingDrawY": 12,
+      "row2DrawY": 35,
+      "rightRowDrawY": 12,
+      "coinIconY": 33,
+      "note": "core-local draw y for Galmuri 12px; caps = draw+1..draw+11"
+    },
+    "managementButtons": {
+      "rectsCoreLocal": [
+        [
+          "W-280",
+          38,
+          88,
+          28
+        ],
+        [
+          "W-184",
+          38,
+          72,
+          28
+        ],
+        [
+          "W-104",
+          38,
+          88,
+          28
+        ]
+      ],
+      "compactRectsCoreLocal": [
+        [
+          "W-192",
+          38,
+          56,
+          28
+        ],
+        [
+          "W-132",
+          38,
+          56,
+          28
+        ],
+        [
+          "W-72",
+          38,
+          56,
+          28
+        ]
+      ],
+      "reason": "Galmuri11 \"Heroes\" is 44 px; at x+25 in an 80 px button its ink touched the pip rim (0 px gap). 88/72/88 keeps the same 264 px run and gives >=6 px clearance."
+    }
+  },
+  "rarityDrop": {
+    "source": "rarity-drops.md; research Page \"Taskbar Legends: luck, rare rewards and legendary looks\"",
+    "stepMs": 40,
+    "baselineY": 136,
+    "icon": {
+      "sizePx": 16,
+      "restRect": [
+        "dx-8",
+        120,
+        16,
+        16
+      ],
+      "note": "bottom of icon on baseline 136; dx = dying enemy anchor x clamped to [field.x+12, field.x+field.width-12]"
+    },
+    "shapeSlot": {
+      "centerY": 114,
+      "note": "every tier draws its shape cue centred on (dx, 114), 2-6 px above the icon top (120); 1 px ink outline (4-neighbour) around every shape"
+    },
+    "shapes": {
+      "common": {
+        "name": "dot",
+        "map": [
+          "##"
+        ],
+        "colors": {
+          "#": "#b0bcc8"
+        }
+      },
+      "rare": {
+        "name": "diamond glint",
+        "map": [
+          "..#..",
+          ".#o#.",
+          "#ooo#",
+          ".#o#.",
+          "..#.."
+        ],
+        "twinkleMap": [
+          ".#.",
+          "#o#",
+          ".#."
+        ],
+        "colors": {
+          "#": "#8dbfe3",
+          "o": "#f2e9cf"
+        }
+      },
+      "epic": {
+        "name": "4-point star",
+        "map": [
+          "....#....",
+          "....#....",
+          "...#o#...",
+          "..#ooo#..",
+          "##ooooo##",
+          "..#ooo#..",
+          "...#o#...",
+          "....#....",
+          "....#...."
+        ],
+        "colors": {
+          "#": "#c19cd9",
+          "o": "#f2e9cf"
+        }
+      },
+      "legendary": {
+        "name": "crown",
+        "map": [
+          "#....#....#",
+          "##..###..##",
+          "#o##ooo##o#",
+          "#ooooooooo#",
+          "###########"
+        ],
+        "colors": {
+          "#": "#e9bd68",
+          "o": "#fff0ac"
+        }
+      }
+    },
+    "outline": {
+      "color": "#0d121b",
+      "alpha": 255
+    },
+    "tiers": {
+      "common": {
+        "fallPx": [
+          4,
+          2,
+          0
+        ],
+        "landMs": 80,
+        "collectMs": 1200,
+        "totalMs": 1320,
+        "particles": 0,
+        "audio": [
+          "drop_pop@0"
+        ]
+      },
+      "rare": {
+        "fallPx": [
+          8,
+          4,
+          2,
+          0
+        ],
+        "landMs": 120,
+        "collectMs": 1600,
+        "totalMs": 1720,
+        "twinkleMs": [
+          640,
+          720
+        ],
+        "particles": {
+          "count": 6,
+          "sizePx": [
+            1,
+            1
+          ],
+          "speedPxPerSec": [
+            30,
+            60
+          ],
+          "lifeMs": 280,
+          "colors": [
+            "#8dbfe3",
+            "#f2e9cf"
+          ]
+        },
+        "audio": [
+          "drop_pop@0"
+        ]
+      },
+      "epic": {
+        "fallPx": [
+          12,
+          8,
+          4,
+          2,
+          0
+        ],
+        "landMs": 160,
+        "collectMs": 2000,
+        "totalMs": 2120,
+        "particles": {
+          "count": 10,
+          "sizePx": [
+            2,
+            1
+          ],
+          "speedPxPerSec": [
+            40,
+            80
+          ],
+          "lifeMs": 320,
+          "colors": [
+            "#c19cd9",
+            "#f2e9cf"
+          ]
+        },
+        "motes": {
+          "count": 6,
+          "sizePx": 1,
+          "risePx": 24,
+          "periodMs": 640,
+          "fromMs": 160,
+          "toMs": 1600,
+          "color": "#c19cd9"
+        },
+        "audio": [
+          "drop_pop@0"
+        ]
+      },
+      "legendary": {
+        "fallPx": [
+          24,
+          21,
+          18,
+          15,
+          12,
+          9,
+          6,
+          3,
+          0
+        ],
+        "landMs": 320,
+        "collectMs": 3600,
+        "totalMs": 3720,
+        "particles": {
+          "count": 16,
+          "sizePx": [
+            2,
+            1
+          ],
+          "speedPxPerSec": [
+            50,
+            100
+          ],
+          "lifeMs": 360,
+          "colors": [
+            "#e9bd68",
+            "#fff0ac",
+            "#f2e9cf"
+          ]
+        },
+        "ring": {
+          "radiiPx": [
+            4,
+            8,
+            12,
+            16
+          ],
+          "alpha": [
+            204,
+            153,
+            102,
+            51
+          ],
+          "fromMs": 320,
+          "color": "#e9bd68"
+        },
+        "flash": {
+          "atMs": 320,
+          "durationMs": 80,
+          "rect": "icon rect grown 1 px (18x18 outline)",
+          "color": "#fff0ac"
+        },
+        "shake": {
+          "atMs": 320,
+          "patternPx": [
+            1,
+            -1,
+            1,
+            -1,
+            0
+          ],
+          "stepMs": 40,
+          "scope": "field content only (units, drops, effects); HUD islands and window never move"
+        },
+        "audio": [
+          "drop_pop@0",
+          "gacha_legendary_sting@320 (fallback gacha_reveal_legendary)"
+        ]
+      }
+    },
+    "beam": {
+      "tier": "legendary",
+      "rectX": [
+        "dx-5",
+        "dx+5"
+      ],
+      "topY": 8,
+      "bottomY": 80,
+      "heightPx": 72,
+      "columns": [
+        {
+          "dx": [
+            -6,
+            6
+          ],
+          "color": "#0d121b",
+          "alpha": 77,
+          "why": "1 px edge so the beam reads on light wallpaper"
+        },
+        {
+          "dx": [
+            -5,
+            -4,
+            4,
+            5
+          ],
+          "color": "#e9bd68",
+          "alpha": 51
+        },
+        {
+          "dx": [
+            -3,
+            -2,
+            2,
+            3
+          ],
+          "color": "#e9bd68",
+          "alpha": 153
+        },
+        {
+          "dx": [
+            -1,
+            0,
+            1
+          ],
+          "color": "#fff0ac",
+          "alpha": 204
+        }
+      ],
+      "topDitherPx": 16,
+      "dither": "4x4 Bayer: pixel kept when bayer[(x)&3][(y)&3] < floor(16*rowFromTop/16)",
+      "fieldTether": {
+        "fromY": 80,
+        "toY": "shape outline top (crown: 111)",
+        "dx": [
+          -1,
+          0,
+          1
+        ],
+        "color": "#fff0ac",
+        "alpha": 102
+      },
+      "growMs": [
+        320,
+        480
+      ],
+      "growStepPx": 18,
+      "holdUntilMs": 1520,
+      "narrowMs": [
+        1520,
+        1600
+      ],
+      "narrowColumns": "core 3 px at alpha 153",
+      "pillar": {
+        "fromMs": 1600,
+        "dx": [
+          0
+        ],
+        "color": "#fff0ac",
+        "alpha": 153,
+        "untilCollect": true
+      },
+      "motes": {
+        "count": 8,
+        "sizePx": 1,
+        "risePx": 72,
+        "periodMs": 960,
+        "fromMs": 480,
+        "toMs": 1520,
+        "xRange": [
+          -3,
+          3
+        ],
+        "color": "#fff0ac"
+      },
+      "compositing": "source-over in the transparent band (the OS composites the window over the wallpaper); lighter only where the beam crosses already-drawn sprite pixels",
+      "maxFullBeams": 3,
+      "groundGlow": {
+        "rows": [
+          {
+            "y": 135,
+            "dx": [
+              -8,
+              8
+            ],
+            "alpha": 102
+          },
+          {
+            "y": 136,
+            "dx": [
+              -12,
+              12
+            ],
+            "alpha": 64
+          },
+          {
+            "y": 137,
+            "dx": [
+              -8,
+              8
+            ],
+            "alpha": 38
+          }
+        ],
+        "color": "#e9bd68",
+        "fromMs": "land",
+        "untilMs": 1600,
+        "note": "static floor glint under the drop while the full beam stands"
+      }
+    },
+    "collect": {
+      "risePx": 8,
+      "alpha": [
+        204,
+        128,
+        51
+      ],
+      "stepMs": 40,
+      "then": "icon removed; the Gear (or Heroes) pip runs its Q1 pulse"
+    },
+    "budget": {
+      "flashLimiter": "shared global FlashLimiter: minGapMs 400 and at most 2 grants in any rolling 1000 ms (gacha + drops share it)",
+      "legendaryStaggerMs": 520,
+      "maxStaggered": 3,
+      "shakeMinGapMs": 1000,
+      "stingMinGapMs": 1500,
+      "denied": "a denied flash or shake is skipped (static rim, no shake); it is never queued beyond the stagger"
+    },
+    "reducedMotion": {
+      "fall": false,
+      "shake": false,
+      "flash": false,
+      "particles": false,
+      "motes": false,
+      "ring": false,
+      "shape": "static, shown from land",
+      "beam": "static full 72 px from land to 1520 ms, then the 1 px pillar until collect",
+      "collect": "icon removed without rising"
+    },
+    "hitRegions": "none; all drop visuals are click-through and drawn only inside the field columns"
   }
 }
