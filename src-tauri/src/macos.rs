@@ -65,14 +65,15 @@ mod tests {
     }
 
     #[test]
-    fn platform_config_enables_private_transparency_without_changing_windows_defaults() {
+    fn private_transparency_is_declared_without_changing_windows_window_defaults() {
         let base: serde_json::Value =
             serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
         let mac: serde_json::Value =
             serde_json::from_str(include_str!("../tauri.macos.conf.json")).unwrap();
-        assert_eq!(mac["app"]["macOSPrivateApi"], true);
-        assert!(mac["app"].get("windows").is_none());
-        assert!(base["app"].get("macOSPrivateApi").is_none());
+        // AppKit-only flag; it has no Windows/Linux implementation.
+        assert_eq!(base["app"]["macOSPrivateApi"], true);
+        assert!(mac.get("app").is_none());
+        assert_eq!(mac["bundle"]["macOS"]["signingIdentity"], "-");
         assert_eq!(base["app"]["windows"][0]["transparent"], true);
         assert_eq!(base["app"]["windows"][0]["alwaysOnTop"], true);
     }

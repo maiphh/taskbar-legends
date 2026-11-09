@@ -34,7 +34,7 @@ Fallback is an 800×488 logical-pixel, opaque, decorated, resizable normal windo
 
 ## Overlay behavior and deliberate limits
 
-- Transparent, frameless, topmost overlay; macOSPrivateApi is explicitly enabled in the Mac-only config (Tauri 2.12.1+ already enables these APIs). This is outside the Mac App Store.
+- Transparent, frameless, topmost overlay; `macOSPrivateApi` plus Tauri's required `macos-private-api` feature are enabled in shared config because `tauri-build` validates that pair on every target; the API is AppKit-only and does not change Windows window settings (Tauri 2.12.1+ already enables these APIs on macOS). This is outside the Mac App Store.
 - Accessory activation policy is set **before** creating the Mac window: no Dock icon in overlay mode. Normal fallback uses Regular policy.
 - Visible on all ordinary Spaces. `accept_first_mouse` allows the initial HUD click. There is no custom NSPanel conversion or elevated fullscreen-app overlay level in this small test build. A fullscreen app's dedicated Space may hide the overlay; record this limitation rather than marking fullscreen acceptance as passed.
 - Same monitor work-area adapter and global-cursor `setIgnoreCursorEvents` loop as Windows. Fixed 160/488 logical host, upward panel expansion, native-pixel art and bottom anchoring remain unchanged. Work areas are polled and re-docked on monitor/scale changes.

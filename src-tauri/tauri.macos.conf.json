@@ -1,7 +1,4 @@
 {
-  "app": {
-    "macOSPrivateApi": true
-  },
   "bundle": {
     "icon": [
       "icons/icon.icns"
