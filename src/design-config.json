@@ -12,8 +12,8 @@
     ],
     "enemySpawnX": 400,
     "enemySpawnSpacingPx": 50,
-    "waveGapSec": 3,
-    "stageGapSec": 7,
+    "waveGapSec": 2,
+    "stageGapSec": 5,
     "partySize": 3
   },
   "rarity": {
@@ -37,7 +37,7 @@
     "perStar": 0.12,
     "formula": "stat = roleBase * rarityMult * heroMod * (1 + perLevel*(L-1)) * (1 + perStar*(stars-1)) + gearFlat, then * (1 + gearPct)",
     "xpToNext": {
-      "a": 1000,
+      "a": 1100,
       "p": 1.6,
       "formula": "round(a * L^p)"
     },
@@ -324,7 +324,7 @@
     },
     "boss_ch1": {
       "name": "Chapter 1 Boss",
-      "hp": 1500,
+      "hp": 1550,
       "atk": 36,
       "def": 20,
       "attackIntervalTicks": 30,
@@ -688,7 +688,7 @@
       "index": 10,
       "chapter": 1,
       "isBoss": true,
-      "timeoutSec": 23,
+      "timeoutSec": 21,
       "firstClearTickets": 5,
       "waves": [
         {
@@ -1050,8 +1050,8 @@
       "index": 20,
       "chapter": 2,
       "isBoss": true,
-      "timeoutSec": 23,
-      "firstClearTickets": 150,
+      "timeoutSec": 21,
+      "firstClearTickets": 200,
       "waves": [
         {
           "enemies": [
@@ -1082,7 +1082,7 @@
     "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
     "firstClearChest": true,
     "farmChestChance": 0.15,
-    "farmTicketChance": 0.01,
+    "farmTicketChance": 0.0075,
     "startingTickets": 10
   },
   "gear": {

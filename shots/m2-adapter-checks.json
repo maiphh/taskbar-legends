@@ -172,12 +172,12 @@
       "active": false,
       "ignoring": true,
       "dockCount": 4,
-      "hitTests": 60,
+      "hitTests": 62,
       "monitor": "emulated-display:0,0",
       "logicalHeight": 160,
       "errors": [
         {
-          "at": 1794201907882,
+          "at": 1794202103308,
           "message": "Error: emulated cursor API failure"
         }
       ],
@@ -364,12 +364,12 @@
       "active": false,
       "ignoring": true,
       "dockCount": 4,
-      "hitTests": 67,
+      "hitTests": 70,
       "monitor": "emulated-display:0,0",
       "logicalHeight": 160,
       "errors": [
         {
-          "at": 1794201909349,
+          "at": 1794202104807,
           "message": "Error: emulated cursor API failure"
         }
       ],
@@ -556,12 +556,12 @@
       "active": false,
       "ignoring": true,
       "dockCount": 4,
-      "hitTests": 63,
+      "hitTests": 62,
       "monitor": "emulated-display:0,0",
       "logicalHeight": 160,
       "errors": [
         {
-          "at": 1794201910732,
+          "at": 1794202106224,
           "message": "Error: emulated cursor API failure"
         }
       ],
