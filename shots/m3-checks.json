@@ -109,7 +109,7 @@
       "afterTabSwitch": null,
       "cues": [
         "hit_1",
-        "hit_2",
+        "hit_3",
         "enemy_death",
         "coin_pickup_2",
         "enemy_death",
@@ -323,8 +323,8 @@
       },
       "afterTabSwitch": null,
       "cues": [
-        "hit_2",
         "hit_1",
+        "hit_2",
         "enemy_death",
         "coin_pickup_2",
         "enemy_death",
@@ -443,7 +443,7 @@
           "rarity": "legendary",
           "slot": "charm"
         },
-        "choices": 3,
+        "choices": 0,
         "closing": false
       },
       "audioAfterReload": {

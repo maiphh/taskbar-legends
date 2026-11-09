@@ -50,3 +50,11 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - The pending pick-1-of-2 prompt replaces the left-island heading (a running boss countdown keeps priority). Approved.
 - `bestChoice` (reference policy and the auto-resolve of a 4th queued choice) keeps option 0 when both gear scores tie. Approved.
 - Recruit pity (CR-14-01/02) and gear Fortune (CR-14-03) follow design.md §14 and are opt-in (`recruitPity`, `gearFortune`); see docs/V14-LUCK.md for the choices made where the spec is silent.
+
+## v1.4 M3 (PR 4, 2026-11-09)
+
+- Designer answers 1–5 on luck are applied (docs/V14-LUCK.md). The settled 1.4.1 values are taken from the Designer's config when it lands; not hand-edited.
+- `v14.economyOverrides` is not applied: design.md applies it only together with CR-14-01/02/05/06, and the goblin (CR-14-06) is out of scope.
+- Offline ticket rate uses wall-time farm clears (`metrics.farmClearSeconds`); offline Expedition choice option B is also best-of-4 with 0 units.
+- Audio controls live in the management tab row (no spec position). `stage_clear` plays on first clears only; the hit group only for hits on enemies.
+- The gacha card beam (rarity-drops legendary beam) is deferred to PR 5 with the drop beam and ultimates.
