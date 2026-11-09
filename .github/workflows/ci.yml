@@ -30,7 +30,7 @@ jobs:
       - name: v1.4 rules sim smoke (chestChoice + farmChest)
         run: |
           npm run --silent sim -- --seed 1 --hours 1 --v14 all > sim-v14-smoke.json
-          node --input-type=module -e "import fs from 'node:fs'; const s=JSON.parse(fs.readFileSync('sim-v14-smoke.json','utf8')); if(s.v14Rules.join()!=='chestChoice,farmChest,recruitPity,gearFortune' || !(s.events.chestChoice>0)) throw new Error('Invalid v14 smoke');"
+          node --input-type=module -e "import fs from 'node:fs'; const s=JSON.parse(fs.readFileSync('sim-v14-smoke.json','utf8')); if(s.v14Rules.join()!=='chestChoice,farmChest,recruitPity,gearFortune,expeditionChests,offlineTickets' || !(s.events.chestChoice>0)) throw new Error('Invalid v14 smoke');"
       - uses: actions/upload-artifact@v4
         with:
           name: sim-smoke

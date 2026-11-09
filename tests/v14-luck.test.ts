@@ -13,7 +13,7 @@ const starters = (): Set<string> => new Set(CONFIG.heroes.filter(hero => hero.st
 describe('CR-14-01/02 recruit pity', () => {
   it('over 1M seeded pulls no pre-roster 60-pull window lacks a Legendary and no 20 duplicates run in a row', { timeout: 120_000 }, () => {
     setV14Rules(['recruitPity']);
-    let pulls = 0, maxNoLegendary = 0, maxDupes = 0, legendaryPityFired = 0, epicResetByLegendaryPity = true;
+    let pulls = 0, maxNoLegendary = 0, maxDupes = 0, legendaryPityFired = 0, epicResetByLegendaryPity = true, unexcused = 0, excused = 0;
     for (let seed = 1; pulls < 1_000_000; seed += 1) {
       const rng = { rng: seed >>> 0 }, owned = starters();
       let pity = 0, luck: RecruitLuck | undefined = { legendary: 0, newHero: 0 }, noLegendary = 0, dupes = 0;
@@ -22,10 +22,13 @@ describe('CR-14-01/02 recruit pity', () => {
         if (draw.legendaryPity) { legendaryPityFired += 1; if (draw.nextPity !== 0) epicResetByLegendaryPity = false; }
         noLegendary = draw.rarity === 'legendary' ? 0 : noLegendary + 1; dupes = owned.has(draw.hero.id) ? dupes + 1 : 0;
         maxNoLegendary = Math.max(maxNoLegendary, noLegendary); maxDupes = Math.max(maxDupes, dupes);
+        // Designer answer 1: Legendary pity stays Legendary even with every Legendary owned, so that one pull may be the 20th duplicate.
+        if (dupes >= 20) { if (draw.legendaryPity && draw.fresh) excused += 1; else unexcused += 1; }
+        if (draw.legendaryPity && draw.fresh) expect(draw.rarity).toBe('legendary');
         pity = draw.nextPity; luck = draw.nextLuck; owned.add(draw.hero.id); pulls += 1;
       }
     }
-    expect(maxNoLegendary).toBeLessThan(60); expect(maxDupes).toBeLessThan(20);
+    expect(maxNoLegendary).toBeLessThan(60); expect(unexcused).toBe(0); expect(maxDupes).toBeLessThan(20 + excused);
     expect(legendaryPityFired).toBeGreaterThan(0); expect(epicResetByLegendaryPity).toBe(true);
   });
   it('10k cohort with CR-14-01 + 02: median 79 ± 1, max ≤ 141 (design.md §14.6 T4a)', { timeout: 60_000 }, () => {
@@ -53,19 +56,33 @@ describe('CR-14-01/02 recruit pity', () => {
       expect(allCommon.has(draw.hero.id)).toBe(false); expect(draw.fresh).toBe(true); expect(draw.rarity).not.toBe('common');
     }
   });
-  it('pull() writes the counters, meters count down, and everything freezes and hides once the roster is complete', () => {
+  it('pull() writes the counters; with a full roster only the new-hero counter freezes and hides (designer answer 3)', () => {
     setV14Rules(['recruitPity']);
     const state = createState(4); state.tickets = 10;
     expect(recruitMeters(state)).toEqual({ epicPlus: 30, legendary: 60, newHero: 20 });
     pull(state);
     expect(state.pityLegendary).toBeDefined(); expect(state.pityNewHero).toBeDefined();
     const meters = recruitMeters(state); expect(meters?.legendary).toBe(60 - (state.pityLegendary ?? 0));
+    const kind = state.events.at(-1)?.data; expect(kind?.type === 'pull' && (kind.pity === null || typeof kind.pity === 'string')).toBe(true);
     for (const hero of CONFIG.heroes) if (!state.roster.some(owned => owned.id === hero.id)) state.roster.push({ id: hero.id, level: 1, xp: 0, stars: 1, equipment: { weapon: null, armor: null, charm: null } });
-    state.pity = 29; state.pityLegendary = 59; state.pityNewHero = 19; state.tickets = 5;
-    for (let i = 0; i < 5; i += 1) pull(state);
-    expect([state.pity, state.pityLegendary, state.pityNewHero]).toEqual([29, 59, 19]);
-    expect(state.events.filter(event => event.data.type === 'pull').slice(-5).every(event => event.data.type === 'pull' && !event.data.pity)).toBe(true);
-    expect(recruitMeters(state)).toBeNull();
+    state.pity = 28; state.pityLegendary = 58; state.pityNewHero = 19; state.tickets = 2;
+    pull(state); pull(state);
+    const last = state.events.filter(event => event.data.type === 'pull').slice(-2).map(event => event.data.type === 'pull' ? [event.data.rarity, event.data.pity] : null);
+    // 59th since Legendary + 29th since Epic+: pity fires; then the 60th is Legendary pity even though the roster is full.
+    expect(last[1]).toEqual(['legendary', 'legend']);
+    expect(state.pityNewHero).toBe(19); expect(state.pityLegendary).toBe(0);
+    expect(recruitMeters(state)).toEqual({ epicPlus: 30 - state.pity, legendary: 60, newHero: null });
+  });
+  it('the pull log names the guarantee: legend, epic, newHero or null; 1.3.0 keeps the boolean', () => {
+    setV14Rules(['recruitPity']);
+    const state = createState(5); state.tickets = 200;
+    for (let i = 0; i < 200; i += 1) pull(state);
+    const kinds = new Set(state.events.flatMap(event => event.data.type === 'pull' ? [event.data.pity] : []));
+    for (const kind of kinds) expect([null, 'legend', 'epic', 'newHero']).toContain(kind);
+    setV14Rules([]);
+    const plain = createState(5); plain.tickets = 40;
+    for (let i = 0; i < 40; i += 1) pull(plain);
+    expect(plain.events.every(event => event.data.type !== 'pull' || typeof event.data.pity === 'boolean')).toBe(true);
   });
 });
 

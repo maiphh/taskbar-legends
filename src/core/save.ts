@@ -79,14 +79,35 @@ export function applyOffline(state: GameState, elapsedMs: number) {
   const rewards = expectedFarmRewards(stage);
   const gold = Math.floor(rewards.gold * clears * CONFIG.idle.offlineEfficiency);
   const xp = Math.floor(rewards.xp * clears * CONFIG.idle.offlineEfficiency);
-  const chests = Math.min(CONFIG.idle.offlineChestMax, Math.floor(seconds / (CONFIG.idle.offlineChestEveryHours * 3600)));
+  const away = CONFIG.v14.offline, expedition = away.expeditionChestsPerHour > 0;
+  // CR-14-04: floor(min(t, cap) × 2 per hour), max 16, replaces 1 per 2 h (max 4).
+  const chests = expedition ? Math.min(away.expeditionChestMax, Math.floor(seconds / 3600 * away.expeditionChestsPerHour))
+    : Math.min(CONFIG.idle.offlineChestMax, Math.floor(seconds / (CONFIG.idle.offlineChestEveryHours * 3600)));
   goldChange(state, gold, 'offline');
   const heroes = xp ? grantXp(state, xp, state.partyIds) : state.partyIds.map(id => { const level = state.roster.find(hero => hero.id === id)?.level ?? 1; return { id, levelBefore: level, levelAfter: level }; });
-  for (let index = 0; index < chests; index += 1) chest(state, stage);
+  for (let index = 0; index < chests; index += 1) chest(state, stage, expedition ? 'expedition' : 'chest');
+  const tickets = away.ticketRateVsOnline > 0 ? offlineTickets(state, seconds, away.ticketRateVsOnline) : null;
   state.stats.offlineClears += clears; state.stats.offlineSeconds += Math.floor(seconds);
   // Offline does not advance open ticks, progression, retry deadlines, or summon tickets.
-  if (seconds) emit(state, { type: 'offline', seconds, rawSeconds, clears, gold, xp, chests, heroes });
-  return { seconds, rawSeconds, clears, gold, xp, chests, heroes, capped: elapsedMs > CONFIG.idle.offlineCapHours * 3_600_000 };
+  const extra = { ...(expedition ? { expeditionChests: chests } : {}), ...(tickets === null ? {} : { tickets }) };
+  if (seconds) emit(state, { type: 'offline', seconds, rawSeconds, clears, gold, xp, chests, heroes, ...extra });
+  return { seconds, rawSeconds, clears, gold, xp, chests, heroes, ...extra, capped: elapsedMs > CONFIG.idle.offlineCapHours * 3_600_000 };
+}
+/** Wall-clock seconds per repeat farm clear (the online ticket clock), over the same sample window as offline clears. */
+export function avgWallFarmClearSec(state: GameState): number {
+  const samples = state.metrics.farmClearSeconds;
+  return samples.length ? samples.reduce((a, b) => a + b, 0) / samples.length : CONFIG.idle.avgFarmClearSecDefault;
+}
+/**
+ * CR-14-05: owed = t / avgWallFarmClearSec × farmTicketChance × rate + carried fraction; grants floor(owed) and keeps the
+ * rest in offlineTicketFrac. Only a whole amount above 0 emits a tickets event. No RNG.
+ */
+export function offlineTickets(state: GameState, seconds: number, rate: number): number {
+  const owed = seconds / avgWallFarmClearSec(state) * CONFIG.rewards.farmTicketChance * rate + (state.offlineTicketFrac ?? 0);
+  const whole = Math.floor(owed);
+  state.offlineTicketFrac = Math.min(owed - whole, 1 - Number.EPSILON);
+  if (whole > 0) { state.tickets += whole; state.economyRevision += 1; emit(state, { type: 'tickets', amount: whole, total: state.tickets }); }
+  return whole;
 }
 /** Applies offline catch-up for the wall-clock time since the save was written. */
 export function resumeSave(data: SaveData, nowMs: number) {
