@@ -5,7 +5,9 @@ import { cheapestEquippedUpgrade } from './core/economy';
 import { createState, input, load, snapshot, statusText, step } from './core/game';
 import { cloneState, parseAction } from './core/model';
 import { bindInput } from './input';
-import { resumeSave } from './core/save';
+import { applyOffline, resumeSave } from './core/save';
+import type { WelcomeData } from './pixel-ui';
+import { raritySchema } from './config';
 import { localSaveStore } from './platform/storage';
 import { Renderer } from './renderer';
 import type { GameDebug } from './debug';
@@ -30,12 +32,21 @@ async function restore(): Promise<void> {
   try {
     const data = await store.load();
     if (data) { const saved = resumeSave(data, Date.now()); state = saved.state; accumulatorMs = saved.remainderMs;
-      if (saved.seconds >= 1) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears${saved.capped ? ' (8h cap)' : ''}`);
+      if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq));
+        if (!renderer.ui.welcome) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears${saved.capped ? ' (8h cap)' : ''}`); }
     }
   } catch { showNotice('Save unavailable or incompatible. Started fresh; old save retained until next save.'); }
   finally { restoring = false; render(); }
 }
 void restore();
+/** Welcome-back data: the offline result plus the farm stage, the best item rolled and the choices waiting. */
+function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number): WelcomeData {
+  let best: WelcomeData['best'] = null;
+  const consider = (rarity: (typeof raritySchema.options)[number], slot: string): void => { if (!best || raritySchema.options.indexOf(rarity) > raritySchema.options.indexOf(best.rarity)) best = { rarity, slot }; };
+  for (const event of state.events) if (event.seq > beforeSeq && event.data.type === 'gear') consider(event.data.rarity, event.data.slot);
+  for (const pair of state.pendingChoice ?? []) for (const item of pair) if (item.acquiredAt.tick === state.tick) consider(item.rarity, item.slot);
+  return { ...result, stage: Math.max(1, state.highestCleared), best, choices: activeV14Rules().includes('chestChoice') && result.chests ? state.pendingChoice?.length ?? 0 : 0 };
+}
 function save(): void {
   if (restoring) return;
   store.save({ state, savedAtMs: Date.now(), remainderMs: accumulatorMs })
@@ -55,6 +66,9 @@ function action(value: unknown): void { input(state, parseAction(value)); render
 function togglePause(): void { paused = !paused; lastFrame = performance.now(); render(); }
 function resize(): void { renderer.resize(window.innerWidth); render(); }
 renderer.ui.onAction = action; renderer.ui.onPause = togglePause; renderer.ui.onLayoutChange = resize; renderer.ui.onRedraw = render;
+renderer.ui.onCue = key => { audio.play(key); };
+renderer.ui.audio = audio.settings();
+renderer.ui.onAudio = change => { audio.set(change); renderer.ui.audio = audio.settings(); render(); };
 bindInput({ action, togglePause, cheapestUpgrade: () => { const item = cheapestEquippedUpgrade(state); if (item) action({ type: 'upgrade', gearId: item.id }); } });
 window.addEventListener('resize', resize); resize();
 window.addEventListener('pagehide', () => { if (!hidden) save(); audio.dispose(); });
@@ -72,6 +86,10 @@ const debug: GameDebug = {
   whenReady: () => Promise.all([renderer.atlases.ready, renderer.ui.ready]).then(() => { render(); }),
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
   setV14Rules: rules => { setV14Rules(rules); render(); return activeV14Rules(); }, getV14Rules: () => activeV14Rules(),
+  // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
+  freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
+  getAudio: () => audio.debug(),
+  away: ms => { const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };
 window.__game = debug;
 void startDesktop(debug, resize, { flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler) }).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));

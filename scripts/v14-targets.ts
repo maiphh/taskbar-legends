@@ -1,12 +1,12 @@
 // v1.4 target report (design.md §15.1 / §17) for the reference player with v14 rules switched on.
-//   npx tsx scripts/v14-targets.ts [--rules chestChoice,farmChest,recruitPity,gearFortune|none] [--seeds 25] [--days 9] [--out shots/v14-targets.json]
+//   npx tsx scripts/v14-targets.ts [--rules all|none|a,b,…] [--seeds 25] [--days 9] [--out shots/v14-targets.json]
 // Each seed runs in a worker process. The instrumented policy mirrors referencePolicy action-for-action; every seed's final
 // state is checked against runReference() with the same rules, so the decision log describes the real reference run.
 import { spawn } from 'node:child_process';
 import { availableParallelism } from 'node:os';
 import { writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
-import { CONFIG, activeV14Rules, heroConfig, setV14Rules, v14RuleSchema } from '../src/config';
+import { CONFIG, V14_DESIGN, activeV14Rules, heroConfig, setV14Rules, v14RuleSchema } from '../src/config';
 import type { V14Rule } from '../src/config';
 import { autoEquip, autoParty, bestChoice, cheapestEquippedUpgrade, chooseChest, getOwned, partyPower, pull, upgrade, upgradeCost } from '../src/core/economy';
 import { createState, input, snapshot, step } from '../src/core/game';
@@ -16,9 +16,9 @@ import { gachaCohort, runReference } from '../src/core/policy';
 import { applyOffline } from '../src/core/save';
 import { distribution } from '../src/core/statistics';
 
-const { values } = parseArgs({ options: { rules: { type: 'string', default: 'chestChoice,farmChest,recruitPity,gearFortune' }, seeds: { type: 'string', default: '25' }, days: { type: 'string', default: '9' },
+const { values } = parseArgs({ options: { rules: { type: 'string', default: 'all' }, seeds: { type: 'string', default: '25' }, days: { type: 'string', default: '9' },
   worker: { type: 'string' }, out: { type: 'string', default: 'shots/v14-targets.json' }, 'gacha-seeds': { type: 'string', default: '10000' } } });
-const rules = (values.rules === 'none' ? [] : (values.rules ?? '').split(',').filter(Boolean)).map(rule => v14RuleSchema.parse(rule)) satisfies V14Rule[];
+const rules = (values.rules === 'none' ? [] : values.rules === 'all' ? [...v14RuleSchema.options] : (values.rules ?? '').split(',').filter(Boolean)).map(rule => v14RuleSchema.parse(rule)) satisfies V14Rule[];
 const days = Number(values.days), SESSION = CONFIG.referencePlayer.openHoursPerDay * 3600, HOUR_TICKS = 3600 * CONFIG.sim.ticksPerSecond;
 setV14Rules(rules);
 
@@ -77,9 +77,11 @@ function runSeed(seed: number) {
       if (data.type === 'chestChoice' && data.rarities) { const index = gearIndex.get(data.kept); if (index !== undefined) gearRarity[index] = data.rarities.includes('legendary') ? 'legendary' : data.rarities[0]; }
     }
   };
+  // T8 offline rate in roll units: an Expedition Chest is rollUnits.expeditionChest (4), a 1.3.0 offline chest 1.
+  const offlineUnits = activeV14Rules().includes('expeditionChests') ? V14_DESIGN.gearPity.rollUnits.expeditionChest : 1;
   const milestones: Record<string, number> = {};
   for (let day = 1; day <= days; day += 1) {
-    if (day > 1) { const away = applyOffline(state, (24 * 3600 - SESSION) * 1000); offlineChests += away.chests; offlineSeconds += away.seconds; scan(); }
+    if (day > 1) { const away = applyOffline(state, (24 * 3600 - SESSION) * 1000); offlineChests += away.chests * offlineUnits; offlineSeconds += away.seconds; scan(); }
     const sessionChests = state.stats.chests;
     const start = state.tick, end = start + SESSION * CONFIG.sim.ticksPerSecond;
     while (state.tick < end) {
@@ -172,7 +174,7 @@ const report = {
       T4b: { target: 'roster median day 6–8, ≥ 20/25 by day 8', unit: 'day', ...roster, byDay8: results.filter(r => r.rosterDay !== null && r.rosterDay <= 8).length,
         pass: roster.median !== null && roster.median >= 6 && roster.median <= 8 && results.filter(r => r.rosterDay !== null && r.rosterDay <= 8).length >= Math.ceil(results.length * 0.8) } },
     T8: { target: 'luck bounds: no 60-pull window without Legendary, no 20 dupes in a row (pre-roster); first Legendary gear by roll 40, then ≤ 100-roll gaps; goblin ≤ 300 clears; offline roll units ≥ 50% of online chest rate',
-      ...t8, checks: t8Checks, pass: Object.values(t8Checks).every(value => value !== false) && t8Checks.goblin300 !== null, note: 'Recruit pity (CR-14-01/02) and gear Fortune (CR-14-03) are guaranteed when their rules are on; overall T8 cannot pass yet: goblin (CR-14-06) is not implemented, so goblin300 is unmeasured, and offline50pct needs Expedition Chests (CR-14-04).' },
+      ...t8, checks: t8Checks, pass: Object.values(t8Checks).every(value => value !== false) && t8Checks.goblin300 !== null, note: 'Recruit pity (CR-14-01/02) and gear Fortune (CR-14-03) are guaranteed when their rules are on; offline50pct counts Expedition Chests × 4 roll units (CR-14-04); overall T8 cannot pass yet: goblin (CR-14-06) is not implemented, so goblin300 is unmeasured.' },
     T9: { target: 'median gap ≤ 3 min and p90 ≤ 5 min in every phase (d1 h0–2, h2–6, d2–5, d6–9)', unit: 'minutes', phases: t9, pass: t9Pass },
     T10: { target: '≥ 95% of 1 h absences offer a meaningful decision on return', ...t10, pass: (t10.fraction ?? 0) >= 0.95 },
   },

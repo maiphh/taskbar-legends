@@ -8,14 +8,23 @@ and `CONFIG.v14.fortune` are inert (0 = off) and 1.3.0 is byte-identical (golden
 
 - Counters: `pity` (Epic+ at 30, unchanged), `pityLegendary` (0..59), `pityNewHero` (0..19).
 - Precedence: Legendary pity (60th pull, no rarity RNG drawn), then Epic+ pity, then the normal roll. A Legendary resets Epic+ pity.
-- New-hero guarantee (20th pull since a new hero): only changes the pick. If the rolled rarity has no unowned hero it falls back to the most common rarity that still has one.
+- Legendary pity always gives a Legendary, even when every Legendary is owned; the duplicate becomes a star (Designer answer 1).
+- New-hero guarantee (20th pull since a new hero) is a separate counter and only changes the pick. If the rolled rarity has no
+  unowned hero it falls back to the most common rarity that still has one, except on a Legendary-pity pull (answer 1). That pull
+  may therefore be the one excused duplicate at the 20th count; the new-hero counter then stays at 19 and fires on the next pull.
 - `legendaryPityPrefersUnowned`: a Legendary-pity pull picks an unowned Legendary when one exists.
-- Once the roster is complete the counters freeze and the meters hide (rule on only).
+- Once the roster is complete only the new-hero counter freezes and hides; Epic+ and Legend pity keep running and firing (answer 3).
+- Pull log: with `recruitPity` on, the pull event carries `pity: 'legend' | 'epic' | 'newHero' | null` (answer 4); the gacha
+  reveal shows a `PITY` tag and plays `gacha_pity` (unless the Legendary sting plays). With the rule off it stays the 1.3.0 boolean.
 
 ## Fortune (design.md §14.2, keys `v14.gearPity`)
 
 - `gearSinceLegendary` (0..99), `gearLegendaryFound`. First Legendary forced by roll 40, then every ≤ 100 rolls. No soft ramp.
-- One chest = `rollUnits.chest` (1) unit. In a pick-1-of-2 chest the second option counts 0 units, so the chest counts once.
+- Roll units: normal chest `rollUnits.chest` 1, Expedition Chest `rollUnits.expeditionChest` 4 (with `expeditionChests` on,
+  see docs/V14-OFFLINE.md), Gold Chest 3 (`goldChest`, unused until the goblin, answer 5). In a pick-1-of-2 chest the second option
+  counts 0 units, so the chest counts once.
+- Only a Legendary from a counted chest roll (units > 0) resets Fortune. Option B of a choice and any other non-chest gear neither
+  count nor reset (answer 2). Fortune never freezes (answer 3).
 
 ## Saves
 
@@ -29,10 +38,17 @@ All four fields are optional and validated (bounds, and `gearSinceLegendary < 40
 - Fortune sits after gold in the progress island row 2: `Fortune 37/100` / `F 37/100`, before the first Legendary `Legend in 14` / `L 14`; hidden if neither fits. Hotspot `fortune-meter` opens Gear. The Gear panel header shows the full text.
 - Shots 25–28 (`npm run shot:v14`) with click checks in `shots/v14-chest-choice-checks.json`.
 
-## Spec questions (implemented as stated, open for the Designer)
+## Designer answers (2026-11-09, applied in PR 4)
 
-1. When every Legendary is owned, the new-hero fallback can override the Legendary-pity rarity (matches the prototype).
-2. Any Legendary gear (natural roll, or option B of a choice) resets Fortune; the prototype reset only on units > 0.
-3. After the full roster all recruit counters, including Epic+, freeze and no pity fires (rule on only).
-4. A Legendary-pity pull sets the pull event `pity: true`.
-5. `rollUnits.expeditionChest` / `goldChest` are read but unused (no Expedition Chests or goblin yet).
+1. Legend pity at 60 always gives a Legendary; with every Legendary owned it is a duplicate star. New-hero guarantee is separate.
+2. Fortune resets only on Legendary gear from a counted chest. Units: normal 1, Expedition 4, Gold 3. Non-chest gear neither counts nor resets.
+3. Full roster: freeze and hide only the new-hero counter. Epic+ and Legend keep running; Fortune never freezes.
+4. Pull-log field `pity: 'epic'|'legend'|'newHero'|null`, and a `PITY` tag on the gacha reveal.
+5. Expedition units count 4 (CR-14-04 in PR 4); Gold stays unused until the goblin.
+
+Tests: `tests/v14-luck.test.ts` (1M pulls, full roster, pull-log kinds, Fortune units), `tests/v14-offline.test.ts`.
+
+## Open
+
+- The settled 1.4.1 values (`chestChoice.fromStage` 10, `farmChest.guaranteeEvery` 7) come from the Designer's config.json when 1.4.1
+  lands; they are not hand-edited. As of PR 4 the handoff config is still 1.3.0 / `v14.targetVersion` 1.4.0 (fromStage 1, guaranteeEvery 9).

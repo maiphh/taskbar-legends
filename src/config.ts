@@ -27,17 +27,19 @@ export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int()
 /**
  * v1.4 code requests (design.md §18). config.json → `v14` carries the designer's *target* values; the game reads them only
  * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default and the game is 1.3.0.
- * Implemented here: CR-14-08 chestChoice, CR-14-09 farmChest, CR-14-01/02 recruitPity, CR-14-03 gearFortune.
+ * Implemented here: CR-14-08 chestChoice, CR-14-09 farmChest, CR-14-01/02 recruitPity, CR-14-03 gearFortune,
+ * CR-14-04 expeditionChests, CR-14-05 offlineTickets.
  * Other v14 keys are parsed loosely and stay inert.
  */
 const v14Schema = z.looseObject({
   chestChoice: z.looseObject({ options: z.number().int().min(1).max(2), fromStage: z.number().int().positive() }),
   farmChest: z.looseObject({ baseChance: z.number().min(0).max(1), guaranteeEvery: z.number().int().positive(), fromStage: z.number().int().positive() }),
   gacha: z.looseObject({ legendaryPityEvery: z.number().int().min(2), legendaryPityPrefersUnowned: z.boolean(), newHeroGuaranteeEvery: z.number().int().min(2) }),
-  gearPity: z.looseObject({ legendaryEvery: z.number().int().min(2), firstLegendaryBy: z.number().int().min(2), rollUnits: z.looseObject({ chest: z.number().int().positive() }) }),
+  gearPity: z.looseObject({ legendaryEvery: z.number().int().min(2), firstLegendaryBy: z.number().int().min(2), rollUnits: z.looseObject({ chest: z.number().int().positive(), expeditionChest: z.number().int().positive() }) }),
+  offline: z.looseObject({ expeditionChestsPerHour: z.number().positive(), expeditionBestOf: z.number().int().positive(), expeditionChestMax: z.number().int().positive(), ticketRateVsOnline: z.number().min(0).max(1) }),
 });
 export const V14_DESIGN = v14Schema.parse(design.v14);
-export const v14RuleSchema = z.enum(['chestChoice', 'farmChest', 'recruitPity', 'gearFortune']);
+export const v14RuleSchema = z.enum(['chestChoice', 'farmChest', 'recruitPity', 'gearFortune', 'expeditionChests', 'offlineTickets']);
 export type V14Rule = z.infer<typeof v14RuleSchema>;
 export interface V14Live {
   chestChoice: { options: number; fromStage: number };
@@ -45,12 +47,15 @@ export interface V14Live {
   /** CR-14-01 legendaryPityEvery / CR-14-02 newHeroGuaranteeEvery; 0 = off. */
   recruit: { legendaryPityEvery: number; legendaryPityPrefersUnowned: boolean; newHeroGuaranteeEvery: number };
   /** CR-14-03; 0 = off. chestUnits = Fortune roll units per normal chest. */
-  fortune: { legendaryEvery: number; firstLegendaryBy: number; chestUnits: number };
+  fortune: { legendaryEvery: number; firstLegendaryBy: number; chestUnits: number; expeditionUnits: number };
+  /** CR-14-04 (expeditionChestsPerHour 0 = the 1.3.0 1 per offlineChestEveryHours, max offlineChestMax) and CR-14-05 (ticketRateVsOnline 0 = no offline tickets). */
+  offline: { expeditionChestsPerHour: number; expeditionBestOf: number; expeditionChestMax: number; ticketRateVsOnline: number };
 }
 // §18 defaults: options 1 (off), farmChest null (→ rewards.farmChestChance everywhere), pity and Fortune 0 (off).
 const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null,
   recruit: { legendaryPityEvery: 0, legendaryPityPrefersUnowned: true, newHeroGuaranteeEvery: 0 },
-  fortune: { legendaryEvery: 0, firstLegendaryBy: 0, chestUnits: 1 } });
+  fortune: { legendaryEvery: 0, firstLegendaryBy: 0, chestUnits: 1, expeditionUnits: 1 },
+  offline: { expeditionChestsPerHour: 0, expeditionBestOf: 1, expeditionChestMax: 0, ticketRateVsOnline: 0 } });
 export const CONFIG = {
   ...design,
   v14: v14Defaults(),
@@ -99,11 +104,17 @@ export function setV14Rules(rules: readonly V14Rule[]): void {
   CONFIG.v14.farmChest = on.has('farmChest') ? { baseChance: V14_DESIGN.farmChest.baseChance, guaranteeEvery: V14_DESIGN.farmChest.guaranteeEvery, fromStage: V14_DESIGN.farmChest.fromStage } : null;
   const gacha = V14_DESIGN.gacha, gear = V14_DESIGN.gearPity;
   CONFIG.v14.recruit = on.has('recruitPity') ? { legendaryPityEvery: gacha.legendaryPityEvery, legendaryPityPrefersUnowned: gacha.legendaryPityPrefersUnowned, newHeroGuaranteeEvery: gacha.newHeroGuaranteeEvery } : v14Defaults().recruit;
-  CONFIG.v14.fortune = on.has('gearFortune') ? { legendaryEvery: gear.legendaryEvery, firstLegendaryBy: gear.firstLegendaryBy, chestUnits: gear.rollUnits.chest } : v14Defaults().fortune;
+  // Expedition Chests count rollUnits.expeditionChest (4) toward Fortune; with expeditionChests off, offline chests are normal chests (1).
+  CONFIG.v14.fortune = on.has('gearFortune') ? { legendaryEvery: gear.legendaryEvery, firstLegendaryBy: gear.firstLegendaryBy, chestUnits: gear.rollUnits.chest,
+    expeditionUnits: on.has('expeditionChests') ? gear.rollUnits.expeditionChest : gear.rollUnits.chest } : v14Defaults().fortune;
+  const away = V14_DESIGN.offline, legacy = v14Defaults().offline;
+  CONFIG.v14.offline = { ...(on.has('expeditionChests') ? { expeditionChestsPerHour: away.expeditionChestsPerHour, expeditionBestOf: away.expeditionBestOf, expeditionChestMax: away.expeditionChestMax } : legacy),
+    ticketRateVsOnline: on.has('offlineTickets') ? away.ticketRateVsOnline : 0 };
 }
 export function activeV14Rules(): V14Rule[] {
   const on: Record<V14Rule, boolean> = { chestChoice: CONFIG.v14.chestChoice.options > 1, farmChest: CONFIG.v14.farmChest !== null,
-    recruitPity: CONFIG.v14.recruit.legendaryPityEvery > 0 || CONFIG.v14.recruit.newHeroGuaranteeEvery > 0, gearFortune: CONFIG.v14.fortune.legendaryEvery > 0 };
+    recruitPity: CONFIG.v14.recruit.legendaryPityEvery > 0 || CONFIG.v14.recruit.newHeroGuaranteeEvery > 0, gearFortune: CONFIG.v14.fortune.legendaryEvery > 0,
+    expeditionChests: CONFIG.v14.offline.expeditionChestsPerHour > 0, offlineTickets: CONFIG.v14.offline.ticketRateVsOnline > 0 };
   return v14RuleSchema.options.filter(rule => on[rule]);
 }
 export const TICK_MS = 1000 / CONFIG.sim.ticksPerSecond;

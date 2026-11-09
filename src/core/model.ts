@@ -63,14 +63,16 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('wave'), stage: stageNumber, wave: positive }),
   z.object({ type: z.literal('loss'), stage: stageNumber, boss: z.boolean() }),
   z.object({ type: z.literal('retry'), stage: stageNumber, manual: z.boolean() }),
-  z.object({ type: z.literal('pull'), heroId: z.string(), rarity: raritySchema, duplicate: z.boolean(), pity: z.boolean() }),
+  z.object({ type: z.literal('pull'), heroId: z.string(), rarity: raritySchema, duplicate: z.boolean(), pity: z.union([z.boolean(), z.enum(['legend', 'epic', 'newHero']), z.null()]) }),
   z.object({ type: z.literal('gear'), gearId: itemIdSchema, slot: slotSchema, rarity: raritySchema }),
   // CR-14-08: emitted when a pick-1-of-2 chest resolves (by the player, or auto-picked by score when the queue overflows).
   z.object({ type: z.literal('chestChoice'), options: z.tuple([itemIdSchema, itemIdSchema]), kept: itemIdSchema, rarities: z.tuple([raritySchema, raritySchema]).optional() }),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema, level: positive, cost: positive }),
   z.object({ type: z.literal('tickets'), amount: positive, total: natural }),
   // seconds = applied (capped) time; rawSeconds = uncapped time away; heroes = every hero that received offline XP.
-  z.object({ type: z.literal('offline'), seconds: finite.nonnegative(), rawSeconds: finite.nonnegative(), clears: natural, gold: natural, xp: natural, chests: natural, heroes: z.array(levelChangeSchema) }),
+  z.object({ type: z.literal('offline'), seconds: finite.nonnegative(), rawSeconds: finite.nonnegative(), clears: natural, gold: natural, xp: natural, chests: natural, heroes: z.array(levelChangeSchema),
+    // v1.4 CR-14-04/05 (only when their rules are on): Expedition Chests granted and whole offline tickets granted.
+    expeditionChests: natural.optional(), tickets: natural.optional() }),
 ]);
 export type EventData = z.infer<typeof eventDataSchema>;
 const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSchema }).strict();
@@ -110,6 +112,8 @@ export const stateSchema = z.object({
   pityNewHero: natural.max(V14_DESIGN.gacha.newHeroGuaranteeEvery - 1).optional(),
   gearSinceLegendary: natural.max(V14_DESIGN.gearPity.legendaryEvery - 1).optional(),
   gearLegendaryFound: z.boolean().optional(),
+  // v1.4 CR-14-05, optional: the owed fraction of an offline ticket carried to the next absence (0 ≤ x < 1).
+  offlineTicketFrac: finite.nonnegative().lt(1).optional(),
   eventSeq: natural, eventCounts: z.record(z.string(), natural), events: z.array(eventSchema).max(CONFIG.runtime.eventLogLimit),
 }).strict().superRefine((state, context) => {
   const invalid = (message: string): void => context.addIssue({ code: 'custom', message });

@@ -54,3 +54,14 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 Original vendor notices, the Galmuri OFL-1.1 text and complete CC0 legal code are retained in `LICENSES/`. Every deduplicated sprite/icon source has an official-page license declaration in `LICENSES/source-declarations/`; enclosed LuizMelo notices are copied unmodified where supplied. All declare CC0-1.0, permitting public redistribution. No incompatible restriction was found. These notices cover third-party assets, not a license grant for original game code.
 
 Original game code is proprietary: Copyright (c) 2026 Mai Gia Phu. All rights reserved. See the root LICENSE. The asset licences above remain CC0, except the Galmuri fonts (OFL-1.1).
+
+## Audio (M3)
+
+All shipped clips in `public/audio/` come from the art handoff (`game-assets/idle-battler/audio/manifest.json`, sha256 in `src/audio-manifest.json`).
+
+| Clips | Source | Licence |
+|---|---|---|
+| `hit_1..3`, `hero_death`, `enemy_death`, `coin_pickup_1..3`, `stage_clear`, `boss_warning`, `gacha_pull`, `gacha_reveal_common/rare/epic/legendary`, `gacha_pity`, `drop_pop`, `ui_click`, `ui_open`, `ui_close`, `ambient_loop` (OGG, MP3, and the M4A/AAC copy of the loop encoded here with ffmpeg) | Original procedural synthesis made for this project by the art agent (`scripts/make_audio.py` in the handoff); no samples, recordings or downloaded sounds | Original work; no third-party licence; no attribution required |
+| `gacha_legendary_sting` | Kenney Music Jingles, `Steel jingles/jingles_STEEL02.ogg`, low-passed, faded and normalized — Kenney Vleugels, https://kenney.nl/assets/music-jingles | CC0-1.0 (credit "Kenney" appreciated, not required) |
+
+Not shipped: `crit` (skipped by design) and the `ultimate_*` clips (held for ultimates, PR 5).

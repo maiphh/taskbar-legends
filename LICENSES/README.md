@@ -12,3 +12,5 @@ The Galmuri fonts (Lee Minseo, https://github.com/quiple/galmuri) are licensed u
 - `../CREDITS.md`: each shipped asset and its source URL/license; `../docs/asset-licenses.md` preserves acquisition/license evidence and timestamps.
 
 No reference screenshots, third-party game mockups, source ZIPs or unrelated assets are redistributed. These third-party notices do not grant a license to the original Taskbar Legends code; its license has not yet been selected.
+
+Audio: every clip except `gacha_legendary_sting` is an original procedural synthesis made for this project (no third-party material). `gacha_legendary_sting` is Kenney Music Jingles `jingles_STEEL02` (CC0-1.0, https://kenney.nl/assets/music-jingles; enclosed `License.txt`: "License (Creative Commons Zero, CC0) … You may use these assets in personal and commercial projects. Credit (Kenney or www.kenney.nl) would be nice but is not mandatory."), covered by `CC0-1.0.txt`. ffmpeg/libvorbis/LAME/AAC were tools only. See `../CREDITS.md`.
