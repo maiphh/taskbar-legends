@@ -52,3 +52,5 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 ## Redistribution verification
 
 Original vendor notices and complete CC0 legal code are retained in `LICENSES/`. Every deduplicated sprite/icon source has an official-page license declaration in `LICENSES/source-declarations/`; enclosed LuizMelo notices are copied unmodified where supplied. All declare CC0-1.0, permitting public redistribution. No incompatible restriction was found. These notices cover third-party assets, not a license grant for original game code.
+
+Original game code is proprietary: Copyright (c) 2026 Mai Gia Phu. All rights reserved. See the root LICENSE. The asset licences above remain CC0.
