@@ -3,19 +3,19 @@ import type { CssRect, DesktopMonitor, PhysicalPoint, PhysicalRect } from './mat
 export interface DesktopPort {
   monitor(): Promise<DesktopMonitor>;
   frame(): Promise<{ origin: PhysicalPoint; scaleFactor: number }>;
+  bounds(): Promise<PhysicalRect>;
   cursor(): Promise<PhysicalPoint>;
-  setBounds(rect: PhysicalRect, previous: PhysicalRect | undefined): Promise<void>;
+  setBounds(rect: PhysicalRect): Promise<void>;
   ignoreCursor(ignore: boolean): Promise<void>;
 }
 export class DesktopController {
-  private bounds: PhysicalRect | undefined;
   private ignoring: boolean | undefined;
   constructor(private readonly port: DesktopPort) {}
   async dock(logicalHeight: number): Promise<boolean> {
     const next = dockRect(await this.port.monitor(), logicalHeight);
-    if (sameRect(this.bounds, next)) return false;
-    await this.port.setBounds(next, this.bounds);
-    this.bounds = next;
+    const actual = await this.port.bounds();
+    if (sameRect(actual, next)) return false;
+    await this.port.setBounds(next);
     return true;
   }
   async hitTest(regions: readonly CssRect[]): Promise<boolean> {

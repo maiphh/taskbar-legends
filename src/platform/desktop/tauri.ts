@@ -1,5 +1,5 @@
-import { isTauri } from '@tauri-apps/api/core';
-import { availableMonitors, currentMonitor, cursorPosition, getCurrentWindow, PhysicalPosition, PhysicalSize, primaryMonitor } from '@tauri-apps/api/window';
+import { invoke, isTauri } from '@tauri-apps/api/core';
+import { availableMonitors, currentMonitor, cursorPosition, getCurrentWindow, primaryMonitor } from '@tauri-apps/api/window';
 import type { Monitor } from '@tauri-apps/api/window';
 import { CONFIG } from '../../config';
 import type { GameDebug } from '../../debug';
@@ -25,11 +25,9 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
       if (!monitor) throw new Error('No monitor work area available');
       const parsed = describe(monitor); status.monitor = parsed.key; return parsed;
     },
+    bounds: async () => { const [position, size] = await Promise.all([win.innerPosition(), win.innerSize()]); return { x: position.x, y: position.y, width: size.width, height: size.height }; },
     frame: async () => ({ origin: await win.innerPosition(), scaleFactor: await win.scaleFactor() }), cursor: cursorPosition,
-    setBounds: async (rect, previous) => {
-      if (!previous || previous.width !== rect.width || previous.height !== rect.height) await win.setSize(new PhysicalSize(rect.width, rect.height));
-      if (!previous || previous.x !== rect.x || previous.y !== rect.y) await win.setPosition(new PhysicalPosition(rect.x, rect.y));
-    },
+    setBounds: rect => invoke('set_overlay_bounds', { bounds: rect }),
     ignoreCursor: ignore => win.setIgnoreCursorEvents(ignore),
   });
   function record(error: unknown): void {

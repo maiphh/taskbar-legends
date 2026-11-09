@@ -12,8 +12,8 @@
     ],
     "enemySpawnX": 400,
     "enemySpawnSpacingPx": 50,
-    "waveGapSec": 1.5,
-    "stageGapSec": 5,
+    "waveGapSec": 3,
+    "stageGapSec": 7,
     "partySize": 3
   },
   "rarity": {
@@ -31,13 +31,13 @@
     }
   },
   "growth": {
-    "levelCap": 60,
+    "levelCap": 40,
     "perLevel": 0.1,
     "starMax": 6,
     "perStar": 0.12,
     "formula": "stat = roleBase * rarityMult * heroMod * (1 + perLevel*(L-1)) * (1 + perStar*(stars-1)) + gearFlat, then * (1 + gearPct)",
     "xpToNext": {
-      "a": 1400,
+      "a": 1000,
       "p": 1.6,
       "formula": "round(a * L^p)"
     },
@@ -89,7 +89,7 @@
       "hp": 120,
       "atk": 30,
       "def": 5,
-      "attackIntervalTicks": 30,
+      "attackIntervalTicks": 20,
       "rangePx": 400,
       "skill": {
         "id": "fireball",
@@ -265,7 +265,7 @@
       "rarity": "legendary",
       "starter": false,
       "mod": {
-        "attackIntervalTicks": -3
+        "attackIntervalTicks": 0
       }
     },
     {
@@ -290,11 +290,11 @@
     "fullHealBetweenStages": true
   },
   "enemies": {
-    "scalingPerStage": 1.04,
+    "scalingPerStage": 1.06,
     "scalingFormula": "base * scalingPerStage^(stageIndex-1) for hp, atk, def",
     "grunt": {
-      "hp": 60,
-      "atk": 48,
+      "hp": 80,
+      "atk": 18,
       "def": 10,
       "attackIntervalTicks": 24,
       "rangePx": 30,
@@ -303,8 +303,8 @@
       "xp": 3
     },
     "archer": {
-      "hp": 40,
-      "atk": 40,
+      "hp": 50,
+      "atk": 14,
       "def": 5,
       "attackIntervalTicks": 30,
       "rangePx": 150,
@@ -313,8 +313,8 @@
       "xp": 3
     },
     "brute": {
-      "hp": 225,
-      "atk": 300,
+      "hp": 180,
+      "atk": 32,
       "def": 25,
       "attackIntervalTicks": 36,
       "rangePx": 30,
@@ -325,11 +325,11 @@
     "boss_ch1": {
       "name": "Chapter 1 Boss",
       "hp": 1500,
-      "atk": 450,
+      "atk": 36,
       "def": 20,
       "attackIntervalTicks": 30,
       "rangePx": 40,
-      "speedPxPerSec": 50,
+      "speedPxPerSec": 80,
       "skill": {
         "id": "slam",
         "everyNthAttack": 5,
@@ -343,12 +343,12 @@
     },
     "boss_ch2": {
       "name": "Chapter 2 Boss",
-      "hp": 450,
-      "atk": 1200,
-      "def": 25,
+      "hp": 2000,
+      "atk": 48,
+      "def": 15,
       "attackIntervalTicks": 30,
-      "rangePx": 150,
-      "speedPxPerSec": 50,
+      "rangePx": 100,
+      "speedPxPerSec": 80,
       "skill": {
         "id": "hex_volley",
         "everyNthAttack": 4,
@@ -536,6 +536,7 @@
             "grunt",
             "grunt",
             "grunt",
+            "brute",
             "archer"
           ]
         },
@@ -544,11 +545,13 @@
             "grunt",
             "grunt",
             "grunt",
+            "brute",
             "archer"
           ]
         },
         {
           "enemies": [
+            "grunt",
             "grunt",
             "grunt",
             "brute",
@@ -570,7 +573,7 @@
             "grunt",
             "grunt",
             "grunt",
-            "grunt",
+            "brute",
             "archer"
           ]
         },
@@ -579,7 +582,7 @@
             "grunt",
             "grunt",
             "grunt",
-            "grunt",
+            "brute",
             "archer"
           ]
         },
@@ -607,7 +610,9 @@
             "grunt",
             "grunt",
             "grunt",
-            "grunt",
+            "brute",
+            "brute",
+            "brute",
             "archer"
           ]
         },
@@ -616,7 +621,9 @@
             "grunt",
             "grunt",
             "grunt",
-            "grunt",
+            "brute",
+            "brute",
+            "brute",
             "archer"
           ]
         },
@@ -625,6 +632,8 @@
             "grunt",
             "grunt",
             "grunt",
+            "brute",
+            "brute",
             "brute",
             "archer"
           ]
@@ -644,7 +653,9 @@
             "grunt",
             "grunt",
             "grunt",
-            "grunt",
+            "brute",
+            "brute",
+            "brute",
             "archer"
           ]
         },
@@ -653,7 +664,9 @@
             "grunt",
             "grunt",
             "grunt",
-            "grunt",
+            "brute",
+            "brute",
+            "brute",
             "archer"
           ]
         },
@@ -662,6 +675,8 @@
             "grunt",
             "grunt",
             "grunt",
+            "brute",
+            "brute",
             "brute",
             "archer"
           ]
@@ -673,27 +688,19 @@
       "index": 10,
       "chapter": 1,
       "isBoss": true,
-      "timeoutSec": 120,
-      "firstClearTickets": 10,
+      "timeoutSec": 23,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
             "grunt",
-            "grunt",
-            "grunt",
-            "grunt",
-            "grunt",
-            "archer"
+            "grunt"
           ]
         },
         {
           "enemies": [
             "grunt",
-            "grunt",
-            "grunt",
-            "grunt",
-            "grunt",
-            "archer"
+            "grunt"
           ]
         },
         {
@@ -711,7 +718,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -745,7 +752,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -779,7 +786,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -813,7 +820,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -850,7 +857,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -887,7 +894,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -924,7 +931,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -964,7 +971,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -1004,7 +1011,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -1043,29 +1050,17 @@
       "index": 20,
       "chapter": 2,
       "isBoss": true,
-      "timeoutSec": 120,
-      "firstClearTickets": 10,
+      "timeoutSec": 23,
+      "firstClearTickets": 150,
       "waves": [
         {
           "enemies": [
-            "grunt",
-            "grunt",
-            "grunt",
-            "grunt",
-            "grunt",
-            "archer",
-            "archer"
+            "grunt"
           ]
         },
         {
           "enemies": [
-            "grunt",
-            "grunt",
-            "grunt",
-            "grunt",
-            "brute",
-            "archer",
-            "archer"
+            "grunt"
           ]
         },
         {
@@ -1087,20 +1082,20 @@
     "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
     "firstClearChest": true,
     "farmChestChance": 0.15,
-    "farmTicketChance": 0.0075,
+    "farmTicketChance": 0.01,
     "startingTickets": 10
   },
   "gear": {
     "slots": {
       "weapon": {
         "main": {
-          "atk": 6
+          "atk": 16
         }
       },
       "armor": {
         "main": {
-          "hp": 60,
-          "def": 8
+          "hp": 80,
+          "def": 10
         }
       },
       "charm": {
@@ -1127,14 +1122,14 @@
       "legendary": 0.01
     },
     "rarityMult": {
-      "common": 1.0,
-      "rare": 1.3,
-      "epic": 1.7,
-      "legendary": 2.2
+      "common": 1,
+      "rare": 1.1,
+      "epic": 1.2,
+      "legendary": 1.3
     },
     "mainRoll": [
-      0.9,
-      1.1
+      1,
+      1
     ],
     "mainFormula": "round(base * scalingPerStage^(dropStage-1) * rarityMult * roll)",
     "charmFormula": "uniform(min,max) * rarityMult, rounded to 0.001",

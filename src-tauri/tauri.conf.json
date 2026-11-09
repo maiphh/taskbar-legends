@@ -50,6 +50,10 @@
           "libgtk-3-0"
         ]
       }
+    },
+    "resources": {
+      "../CREDITS.md": "licenses/CREDITS.md",
+      "../LICENSES/": "licenses/LICENSES/"
     }
   }
 }

@@ -59,6 +59,8 @@ describe('pure deterministic core', () => {
     const enemy = state.enemies[0];
     if (!ranger || !enemy) throw new Error('Fixture missing');
     state.party = [ranger]; state.enemies = [enemy]; enemy.x = ranger.x + 200;
+    ranger.atk = 18; ranger.attackTicks = 16; ranger.range = 220;
+    enemy.hp = 60; enemy.maxHp = 60; enemy.def = 10;
     enemy.cooldown = 10000; enemy.atk = 1;
     expect(damage(ranger.atk, enemy.def)).toBe(16);
     step(state, 48);
@@ -152,7 +154,8 @@ describe('economy and policy', () => {
   it('only living combat heroes earn XP in full, level cap is respected', () => {
     const state = createState(); const dead = state.party[0]; if (!dead) throw new Error('Fixture'); dead.hp = 0;
     grantXp(state, Math.round(CONFIG.growth.xpToNext.a)); expect(state.roster[0]?.level).toBe(1); expect(state.roster[1]?.level).toBe(2); expect(state.roster[2]?.level).toBe(2);
-    grantXp(state, 1e9); expect(state.roster[1]?.level).toBe(60); expect(state.roster[1]?.xp).toBe(0);
+    const xpThroughCap = Array.from({ length: CONFIG.growth.levelCap }, (_, index) => Math.round(CONFIG.growth.xpToNext.a * (index + 1) ** CONFIG.growth.xpToNext.p)).reduce((sum, xp) => sum + xp, 0);
+    grantXp(state, xpThroughCap); expect(state.roster[1]?.level).toBe(CONFIG.growth.levelCap); expect(state.roster[1]?.xp).toBe(0);
   });
   it('one million seeded pulls match published rates within 0.3 points and never miss Epic+ for 30 pulls', () => {
     const state = { rng: 1 }; let pity = 0, gap = 0, maxGap = 0;

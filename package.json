@@ -17,7 +17,8 @@
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
     "native:check": "cargo check --manifest-path src-tauri/Cargo.toml --locked",
-    "native:test": "cargo test --manifest-path src-tauri/Cargo.toml --locked"
+    "native:test": "cargo test --manifest-path src-tauri/Cargo.toml --locked",
+    "shot:desktop": "tsx scripts/desktop-shot.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",

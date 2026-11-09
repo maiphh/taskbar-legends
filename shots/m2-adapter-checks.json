@@ -1,0 +1,578 @@
+[
+  {
+    "scale": 1,
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 880,
+          "width": 1920,
+          "height": 160
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 160,
+        "dpr": 1,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 8,
+          "y": 88,
+          "width": 280,
+          "height": 64
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1632,
+          "y": 88,
+          "width": 280,
+          "height": 64
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 552,
+          "width": 1920,
+          "height": 488
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 488,
+        "dpr": 1,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 8,
+          "y": 416,
+          "width": 280,
+          "height": 64
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1632,
+          "y": 416,
+          "width": 280,
+          "height": 64
+        },
+        {
+          "x": 1192,
+          "y": 0,
+          "width": 720,
+          "height": 400,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 60,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794201907882,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  },
+  {
+    "scale": 1.25,
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 840,
+          "width": 1920,
+          "height": 200
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 128,
+        "dpr": 1.25,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 6.4,
+          "y": 102.4,
+          "width": 224,
+          "height": 51.2
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1305.6,
+          "y": 102.4,
+          "width": 224,
+          "height": 51.2
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 430,
+          "width": 1920,
+          "height": 610
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 390.4,
+        "dpr": 1.25,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 6.4,
+          "y": 430.409375,
+          "width": 224,
+          "height": 51.2
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1305.6,
+          "y": 430.409375,
+          "width": 224,
+          "height": 51.2
+        },
+        {
+          "x": 953.6,
+          "y": 97.609375,
+          "width": 576,
+          "height": 320,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 67,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794201909349,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  },
+  {
+    "scale": 1.5,
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 800,
+          "width": 1920,
+          "height": 240
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 106.66666666666667,
+        "dpr": 1.5,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 5.333333333333333,
+          "y": 112.01041666666666,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1088,
+          "y": 112.01041666666666,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 308,
+          "width": 1920,
+          "height": 732
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 325.3333333333333,
+        "dpr": 1.5,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 5.333333333333333,
+          "y": 440.0052083333333,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1088,
+          "y": 440.0052083333333,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        },
+        {
+          "x": 794.6666666666666,
+          "y": 162.671875,
+          "width": 480,
+          "height": 266.6666666666667,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 63,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794201910732,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  }
+]

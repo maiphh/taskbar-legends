@@ -13,12 +13,15 @@ export function dockRect(monitor: DesktopMonitor, logicalHeight: number): Physic
   const height = Math.min(Math.round(logicalHeight * monitor.scaleFactor), Math.floor(work.height));
   return { x: Math.round(work.x), y: Math.round(work.y + work.height - height), width: Math.floor(work.width), height };
 }
-export function sameRect(a: PhysicalRect | undefined, b: PhysicalRect): boolean {
-  return !!a && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+export function sameRect(a: PhysicalRect, b: PhysicalRect): boolean {
+  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 }
 export function cursorHits(args: { cursor: PhysicalPoint; origin: PhysicalPoint; scaleFactor: number; regions: readonly CssRect[] }): boolean {
   const { cursor, origin, scaleFactor, regions } = args;
   if (!(scaleFactor > 0) || !Number.isFinite(scaleFactor)) return false;
-  const x = (cursor.x - origin.x) / scaleFactor, y = (cursor.y - origin.y) / scaleFactor;
-  return regions.some(rect => rect.width > 0 && rect.height > 0 && x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height);
+  return regions.some(rect => {
+    const left = Math.round(origin.x + rect.x * scaleFactor), top = Math.round(origin.y + rect.y * scaleFactor);
+    const right = Math.round(origin.x + (rect.x + rect.width) * scaleFactor), bottom = Math.round(origin.y + (rect.y + rect.height) * scaleFactor);
+    return rect.width > 0 && rect.height > 0 && cursor.x >= left && cursor.y >= top && cursor.x < right && cursor.y < bottom;
+  });
 }

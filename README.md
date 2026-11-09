@@ -109,3 +109,9 @@ The later design overrides the initial generic tick-replay request: offline awar
 CI runs typecheck, ESLint, Vitest (core, million-pull distribution/pity, deterministic policy, actual PNG envelopes and packaging), build and JSON-validated sim smoke. The Pages workflow deploys `m1-prototype` pushes (and supports manual dispatch) once the repository and Pages are enabled. `VITE_BASE_PATH=/repo-name/ npm run build` controls app and asset paths; nested-base browser capture is verified. No repo name is hardcoded.
 
 **M2 remains separate:** Tauri 2 transparent/frameless/always-on-top shell, actual taskbar/work-area anchoring, click-through adapter/companion windows, fullscreen policy, monitor transfer, real Windows DPI and separate compact management windows. None is claimed proven by this Linux browser prototype.
+
+## Local M2 desktop shell (not yet published)
+
+See [M2 architecture](docs/M2-ARCHITECTURE.md) and the [real-Windows checklist](docs/M2-WINDOWS-TESTS.md). `npm run desktop:dev` runs Tauri2; `npm run shot:desktop` verifies the adapter against emulated OS IPC, not native click-through. The Windows artifact workflow is ready but has not run while M2 push is on hold. Linux native compilation is blocked by unreachable apt prerequisites.
+
+M1 browser preview: https://maiphh.github.io/taskbar-legends/ ; M1 PR: https://github.com/maiphh/taskbar-legends/pull/1 (not merged). M2 source does not alter that deployed M1 build.

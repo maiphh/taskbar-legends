@@ -38,7 +38,7 @@ export const CONFIG = {
     maxEnemiesPerWave: 10,
     textCacheLimit: 512, damageLabelMaxPerTarget: 3, damageCoalesceSeconds: 0.25, damageLabelSeconds: 0.65, damageRisePx: 32,
   },
-  desktop: { closedLogicalHeight: 160, expandedLogicalHeight: 488, cursorPollMs: 16, monitorPollMs: 500, errorLimit: 30 },
+  desktop: { closedLogicalHeight: uiTokens.closed.height, expandedLogicalHeight: uiTokens.expanded.height, cursorPollMs: 16, monitorPollMs: 500, errorLimit: 30 },
   view: {
     canvasHeight: uiTokens.closed.height, stripHeight: uiTokens.closed.coreHeight, defaultWidth: 1280, minWidth: 320, maxDpr: 2,
     baselineY: uiTokens.closed.baselineY, hitFlashMs: 90, hitFlashColor: '#ffffff', hurtFallbackMs: 200, attackFallbackMs: 500, heroWidth: 18, heroHeight: 23, enemyWidth: 18, enemyHeight: 21,
