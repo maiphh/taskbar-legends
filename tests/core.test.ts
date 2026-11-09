@@ -198,7 +198,9 @@ describe('offline timestamp accounting', () => {
   it('12 hours closed equals exactly the 8-hour cap without progress or tickets', () => {
     const state = createState(9); step(state, 4000); const saved = makeSave(state, 1000);
     const a = restoreSave(saved, 1000 + 8 * 3600000), b = restoreSave(saved, 1000 + 12 * 3600000);
-    expect(a.state).toEqual(b.state); expect(b.capped).toBe(true);
+    const withoutRaw = (value: typeof a.state) => ({ ...value, events: value.events.map(event => event.data.type === 'offline' ? { ...event, data: { ...event.data, rawSeconds: 0 } } : event) });
+    expect(withoutRaw(a.state)).toEqual(withoutRaw(b.state)); expect(b.capped).toBe(true);
+    expect([a.rawSeconds, b.rawSeconds, b.seconds]).toEqual([28800, 43200, 28800]);
     expect(a.state.tick).toBe(state.tick); expect(a.state.progress).toEqual(state.progress); expect(a.state.tickets).toBe(state.tickets);
     expect(a.chests).toBe(4); expect(a.seconds).toBe(28800);
   });

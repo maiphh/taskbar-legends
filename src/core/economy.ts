@@ -2,7 +2,7 @@ import { CONFIG, heroConfig, raritySchema, slotSchema } from '../config';
 import type { GearSlot, Rarity } from '../config';
 import { emit, goldChange } from './events';
 import { compareItemIds, gearTemplateId, itemId } from './model';
-import type { GameState, Gear, ItemId, OwnedHero } from './model';
+import type { GameState, Gear, ItemId, LevelChange, OwnedHero } from './model';
 import { random } from './rng';
 import type { RandomState } from './rng';
 
@@ -36,10 +36,13 @@ export function heroPower(state: GameState, hero: OwnedHero): number {
   return Math.round(stats.maxHp * CONFIG.runtime.hpPower + stats.atk * CONFIG.runtime.atkPower + stats.def * CONFIG.runtime.defPower);
 }
 export function partyPower(state: GameState): number { return state.partyIds.reduce((sum, id) => sum + heroPower(state, getOwned(state, id)), 0); }
-export function grantXp(state: GameState, amount: number, ids = state.party.filter(unit => unit.hp > 0).map(unit => unit.sourceId)): void {
-  if (!amount || !ids.length) return;
+/** Returns levelBefore/levelAfter for every hero that received XP (capped heroes included, unchanged). */
+export function grantXp(state: GameState, amount: number, ids = state.party.filter(unit => unit.hp > 0).map(unit => unit.sourceId)): LevelChange[] {
+  if (!amount || !ids.length) return [];
+  const changes: LevelChange[] = [];
   for (const id of ids) {
-    const hero = getOwned(state, id);
+    const hero = getOwned(state, id), levelBefore = hero.level;
+    changes.push({ id, levelBefore, levelAfter: levelBefore });
     if (hero.level >= CONFIG.growth.levelCap) continue;
     hero.xp += amount;
     while (hero.level < CONFIG.growth.levelCap) {
@@ -48,9 +51,12 @@ export function grantXp(state: GameState, amount: number, ids = state.party.filt
       hero.xp -= cost; hero.level += 1;
     }
     if (hero.level === CONFIG.growth.levelCap) hero.xp = 0;
+    const change = changes.at(-1); if (change) change.levelAfter = hero.level;
   }
   state.economyRevision += 1;
-  emit(state, { type: 'xp', amount, heroIds: ids });
+  const levels = changes.filter(change => change.levelAfter !== change.levelBefore);
+  emit(state, { type: 'xp', amount, heroIds: ids, ...(levels.length ? { levels } : {}) });
+  return changes;
 }
 export function weightedRarity(state: RandomState, rates: Record<Rarity, number>): Rarity {
   let roll = random(state);
