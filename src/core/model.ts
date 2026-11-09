@@ -45,6 +45,8 @@ export const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('party'), heroIds: z.array(z.string()).length(CONFIG.sim.partySize) }).strict(),
 ]);
 export type Action = z.infer<typeof actionSchema>;
+export const levelChangeSchema = z.object({ id: z.string(), levelBefore: positive.max(CONFIG.growth.levelCap), levelAfter: positive.max(CONFIG.growth.levelCap) }).strict();
+export type LevelChange = z.infer<typeof levelChangeSchema>;
 const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('spawn'), unitId: z.string(), side: z.enum(['hero', 'enemy']), stage: stageNumber, wave: positive }),
   z.object({ type: z.literal('hit'), attackerId: z.string(), targetId: z.string(), damage: positive, side: z.enum(['hero', 'enemy']) }),
@@ -52,7 +54,8 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('skill'), unitId: z.string(), skill: z.string() }),
   z.object({ type: z.literal('death'), unitId: z.string(), side: z.enum(['hero', 'enemy']) }),
   z.object({ type: z.literal('gold'), amount: finite.int(), total: natural, reason: z.string() }),
-  z.object({ type: z.literal('xp'), amount: natural, heroIds: z.array(z.string()) }),
+  // levels lists only heroes whose level changed; omitted when nobody levelled up.
+  z.object({ type: z.literal('xp'), amount: natural, heroIds: z.array(z.string()), levels: z.array(levelChangeSchema).optional() }),
   z.object({ type: z.literal('stage'), stage: stageNumber, mode: z.string() }),
   z.object({ type: z.literal('clear'), stage: stageNumber, first: z.boolean(), durationSeconds: finite.nonnegative() }),
   z.object({ type: z.literal('wave'), stage: stageNumber, wave: positive }),
@@ -62,7 +65,8 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('gear'), gearId: itemIdSchema, slot: slotSchema, rarity: raritySchema }),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema, level: positive, cost: positive }),
   z.object({ type: z.literal('tickets'), amount: positive, total: natural }),
-  z.object({ type: z.literal('offline'), seconds: finite.nonnegative(), clears: natural, gold: natural, xp: natural, chests: natural }),
+  // seconds = applied (capped) time; rawSeconds = uncapped time away; heroes = every hero that received offline XP.
+  z.object({ type: z.literal('offline'), seconds: finite.nonnegative(), rawSeconds: finite.nonnegative(), clears: natural, gold: natural, xp: natural, chests: natural, heroes: z.array(levelChangeSchema) }),
 ]);
 export type EventData = z.infer<typeof eventDataSchema>;
 const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSchema }).strict();
@@ -132,6 +136,21 @@ export function itemId(seed: number, serial: number): ItemId {
 /** Fixed-width hex serials make string order equal acquisition order. */
 export function compareItemIds(a: ItemId, b: ItemId): number { return a < b ? -1 : a > b ? 1 : 0; }
 export function gearTemplateId(slot: Gear['slot'], rarity: Gear['rarity']): string { return `gear.${slot}.${rarity}`; }
-export function parseState(value: unknown): GameState { return stateSchema.parse(value); }
+/**
+ * Event-log fields added after a save format shipped. Older logs get the most faithful values available:
+ * an old offline event's raw time away is unknown, so it is its applied seconds; its per-hero levels were never recorded.
+ */
+export function upgradeEventLog(state: unknown): unknown {
+  if (typeof state !== 'object' || state === null || !('events' in state) || !Array.isArray(state.events)) return state;
+  const events: unknown[] = state.events.map((event: unknown) => {
+    if (typeof event !== 'object' || event === null || !('data' in event) || typeof event.data !== 'object' || event.data === null) return event;
+    const data: Record<string, unknown> = { ...event.data };
+    if (data.type !== 'offline') return event;
+    data.rawSeconds ??= data.seconds; data.heroes ??= [];
+    return { ...event, data };
+  });
+  return { ...state, events };
+}
+export function parseState(value: unknown): GameState { return stateSchema.parse(upgradeEventLog(value)); }
 export function cloneState(state: GameState): GameState { return structuredClone(state); }
 export function parseAction(value: unknown): Action { return actionSchema.parse(value); }
