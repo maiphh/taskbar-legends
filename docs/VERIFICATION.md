@@ -1,5 +1,7 @@
 # Verification — milestone 1
 
+Historical published-M1 checkpoint; on the M2 branch use `M2-VERIFICATION.md` for current measurements. Root sim/shot artifacts on M2 may reflect a newer designer snapshot.
+
 Verified 2026-11-09 12:01 Asia/Saigon (UTC+7). All work local; branch m1-prototype; no remote, push, PR, deploy or merge.
 
 ## Automated checks

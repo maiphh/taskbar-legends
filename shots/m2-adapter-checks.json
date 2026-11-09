@@ -1,0 +1,1125 @@
+[
+  {
+    "scale": 1,
+    "mode": "overlay",
+    "exitPath": "hud",
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 880,
+          "width": 1920,
+          "height": 160
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 160,
+        "dpr": 1,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 92,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 8,
+          "y": 88,
+          "width": 280,
+          "height": 64
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1632,
+          "y": 88,
+          "width": 280,
+          "height": 64
+        },
+        {
+          "x": 1840,
+          "y": 92,
+          "width": 28,
+          "height": 24,
+          "kind": "hud",
+          "id": "quit"
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 552,
+          "width": 1920,
+          "height": 488
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 488,
+        "dpr": 1,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 420,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 8,
+          "y": 416,
+          "width": 280,
+          "height": 64
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1632,
+          "y": 416,
+          "width": 280,
+          "height": 64
+        },
+        {
+          "x": 1840,
+          "y": 420,
+          "width": 28,
+          "height": 24,
+          "kind": "hud",
+          "id": "quit"
+        },
+        {
+          "x": 1192,
+          "y": 0,
+          "width": 720,
+          "height": 400,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "mode": "overlay",
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 65,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794208469231,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  },
+  {
+    "scale": 1.25,
+    "mode": "overlay",
+    "exitPath": "tray-quit",
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 840,
+          "width": 1920,
+          "height": 200
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 128,
+        "dpr": 1.25,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 92,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 6.4,
+          "y": 102.4,
+          "width": 224,
+          "height": 51.2
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1305.6,
+          "y": 102.4,
+          "width": 224,
+          "height": 51.2
+        },
+        {
+          "x": 1472,
+          "y": 105.6,
+          "width": 22.4,
+          "height": 19.2,
+          "kind": "hud",
+          "id": "quit"
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 430,
+          "width": 1920,
+          "height": 610
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 390.4,
+        "dpr": 1.25,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 420,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 6.4,
+          "y": 430.409375,
+          "width": 224,
+          "height": 51.2
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1305.6,
+          "y": 430.409375,
+          "width": 224,
+          "height": 51.2
+        },
+        {
+          "x": 1472,
+          "y": 433.609375,
+          "width": 22.4,
+          "height": 19.2,
+          "kind": "hud",
+          "id": "quit"
+        },
+        {
+          "x": 953.6,
+          "y": 97.609375,
+          "width": 576,
+          "height": 320,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "mode": "overlay",
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 69,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794208471004,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  },
+  {
+    "scale": 1.5,
+    "mode": "overlay",
+    "exitPath": "tray-relaunch",
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 800,
+          "width": 1920,
+          "height": 240
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 106.66666666666667,
+        "dpr": 1.5,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 92,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 5.333333333333333,
+          "y": 112.01041666666666,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1088,
+          "y": 112.01041666666666,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        },
+        {
+          "x": 1226.6666666666667,
+          "y": 114.67708333333334,
+          "width": 18.666666666666668,
+          "height": 16,
+          "kind": "hud",
+          "id": "quit"
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 308,
+          "width": 1920,
+          "height": 732
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 325.3333333333333,
+        "dpr": 1.5,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 420,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 5.333333333333333,
+          "y": 440.0052083333333,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 1088,
+          "y": 440.0052083333333,
+          "width": 186.66666666666666,
+          "height": 42.666666666666664
+        },
+        {
+          "x": 1226.6666666666667,
+          "y": 442.671875,
+          "width": 18.666666666666668,
+          "height": 16,
+          "kind": "hud",
+          "id": "quit"
+        },
+        {
+          "x": 794.6666666666666,
+          "y": 162.671875,
+          "width": 480,
+          "height": 266.6666666666667,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "mode": "overlay",
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 59,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794208472556,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  },
+  {
+    "scale": 2,
+    "mode": "overlay",
+    "exitPath": null,
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 720,
+          "width": 1920,
+          "height": 320
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 80,
+        "dpr": 2,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 92,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 4,
+          "y": 124,
+          "width": 140,
+          "height": 32
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 816,
+          "y": 124,
+          "width": 140,
+          "height": 32
+        },
+        {
+          "x": 920,
+          "y": 126,
+          "width": 14,
+          "height": 12,
+          "kind": "hud",
+          "id": "quit"
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 64,
+          "width": 1920,
+          "height": 976
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 244,
+        "dpr": 2,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1840,
+            "y": 420,
+            "width": 28,
+            "height": 24,
+            "kind": "hud",
+            "id": "quit"
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 4,
+          "y": 452,
+          "width": 140,
+          "height": 32
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 816,
+          "y": 452,
+          "width": 140,
+          "height": 32
+        },
+        {
+          "x": 920,
+          "y": 454,
+          "width": 14,
+          "height": 12,
+          "kind": "hud",
+          "id": "quit"
+        },
+        {
+          "x": 596,
+          "y": 244,
+          "width": 360,
+          "height": 200,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "mode": "overlay",
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 65,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794208474140,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  },
+  {
+    "scale": 2,
+    "mode": "window",
+    "proof": "Emulated IPC only, not a real Mac compositor",
+    "fallback": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 976
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          false
+        ],
+        "visible": true,
+        "failCursor": false,
+        "exits": [],
+        "listeners": [
+          {
+            "event": "tauri://scale-change",
+            "handler": 1
+          },
+          {
+            "event": "tauri://move",
+            "handler": 3
+          },
+          {
+            "event": "shell://quit",
+            "handler": 5
+          },
+          {
+            "event": "shell://relaunch",
+            "handler": 7
+          }
+        ]
+      },
+      "shell": {
+        "mode": "window",
+        "active": true,
+        "ignoring": true,
+        "dockCount": 0,
+        "hitTests": 0,
+        "monitor": "",
+        "logicalHeight": 0,
+        "errors": [],
+        "config": {
+          "closedLogicalHeight": 160,
+          "expandedLogicalHeight": 488,
+          "cursorPollMs": 16,
+          "monitorPollMs": 500,
+          "errorLimit": 30
+        }
+      },
+      "background": "rgb(23, 33, 45)"
+    },
+    "errors": []
+  }
+]

@@ -6,11 +6,19 @@ const positive = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const stageNumber = positive.max(CONFIG.stages.length);
 const finite = z.number().finite();
 const statsSchema = z.object({ hp: natural, atk: natural, def: natural, atkPct: finite.nonnegative(), hpPct: finite.nonnegative(), speedPct: finite.nonnegative() }).strict();
-const equipmentSchema = z.object({ weapon: natural.nullable(), armor: natural.nullable(), charm: natural.nullable() }).strict();
+/** Stable item id: itm_<seed namespace>_<serial>, both 8 hex digits, so ids sort in acquisition order. */
+export const itemIdSchema = z.string().regex(/^itm_[0-9a-f]{8}_[0-9a-f]{8}$/).brand<'ItemId'>();
+export type ItemId = z.infer<typeof itemIdSchema>;
+export const itemSourceSchema = z.enum(['drop', 'gacha', 'starter', 'migration']);
+const equipmentSchema = z.object({ weapon: itemIdSchema.nullable(), armor: itemIdSchema.nullable(), charm: itemIdSchema.nullable() }).strict();
 export const ownedHeroSchema = z.object({ id: z.string(), level: positive.max(CONFIG.growth.levelCap), xp: natural, stars: positive.max(CONFIG.growth.starMax), equipment: equipmentSchema }).strict();
 export type OwnedHero = z.infer<typeof ownedHeroSchema>;
-export const gearSchema = z.object({ id: positive, slot: slotSchema, rarity: raritySchema, dropStage: stageNumber,
-  level: natural.max(CONFIG.gear.upgrade.maxLevel), spent: natural, stats: statsSchema }).strict();
+const gearFields = { slot: slotSchema, rarity: raritySchema, dropStage: stageNumber,
+  level: natural.max(CONFIG.gear.upgrade.maxLevel), spent: natural, stats: statsSchema };
+export const gearSchema = z.object({ id: itemIdSchema, templateId: z.string().min(1), tradeable: z.boolean(),
+  acquiredAt: z.object({ tick: natural, source: itemSourceSchema }).strict(), ...gearFields }).strict();
+/** Save v1 gear: a per-save numeric id and no provenance. Only used to migrate old saves. */
+export const gearV1Schema = z.object({ id: positive, ...gearFields }).strict();
 export type Gear = z.infer<typeof gearSchema>;
 const unitSchema = z.object({
   id: z.string(), sourceId: z.string(), side: z.enum(['hero', 'enemy']),
@@ -32,8 +40,8 @@ export const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('pull') }).strict(),
   z.object({ type: z.literal('autoEquip') }).strict(),
   z.object({ type: z.literal('autoParty') }).strict(),
-  z.object({ type: z.literal('upgrade'), gearId: positive }).strict(),
-  z.object({ type: z.literal('equip'), heroId: z.string(), gearId: positive }).strict(),
+  z.object({ type: z.literal('upgrade'), gearId: itemIdSchema }).strict(),
+  z.object({ type: z.literal('equip'), heroId: z.string(), gearId: itemIdSchema }).strict(),
   z.object({ type: z.literal('party'), heroIds: z.array(z.string()).length(CONFIG.sim.partySize) }).strict(),
 ]);
 export type Action = z.infer<typeof actionSchema>;
@@ -51,8 +59,8 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('loss'), stage: stageNumber, boss: z.boolean() }),
   z.object({ type: z.literal('retry'), stage: stageNumber, manual: z.boolean() }),
   z.object({ type: z.literal('pull'), heroId: z.string(), rarity: raritySchema, duplicate: z.boolean(), pity: z.boolean() }),
-  z.object({ type: z.literal('gear'), gearId: positive, slot: slotSchema, rarity: raritySchema }),
-  z.object({ type: z.literal('upgrade'), gearId: positive, level: positive, cost: positive }),
+  z.object({ type: z.literal('gear'), gearId: itemIdSchema, slot: slotSchema, rarity: raritySchema }),
+  z.object({ type: z.literal('upgrade'), gearId: itemIdSchema, level: positive, cost: positive }),
   z.object({ type: z.literal('tickets'), amount: positive, total: natural }),
   z.object({ type: z.literal('offline'), seconds: finite.nonnegative(), clears: natural, gold: natural, xp: natural, chests: natural }),
 ]);
@@ -60,7 +68,7 @@ export type EventData = z.infer<typeof eventDataSchema>;
 const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSchema }).strict();
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
-  version: z.literal(1), balance: z.literal(CONFIG.version), tick: natural,
+  version: z.literal(2), balance: z.literal(CONFIG.version), tick: natural,
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
   highestCleared: natural.max(CONFIG.stages.length), progress: progressSchema,
@@ -91,8 +99,9 @@ export const stateSchema = z.object({
   if (state.enemies.some(unit => !enemyKindSchema.safeParse(unit.sourceId).success)) invalid('Invalid enemy');
   if (state.party.some(unit => !owned.has(unit.sourceId))) invalid('Invalid combat party');
   const gearIds = new Set(state.inventory.map(item => item.id));
-  if (gearIds.size !== state.inventory.length || state.inventory.some(item => item.id >= state.nextGearId)) invalid('Invalid gear IDs');
-  const equipped = new Set<number>();
+  if (gearIds.size !== state.inventory.length || state.inventory.some(item => item.id >= itemId(state.seed, state.nextGearId) || !item.id.startsWith(itemId(state.seed, 0).slice(0, 13))
+    || item.templateId !== gearTemplateId(item.slot, item.rarity))) invalid('Invalid gear IDs');
+  const equipped = new Set<string>();
   for (const hero of state.roster) for (const slot of slotSchema.options) {
     const id = hero.equipment[slot];
     if (id !== null) {
@@ -110,6 +119,19 @@ export const stateSchema = z.object({
   for (const hero of state.roster) heroConfig(hero.id);
 });
 export type GameState = z.infer<typeof stateSchema>;
+/** Seed-derived namespace (pure hash; never draws from the gameplay RNG, so balance sims are unchanged). */
+export function itemNamespace(seed: number): string {
+  let value = (seed ^ 0x9e3779b9) >>> 0;
+  value = Math.imul(value ^ (value >>> 16), 0x85ebca6b) >>> 0;
+  value = Math.imul(value ^ (value >>> 13), 0xc2b2ae35) >>> 0;
+  return ((value ^ (value >>> 16)) >>> 0).toString(16).padStart(8, '0');
+}
+export function itemId(seed: number, serial: number): ItemId {
+  return itemIdSchema.parse(`itm_${itemNamespace(seed)}_${serial.toString(16).padStart(8, '0')}`);
+}
+/** Fixed-width hex serials make string order equal acquisition order. */
+export function compareItemIds(a: ItemId, b: ItemId): number { return a < b ? -1 : a > b ? 1 : 0; }
+export function gearTemplateId(slot: Gear['slot'], rarity: Gear['rarity']): string { return `gear.${slot}.${rarity}`; }
 export function parseState(value: unknown): GameState { return stateSchema.parse(value); }
 export function cloneState(state: GameState): GameState { return structuredClone(state); }
 export function parseAction(value: unknown): Action { return actionSchema.parse(value); }

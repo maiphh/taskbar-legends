@@ -35,7 +35,8 @@ describe('affordability selector', () => {
   });
   it('is pure', () => {
     const state = geared(); state.gold = 1_000_000; const before = structuredClone(state);
-    affordability(state); upgradeDelta(state, state.inventory[0]?.id ?? 1, 1); stageCue(state); upgradePopups(state);
+    const first = state.inventory[0]; if (!first) throw new Error('no gear');
+    affordability(state); upgradeDelta(state, first.id, 1); stageCue(state); upgradePopups(state);
     expect(state).toEqual(before);
   });
 });

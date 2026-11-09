@@ -23,6 +23,10 @@ jobs:
         run: |
           npm run --silent sim -- --seed 1 --ticks 600 > sim-smoke.json
           node --input-type=module -e "import fs from 'node:fs'; const s=JSON.parse(fs.readFileSync('sim-smoke.json','utf8')); if(s.final.tick!==600 || s.final.seed!==1) throw new Error('Invalid smoke result');"
+      - name: Aggregate reference CLI smoke
+        run: |
+          npm run --silent sim -- --policy reference --days 1 --seeds 2 --gacha-seeds 32 > sim-aggregate-smoke.json
+          node --input-type=module -e "import fs from 'node:fs'; const s=JSON.parse(fs.readFileSync('sim-aggregate-smoke.json','utf8')); if(s.seedCount!==2 || s.targets.length!==7 || !s.targets.every(t=>'p10' in t.distribution && 'median' in t.distribution && 'p90' in t.distribution)) throw new Error('Invalid aggregate smoke');"
       - uses: actions/upload-artifact@v4
         with:
           name: sim-smoke

@@ -1,0 +1,7615 @@
+{
+ "format": "taskbar-legends-save-v1",
+ "savedAtMs": 1700000000000,
+ "remainderMs": 0,
+ "state": {
+  "version": 1,
+  "balance": "1.1.0",
+  "tick": 144000,
+  "rng": 2316120997,
+  "seed": 11,
+  "gold": 210,
+  "tickets": 0,
+  "pity": 6,
+  "highestCleared": 9,
+  "progress": {
+   "kind": "BOSS_READY",
+   "stage": 9,
+   "bossStage": 10,
+   "failedPower": 1494,
+   "bossLosses": 8
+  },
+  "phase": {
+   "kind": "battle"
+  },
+  "wave": 1,
+  "encounter": 259,
+  "stageStartedTick": 143928,
+  "attemptPower": 1538,
+  "roster": [
+   {
+    "id": "mw2",
+    "level": 1,
+    "xp": 42,
+    "stars": 6,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "hu1",
+    "level": 1,
+    "xp": 42,
+    "stars": 4,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "wiz",
+    "level": 1,
+    "xp": 42,
+    "stars": 5,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "hu2",
+    "level": 1,
+    "xp": 0,
+    "stars": 6,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "fw",
+    "level": 5,
+    "xp": 7707,
+    "stars": 2,
+    "equipment": {
+     "weapon": 6,
+     "armor": 4,
+     "charm": 12
+    }
+   },
+   {
+    "id": "mw1",
+    "level": 1,
+    "xp": 0,
+    "stars": 2,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "mh1",
+    "level": 1,
+    "xp": 0,
+    "stars": 3,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "mw3",
+    "level": 1,
+    "xp": 0,
+    "stars": 1,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "hk1",
+    "level": 5,
+    "xp": 7707,
+    "stars": 5,
+    "equipment": {
+     "weapon": 8,
+     "armor": 7,
+     "charm": 13
+    }
+   },
+   {
+    "id": "ew2",
+    "level": 1,
+    "xp": 44,
+    "stars": 1,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "mh2",
+    "level": 1,
+    "xp": 0,
+    "stars": 5,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "priest",
+    "level": 5,
+    "xp": 7663,
+    "stars": 1,
+    "equipment": {
+     "weapon": 2,
+     "armor": 5,
+     "charm": 16
+    }
+   },
+   {
+    "id": "ew1",
+    "level": 1,
+    "xp": 0,
+    "stars": 2,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   },
+   {
+    "id": "mh3",
+    "level": 1,
+    "xp": 0,
+    "stars": 1,
+    "equipment": {
+     "weapon": null,
+     "armor": null,
+     "charm": null
+    }
+   }
+  ],
+  "partyIds": [
+   "hk1",
+   "fw",
+   "priest"
+  ],
+  "inventory": [
+   {
+    "id": 1,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 1,
+    "level": 2,
+    "spent": 91,
+    "stats": {
+     "hp": 0,
+     "atk": 6,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 2,
+    "slot": "weapon",
+    "rarity": "rare",
+    "dropStage": 2,
+    "level": 10,
+    "spent": 3970,
+    "stats": {
+     "hp": 0,
+     "atk": 7,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 3,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 3,
+    "level": 2,
+    "spent": 98,
+    "stats": {
+     "hp": 69,
+     "atk": 0,
+     "def": 9,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 4,
+    "slot": "armor",
+    "rarity": "rare",
+    "dropStage": 4,
+    "level": 10,
+    "spent": 4294,
+    "stats": {
+     "hp": 88,
+     "atk": 0,
+     "def": 12,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 5,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 5,
+    "level": 10,
+    "spent": 3436,
+    "stats": {
+     "hp": 77,
+     "atk": 0,
+     "def": 10,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 6,
+    "slot": "weapon",
+    "rarity": "rare",
+    "dropStage": 6,
+    "level": 9,
+    "spent": 3652,
+    "stats": {
+     "hp": 0,
+     "atk": 9,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 7,
+    "slot": "armor",
+    "rarity": "rare",
+    "dropStage": 7,
+    "level": 9,
+    "spent": 3797,
+    "stats": {
+     "hp": 97,
+     "atk": 0,
+     "def": 13,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 8,
+    "slot": "weapon",
+    "rarity": "rare",
+    "dropStage": 8,
+    "level": 8,
+    "spent": 3023,
+    "stats": {
+     "hp": 0,
+     "atk": 10,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 9,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 88,
+     "atk": 0,
+     "def": 12,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 10,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 90,
+     "atk": 0,
+     "def": 12,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 11,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 82,
+     "atk": 0,
+     "def": 11,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 12,
+    "slot": "charm",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 10,
+    "spent": 4019,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0.065
+    }
+   },
+   {
+    "id": 13,
+    "slot": "charm",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 10,
+    "spent": 4019,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0.073
+    }
+   },
+   {
+    "id": 14,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 15,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 9,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 16,
+    "slot": "charm",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 10,
+    "spent": 4019,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0.054,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 17,
+    "slot": "weapon",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 11,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 18,
+    "slot": "armor",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 116,
+     "atk": 0,
+     "def": 15,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 19,
+    "slot": "armor",
+    "rarity": "epic",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 142,
+     "atk": 0,
+     "def": 19,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 20,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 76,
+     "atk": 0,
+     "def": 10,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 21,
+    "slot": "armor",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 106,
+     "atk": 0,
+     "def": 14,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 23,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 85,
+     "atk": 0,
+     "def": 11,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 24,
+    "slot": "armor",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 111,
+     "atk": 0,
+     "def": 15,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 25,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 9,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 26,
+    "slot": "armor",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 98,
+     "atk": 0,
+     "def": 13,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 27,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 89,
+     "atk": 0,
+     "def": 12,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 28,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 87,
+     "atk": 0,
+     "def": 12,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 29,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 9,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 32,
+    "slot": "charm",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0.074,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 33,
+    "slot": "weapon",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 11,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 34,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 35,
+    "slot": "weapon",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 10,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 36,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 38,
+    "slot": "charm",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0.063,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 39,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 40,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 87,
+     "atk": 0,
+     "def": 12,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 41,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 7,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 42,
+    "slot": "charm",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0.066
+    }
+   },
+   {
+    "id": 43,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 44,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 74,
+     "atk": 0,
+     "def": 10,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 45,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 46,
+    "slot": "armor",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 78,
+     "atk": 0,
+     "def": 10,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 47,
+    "slot": "armor",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 112,
+     "atk": 0,
+     "def": 15,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 49,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 51,
+    "slot": "armor",
+    "rarity": "epic",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 129,
+     "atk": 0,
+     "def": 17,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 52,
+    "slot": "charm",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0.062,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 53,
+    "slot": "weapon",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 11,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 54,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 9,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 55,
+    "slot": "charm",
+    "rarity": "rare",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 0,
+     "def": 0,
+     "atkPct": 0.067,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   },
+   {
+    "id": 56,
+    "slot": "weapon",
+    "rarity": "common",
+    "dropStage": 9,
+    "level": 0,
+    "spent": 0,
+    "stats": {
+     "hp": 0,
+     "atk": 8,
+     "def": 0,
+     "atkPct": 0,
+     "hpPct": 0,
+     "speedPct": 0
+    }
+   }
+  ],
+  "nextGearId": 57,
+  "party": [
+   {
+    "id": "hero-hk1",
+    "sourceId": "hk1",
+    "side": "hero",
+    "hp": 943,
+    "maxHp": 943,
+    "atk": 55,
+    "def": 126,
+    "cooldown": 13,
+    "attackTicks": 20,
+    "range": 160,
+    "x": 140,
+    "slot": 0,
+    "boss": false,
+    "attacks": 3,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   },
+   {
+    "id": "hero-fw",
+    "sourceId": "fw",
+    "side": "hero",
+    "hp": 622,
+    "maxHp": 622,
+    "atk": 72,
+    "def": 72,
+    "cooldown": 0,
+    "attackTicks": 10,
+    "range": 160,
+    "x": 95,
+    "slot": 1,
+    "boss": false,
+    "attacks": 2,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   },
+   {
+    "id": "hero-priest",
+    "sourceId": "priest",
+    "side": "hero",
+    "hp": 434,
+    "maxHp": 434,
+    "atk": 38,
+    "def": 41,
+    "cooldown": 19,
+    "attackTicks": 30,
+    "range": 400,
+    "x": 50,
+    "slot": 2,
+    "boss": false,
+    "attacks": 3,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   }
+  ],
+  "enemies": [
+   {
+    "id": "enemy-259-1-0",
+    "sourceId": "grunt",
+    "side": "enemy",
+    "hp": 0,
+    "maxHp": 82,
+    "atk": 66,
+    "def": 14,
+    "cooldown": 0,
+    "attackTicks": 24,
+    "range": 30,
+    "x": 276,
+    "slot": 0,
+    "boss": false,
+    "attacks": 0,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   },
+   {
+    "id": "enemy-259-1-1",
+    "sourceId": "grunt",
+    "side": "enemy",
+    "hp": 0,
+    "maxHp": 82,
+    "atk": 66,
+    "def": 14,
+    "cooldown": 0,
+    "attackTicks": 24,
+    "range": 30,
+    "x": 254,
+    "slot": 1,
+    "boss": false,
+    "attacks": 0,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   },
+   {
+    "id": "enemy-259-1-2",
+    "sourceId": "grunt",
+    "side": "enemy",
+    "hp": 0,
+    "maxHp": 82,
+    "atk": 66,
+    "def": 14,
+    "cooldown": 0,
+    "attackTicks": 24,
+    "range": 30,
+    "x": 252,
+    "slot": 2,
+    "boss": false,
+    "attacks": 0,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   },
+   {
+    "id": "enemy-259-1-3",
+    "sourceId": "grunt",
+    "side": "enemy",
+    "hp": 34,
+    "maxHp": 82,
+    "atk": 66,
+    "def": 14,
+    "cooldown": 0,
+    "attackTicks": 24,
+    "range": 30,
+    "x": 262,
+    "slot": 3,
+    "boss": false,
+    "attacks": 0,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   },
+   {
+    "id": "enemy-259-1-4",
+    "sourceId": "archer",
+    "side": "enemy",
+    "hp": 55,
+    "maxHp": 55,
+    "atk": 55,
+    "def": 7,
+    "cooldown": 0,
+    "attackTicks": 30,
+    "range": 150,
+    "x": 312,
+    "slot": 4,
+    "boss": false,
+    "attacks": 0,
+    "shield": 0,
+    "shieldUntilTick": 0,
+    "bornTick": 143928
+   }
+  ],
+  "retryFailures": 0,
+  "economyRevision": 8365,
+  "stats": {
+   "clears": 245,
+   "losses": 8,
+   "retries": 8,
+   "bossFailures": 8,
+   "goldEarned": 34628,
+   "pulls": 43,
+   "chests": 56,
+   "offlineClears": 0,
+   "offlineSeconds": 0
+  },
+  "metrics": {
+   "firstAttemptTicks": {
+    "1": 0,
+    "2": 401,
+    "3": 746,
+    "4": 1197,
+    "5": 1768,
+    "6": 2339,
+    "7": 3006,
+    "8": 3684,
+    "9": 4362,
+    "10": 4940
+   },
+   "firstClearTicks": {
+    "1": 301,
+    "2": 646,
+    "3": 1097,
+    "4": 1668,
+    "5": 2239,
+    "6": 2906,
+    "7": 3584,
+    "8": 4262,
+    "9": 4940
+   },
+   "fullRosterTick": null,
+   "farmClearSeconds": [
+    26.8,
+    26.8,
+    26.8,
+    26.8,
+    26.8,
+    26.8,
+    26.8,
+    26.8,
+    26.8,
+    26.8
+   ],
+   "farmMinSeconds": 26.8,
+   "farmMaxSeconds": 33.9,
+   "farmSamples": 236,
+   "maxNonBossStallSeconds": 28.9
+  },
+  "eventSeq": 33830,
+  "eventCounts": {
+   "spawn": 4605,
+   "stage": 259,
+   "wave": 771,
+   "pull": 43,
+   "hit": 12209,
+   "death": 3828,
+   "gold": 4147,
+   "xp": 4049,
+   "skill": 2441,
+   "clear": 245,
+   "gear": 56,
+   "tickets": 13,
+   "upgrade": 90,
+   "heal": 1058,
+   "retry": 8,
+   "loss": 8
+  },
+  "events": [
+   {
+    "seq": 33231,
+    "tick": 141461,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-2-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33232,
+    "tick": 141461,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 461,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33233,
+    "tick": 141461,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33234,
+    "tick": 141464,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-254-2-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33235,
+    "tick": 141473,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-2-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33236,
+    "tick": 141473,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-2-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33237,
+    "tick": 141473,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 467,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33238,
+    "tick": 141473,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33239,
+    "tick": 141477,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-254-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33240,
+    "tick": 141484,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-254-2-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33241,
+    "tick": 141489,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33242,
+    "tick": 141489,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33243,
+    "tick": 141504,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33244,
+    "tick": 141507,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-254-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33245,
+    "tick": 141519,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-254-2-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33246,
+    "tick": 141519,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-2-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33247,
+    "tick": 141519,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 473,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33248,
+    "tick": 141519,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33249,
+    "tick": 141549,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-254-3-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33250,
+    "tick": 141549,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-254-3-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33251,
+    "tick": 141549,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-254-3-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33252,
+    "tick": 141549,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-254-3-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33253,
+    "tick": 141549,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-254-3-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33254,
+    "tick": 141549,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33255,
+    "tick": 141574,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-254-3-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33256,
+    "tick": 141579,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-254-3-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33257,
+    "tick": 141586,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33258,
+    "tick": 141586,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-3-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33259,
+    "tick": 141586,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-3-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33260,
+    "tick": 141586,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 479,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33261,
+    "tick": 141586,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33262,
+    "tick": 141594,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-254-3-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33263,
+    "tick": 141598,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-3-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33264,
+    "tick": 141598,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-3-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33265,
+    "tick": 141598,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 485,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33266,
+    "tick": 141598,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33267,
+    "tick": 141609,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-254-3-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33268,
+    "tick": 141611,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-3-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33269,
+    "tick": 141611,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-3-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33270,
+    "tick": 141611,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 491,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33271,
+    "tick": 141611,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33272,
+    "tick": 141624,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-254-3-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33273,
+    "tick": 141627,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-254-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33274,
+    "tick": 141639,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33275,
+    "tick": 141639,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33276,
+    "tick": 141644,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-254-3-3",
+     "damage": 41,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33277,
+    "tick": 141648,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33278,
+    "tick": 141657,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-254-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33279,
+    "tick": 141658,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33280,
+    "tick": 141658,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-3-3",
+     "damage": 97,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33281,
+    "tick": 141664,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33282,
+    "tick": 141668,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33283,
+    "tick": 141669,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-254-3-3",
+     "damage": 28,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33284,
+    "tick": 141676,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-254-3-3",
+     "targetId": "hero-hk1",
+     "damage": 182,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33285,
+    "tick": 141678,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-254-3-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33286,
+    "tick": 141678,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-3-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33287,
+    "tick": 141678,
+    "data": {
+     "type": "gold",
+     "amount": 17,
+     "total": 508,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33288,
+    "tick": 141678,
+    "data": {
+     "type": "xp",
+     "amount": 17,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33289,
+    "tick": 141684,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-254-3-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33290,
+    "tick": 141684,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-254-3-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33291,
+    "tick": 141684,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 514,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33292,
+    "tick": 141684,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33293,
+    "tick": 141684,
+    "data": {
+     "type": "gold",
+     "amount": 37,
+     "total": 551,
+     "reason": "clear"
+    }
+   },
+   {
+    "seq": 33294,
+    "tick": 141684,
+    "data": {
+     "type": "xp",
+     "amount": 37,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33295,
+    "tick": 141684,
+    "data": {
+     "type": "clear",
+     "stage": 9,
+     "first": false,
+     "durationSeconds": 26.8
+    }
+   },
+   {
+    "seq": 33296,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-hk1",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33297,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-fw",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33298,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-priest",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33299,
+    "tick": 141784,
+    "data": {
+     "type": "stage",
+     "stage": 9,
+     "mode": "BOSS_READY"
+    }
+   },
+   {
+    "seq": 33300,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-1-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33301,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-1-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33302,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-1-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33303,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-1-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33304,
+    "tick": 141784,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-1-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33305,
+    "tick": 141784,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33306,
+    "tick": 141785,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-1-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33307,
+    "tick": 141809,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-1-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33308,
+    "tick": 141815,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-1-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33309,
+    "tick": 141815,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-1-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33310,
+    "tick": 141815,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 557,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33311,
+    "tick": 141815,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33312,
+    "tick": 141829,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-1-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33313,
+    "tick": 141833,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-1-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33314,
+    "tick": 141833,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-1-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33315,
+    "tick": 141833,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 563,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33316,
+    "tick": 141833,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33317,
+    "tick": 141845,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-1-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33318,
+    "tick": 141846,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-1-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33319,
+    "tick": 141846,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-1-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33320,
+    "tick": 141846,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 569,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33321,
+    "tick": 141846,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33322,
+    "tick": 141849,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-1-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33323,
+    "tick": 141858,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-1-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33324,
+    "tick": 141858,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-1-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33325,
+    "tick": 141858,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 575,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33326,
+    "tick": 141858,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33327,
+    "tick": 141862,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-255-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33328,
+    "tick": 141869,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-1-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33329,
+    "tick": 141875,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33330,
+    "tick": 141875,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33331,
+    "tick": 141889,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33332,
+    "tick": 141892,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-255-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33333,
+    "tick": 141905,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-1-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33334,
+    "tick": 141905,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-1-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33335,
+    "tick": 141905,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 581,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33336,
+    "tick": 141905,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33337,
+    "tick": 141935,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-2-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33338,
+    "tick": 141935,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-2-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33339,
+    "tick": 141935,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-2-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33340,
+    "tick": 141935,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-2-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33341,
+    "tick": 141935,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-2-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33342,
+    "tick": 141935,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33343,
+    "tick": 141960,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-2-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33344,
+    "tick": 141965,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-2-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33345,
+    "tick": 141972,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33346,
+    "tick": 141972,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-2-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33347,
+    "tick": 141972,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-2-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33348,
+    "tick": 141972,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 587,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33349,
+    "tick": 141972,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33350,
+    "tick": 141980,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-2-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33351,
+    "tick": 141984,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-2-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33352,
+    "tick": 141984,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-2-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33353,
+    "tick": 141984,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 593,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33354,
+    "tick": 141984,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33355,
+    "tick": 141995,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-2-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33356,
+    "tick": 141997,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-2-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33357,
+    "tick": 141997,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-2-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33358,
+    "tick": 141997,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 599,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33359,
+    "tick": 141997,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33360,
+    "tick": 142000,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-2-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33361,
+    "tick": 142009,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-2-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33362,
+    "tick": 142009,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-2-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33363,
+    "tick": 142009,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 605,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33364,
+    "tick": 142009,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33365,
+    "tick": 142013,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-255-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33366,
+    "tick": 142020,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-2-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33367,
+    "tick": 142025,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33368,
+    "tick": 142025,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33369,
+    "tick": 142040,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33370,
+    "tick": 142043,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-255-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33371,
+    "tick": 142055,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-2-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33372,
+    "tick": 142055,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-2-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33373,
+    "tick": 142055,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 611,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33374,
+    "tick": 142055,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33375,
+    "tick": 142085,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-3-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33376,
+    "tick": 142085,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-3-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33377,
+    "tick": 142085,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-3-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33378,
+    "tick": 142085,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-3-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33379,
+    "tick": 142085,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-255-3-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33380,
+    "tick": 142085,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33381,
+    "tick": 142110,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-3-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33382,
+    "tick": 142115,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-3-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33383,
+    "tick": 142122,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33384,
+    "tick": 142122,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-3-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33385,
+    "tick": 142122,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-3-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33386,
+    "tick": 142122,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 617,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33387,
+    "tick": 142122,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33388,
+    "tick": 142130,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-3-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33389,
+    "tick": 142134,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-3-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33390,
+    "tick": 142134,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-3-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33391,
+    "tick": 142134,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 623,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33392,
+    "tick": 142134,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33393,
+    "tick": 142145,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-3-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33394,
+    "tick": 142147,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-3-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33395,
+    "tick": 142147,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-3-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33396,
+    "tick": 142147,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 629,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33397,
+    "tick": 142147,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33398,
+    "tick": 142160,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-3-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33399,
+    "tick": 142163,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-255-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33400,
+    "tick": 142175,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33401,
+    "tick": 142175,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33402,
+    "tick": 142180,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-3-3",
+     "damage": 41,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33403,
+    "tick": 142184,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33404,
+    "tick": 142193,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-255-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33405,
+    "tick": 142194,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33406,
+    "tick": 142194,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-3-3",
+     "damage": 97,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33407,
+    "tick": 142200,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33408,
+    "tick": 142204,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33409,
+    "tick": 142205,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-255-3-3",
+     "damage": 28,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33410,
+    "tick": 142212,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-255-3-3",
+     "targetId": "hero-hk1",
+     "damage": 182,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33411,
+    "tick": 142214,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-255-3-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33412,
+    "tick": 142214,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-3-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33413,
+    "tick": 142214,
+    "data": {
+     "type": "gold",
+     "amount": 17,
+     "total": 646,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33414,
+    "tick": 142214,
+    "data": {
+     "type": "xp",
+     "amount": 17,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33415,
+    "tick": 142220,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-255-3-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33416,
+    "tick": 142220,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-255-3-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33417,
+    "tick": 142220,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 652,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33418,
+    "tick": 142220,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33419,
+    "tick": 142220,
+    "data": {
+     "type": "gold",
+     "amount": 37,
+     "total": 689,
+     "reason": "clear"
+    }
+   },
+   {
+    "seq": 33420,
+    "tick": 142220,
+    "data": {
+     "type": "xp",
+     "amount": 37,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33421,
+    "tick": 142220,
+    "data": {
+     "type": "clear",
+     "stage": 9,
+     "first": false,
+     "durationSeconds": 26.8
+    }
+   },
+   {
+    "seq": 33422,
+    "tick": 142220,
+    "data": {
+     "type": "gear",
+     "gearId": 56,
+     "slot": "weapon",
+     "rarity": "common"
+    }
+   },
+   {
+    "seq": 33423,
+    "tick": 142220,
+    "data": {
+     "type": "gold",
+     "amount": 7,
+     "total": 696,
+     "reason": "salvage"
+    }
+   },
+   {
+    "seq": 33424,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-hk1",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33425,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-fw",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33426,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-priest",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33427,
+    "tick": 142320,
+    "data": {
+     "type": "stage",
+     "stage": 9,
+     "mode": "BOSS_READY"
+    }
+   },
+   {
+    "seq": 33428,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-1-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33429,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-1-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33430,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-1-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33431,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-1-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33432,
+    "tick": 142320,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-1-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33433,
+    "tick": 142320,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33434,
+    "tick": 142321,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-1-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33435,
+    "tick": 142345,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-1-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33436,
+    "tick": 142351,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-1-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33437,
+    "tick": 142351,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-1-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33438,
+    "tick": 142351,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 702,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33439,
+    "tick": 142351,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33440,
+    "tick": 142365,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-1-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33441,
+    "tick": 142369,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-1-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33442,
+    "tick": 142369,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-1-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33443,
+    "tick": 142369,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 708,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33444,
+    "tick": 142369,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33445,
+    "tick": 142381,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-1-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33446,
+    "tick": 142382,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-1-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33447,
+    "tick": 142382,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-1-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33448,
+    "tick": 142382,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 714,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33449,
+    "tick": 142382,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33450,
+    "tick": 142385,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-1-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33451,
+    "tick": 142394,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-1-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33452,
+    "tick": 142394,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-1-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33453,
+    "tick": 142394,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 720,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33454,
+    "tick": 142394,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33455,
+    "tick": 142398,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-256-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33456,
+    "tick": 142405,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-1-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33457,
+    "tick": 142411,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33458,
+    "tick": 142411,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33459,
+    "tick": 142425,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33460,
+    "tick": 142428,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-256-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33461,
+    "tick": 142441,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-1-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33462,
+    "tick": 142441,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-1-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33463,
+    "tick": 142441,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 726,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33464,
+    "tick": 142441,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33465,
+    "tick": 142471,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-2-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33466,
+    "tick": 142471,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-2-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33467,
+    "tick": 142471,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-2-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33468,
+    "tick": 142471,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-2-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33469,
+    "tick": 142471,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-2-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33470,
+    "tick": 142471,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33471,
+    "tick": 142496,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-2-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33472,
+    "tick": 142501,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-2-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33473,
+    "tick": 142508,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33474,
+    "tick": 142508,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-2-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33475,
+    "tick": 142508,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-2-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33476,
+    "tick": 142508,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 732,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33477,
+    "tick": 142508,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33478,
+    "tick": 142516,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-2-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33479,
+    "tick": 142520,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-2-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33480,
+    "tick": 142520,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-2-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33481,
+    "tick": 142520,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 738,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33482,
+    "tick": 142520,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33483,
+    "tick": 142531,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-2-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33484,
+    "tick": 142533,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-2-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33485,
+    "tick": 142533,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-2-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33486,
+    "tick": 142533,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 744,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33487,
+    "tick": 142533,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33488,
+    "tick": 142536,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-2-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33489,
+    "tick": 142545,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-2-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33490,
+    "tick": 142545,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-2-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33491,
+    "tick": 142545,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 750,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33492,
+    "tick": 142545,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33493,
+    "tick": 142549,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-256-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33494,
+    "tick": 142556,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-2-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33495,
+    "tick": 142561,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33496,
+    "tick": 142561,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33497,
+    "tick": 142576,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33498,
+    "tick": 142579,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-256-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33499,
+    "tick": 142591,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-2-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33500,
+    "tick": 142591,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-2-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33501,
+    "tick": 142591,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 756,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33502,
+    "tick": 142591,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33503,
+    "tick": 142621,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-3-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33504,
+    "tick": 142621,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-3-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33505,
+    "tick": 142621,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-3-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33506,
+    "tick": 142621,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-3-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33507,
+    "tick": 142621,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-256-3-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33508,
+    "tick": 142621,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33509,
+    "tick": 142646,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-3-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33510,
+    "tick": 142651,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-3-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33511,
+    "tick": 142658,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33512,
+    "tick": 142658,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-3-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33513,
+    "tick": 142658,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-3-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33514,
+    "tick": 142658,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 762,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33515,
+    "tick": 142658,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33516,
+    "tick": 142666,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-3-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33517,
+    "tick": 142670,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-3-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33518,
+    "tick": 142670,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-3-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33519,
+    "tick": 142670,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 768,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33520,
+    "tick": 142670,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33521,
+    "tick": 142681,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-3-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33522,
+    "tick": 142683,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-3-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33523,
+    "tick": 142683,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-3-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33524,
+    "tick": 142683,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 774,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33525,
+    "tick": 142683,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33526,
+    "tick": 142696,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-3-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33527,
+    "tick": 142699,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-256-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33528,
+    "tick": 142711,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33529,
+    "tick": 142711,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33530,
+    "tick": 142716,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-3-3",
+     "damage": 41,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33531,
+    "tick": 142720,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33532,
+    "tick": 142729,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-256-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33533,
+    "tick": 142730,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33534,
+    "tick": 142730,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-3-3",
+     "damage": 97,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33535,
+    "tick": 142736,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33536,
+    "tick": 142740,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33537,
+    "tick": 142741,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-256-3-3",
+     "damage": 28,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33538,
+    "tick": 142748,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-256-3-3",
+     "targetId": "hero-hk1",
+     "damage": 182,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33539,
+    "tick": 142750,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-256-3-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33540,
+    "tick": 142750,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-3-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33541,
+    "tick": 142750,
+    "data": {
+     "type": "gold",
+     "amount": 17,
+     "total": 791,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33542,
+    "tick": 142750,
+    "data": {
+     "type": "xp",
+     "amount": 17,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33543,
+    "tick": 142756,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-256-3-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33544,
+    "tick": 142756,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-256-3-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33545,
+    "tick": 142756,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 797,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33546,
+    "tick": 142756,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33547,
+    "tick": 142756,
+    "data": {
+     "type": "gold",
+     "amount": 37,
+     "total": 834,
+     "reason": "clear"
+    }
+   },
+   {
+    "seq": 33548,
+    "tick": 142756,
+    "data": {
+     "type": "xp",
+     "amount": 37,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33549,
+    "tick": 142756,
+    "data": {
+     "type": "clear",
+     "stage": 9,
+     "first": false,
+     "durationSeconds": 26.8
+    }
+   },
+   {
+    "seq": 33550,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-hk1",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33551,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-fw",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33552,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-priest",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33553,
+    "tick": 142856,
+    "data": {
+     "type": "stage",
+     "stage": 9,
+     "mode": "BOSS_READY"
+    }
+   },
+   {
+    "seq": 33554,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-1-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33555,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-1-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33556,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-1-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33557,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-1-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33558,
+    "tick": 142856,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-1-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33559,
+    "tick": 142856,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33560,
+    "tick": 142857,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-1-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33561,
+    "tick": 142881,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-1-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33562,
+    "tick": 142887,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-1-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33563,
+    "tick": 142887,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-1-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33564,
+    "tick": 142887,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 840,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33565,
+    "tick": 142887,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33566,
+    "tick": 142901,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-1-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33567,
+    "tick": 142905,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-1-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33568,
+    "tick": 142905,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-1-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33569,
+    "tick": 142905,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 846,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33570,
+    "tick": 142905,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33571,
+    "tick": 142917,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-1-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33572,
+    "tick": 142918,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-1-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33573,
+    "tick": 142918,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-1-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33574,
+    "tick": 142918,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 852,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33575,
+    "tick": 142918,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33576,
+    "tick": 142921,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-1-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33577,
+    "tick": 142930,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-1-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33578,
+    "tick": 142930,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-1-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33579,
+    "tick": 142930,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 858,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33580,
+    "tick": 142930,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33581,
+    "tick": 142934,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-257-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33582,
+    "tick": 142941,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-1-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33583,
+    "tick": 142947,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33584,
+    "tick": 142947,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33585,
+    "tick": 142961,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33586,
+    "tick": 142964,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-257-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33587,
+    "tick": 142977,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-1-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33588,
+    "tick": 142977,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-1-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33589,
+    "tick": 142977,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 864,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33590,
+    "tick": 142977,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33591,
+    "tick": 143007,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-2-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33592,
+    "tick": 143007,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-2-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33593,
+    "tick": 143007,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-2-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33594,
+    "tick": 143007,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-2-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33595,
+    "tick": 143007,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-2-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33596,
+    "tick": 143007,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33597,
+    "tick": 143032,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-2-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33598,
+    "tick": 143037,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-2-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33599,
+    "tick": 143044,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33600,
+    "tick": 143044,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-2-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33601,
+    "tick": 143044,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-2-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33602,
+    "tick": 143044,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 870,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33603,
+    "tick": 143044,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33604,
+    "tick": 143052,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-2-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33605,
+    "tick": 143056,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-2-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33606,
+    "tick": 143056,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-2-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33607,
+    "tick": 143056,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 876,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33608,
+    "tick": 143056,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33609,
+    "tick": 143067,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-2-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33610,
+    "tick": 143069,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-2-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33611,
+    "tick": 143069,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-2-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33612,
+    "tick": 143069,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 882,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33613,
+    "tick": 143069,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33614,
+    "tick": 143072,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-2-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33615,
+    "tick": 143081,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-2-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33616,
+    "tick": 143081,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-2-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33617,
+    "tick": 143081,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 888,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33618,
+    "tick": 143081,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33619,
+    "tick": 143085,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-257-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33620,
+    "tick": 143092,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-2-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33621,
+    "tick": 143097,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33622,
+    "tick": 143097,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33623,
+    "tick": 143112,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33624,
+    "tick": 143115,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-257-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33625,
+    "tick": 143127,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-2-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33626,
+    "tick": 143127,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-2-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33627,
+    "tick": 143127,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 894,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33628,
+    "tick": 143127,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33629,
+    "tick": 143157,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-3-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33630,
+    "tick": 143157,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-3-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33631,
+    "tick": 143157,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-3-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33632,
+    "tick": 143157,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-3-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33633,
+    "tick": 143157,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-257-3-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33634,
+    "tick": 143157,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33635,
+    "tick": 143182,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-3-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33636,
+    "tick": 143187,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-3-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33637,
+    "tick": 143194,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33638,
+    "tick": 143194,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-3-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33639,
+    "tick": 143194,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-3-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33640,
+    "tick": 143194,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 900,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33641,
+    "tick": 143194,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33642,
+    "tick": 143202,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-3-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33643,
+    "tick": 143206,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-3-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33644,
+    "tick": 143206,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-3-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33645,
+    "tick": 143206,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 906,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33646,
+    "tick": 143206,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33647,
+    "tick": 143217,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-3-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33648,
+    "tick": 143219,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-3-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33649,
+    "tick": 143219,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-3-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33650,
+    "tick": 143219,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 912,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33651,
+    "tick": 143219,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33652,
+    "tick": 143232,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-3-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33653,
+    "tick": 143235,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-257-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33654,
+    "tick": 143247,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33655,
+    "tick": 143247,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33656,
+    "tick": 143252,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-3-3",
+     "damage": 41,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33657,
+    "tick": 143256,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33658,
+    "tick": 143265,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-257-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33659,
+    "tick": 143266,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33660,
+    "tick": 143266,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-3-3",
+     "damage": 97,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33661,
+    "tick": 143272,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33662,
+    "tick": 143276,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33663,
+    "tick": 143277,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-257-3-3",
+     "damage": 28,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33664,
+    "tick": 143284,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-257-3-3",
+     "targetId": "hero-hk1",
+     "damage": 182,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33665,
+    "tick": 143286,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-257-3-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33666,
+    "tick": 143286,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-3-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33667,
+    "tick": 143286,
+    "data": {
+     "type": "gold",
+     "amount": 17,
+     "total": 929,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33668,
+    "tick": 143286,
+    "data": {
+     "type": "xp",
+     "amount": 17,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33669,
+    "tick": 143286,
+    "data": {
+     "type": "gold",
+     "amount": -918,
+     "total": 11,
+     "reason": "upgrade"
+    }
+   },
+   {
+    "seq": 33670,
+    "tick": 143286,
+    "data": {
+     "type": "upgrade",
+     "gearId": 4,
+     "level": 10,
+     "cost": 918
+    }
+   },
+   {
+    "seq": 33671,
+    "tick": 143292,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-257-3-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33672,
+    "tick": 143292,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-257-3-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33673,
+    "tick": 143292,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 17,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33674,
+    "tick": 143292,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33675,
+    "tick": 143292,
+    "data": {
+     "type": "gold",
+     "amount": 37,
+     "total": 54,
+     "reason": "clear"
+    }
+   },
+   {
+    "seq": 33676,
+    "tick": 143292,
+    "data": {
+     "type": "xp",
+     "amount": 37,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33677,
+    "tick": 143292,
+    "data": {
+     "type": "clear",
+     "stage": 9,
+     "first": false,
+     "durationSeconds": 26.8
+    }
+   },
+   {
+    "seq": 33678,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-hk1",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33679,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-fw",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33680,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-priest",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33681,
+    "tick": 143392,
+    "data": {
+     "type": "stage",
+     "stage": 9,
+     "mode": "BOSS_READY"
+    }
+   },
+   {
+    "seq": 33682,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-1-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33683,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-1-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33684,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-1-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33685,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-1-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33686,
+    "tick": 143392,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-1-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33687,
+    "tick": 143392,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33688,
+    "tick": 143393,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-1-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33689,
+    "tick": 143417,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-1-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33690,
+    "tick": 143423,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-1-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33691,
+    "tick": 143423,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-1-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33692,
+    "tick": 143423,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 60,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33693,
+    "tick": 143423,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33694,
+    "tick": 143437,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-1-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33695,
+    "tick": 143441,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-1-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33696,
+    "tick": 143441,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-1-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33697,
+    "tick": 143441,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 66,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33698,
+    "tick": 143441,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33699,
+    "tick": 143453,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-1-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33700,
+    "tick": 143454,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-1-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33701,
+    "tick": 143454,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-1-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33702,
+    "tick": 143454,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 72,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33703,
+    "tick": 143454,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33704,
+    "tick": 143457,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-1-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33705,
+    "tick": 143466,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-1-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33706,
+    "tick": 143466,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-1-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33707,
+    "tick": 143466,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 78,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33708,
+    "tick": 143466,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33709,
+    "tick": 143470,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-258-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33710,
+    "tick": 143477,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-1-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33711,
+    "tick": 143483,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33712,
+    "tick": 143483,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33713,
+    "tick": 143497,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33714,
+    "tick": 143500,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-258-1-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33715,
+    "tick": 143513,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-1-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33716,
+    "tick": 143513,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-1-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33717,
+    "tick": 143513,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 84,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33718,
+    "tick": 143513,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33719,
+    "tick": 143543,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-2-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33720,
+    "tick": 143543,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-2-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33721,
+    "tick": 143543,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-2-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33722,
+    "tick": 143543,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-2-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33723,
+    "tick": 143543,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-2-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33724,
+    "tick": 143543,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 2
+    }
+   },
+   {
+    "seq": 33725,
+    "tick": 143568,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-2-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33726,
+    "tick": 143573,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-2-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33727,
+    "tick": 143580,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33728,
+    "tick": 143580,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-2-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33729,
+    "tick": 143580,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-2-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33730,
+    "tick": 143580,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 90,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33731,
+    "tick": 143580,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33732,
+    "tick": 143588,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-2-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33733,
+    "tick": 143592,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-2-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33734,
+    "tick": 143592,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-2-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33735,
+    "tick": 143592,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 96,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33736,
+    "tick": 143592,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33737,
+    "tick": 143603,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-2-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33738,
+    "tick": 143605,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-2-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33739,
+    "tick": 143605,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-2-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33740,
+    "tick": 143605,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 102,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33741,
+    "tick": 143605,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33742,
+    "tick": 143608,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-2-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33743,
+    "tick": 143617,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-2-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33744,
+    "tick": 143617,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-2-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33745,
+    "tick": 143617,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 108,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33746,
+    "tick": 143617,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33747,
+    "tick": 143621,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-258-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33748,
+    "tick": 143628,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-2-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33749,
+    "tick": 143633,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33750,
+    "tick": 143633,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33751,
+    "tick": 143648,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33752,
+    "tick": 143651,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-258-2-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33753,
+    "tick": 143663,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-2-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33754,
+    "tick": 143663,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-2-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33755,
+    "tick": 143663,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 114,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33756,
+    "tick": 143663,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33757,
+    "tick": 143693,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-3-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33758,
+    "tick": 143693,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-3-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33759,
+    "tick": 143693,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-3-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33760,
+    "tick": 143693,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-3-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33761,
+    "tick": 143693,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-258-3-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33762,
+    "tick": 143693,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 3
+    }
+   },
+   {
+    "seq": 33763,
+    "tick": 143718,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-3-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33764,
+    "tick": 143723,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-3-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33765,
+    "tick": 143730,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33766,
+    "tick": 143730,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-3-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33767,
+    "tick": 143730,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-3-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33768,
+    "tick": 143730,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 120,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33769,
+    "tick": 143730,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33770,
+    "tick": 143738,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-3-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33771,
+    "tick": 143742,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-3-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33772,
+    "tick": 143742,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-3-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33773,
+    "tick": 143742,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 126,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33774,
+    "tick": 143742,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33775,
+    "tick": 143753,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-3-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33776,
+    "tick": 143755,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-3-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33777,
+    "tick": 143755,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-3-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33778,
+    "tick": 143755,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 132,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33779,
+    "tick": 143755,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33780,
+    "tick": 143768,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-3-4",
+     "damage": 51,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33781,
+    "tick": 143771,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-258-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33782,
+    "tick": 143783,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-priest",
+     "skill": "prayer"
+    }
+   },
+   {
+    "seq": 33783,
+    "tick": 143783,
+    "data": {
+     "type": "heal",
+     "sourceId": "hero-priest",
+     "targetId": "hero-hk1",
+     "amount": 24
+    }
+   },
+   {
+    "seq": 33784,
+    "tick": 143788,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-3-3",
+     "damage": 41,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33785,
+    "tick": 143792,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33786,
+    "tick": 143801,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-258-3-4",
+     "targetId": "hero-hk1",
+     "damage": 24,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33787,
+    "tick": 143802,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-fw",
+     "skill": "cleave"
+    }
+   },
+   {
+    "seq": 33788,
+    "tick": 143802,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-3-3",
+     "damage": 97,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33789,
+    "tick": 143808,
+    "data": {
+     "type": "skill",
+     "unitId": "hero-hk1",
+     "skill": "guard"
+    }
+   },
+   {
+    "seq": 33790,
+    "tick": 143812,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-3-3",
+     "damage": 54,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33791,
+    "tick": 143813,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-258-3-3",
+     "damage": 28,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33792,
+    "tick": 143820,
+    "data": {
+     "type": "hit",
+     "attackerId": "enemy-258-3-3",
+     "targetId": "hero-hk1",
+     "damage": 182,
+     "side": "hero"
+    }
+   },
+   {
+    "seq": 33793,
+    "tick": 143822,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-258-3-3",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33794,
+    "tick": 143822,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-3-3",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33795,
+    "tick": 143822,
+    "data": {
+     "type": "gold",
+     "amount": 17,
+     "total": 149,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33796,
+    "tick": 143822,
+    "data": {
+     "type": "xp",
+     "amount": 17,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33797,
+    "tick": 143828,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-258-3-4",
+     "damage": 4,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33798,
+    "tick": 143828,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-258-3-4",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33799,
+    "tick": 143828,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 155,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33800,
+    "tick": 143828,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33801,
+    "tick": 143828,
+    "data": {
+     "type": "gold",
+     "amount": 37,
+     "total": 192,
+     "reason": "clear"
+    }
+   },
+   {
+    "seq": 33802,
+    "tick": 143828,
+    "data": {
+     "type": "xp",
+     "amount": 37,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33803,
+    "tick": 143828,
+    "data": {
+     "type": "clear",
+     "stage": 9,
+     "first": false,
+     "durationSeconds": 26.8
+    }
+   },
+   {
+    "seq": 33804,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-hk1",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33805,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-fw",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33806,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "hero-priest",
+     "side": "hero",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33807,
+    "tick": 143928,
+    "data": {
+     "type": "stage",
+     "stage": 9,
+     "mode": "BOSS_READY"
+    }
+   },
+   {
+    "seq": 33808,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-259-1-0",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33809,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-259-1-1",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33810,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-259-1-2",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33811,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-259-1-3",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33812,
+    "tick": 143928,
+    "data": {
+     "type": "spawn",
+     "unitId": "enemy-259-1-4",
+     "side": "enemy",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33813,
+    "tick": 143928,
+    "data": {
+     "type": "wave",
+     "stage": 9,
+     "wave": 1
+    }
+   },
+   {
+    "seq": 33814,
+    "tick": 143929,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-259-1-0",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33815,
+    "tick": 143953,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-259-1-0",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33816,
+    "tick": 143959,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-259-1-0",
+     "damage": 1,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33817,
+    "tick": 143959,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-259-1-0",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33818,
+    "tick": 143959,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 198,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33819,
+    "tick": 143959,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33820,
+    "tick": 143973,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-259-1-1",
+     "damage": 48,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33821,
+    "tick": 143977,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-259-1-1",
+     "damage": 34,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33822,
+    "tick": 143977,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-259-1-1",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33823,
+    "tick": 143977,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 204,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33824,
+    "tick": 143977,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33825,
+    "tick": 143989,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-priest",
+     "targetId": "enemy-259-1-2",
+     "damage": 33,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33826,
+    "tick": 143990,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-fw",
+     "targetId": "enemy-259-1-2",
+     "damage": 49,
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33827,
+    "tick": 143990,
+    "data": {
+     "type": "death",
+     "unitId": "enemy-259-1-2",
+     "side": "enemy"
+    }
+   },
+   {
+    "seq": 33828,
+    "tick": 143990,
+    "data": {
+     "type": "gold",
+     "amount": 6,
+     "total": 210,
+     "reason": "kill"
+    }
+   },
+   {
+    "seq": 33829,
+    "tick": 143990,
+    "data": {
+     "type": "xp",
+     "amount": 6,
+     "heroIds": [
+      "hk1",
+      "fw",
+      "priest"
+     ]
+    }
+   },
+   {
+    "seq": 33830,
+    "tick": 143993,
+    "data": {
+     "type": "hit",
+     "attackerId": "hero-hk1",
+     "targetId": "enemy-259-1-3",
+     "damage": 48,
+     "side": "enemy"
+    }
+   }
+  ]
+ }
+}

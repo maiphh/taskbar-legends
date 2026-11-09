@@ -1,6 +1,6 @@
 import { CONFIG, slotSchema, ticksForSeconds } from '../config';
 import { cheapestEquippedUpgrade, gearScore, getOwned, heroStats, upgradeCost } from './economy';
-import type { GameEvent, GameState, Gear } from './model';
+import type { GameEvent, GameState, Gear, ItemId } from './model';
 
 /** Pure read-only views over GameState used by the HUD for feedback; never mutate state. */
 export interface Affordability { heroes: boolean; gear: boolean; recruit: boolean; boss: boolean }
@@ -31,7 +31,7 @@ export function affordability(state: GameState): Affordability {
 
 export interface StatDelta { heroId: string | null; atk: number; maxHp: number; def: number; dpsPct: number; label: string }
 /** Stat change from one gear upgrade (level - 1 -> level) on whoever wears it now. */
-export function upgradeDelta(state: GameState, gearId: number, level: number): StatDelta {
+export function upgradeDelta(state: GameState, gearId: ItemId, level: number): StatDelta {
   const item = state.inventory.find(gear => gear.id === gearId);
   const owner = item ? state.roster.find(hero => hero.equipment[item.slot] === gearId) : undefined;
   if (!item || !owner) return { heroId: null, atk: 0, maxHp: 0, def: 0, dpsPct: 0, label: `+1 LV (now +${level})` };
@@ -45,7 +45,7 @@ export function upgradeDelta(state: GameState, gearId: number, level: number): S
   return { heroId: owner.id, ...delta, label: parts.slice(0, 2).join(' ') || `+1 LV (now +${level})` };
 }
 
-export interface UpgradePopup { seq: number; age: number; gearId: number; delta: StatDelta }
+export interface UpgradePopup { seq: number; age: number; gearId: ItemId; delta: StatDelta }
 export function upgradePopups(state: GameState): UpgradePopup[] {
   const life = ticksForSeconds(CONFIG.view.upgradePopupSeconds);
   return state.events.filter(event => event.data.type === 'upgrade' && state.tick - event.tick < life).map(event => {
