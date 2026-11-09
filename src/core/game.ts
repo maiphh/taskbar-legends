@@ -72,7 +72,8 @@ function awardClear(state: GameState, duration: number, nativeDuration = duratio
     }
     if (CONFIG.rewards.firstClearChest) chest(state, stage.index);
     state.tickets += stage.firstClearTickets; state.economyRevision += 1;
-    emit(state, { type: 'tickets', amount: stage.firstClearTickets, total: state.tickets });
+    // A 0-ticket stage grants nothing, so it logs nothing (the tickets event keeps amount: positive).
+    if (stage.firstClearTickets > 0) emit(state, { type: 'tickets', amount: stage.firstClearTickets, total: state.tickets });
     if (stage.index === CONFIG.stages.length) state.progress = { kind: 'COMPLETE', stage: stage.index };
     else if (isBoss(stage.index + 1)) state.progress = { kind: 'BOSS_READY', stage: stage.index, bossStage: stage.index + 1, failedPower: 0, bossLosses: 0 };
     else state.progress = { kind: 'PUSHING', stage: stage.index + 1 };

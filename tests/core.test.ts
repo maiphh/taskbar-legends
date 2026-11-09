@@ -119,12 +119,29 @@ describe('progression, retry and boss gates', () => {
     input(state, { type: 'retry' }); forceClear(state); expect(state.retryFailures).toBe(0);
   });
   it('zero-delay power growth retries on the gain action wall tick', () => {
-    const state = failedFrontier();
-    for (const hero of state.roster) hero.stars = 2;
-    const gainedAt = state.tick;
-    input(state, { type: 'autoEquip' });
-    expect(state.stats.retries).toBe(1); expect(state.progress.kind).toBe('PUSHING');
-    expect(state.events.find(event => event.data.type === 'retry')?.tick).toBe(gainedAt);
+    // Own config: this asserts the zero-delay rule, independent of the shipped powerGainRetryMinSec.
+    const configured = CONFIG.progression.powerGainRetryMinSec;
+    CONFIG.progression.powerGainRetryMinSec = 0;
+    try {
+      const state = failedFrontier();
+      for (const hero of state.roster) hero.stars = 2;
+      const gainedAt = state.tick;
+      input(state, { type: 'autoEquip' });
+      expect(state.stats.retries).toBe(1); expect(state.progress.kind).toBe('PUSHING');
+      expect(state.events.find(event => event.data.type === 'retry')?.tick).toBe(gainedAt);
+    } finally { CONFIG.progression.powerGainRetryMinSec = configured; }
+  });
+  it('a 0-ticket first clear logs no tickets event and the save stays valid', () => {
+    const stage = CONFIG.stages[0]; if (!stage) throw new Error('stage 1');
+    const configured = stage.firstClearTickets;
+    stage.firstClearTickets = 0;
+    try {
+      const state = createState(); const tickets = state.tickets;
+      forceClear(state);
+      expect(state.highestCleared).toBe(1); expect(state.tickets).toBe(tickets);
+      expect(state.events.some(event => event.data.type === 'tickets')).toBe(false);
+      expect(() => restoreSave(makeSave(state, 0), 0)).not.toThrow();
+    } finally { stage.firstClearTickets = configured; }
   });
   it('never enters a boss without input, even after large power growth; failures wait for input', () => {
     const state = createState(); state.highestCleared = 8; state.progress = { kind: 'PUSHING', stage: 9 };
