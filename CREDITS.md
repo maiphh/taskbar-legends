@@ -44,13 +44,13 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 
 ## Pixel UI and font
 
-- Pixel Operator (regular, bold, PixelOperator8, PixelOperator8-Bold), Jayvee Enaguas / HarvettFox96 — CC0-1.0, retained in `public/fonts/LICENSE.txt`. Source: https://www.fonttoolbox.com/fonts/pixel-operator ; supplied archive source: https://dl.dafont.com/dl/?f=pixel_operator .
+- Galmuri11, Galmuri11 Bold and Galmuri9 (v2.404), Lee Minseo (quiple) — SIL Open Font License 1.1, retained in `public/fonts/LICENSE.txt` and `LICENSES/Galmuri-OFL-1.1.txt`. Source: https://github.com/quiple/galmuri ; https://galmuri.quiple.dev/ . Shipped as glyph subsets (Latin, Vietnamese, Cyrillic, punctuation, arrows, shapes) made by `scripts/subset-fonts.py`; the licence declares no Reserved Font Name.
 - Kenney Pixel UI Pack, Kenney Vleugels with Lynn Evers — CC0. `public/ui/*-9slice.png` are supplied navy/brass recolors of `Ancient/grey.png`. Source: https://opengameart.org/content/pixel-ui-pack-750-assets ; author: https://kenney.nl/assets/pixel-ui-pack . License retained in `public/ui/KENNEY-LICENSE.txt`.
 - `public/ui/icon-sword.png`, armor, chest and potion are supplied 16px crops from the credited Merchant-Shade packs; gold mark is original UI-handoff geometry.
 - Research references, Steam/wiki art, mockups, previews, archives, Silkscreen and unused vendor font alternates are **not** shipped in `public/`.
 
 ## Redistribution verification
 
-Original vendor notices and complete CC0 legal code are retained in `LICENSES/`. Every deduplicated sprite/icon source has an official-page license declaration in `LICENSES/source-declarations/`; enclosed LuizMelo notices are copied unmodified where supplied. All declare CC0-1.0, permitting public redistribution. No incompatible restriction was found. These notices cover third-party assets, not a license grant for original game code.
+Original vendor notices, the Galmuri OFL-1.1 text and complete CC0 legal code are retained in `LICENSES/`. Every deduplicated sprite/icon source has an official-page license declaration in `LICENSES/source-declarations/`; enclosed LuizMelo notices are copied unmodified where supplied. All declare CC0-1.0, permitting public redistribution. No incompatible restriction was found. These notices cover third-party assets, not a license grant for original game code.
 
-Original game code is proprietary: Copyright (c) 2026 Mai Gia Phu. All rights reserved. See the root LICENSE. The asset licences above remain CC0.
+Original game code is proprietary: Copyright (c) 2026 Mai Gia Phu. All rights reserved. See the root LICENSE. The asset licences above remain CC0, except the Galmuri fonts (OFL-1.1).

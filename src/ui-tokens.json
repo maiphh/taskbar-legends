@@ -53,11 +53,16 @@
     "sampling": "nearest"
   },
   "font": {
-    "family": "Pixel Operator",
-    "bodySize": 16,
+    "family": "Galmuri11",
+    "boldFamily": "Galmuri11 Bold",
+    "decorativeFamily": "Galmuri9",
+    "bodySize": 12,
     "headingSize": 24,
-    "decorativeSize": 8,
-    "licence": "CC0-1.0"
+    "decorativeSize": 10,
+    "rowHeight": 16,
+    "note": "CSS px = native grid: Galmuri11 em = 12 px (1200 upem / 100-unit pixels), Galmuri9 em = 10 px. Bold only for Latin-1 strings; Vietnamese/Cyrillic use Regular. Text is centred in the 16 px rows the HUD/panels are laid out on; body text that overflows its maxWidth drops to Galmuri9.",
+    "licence": "OFL-1.1",
+    "source": "https://github.com/quiple/galmuri"
   },
   "palette": {
     "ink": "#0d121b",

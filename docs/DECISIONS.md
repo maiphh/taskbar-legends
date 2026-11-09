@@ -32,3 +32,11 @@ Hit events use explicit attackerId, targetId, damage and enclosing tick fields. 
 ## Browser UI scope
 
 The exact 1920px layout is implemented and compared to the supplied mockups. A compact HUD switches earlier (below 1000 source pixels) to keep buttons usable; below 736, two representative enemies plus +N are rendered without changing simulation. Below 608px, the UI spec calls for a separate normal management window; that native fallback is M2, so use a wider browser for M1 management. Native click-through, screen-space taskbar anchoring and real Windows monitor/DPI transfer are explicitly unverified, not simulated by CSS.
+
+## Font: Galmuri (replaces Pixel Operator)
+
+- Galmuri11/Galmuri11 Bold/Galmuri9 by Lee Minseo, OFL-1.1, subset by `scripts/subset-fonts.py` (12.6 MB of Hangul/CJK → about 0.48 MB; the game and file:// build only need Latin, Vietnamese and Cyrillic).
+- "11" and "9" are the faces' design names, not their CSS sizes. Galmuri11 has 1200 units per em on a 100-unit pixel grid, so one font pixel is one CSS pixel at **12px** (24px = 2×); Galmuri9 has 1000 upem, so it is native at **10px**. At 11px/22px/9px the grid lands between device pixels and the alpha threshold drops or doubles columns. Tokens: body 12, heading 24, decorative 10.
+- Layout rows stay 16px tall; `PixelUI.text` centres the native glyph box in the row (+2px for body) so positions stay integer and existing layout coordinates are unchanged. Body text given a `maxWidth` it would overflow drops to Galmuri9 (e.g. "Hero Knight 2" on a roster card).
+- Galmuri11 Bold has no Vietnamese or Cyrillic glyphs. `fontFor` uses Bold only when every character is in Bold's cmap (`BOLD_SAFE`, checked against the TTF in `tests/font-coverage.test.ts`); otherwise Regular.
+- Rasterize-once with alpha threshold 128, `imageSmoothingEnabled=false` and rounded positions are unchanged. Historical handoff docs (`docs/ui-v1.md`, `docs/ui-assets.md`) still describe the M1 Pixel Operator choice and are left as written.

@@ -109,10 +109,10 @@ export class Renderer {
       const age = state.tick - group.tick, x = this.position(unit, state) - 10 + count * 6;
       const y = Math.max(8, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
       const label = `${group.heal ? '+' : '-'}${group.amount}`;
-      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, 16, true);
-      this.ui.text(ctx, label, x, y, group.heal ? palette.green : palette.gold, 16, true);
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, CONFIG.ui.font.bodySize, true);
+      this.ui.text(ctx, label, x, y, group.heal ? palette.green : palette.gold, CONFIG.ui.font.bodySize, true);
     }
-    if (state.enemies.length > enemies.length) this.ui.text(ctx, `+${state.enemies.length - enemies.length}`, field.x + field.width - 32, coreY + 3, palette.muted, 16);
+    if (state.enemies.length > enemies.length) this.ui.text(ctx, `+${state.enemies.length - enemies.length}`, field.x + field.width - 32, coreY + 3, palette.muted, CONFIG.ui.font.bodySize);
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, 1 / this.dpr);
   }
