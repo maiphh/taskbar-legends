@@ -1,3 +1,4 @@
+import type { V14Rule } from './config';
 import type { GameEvent, GameState } from './core/model';
 import type { HitRegion, Renderer } from './renderer';
 import type { PanelTab } from './pixel-ui';
@@ -17,5 +18,8 @@ export interface GameDebug {
   openPanel(tab: PanelTab | null): void;
   whenReady(): Promise<void>;
   getAssetErrors(): string[];
+  /** v1.4 rules (not saved; default none = 1.3.0). */
+  setV14Rules(rules: readonly V14Rule[]): V14Rule[];
+  getV14Rules(): V14Rule[];
 }
 declare global { interface Window { __game: GameDebug } }

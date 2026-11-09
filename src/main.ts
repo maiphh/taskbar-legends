@@ -1,5 +1,5 @@
 import './style.css';
-import { CONFIG, TICK_MS } from './config';
+import { CONFIG, TICK_MS, activeV14Rules, setV14Rules, v14RuleSchema } from './config';
 import { audio } from './audio';
 import { cheapestEquippedUpgrade } from './core/economy';
 import { createState, input, load, snapshot, statusText, step } from './core/game';
@@ -14,6 +14,9 @@ import { startDesktop } from './platform/desktop/tauri';
 function element(id: string): HTMLElement {
   const value = document.getElementById(id); if (!value) throw new Error(`Missing UI element ${id}`); return value;
 }
+// v1.4 preview: `?v14=chestChoice,farmChest` (or `?v14=all`) switches implemented v1.4 rules on for this page. Off by default (1.3.0).
+const v14Param = new URLSearchParams(location.search).get('v14');
+if (v14Param) setV14Rules(v14Param === 'all' ? v14RuleSchema.options : v14Param.split(',').filter(rule => v14RuleSchema.safeParse(rule).success).map(rule => v14RuleSchema.parse(rule)));
 const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing canvas');
 const notice = element('notice'), liveStatus = element('live-status');
 const renderer = new Renderer(canvas, element('controls'));
@@ -68,6 +71,7 @@ const debug: GameDebug = {
   openPanel: tab => renderer.ui.setPanel(tab),
   whenReady: () => Promise.all([renderer.atlases.ready, renderer.ui.ready]).then(() => { render(); }),
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
+  setV14Rules: rules => { setV14Rules(rules); render(); return activeV14Rules(); }, getV14Rules: () => activeV14Rules(),
 };
 window.__game = debug;
 void startDesktop(debug, resize, { flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler) }).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));

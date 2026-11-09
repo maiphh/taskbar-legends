@@ -100,7 +100,8 @@ function rollBetween(state: RandomState, bounds: number[]): number {
   if (min === undefined || max === undefined) throw new Error('Missing roll bounds');
   return min + random(state) * (max - min);
 }
-export function chest(state: GameState, dropStage: number): void {
+/** Rolls one chest item (rarity, slot, main roll, charm stat: the 1.3.0 RNG order) and assigns the next item id. */
+function rollGear(state: GameState, dropStage: number): Gear {
   const rarity = weightedRarity(state, CONFIG.gear.chestRarityOdds);
   const slot = slotSchema.options[Math.floor(random(state) * slotSchema.options.length)];
   if (!slot) throw new Error('Empty gear slot pool');
@@ -114,10 +115,13 @@ export function chest(state: GameState, dropStage: number): void {
     if (!key) throw new Error('Empty charm pool');
     stats[key] = Math.round(rollBetween(state, CONFIG.gear.slots.charm.oneOf[key]) * CONFIG.gear.rarityMult[rarity] * CONFIG.runtime.percentPrecision) / CONFIG.runtime.percentPrecision;
   }
-  const item: Gear = { id: itemId(state.seed, state.nextGearId++), templateId: gearTemplateId(slot, rarity), tradeable: false,
+  return { id: itemId(state.seed, state.nextGearId++), templateId: gearTemplateId(slot, rarity), tradeable: false,
     acquiredAt: { tick: state.tick, source: 'drop' }, slot, rarity, dropStage, level: 0, spent: 0, stats };
-  state.inventory.push(item); state.stats.chests += 1; state.economyRevision += 1;
-  emit(state, { type: 'gear', gearId: item.id, slot, rarity });
+}
+/** Adds an item to the inventory; over the cap the lowest-score item is salvaged (1.3.0 rule). */
+function addGear(state: GameState, item: Gear): void {
+  state.inventory.push(item); state.economyRevision += 1;
+  emit(state, { type: 'gear', gearId: item.id, slot: item.slot, rarity: item.rarity });
   if (state.inventory.length > CONFIG.gear.inventoryCap) {
     const lowest = [...state.inventory].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
     if (!lowest) return;
@@ -125,6 +129,41 @@ export function chest(state: GameState, dropStage: number): void {
     for (const hero of state.roster) for (const slot of slotSchema.options) if (hero.equipment[slot] === lowest.id) hero.equipment[slot] = null;
     goldChange(state, Math.round(lowest.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[lowest.rarity]), 'salvage');
   }
+}
+/**
+ * One chest. With v14.chestChoice.options 2 (CR-14-08) at dropStage ≥ fromStage it rolls two items into
+ * state.pendingChoice instead; a 4th unresolved choice auto-resolves the oldest by score. With options 1 this is 1.3.0.
+ */
+export function chest(state: GameState, dropStage: number): void {
+  const rule = CONFIG.v14.chestChoice;
+  state.stats.chests += 1;
+  if (rule.options < 2 || dropStage < rule.fromStage) { addGear(state, rollGear(state, dropStage)); return; }
+  const first = rollGear(state, dropStage), second = rollGear(state, dropStage);
+  (state.pendingChoice ??= []).push([first, second]); state.economyRevision += 1;
+  while (state.pendingChoice.length > CONFIG.runtime.chestChoiceQueueMax) chooseChest(state, bestChoice(state.pendingChoice[0]));
+}
+/** Index the score rule keeps: the higher gearScore, ties keep the first option. */
+export function bestChoice(options: readonly [Gear, Gear] | undefined): 0 | 1 {
+  return options && gearScore(options[1]) > gearScore(options[0]) ? 1 : 0;
+}
+/** Resolves the oldest pending choice: keep one, salvage the other for salvageBase × rarityMult gold. */
+export function chooseChest(state: GameState, keep: number): void {
+  const options = state.pendingChoice?.[0];
+  if (!options || !state.pendingChoice || (keep !== 0 && keep !== 1)) return;
+  state.pendingChoice.shift();
+  if (!state.pendingChoice.length) delete state.pendingChoice;
+  const kept = options[keep], other = options[keep === 0 ? 1 : 0];
+  addGear(state, kept);
+  goldChange(state, Math.round(CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[other.rarity]), 'salvage');
+  emit(state, { type: 'chestChoice', options: [options[0].id, options[1].id], kept: kept.id });
+}
+/** Repeat farm clear chest roll. CR-14-09 from farmChest.fromStage: baseChance plus a guaranteed chest on the guaranteeEvery-th dry clear. */
+export function farmChestRoll(state: GameState, stage: number): void {
+  const rule = CONFIG.v14.farmChest;
+  if (!rule || stage < rule.fromStage) { if (random(state) < CONFIG.rewards.farmChestChance) chest(state, stage); return; }
+  const dry = (state.farmChestDry ?? 0) + 1;
+  if (random(state) < rule.baseChance || dry >= rule.guaranteeEvery) { state.farmChestDry = 0; chest(state, stage); }
+  else state.farmChestDry = dry;
 }
 export function upgradeCost(item: Gear): number {
   return Math.round(CONFIG.gear.upgrade.costBase * CONFIG.enemies.scalingPerStage ** (item.dropStage - 1) * CONFIG.gear.rarityMult[item.rarity] * (item.level + 1) ** CONFIG.gear.upgrade.costExp);

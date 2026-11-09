@@ -1,5 +1,5 @@
 import { CONFIG, heroConfig, ticksForSeconds } from '../config';
-import { autoEquip, autoParty, cheapestEquippedUpgrade, drawHero, partyPower, pull, upgrade, upgradeCost } from './economy';
+import { autoEquip, autoParty, bestChoice, cheapestEquippedUpgrade, chooseChest, drawHero, partyPower, pull, upgrade, upgradeCost } from './economy';
 import { createState, input, step, summary } from './game';
 import type { GameState } from './model';
 import { applyOffline } from './save';
@@ -8,6 +8,8 @@ import { distribution } from './statistics';
 export interface PolicyCursor { revision: number }
 export function referencePolicy(state: GameState, cursor: PolicyCursor): void {
   if (cursor.revision !== state.economyRevision) {
+    // CR-14-08: the reference player keeps the higher-score option of every pending chest choice (oldest first).
+    while (state.pendingChoice?.length) chooseChest(state, bestChoice(state.pendingChoice[0]));
     while (state.tickets >= CONFIG.gacha.costTickets) pull(state);
     autoParty(state); autoEquip(state);
     for (;;) {

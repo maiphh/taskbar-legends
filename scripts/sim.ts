@@ -4,13 +4,15 @@ import { runReferenceAggregate } from '../src/sim/aggregate';
 import design from '../src/design-config.json';
 import { parseArgs } from 'node:util';
 import { z } from 'zod';
-import { CONFIG, ticksForSeconds } from '../src/config';
+import { CONFIG, activeV14Rules, setV14Rules, ticksForSeconds, v14RuleSchema } from '../src/config';
 import { createState, input, step, summary } from '../src/core/game';
 import { actionSchema } from '../src/core/model';
 import { balanceReport, referencePolicy, runReference } from '../src/core/policy';
 
 const { values } = parseArgs({ options: { seed: { type: 'string', default: '1' }, ticks: { type: 'string' }, hours: { type: 'string' },
-  seeds: { type: 'string' }, days: { type: 'string' }, policy: { type: 'string' }, inputs: { type: 'string' }, events: { type: 'string', default: 'summary' }, 'gacha-seeds': { type: 'string', default: '10000' } } });
+  seeds: { type: 'string' }, days: { type: 'string' }, policy: { type: 'string' }, inputs: { type: 'string' }, events: { type: 'string', default: 'summary' }, 'gacha-seeds': { type: 'string', default: '10000' }, v14: { type: 'string', default: 'none' } } });
+// --v14 chestChoice,farmChest (or all) switches implemented v1.4 rules on; default none reproduces 1.3.0.
+setV14Rules(values.v14 === 'none' ? [] : values.v14 === 'all' ? v14RuleSchema.options : (values.v14 ?? '').split(',').map(rule => v14RuleSchema.parse(rule)));
 function numberOption(value: string | undefined, fallback: number, name: string): number {
   const result = value === undefined ? fallback : Number(value);
   if (!Number.isFinite(result) || result < 0) throw new Error(`Invalid ${name}`);
@@ -31,13 +33,13 @@ if (values.seeds !== undefined) {
   const gachaSeeds = z.number().int().min(1).max(100000).parse(numberOption(values['gacha-seeds'], 10000, 'gacha-seeds'));
   const report = runReferenceAggregate({ firstSeed: seed, seeds: numberOption(values.seeds, 100, 'seeds'), days: numberOption(values.days, 7, 'days'), gachaSeeds,
     onProgress: (completed, currentSeed) => { if (completed % 10 === 0 || completed === 1) process.stderr.write(`Reference aggregate: ${completed}/${values.seeds} (seed ${currentSeed})\n`); } });
-  process.stdout.write(JSON.stringify({ configSha256, configSnapshot: design,
+  process.stdout.write(JSON.stringify({ configSha256, v14Rules: activeV14Rules(), configSnapshot: design,
     ...report, elapsedRealMs: Math.round(performance.now() - start) }, null, 2) + '\n');
 } else if (values.days !== undefined) {
   const run = runReference(seed, numberOption(values.days, 7, 'days'));
   const gachaSeeds = z.number().int().min(1).max(100000).parse(numberOption(values['gacha-seeds'], 10000, 'gacha-seeds'));
   const report = balanceReport(run, gachaSeeds);
-  process.stdout.write(JSON.stringify({ configSha256, final: summary(run.state), days: run.daily, milestones: run.milestones, balance: report,
+  process.stdout.write(JSON.stringify({ configSha256, v14Rules: activeV14Rules(), final: summary(run.state), days: run.daily, milestones: run.milestones, balance: report,
     events: values.events === 'full' ? run.state.events : run.state.eventCounts, eventsRetained: run.state.events.length,
     eventLogNote: `Structured tail bounded to ${CONFIG.runtime.eventLogLimit}; counts cover entire run`, elapsedRealMs: Math.round(performance.now() - start) }, null, 2) + '\n');
 } else {
@@ -54,6 +56,6 @@ if (values.seeds !== undefined) {
     step(state);
   }
   while (commands[index]?.tick === ticks) { const command = commands[index++]; if (command) input(state, command.action); }
-  process.stdout.write(JSON.stringify({ configSha256, final: summary(state), events: values.events === 'full' ? state.events : state.eventCounts,
+  process.stdout.write(JSON.stringify({ configSha256, v14Rules: activeV14Rules(), final: summary(state), events: values.events === 'full' ? state.events : state.eventCounts,
     eventsRetained: state.events.length, eventLogNote: `Structured tail bounded to ${CONFIG.runtime.eventLogLimit}; counts cover entire run`, elapsedRealMs: Math.round(performance.now() - start) }, null, 2) + '\n');
 }
