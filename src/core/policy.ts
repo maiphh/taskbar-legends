@@ -1,5 +1,5 @@
 import { CONFIG, heroConfig, ticksForSeconds } from '../config';
-import { autoEquip, autoParty, bestChoice, cheapestEquippedUpgrade, chooseChest, drawHero, partyPower, pull, upgrade, upgradeCost } from './economy';
+import { autoEquip, autoParty, bestChoice, cheapestEquippedUpgrade, chooseChest, drawHero, partyPower, recruitPityOn, pull, upgrade, upgradeCost } from './economy';
 import { createState, input, step, summary } from './game';
 import type { GameState } from './model';
 import { applyOffline } from './save';
@@ -58,10 +58,10 @@ export function gachaCohort(count: number) {
   for (let seed = 1; seed <= count; seed += 1) {
     const rng = { rng: seed >>> 0 };
     const owned = new Set(CONFIG.heroes.filter(hero => hero.starter).map(hero => hero.id));
-    let pity = 0, n = 0;
+    let pity = 0, n = 0, luck = recruitPityOn() ? { legendary: 0, newHero: 0 } : undefined;
     while (owned.size < CONFIG.heroes.length) {
-      const draw = drawHero(rng, pity, owned);
-      pity = draw.nextPity; owned.add(draw.hero.id); n += 1; rates[draw.rarity] += 1; total += 1;
+      const draw = drawHero(rng, pity, owned, luck);
+      pity = draw.nextPity; luck = draw.nextLuck; owned.add(draw.hero.id); n += 1; rates[draw.rarity] += 1; total += 1;
     }
     pulls.push(n);
   }

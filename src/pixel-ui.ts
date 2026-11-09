@@ -2,7 +2,7 @@ import { CONFIG, TICK_MS, heroConfig, slotSchema, stageConfig } from './config';
 import { pulseGrowPx } from './motion';
 import { BODY, FONT_FILES, HEADING, LINE_BOX, fitSize, fontFor, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
-import { bestChoice, cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
+import { bestChoice, cheapestEquippedUpgrade, fortuneMeter, gearScore, heroStats, recruitMeters, upgradeCost } from './core/economy';
 import { bossSecondsRemaining, statusText } from './core/game';
 import { affordability } from './core/selectors';
 import type { Action, GameState, Gear, ItemId } from './core/model';
@@ -287,10 +287,31 @@ export class PixelUI {
     if (bossSeconds !== null) this.text(ctx, `TIME ${Math.floor(bossSeconds / 60)}:${String(bossSeconds % 60).padStart(2, '0')}`, islandWidth - 80, coreY + island.headingDrawY, bossSeconds <= CONFIG.view.bossCountdownWarnSec ? palette.red : palette.gold, BODY, true, undefined, { exactY: true });
     if (!bossReady || !boss.hidesWaveLabel) this.text(ctx, `WAVE ${state.wave}/${stage?.waves.length ?? 3}`, 20, coreY + island.row2DrawY, palette.muted, BODY, false, undefined, { exactY: true });
     this.icon(ctx, 'gold', compact ? 108 : 160, coreY + island.coinIconY); this.text(ctx, short(state.gold), compact ? 128 : 182, coreY + island.row2DrawY, palette.gold, BODY, true, compact ? 70 : 96, { exactY: true });
+    // CR-14-03 Fortune meter (design.md §16): row 2 right of gold; label → number-only fallback → hidden when it can't fit.
+    const fortune = fortuneMeter(state);
+    if (fortune) {
+      const goldX = compact ? 128 : 182, x = goldX + Math.min(compact ? 70 : 96, this.measureText(short(state.gold), BODY, true)) + 10, room = islandWidth - x;
+      const labels = fortune.found ? [`Fortune ${fortune.since}/${fortune.limit}`, `F ${fortune.since}/${fortune.limit}`] : [`Legend in ${fortune.left}`, `L ${fortune.left}`];
+      const label = labels.find(value => this.measureText(value) <= room);
+      const tooltip = fortune.found ? `Gear Fortune ${fortune.since}/${fortune.limit}: the chest roll that reaches ${fortune.limit} is Legendary` : `First Legendary gear guaranteed within ${fortune.left} chest roll${fortune.left === 1 ? '' : 's'}`;
+      if (label) {
+        this.text(ctx, label, x, coreY + island.row2DrawY, CONFIG.ui.rarity.legendary.label, BODY, false, room, { exactY: true });
+        this.hotspot(ctx, 'fortune-meter', { x: x - 2, y: coreY + island.row2DrawY - 2, width: this.measureText(label) + 4, height: 18 }, () => this.setPanel('gear'), tooltip);
+      }
+    }
     ctx.fillStyle = palette.ink; ctx.fillRect(20, coreY + 59, islandWidth - 24, 4); ctx.fillStyle = palette.blue; ctx.fillRect(20, coreY + 59, Math.round((islandWidth - 24) * (state.wave - 1) / 3), 4);
     const dps = state.events.reduce((sum, event) => event.data.type === 'hit' && event.data.side === 'enemy' && state.tick - event.tick <= CONFIG.sim.ticksPerSecond * 5 ? sum + event.data.damage : sum, 0) / Math.min(5, Math.max(1, state.tick / CONFIG.sim.ticksPerSecond));
-    if (!compact) this.text(ctx, `DPS ${short(Math.round(dps))}`, right + 12, coreY + island.rightRowDrawY, palette.blue, BODY, true, undefined, { exactY: true });
-    this.text(ctx, paused ? 'PAUSED' : 'RUNNING', right + (compact ? 12 : this.quitHandler ? 120 : 152), coreY + island.rightRowDrawY, paused ? palette.gold : palette.green, BODY, false, undefined, { exactY: true });
+    // CR-14-01/02 recruit meters (design.md §16) take the DPS slot (compact: the status slot); full text, then the fallbacks.
+    const meters = recruitMeters(state), statusX = right + (compact ? 12 : this.quitHandler ? 120 : 152);
+    if (meters) {
+      const x = right + 12, room = (compact ? width - 56 : statusX - 8) - x;
+      const epic = `Epic+ in ${meters.epicPlus}`, legend = meters.legendary === null ? '' : ` · Legend in ${meters.legendary}`, fresh = meters.newHero === null ? '' : `New hero in ${meters.newHero}`;
+      const short2 = `E+${meters.epicPlus}${meters.legendary === null ? '' : ` L${meters.legendary}`}`;
+      const label = [`${epic}${legend}`, `${short2}${meters.newHero === null ? '' : ` N${meters.newHero}`}`, short2].find(value => this.measureText(value, BODY, true) <= room) ?? short2;
+      this.text(ctx, label, x, coreY + island.rightRowDrawY, CONFIG.ui.rarity.epic.label, BODY, true, room, { exactY: true });
+      this.hotspot(ctx, 'recruit-meter', { x: x - 2, y: coreY + island.rightRowDrawY - 2, width: Math.min(room, this.measureText(label, BODY, true)) + 4, height: 18 }, () => this.setPanel('recruit'), [epic + legend, fresh].filter(Boolean).join(' · '));
+    } else if (!compact) this.text(ctx, `DPS ${short(Math.round(dps))}`, right + 12, coreY + island.rightRowDrawY, palette.blue, BODY, true, undefined, { exactY: true });
+    if (!(meters && compact)) this.text(ctx, paused ? 'PAUSED' : 'RUNNING', statusX, coreY + island.rightRowDrawY, paused ? palette.gold : palette.green, BODY, false, undefined, { exactY: true });
     this.button(ctx, 'pause', paused ? '>' : 'II', { x: width - 48, y: coreY + 12, width: 28, height: 24 }, () => this.onPause(), { tooltip: paused ? 'Resume simulation (Space)' : 'Pause simulation (Space)' });
     const quit = this.quitHandler;
     if (quit) this.button(ctx, 'quit', 'X', this.quitRect(coreY), quit, { tooltip: 'Save and quit' });
@@ -382,7 +403,11 @@ export class PixelUI {
     const x = panel.x, cols = this.gearColumns(), detailX = x + (panel.width >= 720 ? 424 : panel.width - 232), detailWidth = panel.width >= 720 ? 280 : 216;
     const choice = state.pendingChoice?.[0];
     if (choice) this.drawChestChoice(ctx, state, choice, x + 16, detailX - 16, state.pendingChoice?.length ?? 1);
-    else this.text(ctx, `INVENTORY ${state.inventory.length}/${CONFIG.gear.inventoryCap}`, x + 16, 80, palette.text, BODY, true);
+    else {
+      this.text(ctx, `INVENTORY ${state.inventory.length}/${CONFIG.gear.inventoryCap}`, x + 16, 80, palette.text, BODY, true);
+      const fortune = fortuneMeter(state);
+      if (fortune) { const label = fortune.found ? `Fortune ${fortune.since}/${fortune.limit}` : `Legend in ${fortune.left}`; this.text(ctx, label, detailX - 16 - this.measureText(label), 80, CONFIG.ui.rarity.legendary.label, BODY); }
+    }
     if (!state.inventory.some(item => item.id === this.selectedGear)) this.selectedGear = state.inventory[0]?.id ?? null;
     for (let visible = 0; visible < (choice ? 0 : cols * 5); visible += 1) {
       const item = state.inventory[this.gearRow * cols + visible];
@@ -459,8 +484,14 @@ export class PixelUI {
     this.text(ctx, 'ACTUAL ODDS', detailX + 16, 96, palette.text, BODY, true);
     let row = 0;
     for (const [rarity, rate] of Object.entries(CONFIG.gacha.rates)) this.text(ctx, `${rarity.toUpperCase()} ${(rate * 100).toFixed(0)}%`, detailX + 16, 126 + row++ * 22, palette.muted, BODY);
-    this.text(ctx, `Pity: ${state.pity}/${CONFIG.gacha.pity.guaranteeEpicPlusEvery}`, detailX + 16, 224, palette.gold, BODY);
-    this.text(ctx, '30th: Epic 76.5% / Leg 23.5%', detailX + 16, 244, palette.muted, BODY, false, detailWidth - 24);
+    const meters = recruitMeters(state);
+    if (meters) {
+      this.text(ctx, `Epic+ in ${meters.epicPlus}${meters.legendary === null ? '' : ` · Legend in ${meters.legendary}`}`, detailX + 16, 224, palette.gold, BODY, false, detailWidth - 24);
+      this.text(ctx, meters.newHero === null ? '30th: Epic 76.5% / Leg 23.5%' : `New hero in ${meters.newHero}`, detailX + 16, 244, meters.newHero === null ? palette.muted : palette.green, BODY, false, detailWidth - 24);
+    } else {
+      this.text(ctx, `Pity: ${state.pity}/${CONFIG.gacha.pity.guaranteeEpicPlusEvery}`, detailX + 16, 224, palette.gold, BODY);
+      this.text(ctx, '30th: Epic 76.5% / Leg 23.5%', detailX + 16, 244, palette.muted, BODY, false, detailWidth - 24);
+    }
     this.text(ctx, `Duplicates: +1 star (max ${CONFIG.growth.starMax})`, detailX + 16, 267, palette.text, BODY, false, detailWidth - 24);
     this.text(ctx, 'Then rarity-based gold.', detailX + 16, 287, palette.text, BODY, false, detailWidth - 24);
     this.text(ctx, this.history[0] ?? 'Earned tickets only.', detailX + 16, 320, palette.blue, BODY, false, detailWidth - 24);

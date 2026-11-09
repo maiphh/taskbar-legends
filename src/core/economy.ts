@@ -63,21 +63,48 @@ export function weightedRarity(state: RandomState, rates: Record<Rarity, number>
   for (const rarity of raritySchema.options) { roll -= rates[rarity]; if (roll < 0) return rarity; }
   return 'legendary';
 }
-export function drawHero(state: RandomState, pityCounter: number, owned: ReadonlySet<string>) {
-  const pity = pityCounter >= CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1;
-  const rarity = pity ? (random(state) < CONFIG.runtime.pityEpicChance ? 'epic' : 'legendary') : weightedRarity(state, CONFIG.gacha.rates);
+/** v1.4 recruit counters (CR-14-01/02): pulls since the last Legendary, consecutive pulls without a new hero. */
+export interface RecruitLuck { legendary: number; newHero: number }
+/**
+ * One recruit draw. Without `luck` this is the 1.3.0 draw. With `luck` (recruitPity on): Legendary pity, then Epic+ pity,
+ * then the normal roll; the new-hero guarantee only changes the pick (falling back to the most common rarity that still
+ * has an unowned hero). Legendary pity draws no rarity roll, so it uses one random number fewer than a normal pull.
+ */
+export function drawHero(state: RandomState, pityCounter: number, owned: ReadonlySet<string>, luck?: RecruitLuck) {
+  const rule = CONFIG.v14.recruit;
+  const legendaryPity = !!luck && rule.legendaryPityEvery > 0 && luck.legendary >= rule.legendaryPityEvery - 1;
+  const pity = legendaryPity || pityCounter >= CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1;
+  let rarity: Rarity = legendaryPity ? 'legendary' : pity ? (random(state) < CONFIG.runtime.pityEpicChance ? 'epic' : 'legendary') : weightedRarity(state, CONFIG.gacha.rates);
+  const fresh = !!luck && rule.newHeroGuaranteeEvery > 0 && luck.newHero >= rule.newHeroGuaranteeEvery - 1;
+  if (fresh && CONFIG.heroes.filter(hero => hero.rarity === rarity).every(hero => owned.has(hero.id)))
+    rarity = raritySchema.options.find(tier => CONFIG.heroes.some(hero => hero.rarity === tier && !owned.has(hero.id))) ?? rarity;
   const candidates = CONFIG.heroes.filter(hero => hero.rarity === rarity);
-  const missing = pity && CONFIG.gacha.pity.pityPrefersUnowned ? candidates.filter(hero => !owned.has(hero.id)) : [];
+  const prefersUnowned = fresh || (pity && (legendaryPity ? rule.legendaryPityPrefersUnowned : CONFIG.gacha.pity.pityPrefersUnowned));
+  const missing = prefersUnowned ? candidates.filter(hero => !owned.has(hero.id)) : [];
   const pool = missing.length ? missing : candidates;
   const hero = pool[Math.floor(random(state) * pool.length)];
   if (!hero) throw new Error('Empty gacha pool');
-  return { hero, rarity, pity, nextPity: rarity === 'epic' || rarity === 'legendary' ? 0 : pityCounter + 1 };
+  const nextLuck: RecruitLuck | undefined = luck ? { legendary: rarity === 'legendary' ? 0 : luck.legendary + 1, newHero: owned.has(hero.id) ? luck.newHero + 1 : 0 } : undefined;
+  return { hero, rarity, pity, legendaryPity, fresh, nextPity: rarity === 'epic' || rarity === 'legendary' ? 0 : pityCounter + 1, nextLuck };
+}
+export const recruitPityOn = (): boolean => CONFIG.v14.recruit.legendaryPityEvery > 0 || CONFIG.v14.recruit.newHeroGuaranteeEvery > 0;
+/** Pulls left until each guarantee (1 = this pull), or null when the rule is off or the roster is complete (counters frozen). */
+export function recruitMeters(state: GameState): { epicPlus: number; legendary: number | null; newHero: number | null } | null {
+  if (!recruitPityOn() || state.roster.length >= CONFIG.heroes.length) return null;
+  const rule = CONFIG.v14.recruit;
+  return { epicPlus: CONFIG.gacha.pity.guaranteeEpicPlusEvery - state.pity,
+    legendary: rule.legendaryPityEvery > 0 ? rule.legendaryPityEvery - (state.pityLegendary ?? 0) : null,
+    newHero: rule.newHeroGuaranteeEvery > 0 ? rule.newHeroGuaranteeEvery - (state.pityNewHero ?? 0) : null };
 }
 export function pull(state: GameState): void {
   if (state.tickets < CONFIG.gacha.costTickets) return;
   state.tickets -= CONFIG.gacha.costTickets;
-  const draw = drawHero(state, state.pity, new Set(state.roster.map(hero => hero.id)));
-  state.pity = draw.nextPity;
+  // recruitPity: once the roster is complete all three counters freeze and no guarantee fires (design.md §14.1).
+  const luckOn = recruitPityOn(), complete = state.roster.length >= CONFIG.heroes.length;
+  const luck = luckOn && !complete ? { legendary: state.pityLegendary ?? 0, newHero: state.pityNewHero ?? 0 } : undefined;
+  const draw = drawHero(state, luckOn && complete ? 0 : state.pity, new Set(state.roster.map(hero => hero.id)), luck);
+  if (!(luckOn && complete)) state.pity = draw.nextPity;
+  if (draw.nextLuck) { state.pityLegendary = draw.nextLuck.legendary; state.pityNewHero = draw.nextLuck.newHero; }
   const existing = state.roster.find(hero => hero.id === draw.hero.id);
   if (existing) {
     if (existing.stars < CONFIG.growth.starMax) existing.stars += 1;
@@ -101,8 +128,30 @@ function rollBetween(state: RandomState, bounds: number[]): number {
   return min + random(state) * (max - min);
 }
 /** Rolls one chest item (rarity, slot, main roll, charm stat: the 1.3.0 RNG order) and assigns the next item id. */
-function rollGear(state: GameState, dropStage: number): Gear {
-  const rarity = weightedRarity(state, CONFIG.gear.chestRarityOdds);
+/**
+ * CR-14-03 Fortune: the roll that brings the counter to firstLegendaryBy (before any Legendary) or legendaryEvery is
+ * Legendary. `units` is the roll's Fortune weight (normal chest 1; the second pick-1-of-2 option 0, so a chest counts once).
+ * Any Legendary rolled resets the counter and sets the flag. Pure: (counter, found, rolled rarity) → result.
+ */
+export function fortuneRoll(since: number, found: boolean, rolled: Rarity, units: number): { rarity: Rarity; since: number; found: boolean; forced: boolean } {
+  const rule = CONFIG.v14.fortune, limit = found ? rule.legendaryEvery : rule.firstLegendaryBy;
+  const forced = rolled !== 'legendary' && units > 0 && since + units >= limit;
+  const rarity: Rarity = forced ? 'legendary' : rolled;
+  return rarity === 'legendary' ? { rarity, since: 0, found: true, forced } : { rarity, since: since + units, found, forced };
+}
+export const gearFortuneOn = (): boolean => CONFIG.v14.fortune.legendaryEvery > 0;
+/** Fortune meter: `Legend in n` before the first Legendary, then `Fortune c/100`. Null when the rule is off. */
+export function fortuneMeter(state: GameState): { found: boolean; since: number; limit: number; left: number } | null {
+  if (!gearFortuneOn()) return null;
+  const found = state.gearLegendaryFound ?? false, since = state.gearSinceLegendary ?? 0, limit = found ? CONFIG.v14.fortune.legendaryEvery : CONFIG.v14.fortune.firstLegendaryBy;
+  return { found, since, limit, left: limit - since };
+}
+function rollGear(state: GameState, dropStage: number, units = CONFIG.v14.fortune.chestUnits): Gear {
+  let rarity = weightedRarity(state, CONFIG.gear.chestRarityOdds);
+  if (gearFortuneOn()) {
+    const fortune = fortuneRoll(state.gearSinceLegendary ?? 0, state.gearLegendaryFound ?? false, rarity, units);
+    rarity = fortune.rarity; state.gearSinceLegendary = fortune.since; state.gearLegendaryFound = fortune.found;
+  }
   const slot = slotSchema.options[Math.floor(random(state) * slotSchema.options.length)];
   if (!slot) throw new Error('Empty gear slot pool');
   const mult = CONFIG.enemies.scalingPerStage ** (dropStage - 1) * CONFIG.gear.rarityMult[rarity] * rollBetween(state, CONFIG.gear.mainRoll);
@@ -138,7 +187,7 @@ export function chest(state: GameState, dropStage: number): void {
   const rule = CONFIG.v14.chestChoice;
   state.stats.chests += 1;
   if (rule.options < 2 || dropStage < rule.fromStage) { addGear(state, rollGear(state, dropStage)); return; }
-  const first = rollGear(state, dropStage), second = rollGear(state, dropStage);
+  const first = rollGear(state, dropStage), second = rollGear(state, dropStage, 0);
   (state.pendingChoice ??= []).push([first, second]); state.economyRevision += 1;
   while (state.pendingChoice.length > CONFIG.runtime.chestChoiceQueueMax) chooseChest(state, bestChoice(state.pendingChoice[0]));
 }
@@ -155,7 +204,7 @@ export function chooseChest(state: GameState, keep: number): void {
   const kept = options[keep], other = options[keep === 0 ? 1 : 0];
   addGear(state, kept);
   goldChange(state, Math.round(CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[other.rarity]), 'salvage');
-  emit(state, { type: 'chestChoice', options: [options[0].id, options[1].id], kept: kept.id });
+  emit(state, { type: 'chestChoice', options: [options[0].id, options[1].id], kept: kept.id, rarities: [options[0].rarity, options[1].rarity] });
 }
 /** Repeat farm clear chest roll. CR-14-09 from farmChest.fromStage: baseChance plus a guaranteed chest on the guaranteeEvery-th dry clear. */
 export function farmChestRoll(state: GameState, stage: number): void {

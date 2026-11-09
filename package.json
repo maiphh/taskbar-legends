@@ -20,7 +20,8 @@
     "native:test": "cargo test --manifest-path src-tauri/Cargo.toml --locked",
     "shot:desktop": "tsx scripts/desktop-shot.ts",
     "shot:v14": "tsx scripts/shot-v14.ts",
-    "sim:v14": "tsx scripts/v14-targets.ts"
+    "sim:v14": "tsx scripts/v14-targets.ts",
+    "sim:v14:off": "tsx scripts/v14-targets.ts --rules none"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
