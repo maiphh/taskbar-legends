@@ -21,7 +21,7 @@ The delivered `config.json` wins over prose. Later steering wins over the earlie
 
 ## Balance is not silently retuned
 
-Initial seed-1 measurements already violate several intended design targets. The prototype deliberately preserves the delivered v1 numbers and reports failures for the designer to tune. The 7-day report is `sim-ref-7d.json`; full measurements and local validation are summarized in `docs/VERIFICATION.md` once generated.
+Initial v1 measurements violated several design targets. The designer subsequently delivered v1.1; that exact JSON is now imported, and seed-1 measurements pass six targets with target4 reference-roster timing too early. The prototype never changes designer numbers to force a pass. The 7-day report is `sim-ref-7d.json`; full measurements and local validation are summarized in `docs/VERIFICATION.md` once generated.
 
 Population checks across 100 reference-player seeds are **not** claimed by the single requested seed-1 run. The 10,000-seed gacha-only component is executed. Art and functional Heroes/Gear/Recruit management shells are wired; manual salvage, animation-polished reveals and audio remain future work.
 

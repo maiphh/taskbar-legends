@@ -50,6 +50,20 @@ The dark and light halves of `contact-sheet-heroes-outlined.png` repeat all 18 h
 
 The rat and slime become broad at the common height. The slime's attack can reach 281 pixels in cell width. The bat's first flying frame has folded wings and looks small. Its complete flying cycle reaches the target height range. Matching heights does not give these monsters equal body mass.
 
+## Hit sprites have no baked flash
+
+Every shipping hit frame has normal character colors, including the legacy `hit-white` bonus tags. The legacy names remain for compatibility, but their images no longer contain a white flash. Normal white clothing, eyes, metal highlights, and spell colors are not hit flashes. The priest retains its ivory clothing throughout the hit pose sequence.
+
+The runtime applies one uniform pure-white silhouette at the start of a hit event. The flash lasts two presentation frames, 40 ms and 50 ms, for 90 ms total. The RGB becomes `#ffffff` while the alpha channel stays unchanged. The color timer is independent of sprite-pose timing. Atlas frame counts and `durationMs` values do not change, so the first two preview samples can show the same source pose. Normal colors return at 90 ms even if that pose has not advanced yet.
+
+All 27 characters and 30 hit tags were audited using native color histograms, mean luminance, bright-grey pixel fraction, and palette comparison against non-hit animations. Each hit pose was also viewed. Ten fully flashed frames were found. No additional tinted or partially recolored body flashes were found. Goblin also had detached white impact sparks in two later frames. Those sparks were removed so the runtime flash supplies the only transient white hit cue.
+
+Most flashed poses retain their exact alpha mask. Their normal colors come from a matching non-flash pose at the same pixel coordinates. A few unmatched edge pixels use the nearest normal-palette pixel. Evil Wizard has no close matching normal pose, so its flashed second frame uses the following normal-colored hit pose. That is the only full-pose substitution.
+
+Raw downloads remain unchanged. Reviewed native corrections are stored in `processed/deflashed`. The build applies those corrections before nearest-neighbour export, priest recolor, and the readability outline. The published atlas rectangles, anchors, animation tags, frame counts, and timings stay fixed. Only the corrected hit-frame pixels and their actual ink bounds change.
+
+The complete frame-by-frame record is [deflash-report.json](deflash-report.json). The before and after histogram audits are `hit-flash-audit-before.json` and `hit-flash-audit-after.json`. The animation GIFs simulate the runtime timer rather than storing the flash in the sheets.
+
 ## The schema avoids animation-specific alignment
 
 Character keys use the requested lowercase hyphenated pack slug. The derived recolor is `priest`. Enemy keys name the creature. Every character has `sprites.png`, `sprites.outlined.png`, and `atlas.json` in its own directory.

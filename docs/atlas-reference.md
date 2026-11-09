@@ -3,7 +3,7 @@
 
 `assets/manifest.json` lists 18 heroes, nine enemies, and ten icon sheets. All paths in the manifest are relative to `assets/`. Each character atlas names its plain `sprites.png` with `image` and its baked variant with `outlinedImage`. Manifest `outlined` paths are the default character textures. Icons remain unchanged and have no outlined variant. Character frames form a row-major grid with at most 12 columns.
 
-All characters have a consistent cell size within their own sheet. Different characters have different cell sizes. Each atlas includes all source character animations, including the Medieval Warrior and classic monster update archives. Projectile-only sheets remain unmodified under `raw`.
+All characters have a consistent cell size within their own sheet. Different characters have different cell sizes. Each atlas includes all source character animations, including the Medieval Warrior and classic monster update archives. Hit frames use reviewed de-flashed native sources. The raw archive versions remain untouched. Projectile-only sheets remain unmodified under `raw`.
 
 ## Frame coordinates and anchors
 
@@ -20,6 +20,16 @@ For an unflipped Canvas 2D draw call, the destination rectangle is `[round(world
 `animations.<tag>.frames` contains zero-based indices into the top-level `frames` array. `from` and `to` are inclusive. `aliasOf` names another tag if no unique frames are needed. `durationMs` appears on both each frame and each animation. `extentsFromAnchor` gives the maximum plain ink distance above, below, left, and right of the anchor across that tag. `outlinedExtentsFromAnchor` gives the equivalent bounds for the baked variant.
 
 Suggested idle timing is 140 ms per frame. Run, walk, flight, and move use 90 ms. Hit uses 100 ms, death uses 110 ms, and other tags use 90 ms. These are playback defaults, not verified original timings. Attack, hit, death, opening, transform, and transition tags are one-shot. Idle, movement, jump, and fall tags loop. A one-shot death holds its last frame.
+
+## Runtime hit flash
+
+Shipping sheets contain no baked white or tinted hit flash. This also applies to the compatibility tag `hit-white`. The manifest and atlas metadata expose `runtimeHitFlash` with `color: #ffffff`, `presentationFrames: 2`, and `durationMs: 90`. The alpha channel is preserved. The runtime color timer uses 40 ms plus 50 ms in the review GIFs and does not alter original pose durations.
+
+Hit animations name the corrected native sheet with `source`, retain the archive path as `sourceOriginal`, and declare `deFlashed: true`. All other animations continue to reference raw source art. A legacy `hit-white` tag is now a normal-colored alternative hit sequence, not an instruction to flash.
+
+`docs/deflash-report.json` lists every correction. It records zero-based frame indices and one-based `humanFrame` numbers. `docs/deflash-baseline.json` records the pre-fix layout and frame hashes. Validation compares against the corrected native sources and independently reconstructs each native correction from the raw art. All unrelated frame pixels remain unchanged.
+
+The GIFs are `anim-sheet-heroes-1x.gif`, `anim-sheet-heroes-2x.gif`, `anim-sheet-enemies-1x.gif`, and `anim-sheet-enemies-2x.gif`. The names without a scale suffix remain aliases for the corresponding 2x GIFs. Their first two encoded frames last 40 ms and 50 ms. Hit and death play once and hold. Other rows loop with their atlas pose durations. Each row has the full 160-pixel vertical area, and column widths contain the complete effects.
 
 ## Hero height and canonical animation mappings
 
@@ -91,6 +101,6 @@ All 22 downloaded source packs explicitly declare CC0. Merchant-Shade's metadata
 
 ## Validation artifacts
 
-`scripts/verify_assets.py` verifies atlas bounds, canonical tags, anchors, output heights, source checksums, and every output frame against the original source pixels after the declared transforms. `docs/validation.json` contains the result. It also verifies that all shipping icon sheets are pixel-identical to the originals. An independent cardinal-neighbour calculation checks every outlined pixel. `docs/readability-baseline.json` retains the original plain-sheet hashes and geometry signatures, so validation proves that the outline pass changes neither plain art nor alignment. The 160-pixel overlay is checked at baseline y = 136.
+`scripts/verify_assets.py` verifies atlas bounds, canonical tags, anchors, output heights, source checksums, and every output frame against raw non-hit pixels and reviewed de-flashed hit sources after the declared transforms. `docs/validation.json` contains the result. It also verifies that all shipping icon sheets are pixel-identical to the originals. An independent cardinal-neighbour calculation checks every outlined pixel. `docs/readability-baseline.json` retains the earlier outline-pass snapshot. The hit correction intentionally supersedes its old full-sheet hashes. `docs/deflash-baseline.json` now proves that only the reviewed hit frames changed and that all frame rectangles, anchors, counts, and timings remain fixed. The outline pass still leaves the corrected plain art unchanged. The 160-pixel overlay is checked at baseline y = 136.
 
 The one-row overview images are `contact-sheet-heroes.png` and `contact-sheet-enemies.png`. The hero detail views are `contact-sheet-heroes-review-a.png` and `contact-sheet-heroes-review-b.png`. The two detail views contain all 18 heroes at 2x display scale. They do not change the exported sprite scale. `contact-sheet-heroes-outlined.png` and `contact-sheet-enemies-outlined.png` repeat every character on dark and light halves. `contact-sheet-huntress-readability.png` shows before-and-after Huntress close-ups.

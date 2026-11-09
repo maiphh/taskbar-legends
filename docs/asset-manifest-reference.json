@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-09T11:44:37.568812+07:00",
+  "generatedAt": "2026-11-09T11:48:19.084593+07:00",
   "targetBodyHeight": 48,
   "heightTolerancePx": 4,
   "sampling": "nearest-neighbour",
@@ -1573,6 +1573,19 @@
       "licence": "CC0-1.0"
     }
   ],
+  "runtimeHitFlash": {
+    "bakedFlash": false,
+    "color": "#ffffff",
+    "presentationFrames": 2,
+    "durationMs": 90,
+    "previewFrameDurationsMs": [
+      40,
+      50
+    ],
+    "alpha": "preserve",
+    "trigger": "start of hit event",
+    "spriteTiming": "unchanged; flash is an independent runtime timer"
+  },
   "readability": {
     "defaultVariant": "outlined",
     "radiusPx": 1,
@@ -1590,18 +1603,5 @@
     "heightPx": 160,
     "hudBottomHeightPx": 80,
     "recommendedBaselinePx": 136
-  },
-  "runtimeHitFlash": {
-    "bakedFlash": false,
-    "color": "#ffffff",
-    "presentationFrames": 2,
-    "durationMs": 90,
-    "previewFrameDurationsMs": [
-      40,
-      50
-    ],
-    "alpha": "preserve",
-    "trigger": "start of hit event",
-    "spriteTiming": "unchanged; flash is an independent runtime timer"
   }
 }

@@ -1,47 +1,48 @@
 {
   "final": {
-    "balanceVersion": "1.0.0-design",
+    "balanceVersion": "1.1.0",
     "tick": 72000,
     "simulatedOpenSeconds": 3600,
     "seed": 1,
-    "stage": "1-9",
-    "highestCleared": "1-9",
-    "status": "Boss 1-10 ready, click to fight",
-    "gold": 13331,
-    "tickets": 40,
-    "partyPower": 1037,
+    "stage": "1-6",
+    "highestCleared": "1-6",
+    "status": "Farming 1-6, next try in 6:02",
+    "gold": 12377,
+    "tickets": 31,
+    "partyPower": 567,
     "ownedHeroes": 3,
     "inventory": 29,
     "party": [
       {
         "id": "mw2",
-        "level": 13,
+        "level": 3,
         "stars": 1
       },
       {
         "id": "hu1",
-        "level": 13,
+        "level": 3,
         "stars": 1
       },
       {
         "id": "wiz",
-        "level": 13,
+        "level": 3,
         "stars": 1
       }
     ],
     "progress": {
-      "kind": "BOSS_READY",
-      "stage": 9,
-      "bossStage": 10,
-      "failedPower": 0,
-      "bossLosses": 0
+      "kind": "FARMING",
+      "stage": 6,
+      "failedStage": 7,
+      "retryAtTick": 79228,
+      "failedPower": 567,
+      "failures": 5
     },
     "stats": {
-      "clears": 99,
-      "losses": 1,
-      "retries": 1,
+      "clears": 142,
+      "losses": 10,
+      "retries": 9,
       "bossFailures": 0,
-      "goldEarned": 13331,
+      "goldEarned": 12377,
       "pulls": 0,
       "chests": 29,
       "offlineClears": 0,
@@ -50,62 +51,57 @@
     "metrics": {
       "firstAttemptTicks": {
         "1": 0,
-        "2": 368,
-        "3": 736,
-        "4": 1118,
-        "5": 1656,
-        "6": 2194,
-        "7": 2827,
-        "8": 3631,
-        "9": 4479
+        "2": 401,
+        "3": 802,
+        "4": 1171,
+        "5": 1620,
+        "6": 2069,
+        "7": 36012
       },
       "firstClearTicks": {
-        "1": 328,
-        "2": 696,
-        "3": 1078,
-        "4": 1616,
-        "5": 2154,
-        "6": 2787,
-        "7": 3591,
-        "8": 4439,
-        "9": 7148
+        "1": 301,
+        "2": 702,
+        "3": 1071,
+        "4": 1520,
+        "5": 1969,
+        "6": 35912
       },
       "fullRosterTick": null,
       "farmClearSeconds": [
-        34,
-        34,
-        34,
-        34,
-        34,
-        34,
-        34,
-        34,
-        34,
-        34
+        24.55,
+        24.55,
+        24.55,
+        24.55,
+        24.55,
+        24.55,
+        24.55,
+        24.55,
+        24.55,
+        24.55
       ],
-      "farmMinSeconds": 34,
-      "farmMaxSeconds": 43.75,
-      "farmSamples": 90,
-      "maxNonBossStallSeconds": 133.45
+      "farmMinSeconds": 21.35,
+      "farmMaxSeconds": 24.55,
+      "farmSamples": 136,
+      "maxNonBossStallSeconds": 1692.15
     },
-    "totalEvents": 18681
+    "totalEvents": 19055
   },
   "events": {
-    "spawn": 1786,
-    "stage": 101,
-    "wave": 302,
-    "hit": 10054,
-    "death": 1485,
-    "gold": 1581,
-    "xp": 1581,
-    "skill": 1651,
-    "clear": 99,
+    "spawn": 2371,
+    "stage": 159,
+    "wave": 472,
+    "hit": 8522,
+    "death": 1948,
+    "gold": 1994,
+    "xp": 1994,
+    "skill": 1398,
+    "clear": 142,
     "gear": 29,
-    "tickets": 10,
-    "loss": 1,
-    "retry": 1
+    "tickets": 7,
+    "loss": 10,
+    "retry": 9
   },
   "eventsRetained": 600,
   "eventLogNote": "Structured tail bounded to 600; counts cover entire run",
-  "elapsedRealMs": 56
+  "elapsedRealMs": 40
 }

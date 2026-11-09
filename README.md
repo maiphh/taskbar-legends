@@ -38,7 +38,7 @@ Uniform hit feedback is renderer-owned: **`CONFIG.view.hitFlashMs=90`**, **`hitF
 ## Configuration / provenance
 
 - **`src/config.ts`** is the single typed entry point for all tunables. It imports exact delivered copies **`src/design-config.json`** and **`src/ui-tokens.json`**, validates domain discriminants, and adds implementation/presentation constants and asset-ID mappings. Drop future designer JSONs into these paths. Config wins over prose; bump its balance version when incompatible values change.
-- The design directory and manifest were absent at kickoff but arrived during implementation. Final code uses the delivered v1 game config, UI tokens, 18 heroes, 9 enemies, and outlined atlases—not provisional placeholder balance.
+- The design directory and manifest were absent at kickoff but arrived during implementation. Final code uses the delivered v1.1 game config, UI tokens, 18 heroes, 9 enemies, and outlined atlases—not provisional placeholder balance.
 - `public/assets/` contains approved CC0 atlas assets; `public/ui/` only the runtime frame/icon crops and license; `public/fonts/` only the four used font faces and license. Research references, mockups, previews, source archives and unused vendor font alternates are excluded from shipping.
 - `CREDITS.md` lists every supplied source/license, including LuizMelo, Merchant-Shade/Kurt Gabriel Sotelo, Pixel Operator/Jayvee Enaguas and Kenney/Lynn Evers. Evidence: `docs/asset-licenses.md`, `docs/ui-assets.md`.
 - Docs preserve the design, art, atlas and UI handoffs. `docs/DECISIONS.md` explains resolved ambiguities. `docs/VERIFICATION.md` records measured results; `docs/UI-CHECKS.md` separates browser proof from native pending gates.
@@ -96,7 +96,7 @@ Inputs are `[{"tick":0,"action":{"type":"pull"}}, ...]`, applied in order before
 
 The reference policy follows config order: spend every ticket immediately; top-power formation with exactly one tank front if owned and support last if owned; best-scored gear; cheapest equipped upgrades until unaffordable; first boss attempt immediately, then only after +5% power since its last failure. Each day is **6h open / 18h closed**, with the latter capped to **8h** credited at the next session. Seven sessions therefore include six overnight credits and end after day 7's open session.
 
-Output includes daily checkpoints, all seven target measurements and honest per-run pass/fail/pending diagnostics. Targets requiring 100-seed medians are labelled `aggregatePass:null`, not misrepresented as proven by seed 1. Target 4 separately executes **10,000 gacha-only seeds** (override `--gacha-seeds N` for speed), starting with the free starter roster. A missing full roster on day 7 remains pending through day 8. Runtime milliseconds are diagnostic, not part of deterministic state. Delivered v1 balance is not silently retuned when targets fail.
+Output includes daily checkpoints, all seven target measurements and honest per-run pass/fail/pending diagnostics. Targets requiring 100-seed medians are labelled `aggregatePass:null`, not misrepresented as proven by seed 1. Target 4 separately executes **10,000 gacha-only seeds** (override `--gacha-seeds N` for speed), starting with the free starter roster. A missing full roster on day 7 remains pending through day 8. Runtime milliseconds are diagnostic, not part of deterministic state. Designer-delivered balance is imported verbatim, not silently retuned when targets fail.
 
 ## Offline / save
 
@@ -106,6 +106,6 @@ The later design overrides the initial generic tick-replay request: offline awar
 
 ## CI / later deployment
 
-CI runs typecheck, ESLint, Vitest (core, million-pull distribution/pity, deterministic policy, actual PNG envelopes and packaging), build and JSON-validated sim smoke. The Pages workflow is manual-only and awaits approved repository setup. `VITE_BASE_PATH=/repo-name/ npm run build` controls app and asset paths; nested-base browser capture is verified. No repo name is hardcoded.
+CI runs typecheck, ESLint, Vitest (core, million-pull distribution/pity, deterministic policy, actual PNG envelopes and packaging), build and JSON-validated sim smoke. The Pages workflow deploys `m1-prototype` pushes (and supports manual dispatch) once the repository and Pages are enabled. `VITE_BASE_PATH=/repo-name/ npm run build` controls app and asset paths; nested-base browser capture is verified. No repo name is hardcoded.
 
 **M2 remains separate:** Tauri 2 transparent/frameless/always-on-top shell, actual taskbar/work-area anchoring, click-through adapter/companion windows, fullscreen policy, monitor transfer, real Windows DPI and separate compact management windows. None is claimed proven by this Linux browser prototype.

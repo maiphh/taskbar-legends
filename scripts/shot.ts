@@ -29,10 +29,10 @@ try {
     window.__game.step(600); window.__game.load(snap);
     if (window.__game.snapshot() !== snap) throw new Error('Browser snapshot roundtrip failed');
   });
-  // Natural no-input baseline demonstrates the boss gate (no forced boss progression).
+  // Natural one-hour no-input baseline; its frontier depends on the delivered balance.
   const natural = createState(1); step(natural, ticksForSeconds(3600));
   await page.evaluate((state: GameState) => { window.__game.load(state); }, natural);
-  await page.screenshot({ path: 'shots/02-boss-ready-1280.png', omitBackground: true });
+  await page.screenshot({ path: 'shots/02-baseline-1h-1280.png', omitBackground: true });
   // Deterministic failed-frontier fixture, visibly labelled in the artifact metadata.
   const farm = createState(1); farm.highestCleared = 7;
   farm.progress = { kind: 'FARMING', stage: 7, failedStage: 8, retryAtTick: ticksForSeconds(120), failedPower: partyPower(farm), failures: 1 };
@@ -42,7 +42,7 @@ try {
   await page.setViewportSize({ width: 640, height: CONFIG.view.canvasHeight });
   await page.screenshot({ path: 'shots/04-farming-640.png', omitBackground: true });
   const closedFinal = await page.evaluate(() => ({ state: window.__game.getState(), hitRegions: window.__game.getHitRegions(), layout: window.__game.getLayout(), events: window.__game.getEvents(), assetErrors: window.__game.getAssetErrors() }));
-  await writeFile('shots/final-state.json', JSON.stringify({ scenario: 'failed-stage-1-8 fixture; natural no-input gate in screenshot 02', ...closedFinal }, null, 2));
+  await writeFile('shots/final-state.json', JSON.stringify({ scenario: 'failed-stage-1-8 fixture; natural one-hour no-input baseline in screenshot 02', ...closedFinal }, null, 2));
   await page.setViewportSize({ width: 1280, height: 488 });
   await page.evaluate((state: GameState) => { window.__game.load(state); }, natural);
   const beforePanel = await page.evaluate(() => window.__game.getLayout());
@@ -121,7 +121,7 @@ try {
     uniformHitFlash: { durationMs: CONFIG.view.hitFlashMs, color: CONFIG.view.hitFlashColor, flashWhitePixels, recoveredWhitePixels, pass: true },
     fontsReady: panelState.layout.ui.fontsReady, assetErrors: assets, dpiChecks }, nativeWindows: 'NOT TESTED: real desktop click-through, OS docking, monitor transfer, work-area/fullscreen handling and Windows 100/125/150% pixel appearance require M2 Tauri/Windows.' }, null, 2));
   if (errors.length) throw new Error(errors.join('\n'));
-  process.stdout.write(JSON.stringify({ screenshots: ['01-pushing-1280.png', '02-boss-ready-1280.png', '03-farming-1280.png', '04-farming-640.png', '05-heroes-panel-1280.png', '06-gear-panel-1280.png', '07-recruit-panel-1280.png', '08-strip-reference-1920.png', '09-dpi125-canvas.png', '10-hit-flash-1280.png', '11-hit-recovered-1280.png'], finalState: 'shots/final-state.json', browserErrors: errors, assetErrors: assets }, null, 2) + '\n');
+  process.stdout.write(JSON.stringify({ screenshots: ['01-pushing-1280.png', '02-baseline-1h-1280.png', '03-farming-1280.png', '04-farming-640.png', '05-heroes-panel-1280.png', '06-gear-panel-1280.png', '07-recruit-panel-1280.png', '08-strip-reference-1920.png', '09-dpi125-canvas.png', '10-hit-flash-1280.png', '11-hit-recovered-1280.png'], finalState: 'shots/final-state.json', browserErrors: errors, assetErrors: assets }, null, 2) + '\n');
 } finally {
   await browser.close();
   await new Promise<void>((resolve, reject) => { server.httpServer.close(error => error ? reject(error) : resolve()); });

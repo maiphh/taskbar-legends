@@ -1507,14 +1507,14 @@
         "left": 20,
         "right": 29
       },
+      "sourceOriginal": "raw/wizard-pack/unpacked/Wizard Pack/Hit.png",
+      "deFlashed": true,
       "outlinedExtentsFromAnchor": {
         "above": 49,
         "below": 1,
         "left": 21,
         "right": 30
-      },
-      "sourceOriginal": "raw/wizard-pack/unpacked/Wizard Pack/Hit.png",
-      "deFlashed": true
+      }
     },
     "death": {
       "frames": [
@@ -1669,19 +1669,6 @@
     "paddingPx": 2,
     "priestPaletteMap": "../../../docs/priest-palette.json",
     "timingNote": "Suggested playback timings, not official author frame timing; tune gameplay independently.",
-    "readability": {
-      "defaultVariant": "outlined",
-      "radiusPx": 1,
-      "neighbourhood": "4-connected, cardinal neighbours only",
-      "color": "#e8e4d8",
-      "alpha": 204,
-      "alphaFraction": 0.8,
-      "opaqueThreshold": 128,
-      "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
-      "originalPixels": "unchanged, including partially transparent pixels",
-      "stage": "after nearest-neighbour scaling; independently for every atlas cell",
-      "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
-    },
     "bakedHitFlash": false,
     "runtimeHitFlash": {
       "bakedFlash": false,
@@ -1696,7 +1683,20 @@
       "trigger": "start of hit event",
       "spriteTiming": "unchanged; flash is an independent runtime timer"
     },
-    "deFlashedSourceReport": "../../../docs/deflash-report.json"
+    "deFlashedSourceReport": "../../../docs/deflash-report.json",
+    "readability": {
+      "defaultVariant": "outlined",
+      "radiusPx": 1,
+      "neighbourhood": "4-connected, cardinal neighbours only",
+      "color": "#e8e4d8",
+      "alpha": 204,
+      "alphaFraction": 0.8,
+      "opaqueThreshold": 128,
+      "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
+      "originalPixels": "unchanged, including partially transparent pixels",
+      "stage": "after nearest-neighbour scaling; independently for every atlas cell",
+      "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
+    }
   },
   "outlinedImage": "sprites.outlined.png"
 }

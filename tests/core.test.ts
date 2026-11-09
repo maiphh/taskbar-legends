@@ -151,7 +151,7 @@ describe('economy and policy', () => {
   });
   it('only living combat heroes earn XP in full, level cap is respected', () => {
     const state = createState(); const dead = state.party[0]; if (!dead) throw new Error('Fixture'); dead.hp = 0;
-    grantXp(state, 40); expect(state.roster[0]?.level).toBe(1); expect(state.roster[1]?.level).toBe(2); expect(state.roster[2]?.level).toBe(2);
+    grantXp(state, Math.round(CONFIG.growth.xpToNext.a)); expect(state.roster[0]?.level).toBe(1); expect(state.roster[1]?.level).toBe(2); expect(state.roster[2]?.level).toBe(2);
     grantXp(state, 1e9); expect(state.roster[1]?.level).toBe(60); expect(state.roster[1]?.xp).toBe(0);
   });
   it('one million seeded pulls match published rates within 0.3 points and never miss Epic+ for 30 pulls', () => {

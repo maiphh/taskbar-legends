@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-design",
+  "version": "1.1.0",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -10,10 +10,10 @@
       95,
       50
     ],
-    "enemySpawnX": 560,
+    "enemySpawnX": 400,
     "enemySpawnSpacingPx": 50,
     "waveGapSec": 1.5,
-    "stageGapSec": 2.0,
+    "stageGapSec": 5,
     "partySize": 3
   },
   "rarity": {
@@ -37,7 +37,7 @@
     "perStar": 0.12,
     "formula": "stat = roleBase * rarityMult * heroMod * (1 + perLevel*(L-1)) * (1 + perStar*(stars-1)) + gearFlat, then * (1 + gearPct)",
     "xpToNext": {
-      "a": 40,
+      "a": 1400,
       "p": 1.6,
       "formula": "round(a * L^p)"
     },
@@ -62,7 +62,7 @@
       "hp": 200,
       "atk": 22,
       "def": 20,
-      "attackIntervalTicks": 20,
+      "attackIntervalTicks": 12,
       "rangePx": 160,
       "skill": {
         "id": "cleave",
@@ -290,11 +290,11 @@
     "fullHealBetweenStages": true
   },
   "enemies": {
-    "scalingPerStage": 1.12,
+    "scalingPerStage": 1.04,
     "scalingFormula": "base * scalingPerStage^(stageIndex-1) for hp, atk, def",
     "grunt": {
       "hp": 60,
-      "atk": 12,
+      "atk": 48,
       "def": 10,
       "attackIntervalTicks": 24,
       "rangePx": 30,
@@ -304,7 +304,7 @@
     },
     "archer": {
       "hp": 40,
-      "atk": 10,
+      "atk": 40,
       "def": 5,
       "attackIntervalTicks": 30,
       "rangePx": 150,
@@ -313,8 +313,8 @@
       "xp": 3
     },
     "brute": {
-      "hp": 150,
-      "atk": 20,
+      "hp": 225,
+      "atk": 300,
       "def": 25,
       "attackIntervalTicks": 36,
       "rangePx": 30,
@@ -324,8 +324,8 @@
     },
     "boss_ch1": {
       "name": "Chapter 1 Boss",
-      "hp": 2400,
-      "atk": 36,
+      "hp": 1500,
+      "atk": 450,
       "def": 20,
       "attackIntervalTicks": 30,
       "rangePx": 40,
@@ -343,8 +343,8 @@
     },
     "boss_ch2": {
       "name": "Chapter 2 Boss",
-      "hp": 3000,
-      "atk": 42,
+      "hp": 450,
+      "atk": 1200,
       "def": 25,
       "attackIntervalTicks": 30,
       "rangePx": 150,
@@ -910,7 +910,7 @@
         {
           "enemies": [
             "grunt",
-            "brute",
+            "grunt",
             "brute",
             "archer",
             "archer"
@@ -950,7 +950,7 @@
           "enemies": [
             "grunt",
             "grunt",
-            "brute",
+            "grunt",
             "brute",
             "archer",
             "archer"
@@ -990,7 +990,7 @@
           "enemies": [
             "grunt",
             "grunt",
-            "brute",
+            "grunt",
             "brute",
             "archer",
             "archer"
@@ -1030,7 +1030,7 @@
           "enemies": [
             "grunt",
             "grunt",
-            "brute",
+            "grunt",
             "brute",
             "archer",
             "archer"
@@ -1087,20 +1087,20 @@
     "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
     "firstClearChest": true,
     "farmChestChance": 0.15,
-    "farmTicketChance": 0.01,
+    "farmTicketChance": 0.0075,
     "startingTickets": 10
   },
   "gear": {
     "slots": {
       "weapon": {
         "main": {
-          "atk": 4
+          "atk": 6
         }
       },
       "armor": {
         "main": {
-          "hp": 30,
-          "def": 4
+          "hp": 60,
+          "def": 8
         }
       },
       "charm": {
@@ -1140,10 +1140,10 @@
     "charmFormula": "uniform(min,max) * rarityMult, rounded to 0.001",
     "upgrade": {
       "maxLevel": 10,
-      "mainPerLevel": 0.1,
+      "mainPerLevel": 0.15,
       "costBase": 25,
       "costExp": 1.4,
-      "costFormula": "round(costBase * 1.12^(dropStage-1) * rarityMult * level^costExp)"
+      "costFormula": "round(costBase * scalingPerStage^(dropStage-1) * rarityMult * level^costExp)"
     },
     "speedPctRule": "attackIntervalTicks = max(8, round(base / (1 + speedPct)))",
     "inventoryCap": 50,

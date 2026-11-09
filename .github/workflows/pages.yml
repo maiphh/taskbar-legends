@@ -1,6 +1,8 @@
 name: Deploy browser preview to Pages
-# Manual only until repository name and Pages setup are approved. No deployment occurs locally.
+# Temporary M1 branch preview. Publishing still requires repository/Pages setup.
 on:
+  push:
+    branches: [m1-prototype]
   workflow_dispatch:
     inputs:
       base_path:
