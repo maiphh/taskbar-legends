@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/martial-hero-3
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: d21b583c2f2f84321b3a26657139b50012653bc35d1a4f577a6eb4283934664e
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal

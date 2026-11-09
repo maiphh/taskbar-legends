@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/medieval-king-pack-2
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: b171eb1183c2e3466d903b6996511bbf506757d9731de93de12593dab30752cd
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal

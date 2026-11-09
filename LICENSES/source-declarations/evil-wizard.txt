@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/evil-wizard
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: cc0976ab67d60f1a7176c8a234a04d51c2447a5204878344d0d201d89bd3a004
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal

@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/medieval-warrior-pack-3
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: cf7e892d0ba958a69bb7b3fb36c9149530a633bc6cafcfda7441ee92902cbf54
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal
