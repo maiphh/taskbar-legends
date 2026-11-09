@@ -99,7 +99,7 @@ pub fn write_prefs(path: &std::path::Path, prefs: &ShellPrefs) -> std::io::Resul
 }
 
 #[cfg(desktop)]
-mod native {
+pub mod native {
     use super::*;
     use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem};
     use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -328,7 +328,7 @@ mod native {
 }
 
 #[cfg(desktop)]
-pub use native::{quit_app, relaunch_app, setup, shell_mode};
+pub use native::setup;
 
 #[cfg(test)]
 mod tests {

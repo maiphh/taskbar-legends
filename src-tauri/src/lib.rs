@@ -73,9 +73,9 @@ pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             set_overlay_bounds,
-            shell::shell_mode,
-            shell::quit_app,
-            shell::relaunch_app
+            shell::native::shell_mode,
+            shell::native::quit_app,
+            shell::native::relaunch_app
         ])
         .setup(shell::setup)
         .run(context)
