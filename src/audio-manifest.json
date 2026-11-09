@@ -1,0 +1,572 @@
+{
+  "source": "game-assets/idle-battler/audio/manifest.json",
+  "sourceSha256": "460cfb74a2dc4f36230bb0f07ec861b07820e231d793c1a56f84c0c34b700aeb",
+  "defaultVolumes": {
+    "master": 0.5,
+    "music": 0.3,
+    "sfx": 0.6,
+    "ui": 0.5
+  },
+  "gainFormula": "master x bus x clip.defaultVolume",
+  "groups": {
+    "hit": {
+      "variants": [
+        "hit_1",
+        "hit_2",
+        "hit_3"
+      ],
+      "select": "random-no-immediate-repeat",
+      "playbackRateJitter": 0.03,
+      "minIntervalMs": 45,
+      "maxVoices": 3
+    },
+    "coin_pickup": {
+      "variants": [
+        "coin_pickup_1",
+        "coin_pickup_2",
+        "coin_pickup_3"
+      ],
+      "select": "random-no-immediate-repeat",
+      "playbackRateJitter": 0.02,
+      "minIntervalMs": 60,
+      "maxVoices": 4
+    },
+    "gacha_reveal": {
+      "byRarity": {
+        "common": "gacha_reveal_common",
+        "rare": "gacha_reveal_rare",
+        "epic": "gacha_reveal_epic",
+        "legendary": "gacha_reveal_legendary"
+      },
+      "pity": "gacha_pity",
+      "legendaryAlternatives": [
+        "gacha_legendary_sting"
+      ],
+      "rarityColours": {
+        "common": "grey",
+        "rare": "blue",
+        "epic": "purple",
+        "legendary": "gold"
+      }
+    }
+  },
+  "skipped": [
+    "crit"
+  ],
+  "heldForV14": [
+    "ultimate_evil_wizard_3",
+    "ultimate_king_2",
+    "ultimate_martial_3"
+  ],
+  "m4aOffsetSamples": 0,
+  "clips": [
+    {
+      "key": "hit_1",
+      "bus": "sfx",
+      "defaultVolume": 0.8,
+      "durationMs": 404.3,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "hit_1.ogg",
+        "mp3": "hit_1.mp3"
+      },
+      "sha256": {
+        "ogg": "1e3099189eea48725ac0d40858f86f20288d8936c3e5abafc7dc9474105cff47",
+        "mp3": "820809311e7f03380d3f16e5431f5e9dc8c9c25dc7b527c0f3be3f20b88a8320"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "hit_2",
+      "bus": "sfx",
+      "defaultVolume": 0.8,
+      "durationMs": 456.3,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "hit_2.ogg",
+        "mp3": "hit_2.mp3"
+      },
+      "sha256": {
+        "ogg": "a271039ca9d9b9660fac4718720c6615fd1fca8b7e4e22b9a33b227e71b4c3d9",
+        "mp3": "0fdb2eae839103a2c4fee06bf94c8d0228d3d6a1798685402664eab6c99d991f"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "hit_3",
+      "bus": "sfx",
+      "defaultVolume": 0.8,
+      "durationMs": 436.5,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "hit_3.ogg",
+        "mp3": "hit_3.mp3"
+      },
+      "sha256": {
+        "ogg": "7ef70409d838dc735504a05aac242bed9ffa37d490cbec17c50ee153e4886d0f",
+        "mp3": "edae89b0b29eb92ea764d0baa36609b60a8fc241ea486f82cdd255f03863da4a"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "hero_death",
+      "bus": "sfx",
+      "defaultVolume": 0.9,
+      "durationMs": 1763.7,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "hero_death.ogg",
+        "mp3": "hero_death.mp3"
+      },
+      "sha256": {
+        "ogg": "0ab08ebf71478f09a1413cf178da62de11fb3f11b4ba02781de8f70000996a85",
+        "mp3": "b93ea7e63edb7608ccf5910d2e4015a0912aa34cb998a9147954a44cb4811bec"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "enemy_death",
+      "bus": "sfx",
+      "defaultVolume": 0.85,
+      "durationMs": 658.0,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "enemy_death.ogg",
+        "mp3": "enemy_death.mp3"
+      },
+      "sha256": {
+        "ogg": "6764c9ed39f34419d94b79b77afa32883f314815ecab5943e4b2724436f97bc8",
+        "mp3": "4e26c9b590e91151ec1b70d24428acf606bb2d2f583efbf6404352fa3df68785"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "coin_pickup_1",
+      "bus": "sfx",
+      "defaultVolume": 0.7,
+      "durationMs": 740.1,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "coin_pickup_1.ogg",
+        "mp3": "coin_pickup_1.mp3"
+      },
+      "sha256": {
+        "ogg": "02685f0b75e24e6598937e37f501ddb277068cd71a8ea24200a12390140b10ee",
+        "mp3": "46e78b12473135c4fbc7738bcd5da6bcfe43b8073f8ea34aad6616066c5280a6"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "coin_pickup_2",
+      "bus": "sfx",
+      "defaultVolume": 0.7,
+      "durationMs": 700.5,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "coin_pickup_2.ogg",
+        "mp3": "coin_pickup_2.mp3"
+      },
+      "sha256": {
+        "ogg": "9497270dff66a0f0d863e737325d5305e1557e1c452229a82f59ff495d4d9144",
+        "mp3": "78fe9577604553574cc212c620d8f91bfb2852c52c0db3d4259778a665ccf927"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "coin_pickup_3",
+      "bus": "sfx",
+      "defaultVolume": 0.7,
+      "durationMs": 707.7,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "coin_pickup_3.ogg",
+        "mp3": "coin_pickup_3.mp3"
+      },
+      "sha256": {
+        "ogg": "23218093469d34e85975231d3852caa7e779d058fb7d0705bfe682cebde5e9cb",
+        "mp3": "d706a4d7bc27685f7a052af348c9ad3a2799ebca94662ce2d91ad0cdc44503d8"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "stage_clear",
+      "bus": "sfx",
+      "defaultVolume": 1.0,
+      "durationMs": 2732.1,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "stage_clear.ogg",
+        "mp3": "stage_clear.mp3"
+      },
+      "sha256": {
+        "ogg": "eb6d9bfd394e39af5845eb7c5624857945e829676dbcb09f572b7e3d8e2f5051",
+        "mp3": "d687d3fe478d4dcc9218421c0e0dc100aad76d5afd9995d71ec2ca4689e30813"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "boss_warning",
+      "bus": "sfx",
+      "defaultVolume": 1.0,
+      "durationMs": 2284.4,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "boss_warning.ogg",
+        "mp3": "boss_warning.mp3"
+      },
+      "sha256": {
+        "ogg": "58d683f2b99eb7b5ad0d1f1ff324a5c9e1b1fb21691c496152015e52ed5fac9f",
+        "mp3": "d511bfe59d399df058f0e6b5bf392d2533ac3a212ee98cbd1eba9096f6ebff46"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "gacha_pull",
+      "bus": "sfx",
+      "defaultVolume": 1.0,
+      "durationMs": 1494.5,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "gacha_pull.ogg",
+        "mp3": "gacha_pull.mp3"
+      },
+      "sha256": {
+        "ogg": "c6a4ef4c067a5cfb4233c36838ceb9d2808ad27579d6f33874cc6e31c59e802b",
+        "mp3": "cd05ee63434ac612c58e6eb1d116151155318eb424deafe5a0566118751a0d94"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "gacha_reveal_common",
+      "bus": "sfx",
+      "defaultVolume": 0.9,
+      "durationMs": 1800.0,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "gacha_reveal_common.ogg",
+        "mp3": "gacha_reveal_common.mp3"
+      },
+      "sha256": {
+        "ogg": "46b2a06407bcca1f21d3a254d0ae4cef559a2938600946ef3422da9493df2c08",
+        "mp3": "6c1c2fe1583c05db8675586769cc910bc7f7a9740652c55a77ad8c5b1799bb2f"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "gacha_reveal_rare",
+      "bus": "sfx",
+      "defaultVolume": 0.95,
+      "durationMs": 1984.8,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "gacha_reveal_rare.ogg",
+        "mp3": "gacha_reveal_rare.mp3"
+      },
+      "sha256": {
+        "ogg": "c65a0a6403b097b593d94376d74609f3b9e5c421d6826fdbe1e27b71512d020c",
+        "mp3": "2fc54612782f938ca66ce5455df4a81b0de9f6a47d278b90fdff2f7ea2b4ad0f"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "gacha_reveal_epic",
+      "bus": "sfx",
+      "defaultVolume": 1.0,
+      "durationMs": 2460.4,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "gacha_reveal_epic.ogg",
+        "mp3": "gacha_reveal_epic.mp3"
+      },
+      "sha256": {
+        "ogg": "8177cac8bb9a428ced419529da43ef4cbcff9750672682ea17e2a811c83c82d1",
+        "mp3": "86d7659cd20ff8f3547cbb7d21e780c63432a661644df6bd86ebad24942dee6e"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "gacha_reveal_legendary",
+      "bus": "sfx",
+      "defaultVolume": 1.0,
+      "durationMs": 3371.0,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "gacha_reveal_legendary.ogg",
+        "mp3": "gacha_reveal_legendary.mp3"
+      },
+      "sha256": {
+        "ogg": "37f842d2a6f3fef46c298e6854ea74b3a8ff1e5da06dfe2139fbf530493cae75",
+        "mp3": "3fc0f5564c20a88ed6049a4ad4372620babba4405c8c97a9e13221a426014244"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "gacha_pity",
+      "bus": "sfx",
+      "defaultVolume": 1.0,
+      "durationMs": 2413.6,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "gacha_pity.ogg",
+        "mp3": "gacha_pity.mp3"
+      },
+      "sha256": {
+        "ogg": "28d3f1b943511bdc6df54438d3f8ebdd0beb7505447e2dbb302857bfc3394eea",
+        "mp3": "e09f40dbdd4183307300a345864e1c20373c815cc6b7d131f78899aa3aa6de23"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "drop_pop",
+      "bus": "sfx",
+      "defaultVolume": 0.8,
+      "durationMs": 389.2,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "drop_pop.ogg",
+        "mp3": "drop_pop.mp3"
+      },
+      "sha256": {
+        "ogg": "c3836d0f2873b2bf90ccaef773c77787c7e7b8edc760e88b5b81beb629b131e0",
+        "mp3": "102ba4fbdb8e2762f615a361ab95d3ac2644e2b7631e08bafe8f98edc0728b4b"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "ui_click",
+      "bus": "ui",
+      "defaultVolume": 1.0,
+      "durationMs": 70.0,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "ui_click.ogg",
+        "mp3": "ui_click.mp3"
+      },
+      "sha256": {
+        "ogg": "428373a47e349162baf7019d2fc2ac10ca136f89294a33f13953c919642daad6",
+        "mp3": "a4a606260d97d5738d2508c8e628d3472da32046b1f47dd277a2e4c6b70491de"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "ui_open",
+      "bus": "ui",
+      "defaultVolume": 1.0,
+      "durationMs": 322.4,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "ui_open.ogg",
+        "mp3": "ui_open.mp3"
+      },
+      "sha256": {
+        "ogg": "fac6f287f345d6da9f696c558eb4be50b1a8b709b166a9027ea318257bff94c4",
+        "mp3": "e0e842ff0ee6b54d20c749bfadd0d6f2fc343fa8124a2db32a661f062cf53473"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "ui_close",
+      "bus": "ui",
+      "defaultVolume": 1.0,
+      "durationMs": 331.8,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "ui_close.ogg",
+        "mp3": "ui_close.mp3"
+      },
+      "sha256": {
+        "ogg": "f2c7afe5afe0e00bf805425ca5794926aad67d261831fd5a3c30ed8c2e4b2ba9",
+        "mp3": "03ce5ed3391c061d0be2fb2f7439bfad5aeae60a5ce5c7fb0b41f8877d777609"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      }
+    },
+    {
+      "key": "gacha_legendary_sting",
+      "bus": "sfx",
+      "defaultVolume": 0.9,
+      "durationMs": 1387.3,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "gacha_legendary_sting.ogg",
+        "mp3": "gacha_legendary_sting.mp3"
+      },
+      "sha256": {
+        "ogg": "0188fb481b4662ada04e1bcdcbaf9f9170f5e2a525cedbd18f2e48b1a7d6226c",
+        "mp3": "ede2902668c751ef26ad3ef4e3692b5fcf2170351b0f687f79eb55d2efbe68a6"
+      },
+      "source": {
+        "type": "third-party",
+        "author": "Kenney Vleugels (www.kenney.nl)",
+        "licence": "CC0-1.0",
+        "pack": "Kenney Music Jingles",
+        "url": "https://kenney.nl/assets/music-jingles",
+        "file": "Audio/Steel jingles/jingles_STEEL02.ogg"
+      }
+    },
+    {
+      "key": "ambient_loop",
+      "bus": "music",
+      "defaultVolume": 1.0,
+      "durationMs": 48000.0,
+      "sampleRate": 48000,
+      "paths": {
+        "ogg": "ambient_loop.ogg",
+        "mp3": "ambient_loop.mp3",
+        "m4a": "ambient_loop.m4a"
+      },
+      "sha256": {
+        "ogg": "8c00c2361ec3c4491c2b69844867ad9debd58749010db4516fb507a5d75584a4",
+        "mp3": "b813f8e04b29920d97c857b76730e8341d607a6952fcad944f2d841c949ef2b1",
+        "m4a": "878f507fd16bb3fbd138fd8324df67ea9728786a7d1ca31d922bc1e9edf2eef3"
+      },
+      "source": {
+        "type": "procedural-synthesis",
+        "author": "Generated for this project by Phu Mai's art agent",
+        "licence": "Original work; no third-party licence applies; no attribution or non-commercial restriction"
+      },
+      "loop": {
+        "startSample": 0,
+        "endSample": 2304000
+      }
+    }
+  ],
+  "m4aOffsetMeasurement": {
+    "method": "scripts/measure-aac-offset.ts: decodeAudioData in Playwright Chromium + WebKit, channel 0 lag search against the OGG decode",
+    "summary": {
+      "chromium": {
+        "version": "156.0.8078.47",
+        "ogg": {
+          "decoded": true,
+          "canPlayType": "probably",
+          "length": 2304000,
+          "offsetSamples": 0,
+          "residual": 0,
+          "lengthDelta": 0
+        },
+        "m4a": {
+          "decoded": true,
+          "canPlayType": "probably",
+          "length": 2304000,
+          "offsetSamples": 0,
+          "residual": 0.00165,
+          "lengthDelta": 0
+        },
+        "mp3": {
+          "decoded": true,
+          "canPlayType": "probably",
+          "length": 2304000,
+          "offsetSamples": 0,
+          "residual": 0.00081,
+          "lengthDelta": 0
+        }
+      },
+      "webkit": {
+        "version": "27.2",
+        "ogg": {
+          "decoded": true,
+          "canPlayType": "probably",
+          "length": 2304001,
+          "offsetSamples": 0,
+          "residual": 0,
+          "lengthDelta": 1
+        },
+        "m4a": {
+          "decoded": true,
+          "canPlayType": "probably",
+          "length": 2304000,
+          "offsetSamples": 0,
+          "residual": 0.00165,
+          "lengthDelta": 0
+        },
+        "mp3": {
+          "decoded": true,
+          "canPlayType": "maybe",
+          "length": 2305152,
+          "offsetSamples": 1105,
+          "residual": 0.00081,
+          "lengthDelta": 1152
+        }
+      }
+    }
+  }
+}
