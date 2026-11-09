@@ -1,0 +1,5 @@
+[
+  { "tick": 0, "action": { "type": "pull" } },
+  { "tick": 0, "action": { "type": "autoParty" } },
+  { "tick": 400, "action": { "type": "autoEquip" } }
+]

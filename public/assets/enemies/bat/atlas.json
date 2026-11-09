@@ -1,0 +1,1447 @@
+{
+  "key": "bat",
+  "image": "sprites.png",
+  "imageSize": [
+    912,
+    244
+  ],
+  "cellSize": [
+    76,
+    61
+  ],
+  "anchor": {
+    "x": 28,
+    "y": 57
+  },
+  "pivot": {
+    "x": 0.3684210526315789,
+    "y": 0.9344262295081968
+  },
+  "frames": [
+    {
+      "name": "fly/000",
+      "animation": "fly",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        8,
+        15,
+        62,
+        48
+      ],
+      "outlinedContentBounds": [
+        7,
+        14,
+        63,
+        49
+      ]
+    },
+    {
+      "name": "fly/001",
+      "animation": "fly",
+      "index": 1,
+      "x": 76,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        18,
+        63,
+        47
+      ],
+      "outlinedContentBounds": [
+        6,
+        17,
+        64,
+        48
+      ]
+    },
+    {
+      "name": "fly/002",
+      "animation": "fly",
+      "index": 2,
+      "x": 152,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        9,
+        33,
+        65,
+        48
+      ],
+      "outlinedContentBounds": [
+        8,
+        32,
+        66,
+        49
+      ]
+    },
+    {
+      "name": "fly/003",
+      "animation": "fly",
+      "index": 3,
+      "x": 228,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        21,
+        33,
+        65,
+        57
+      ],
+      "outlinedContentBounds": [
+        20,
+        32,
+        66,
+        58
+      ]
+    },
+    {
+      "name": "fly/004",
+      "animation": "fly",
+      "index": 4,
+      "x": 304,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        19,
+        33,
+        65,
+        53
+      ],
+      "outlinedContentBounds": [
+        18,
+        32,
+        66,
+        54
+      ]
+    },
+    {
+      "name": "fly/005",
+      "animation": "fly",
+      "index": 5,
+      "x": 380,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        13,
+        31,
+        67,
+        49
+      ],
+      "outlinedContentBounds": [
+        12,
+        30,
+        68,
+        50
+      ]
+    },
+    {
+      "name": "fly/006",
+      "animation": "fly",
+      "index": 6,
+      "x": 456,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        8,
+        28,
+        67,
+        46
+      ],
+      "outlinedContentBounds": [
+        7,
+        27,
+        68,
+        47
+      ]
+    },
+    {
+      "name": "fly/007",
+      "animation": "fly",
+      "index": 7,
+      "x": 532,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        23,
+        69,
+        46
+      ],
+      "outlinedContentBounds": [
+        2,
+        22,
+        70,
+        47
+      ]
+    },
+    {
+      "name": "fly/008",
+      "animation": "fly",
+      "index": 8,
+      "x": 608,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        2,
+        16,
+        69,
+        47
+      ],
+      "outlinedContentBounds": [
+        1,
+        15,
+        70,
+        48
+      ]
+    },
+    {
+      "name": "fly/009",
+      "animation": "fly",
+      "index": 9,
+      "x": 684,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        7,
+        56,
+        48
+      ],
+      "outlinedContentBounds": [
+        6,
+        6,
+        57,
+        49
+      ]
+    },
+    {
+      "name": "fly/010",
+      "animation": "fly",
+      "index": 10,
+      "x": 760,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        12,
+        2,
+        56,
+        48
+      ],
+      "outlinedContentBounds": [
+        11,
+        1,
+        57,
+        49
+      ]
+    },
+    {
+      "name": "attack/000",
+      "animation": "attack",
+      "index": 0,
+      "x": 836,
+      "y": 0,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        10,
+        5,
+        58,
+        48
+      ],
+      "outlinedContentBounds": [
+        9,
+        4,
+        59,
+        49
+      ]
+    },
+    {
+      "name": "attack/001",
+      "animation": "attack",
+      "index": 1,
+      "x": 0,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        11,
+        13,
+        61,
+        49
+      ],
+      "outlinedContentBounds": [
+        10,
+        12,
+        62,
+        50
+      ]
+    },
+    {
+      "name": "attack/002",
+      "animation": "attack",
+      "index": 2,
+      "x": 76,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        10,
+        29,
+        64,
+        50
+      ],
+      "outlinedContentBounds": [
+        9,
+        28,
+        65,
+        51
+      ]
+    },
+    {
+      "name": "attack/003",
+      "animation": "attack",
+      "index": 3,
+      "x": 152,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        22,
+        21,
+        50,
+        51
+      ],
+      "outlinedContentBounds": [
+        21,
+        20,
+        51,
+        52
+      ]
+    },
+    {
+      "name": "attack/004",
+      "animation": "attack",
+      "index": 4,
+      "x": 228,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        22,
+        20,
+        48,
+        51
+      ],
+      "outlinedContentBounds": [
+        21,
+        19,
+        49,
+        52
+      ]
+    },
+    {
+      "name": "attack/005",
+      "animation": "attack",
+      "index": 5,
+      "x": 304,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        22,
+        20,
+        48,
+        51
+      ],
+      "outlinedContentBounds": [
+        21,
+        19,
+        49,
+        52
+      ]
+    },
+    {
+      "name": "attack/006",
+      "animation": "attack",
+      "index": 6,
+      "x": 380,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        23,
+        21,
+        48,
+        50
+      ],
+      "outlinedContentBounds": [
+        22,
+        20,
+        49,
+        51
+      ]
+    },
+    {
+      "name": "attack/007",
+      "animation": "attack",
+      "index": 7,
+      "x": 456,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        21,
+        21,
+        52,
+        49
+      ],
+      "outlinedContentBounds": [
+        20,
+        20,
+        53,
+        50
+      ]
+    },
+    {
+      "name": "attack/008",
+      "animation": "attack",
+      "index": 8,
+      "x": 532,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        21,
+        17,
+        74,
+        53
+      ],
+      "outlinedContentBounds": [
+        20,
+        16,
+        75,
+        54
+      ]
+    },
+    {
+      "name": "attack/009",
+      "animation": "attack",
+      "index": 9,
+      "x": 608,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        20,
+        13,
+        66,
+        53
+      ],
+      "outlinedContentBounds": [
+        19,
+        12,
+        67,
+        54
+      ]
+    },
+    {
+      "name": "attack/010",
+      "animation": "attack",
+      "index": 10,
+      "x": 684,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        13,
+        10,
+        57,
+        48
+      ],
+      "outlinedContentBounds": [
+        12,
+        9,
+        58,
+        49
+      ]
+    },
+    {
+      "name": "hit/000",
+      "animation": "hit",
+      "index": 0,
+      "x": 760,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        10,
+        28,
+        63,
+        50
+      ],
+      "outlinedContentBounds": [
+        9,
+        27,
+        64,
+        51
+      ]
+    },
+    {
+      "name": "hit/001",
+      "animation": "hit",
+      "index": 1,
+      "x": 836,
+      "y": 61,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        11,
+        13,
+        61,
+        49
+      ],
+      "outlinedContentBounds": [
+        10,
+        12,
+        62,
+        50
+      ]
+    },
+    {
+      "name": "hit/002",
+      "animation": "hit",
+      "index": 2,
+      "x": 0,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        10,
+        5,
+        58,
+        48
+      ],
+      "outlinedContentBounds": [
+        9,
+        4,
+        59,
+        49
+      ]
+    },
+    {
+      "name": "death/000",
+      "animation": "death",
+      "index": 0,
+      "x": 76,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        32,
+        3,
+        45,
+        41
+      ],
+      "outlinedContentBounds": [
+        31,
+        2,
+        46,
+        42
+      ]
+    },
+    {
+      "name": "death/001",
+      "animation": "death",
+      "index": 1,
+      "x": 152,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        24,
+        13,
+        55,
+        41
+      ],
+      "outlinedContentBounds": [
+        23,
+        12,
+        56,
+        42
+      ]
+    },
+    {
+      "name": "death/002",
+      "animation": "death",
+      "index": 2,
+      "x": 228,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        16,
+        32,
+        61,
+        41
+      ],
+      "outlinedContentBounds": [
+        15,
+        31,
+        62,
+        42
+      ]
+    },
+    {
+      "name": "death/003",
+      "animation": "death",
+      "index": 3,
+      "x": 304,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        6,
+        29,
+        70,
+        41
+      ],
+      "outlinedContentBounds": [
+        5,
+        28,
+        71,
+        42
+      ]
+    },
+    {
+      "name": "fall/000",
+      "animation": "fall",
+      "index": 0,
+      "x": 380,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        32,
+        12,
+        44,
+        58
+      ],
+      "outlinedContentBounds": [
+        31,
+        11,
+        45,
+        59
+      ]
+    },
+    {
+      "name": "fall/001",
+      "animation": "fall",
+      "index": 1,
+      "x": 456,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        14,
+        42,
+        58
+      ],
+      "outlinedContentBounds": [
+        30,
+        13,
+        43,
+        59
+      ]
+    },
+    {
+      "name": "fall/002",
+      "animation": "fall",
+      "index": 2,
+      "x": 532,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        18,
+        44,
+        58
+      ],
+      "outlinedContentBounds": [
+        30,
+        17,
+        45,
+        59
+      ]
+    },
+    {
+      "name": "fall/003",
+      "animation": "fall",
+      "index": 3,
+      "x": 608,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        33,
+        18,
+        41,
+        58
+      ],
+      "outlinedContentBounds": [
+        32,
+        17,
+        42,
+        59
+      ]
+    },
+    {
+      "name": "fall/004",
+      "animation": "fall",
+      "index": 4,
+      "x": 684,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        16,
+        43,
+        58
+      ],
+      "outlinedContentBounds": [
+        30,
+        15,
+        44,
+        59
+      ]
+    },
+    {
+      "name": "flytofall/000",
+      "animation": "flytofall",
+      "index": 0,
+      "x": 760,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        13,
+        15,
+        57,
+        54
+      ],
+      "outlinedContentBounds": [
+        12,
+        14,
+        58,
+        55
+      ]
+    },
+    {
+      "name": "flytofall/001",
+      "animation": "flytofall",
+      "index": 1,
+      "x": 836,
+      "y": 122,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        26,
+        14,
+        51,
+        57
+      ],
+      "outlinedContentBounds": [
+        25,
+        13,
+        52,
+        58
+      ]
+    },
+    {
+      "name": "flytofall/002",
+      "animation": "flytofall",
+      "index": 2,
+      "x": 0,
+      "y": 183,
+      "w": 76,
+      "h": 61,
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "pivot": {
+        "x": 0.3684210526315789,
+        "y": 0.9344262295081968
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        30,
+        14,
+        45,
+        59
+      ],
+      "outlinedContentBounds": [
+        29,
+        13,
+        46,
+        60
+      ]
+    }
+  ],
+  "animations": {
+    "fly": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "from": 0,
+      "to": 10,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/fly.png",
+      "extentsFromAnchor": {
+        "above": 55,
+        "below": 0,
+        "left": 26,
+        "right": 41
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 56,
+        "below": 1,
+        "left": 27,
+        "right": 42
+      }
+    },
+    "attack": {
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "from": 11,
+      "to": 21,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/attack.png",
+      "extentsFromAnchor": {
+        "above": 52,
+        "below": 0,
+        "left": 18,
+        "right": 46
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 53,
+        "below": 0,
+        "left": 19,
+        "right": 47
+      }
+    },
+    "hit": {
+      "frames": [
+        22,
+        23,
+        24
+      ],
+      "from": 22,
+      "to": 24,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 100,
+      "source": "processed/deflashed/bat/hit.png",
+      "extentsFromAnchor": {
+        "above": 52,
+        "below": 0,
+        "left": 18,
+        "right": 35
+      },
+      "sourceOriginal": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/hurt.png",
+      "deFlashed": true,
+      "outlinedExtentsFromAnchor": {
+        "above": 53,
+        "below": 0,
+        "left": 19,
+        "right": 36
+      }
+    },
+    "death": {
+      "frames": [
+        25,
+        26,
+        27,
+        28
+      ],
+      "from": 25,
+      "to": 28,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 110,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/death.png",
+      "extentsFromAnchor": {
+        "above": 54,
+        "below": 0,
+        "left": 22,
+        "right": 42
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 55,
+        "below": 0,
+        "left": 23,
+        "right": 43
+      }
+    },
+    "fall": {
+      "frames": [
+        29,
+        30,
+        31,
+        32,
+        33
+      ],
+      "from": 29,
+      "to": 33,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/fall.png",
+      "extentsFromAnchor": {
+        "above": 45,
+        "below": 1,
+        "left": -3,
+        "right": 16
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 46,
+        "below": 2,
+        "left": -2,
+        "right": 17
+      }
+    },
+    "flytofall": {
+      "frames": [
+        34,
+        35,
+        36
+      ],
+      "from": 34,
+      "to": 36,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/fly-to-fall.png",
+      "extentsFromAnchor": {
+        "above": 43,
+        "below": 2,
+        "left": 15,
+        "right": 29
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 44,
+        "below": 3,
+        "left": 16,
+        "right": 30
+      }
+    },
+    "idle": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "from": 0,
+      "to": 10,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/fly.png",
+      "aliasOf": "fly",
+      "extentsFromAnchor": {
+        "above": 55,
+        "below": 0,
+        "left": 26,
+        "right": 41
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 56,
+        "below": 1,
+        "left": 27,
+        "right": 42
+      }
+    },
+    "run": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "from": 0,
+      "to": 10,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/fly.png",
+      "aliasOf": "fly",
+      "extentsFromAnchor": {
+        "above": 55,
+        "below": 0,
+        "left": 26,
+        "right": 41
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 56,
+        "below": 1,
+        "left": 27,
+        "right": 42
+      }
+    }
+  },
+  "meta": {
+    "sourcePack": "monsters-creatures-fantasy-2",
+    "author": "LuizMelo",
+    "licence": "CC0-1.0",
+    "targetBodyHeight": 48,
+    "nativeFrameSize": [
+      87,
+      87
+    ],
+    "nativeIdleBounds": [
+      14,
+      16,
+      81,
+      71
+    ],
+    "nativeBodyMeasurementBounds": [
+      14,
+      16,
+      81,
+      71
+    ],
+    "nativeBodyHeight": 46,
+    "nativeBodyEnvelopeHeight": 55,
+    "bodyHeightPx": 46,
+    "maxIdleVisibleHeightPx": 46,
+    "scaleApplied": 1,
+    "effectiveScale": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "scaleMode": "integer/half",
+    "scaledSourceSize": [
+      87,
+      87
+    ],
+    "sharedTrimBounds": [
+      14,
+      16,
+      86,
+      73
+    ],
+    "paddingPx": 2,
+    "priestPaletteMap": null,
+    "timingNote": "Suggested playback timings, not official author frame timing; tune gameplay independently.",
+    "bakedHitFlash": false,
+    "runtimeHitFlash": {
+      "bakedFlash": false,
+      "color": "#ffffff",
+      "presentationFrames": 2,
+      "durationMs": 90,
+      "previewFrameDurationsMs": [
+        40,
+        50
+      ],
+      "alpha": "preserve",
+      "trigger": "start of hit event",
+      "spriteTiming": "unchanged; flash is an independent runtime timer"
+    },
+    "deFlashedSourceReport": "../../../docs/deflash-report.json",
+    "readability": {
+      "defaultVariant": "outlined",
+      "radiusPx": 1,
+      "neighbourhood": "4-connected, cardinal neighbours only",
+      "color": "#e8e4d8",
+      "alpha": 204,
+      "alphaFraction": 0.8,
+      "opaqueThreshold": 128,
+      "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
+      "originalPixels": "unchanged, including partially transparent pixels",
+      "stage": "after nearest-neighbour scaling; independently for every atlas cell",
+      "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
+    }
+  },
+  "outlinedImage": "sprites.outlined.png"
+}

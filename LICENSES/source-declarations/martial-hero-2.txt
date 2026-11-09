@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/martial-hero-2
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: 84b92f5a46d7dee871fcd5b4b7ee144354204933f0206e7df83d2719f5478078
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal

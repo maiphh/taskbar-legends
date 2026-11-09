@@ -1,0 +1,728 @@
+{
+  "generatedAt": "2026-11-09T11:48:17.033125+07:00",
+  "indexConvention": "zero-based; humanFrame is one-based",
+  "runtimeHitFlash": {
+    "bakedFlash": false,
+    "color": "#ffffff",
+    "presentationFrames": 2,
+    "durationMs": 90,
+    "previewFrameDurationsMs": [
+      40,
+      50
+    ],
+    "alpha": "preserve",
+    "trigger": "start of hit event",
+    "spriteTiming": "unchanged; flash is an independent runtime timer"
+  },
+  "auditedCharacters": 27,
+  "auditedHitTags": 30,
+  "corrections": [
+    {
+      "key": "hero-knight",
+      "animation": "hit",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 0,
+      "referenceSource": "raw/hero-knight/unpacked/Hero Knight/Sprites/Take Hit.png",
+      "sameCoordinatePalettePixels": 695,
+      "nearestPalettePixels": 2,
+      "alphaPreserved": true
+    },
+    {
+      "key": "hero-knight-2",
+      "animation": "hit",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 2,
+      "referenceSource": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Take Hit.png",
+      "sameCoordinatePalettePixels": 470,
+      "nearestPalettePixels": 1,
+      "alphaPreserved": true
+    },
+    {
+      "key": "medieval-king-pack-2",
+      "animation": "hit-white",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 1,
+      "referenceSource": "raw/medieval-king-pack-2/unpacked/Medieval King Pack 2/Sprites/Take Hit.png",
+      "sameCoordinatePalettePixels": 958,
+      "nearestPalettePixels": 1,
+      "alphaPreserved": true
+    },
+    {
+      "key": "medieval-warrior-pack-2",
+      "animation": "hit-white",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 1,
+      "referenceSource": "raw/medieval-warrior-pack-2/unpacked/Medieval Warrior Pack 2/Sprites/Take Hit.png",
+      "sameCoordinatePalettePixels": 443,
+      "nearestPalettePixels": 0,
+      "alphaPreserved": true
+    },
+    {
+      "key": "martial-hero",
+      "animation": "hit-white",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 1,
+      "referenceSource": "raw/martial-hero/unpacked/Martial Hero/Sprites/Take Hit.png",
+      "sameCoordinatePalettePixels": 1043,
+      "nearestPalettePixels": 0,
+      "alphaPreserved": true
+    },
+    {
+      "key": "evil-wizard",
+      "animation": "hit",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "nearest normal pose; original colors and exact pose unrecoverable",
+      "referenceAnimation": "hit",
+      "referenceFrame": 2,
+      "referenceSource": "raw/evil-wizard/unpacked/Evil Wizard/Sprites/Take Hit.png",
+      "alphaPreserved": false
+    },
+    {
+      "key": "flying-eye",
+      "animation": "hit",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "attack",
+      "referenceFrame": 0,
+      "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Flying eye/Attack.png",
+      "sameCoordinatePalettePixels": 430,
+      "nearestPalettePixels": 12,
+      "alphaPreserved": true
+    },
+    {
+      "key": "goblin",
+      "animation": "hit",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 0,
+      "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Goblin/Take Hit.png",
+      "sameCoordinatePalettePixels": 505,
+      "nearestPalettePixels": 0,
+      "alphaPreserved": true
+    },
+    {
+      "key": "goblin",
+      "animation": "hit",
+      "frame": 2,
+      "humanFrame": 3,
+      "method": "remove detached pure-white impact particles; body and blade unchanged",
+      "removedNativePixels": 14
+    },
+    {
+      "key": "goblin",
+      "animation": "hit",
+      "frame": 3,
+      "humanFrame": 4,
+      "method": "remove detached pure-white impact particles; body and blade unchanged",
+      "removedNativePixels": 9
+    },
+    {
+      "key": "skeleton",
+      "animation": "hit",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 0,
+      "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Skeleton/Take Hit.png",
+      "sameCoordinatePalettePixels": 723,
+      "nearestPalettePixels": 1,
+      "alphaPreserved": true
+    },
+    {
+      "key": "mushroom",
+      "animation": "hit",
+      "frame": 1,
+      "humanFrame": 2,
+      "method": "palette-transfer, preserve flashed alpha",
+      "referenceAnimation": "hit",
+      "referenceFrame": 0,
+      "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Mushroom/Take Hit.png",
+      "sameCoordinatePalettePixels": 589,
+      "nearestPalettePixels": 0,
+      "alphaPreserved": true
+    }
+  ],
+  "ambiguous": [
+    "Evil Wizard hit frame 1 is a destroyed-color silhouette with no close exact normal pose. Replaced by the following normal-colored hit frame 2.",
+    "Flying Eye and near-identical silhouette matches require a few nearest-palette pixel estimates; their original alpha poses are preserved.",
+    "Goblin hit frames 2 and 3 contain detached white impact sparks rather than a body tint. Removed conservatively so runtime flash is the only baked-free hit cue."
+  ],
+  "sourceSheets": [
+    {
+      "key": "hero-knight",
+      "animation": "hit",
+      "sourceOriginal": "raw/hero-knight/unpacked/Hero Knight/Sprites/Take Hit.png",
+      "path": "processed/deflashed/hero-knight/hit.png",
+      "sha256": "816bf569cc4c5625c8b70b92ea3473d2e7a1e010d6ca500b02602ecda616f51a",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "hero-knight",
+          "animation": "hit",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 0,
+          "referenceSource": "raw/hero-knight/unpacked/Hero Knight/Sprites/Take Hit.png",
+          "sameCoordinatePalettePixels": 695,
+          "nearestPalettePixels": 2,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "hero-knight-2",
+      "animation": "hit",
+      "sourceOriginal": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Take Hit.png",
+      "path": "processed/deflashed/hero-knight-2/hit.png",
+      "sha256": "98b59666047230138071f71815c76cc49ccbbf53328c5aebc17ed42a8d8afd91",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "hero-knight-2",
+          "animation": "hit",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 2,
+          "referenceSource": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Take Hit.png",
+          "sameCoordinatePalettePixels": 470,
+          "nearestPalettePixels": 1,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "medieval-king-pack",
+      "animation": "hit",
+      "sourceOriginal": "raw/medieval-king-pack/unpacked/Medieval King Pack/Hit.png",
+      "path": "processed/deflashed/medieval-king-pack/hit.png",
+      "sha256": "6c4100f5d980dbf304db8a68d45f757c272a256066f5878a7db54a0d09164341",
+      "frameCount": 4,
+      "fixes": []
+    },
+    {
+      "key": "medieval-king-pack-2",
+      "animation": "hit",
+      "sourceOriginal": "raw/medieval-king-pack-2/unpacked/Medieval King Pack 2/Sprites/Take Hit.png",
+      "path": "processed/deflashed/medieval-king-pack-2/hit.png",
+      "sha256": "9d9ef2e422eb6b970a6d886b0ff684c3f2e036606e417b16d0434319a1c84765",
+      "frameCount": 4,
+      "fixes": []
+    },
+    {
+      "key": "medieval-king-pack-2",
+      "animation": "hit-white",
+      "sourceOriginal": "raw/medieval-king-pack-2/unpacked/Medieval King Pack 2/Sprites/Take Hit - white silhouette.png",
+      "path": "processed/deflashed/medieval-king-pack-2/hit-white.png",
+      "sha256": "a23a0960a65f27dff3d1b890d8c6746a781ed81b52396b421ac16392e02083f8",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "medieval-king-pack-2",
+          "animation": "hit-white",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 1,
+          "referenceSource": "raw/medieval-king-pack-2/unpacked/Medieval King Pack 2/Sprites/Take Hit.png",
+          "sameCoordinatePalettePixels": 958,
+          "nearestPalettePixels": 1,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "medieval-warrior-pack",
+      "animation": "hit",
+      "sourceOriginal": "raw/medieval-warrior-pack/unpacked/Medieval Warrior Pack/Hit.png",
+      "path": "processed/deflashed/medieval-warrior-pack/hit.png",
+      "sha256": "dbe399e87e8240597478d2fba51532bbfcc9610ba701977c14def46de450a3b3",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "medieval-warrior-pack-2",
+      "animation": "hit",
+      "sourceOriginal": "raw/medieval-warrior-pack-2/unpacked/Medieval Warrior Pack 2/Sprites/Take Hit.png",
+      "path": "processed/deflashed/medieval-warrior-pack-2/hit.png",
+      "sha256": "e99e089190c36dc19cd99eb035f114db42bccb4f319ca2bb580693f059a207ce",
+      "frameCount": 4,
+      "fixes": []
+    },
+    {
+      "key": "medieval-warrior-pack-2",
+      "animation": "hit-white",
+      "sourceOriginal": "raw/medieval-warrior-pack-2/unpacked/Medieval Warrior Pack 2/Sprites/Take Hit - white silhouette.png",
+      "path": "processed/deflashed/medieval-warrior-pack-2/hit-white.png",
+      "sha256": "e99e089190c36dc19cd99eb035f114db42bccb4f319ca2bb580693f059a207ce",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "medieval-warrior-pack-2",
+          "animation": "hit-white",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 1,
+          "referenceSource": "raw/medieval-warrior-pack-2/unpacked/Medieval Warrior Pack 2/Sprites/Take Hit.png",
+          "sameCoordinatePalettePixels": 443,
+          "nearestPalettePixels": 0,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "medieval-warrior-pack-3",
+      "animation": "hit",
+      "sourceOriginal": "raw/medieval-warrior-pack-3/unpacked/Medieval Warrior Pack 3/Sprites/Get Hit.png",
+      "path": "processed/deflashed/medieval-warrior-pack-3/hit.png",
+      "sha256": "d3aa535e89d8376cc25f681026562862d796e29ef39276159c5a5dbbbb89e571",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "fantasy-warrior",
+      "animation": "hit",
+      "sourceOriginal": "raw/fantasy-warrior/unpacked/Fantasy Warrior/Sprites/Take hit.png",
+      "path": "processed/deflashed/fantasy-warrior/hit.png",
+      "sha256": "e1c8a690c5029ce9e273b2937d241cbec4700f7c875201bcd92d3e1411a3447a",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "martial-hero",
+      "animation": "hit",
+      "sourceOriginal": "raw/martial-hero/unpacked/Martial Hero/Sprites/Take Hit.png",
+      "path": "processed/deflashed/martial-hero/hit.png",
+      "sha256": "da7c5ca3240bd726382d5669f1c43674c6756399a0cb06ea5aa70b05b83231ae",
+      "frameCount": 4,
+      "fixes": []
+    },
+    {
+      "key": "martial-hero",
+      "animation": "hit-white",
+      "sourceOriginal": "raw/martial-hero/unpacked/Martial Hero/Sprites/Take Hit - white silhouette.png",
+      "path": "processed/deflashed/martial-hero/hit-white.png",
+      "sha256": "da7c5ca3240bd726382d5669f1c43674c6756399a0cb06ea5aa70b05b83231ae",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "martial-hero",
+          "animation": "hit-white",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 1,
+          "referenceSource": "raw/martial-hero/unpacked/Martial Hero/Sprites/Take Hit.png",
+          "sameCoordinatePalettePixels": 1043,
+          "nearestPalettePixels": 0,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "martial-hero-2",
+      "animation": "hit",
+      "sourceOriginal": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Take hit.png",
+      "path": "processed/deflashed/martial-hero-2/hit.png",
+      "sha256": "c981eaec8f1d673a8ee8d2fe141559d587c23d5ffbff8fc62c3418fbeb5ea69a",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "martial-hero-3",
+      "animation": "hit",
+      "sourceOriginal": "raw/martial-hero-3/unpacked/Martial Hero 3/Sprite/Take Hit.png",
+      "path": "processed/deflashed/martial-hero-3/hit.png",
+      "sha256": "31d60657ff39e5fb0a68b6f42650f27695021503907b73c84ec5a567cf5d5b60",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "huntress",
+      "animation": "hit",
+      "sourceOriginal": "raw/huntress/unpacked/Huntress/Sprites/Take hit.png",
+      "path": "processed/deflashed/huntress/hit.png",
+      "sha256": "436acb0624b0705fcc11ac8343e5b84edd331853143de4bac00d358950cf0360",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "huntress-2",
+      "animation": "hit",
+      "sourceOriginal": "raw/huntress-2/unpacked/Huntress 2/Sprites/Character/Get Hit.png",
+      "path": "processed/deflashed/huntress-2/hit.png",
+      "sha256": "53381d9d6964e04f7b8eea7f698d438413c0af4b2465061f199db2eab360a8a8",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "wizard-pack",
+      "animation": "hit",
+      "sourceOriginal": "raw/wizard-pack/unpacked/Wizard Pack/Hit.png",
+      "path": "processed/deflashed/wizard-pack/hit.png",
+      "sha256": "741b8c441453f8dcad603b71e1725e6b141103048a743715d3ecd495b1f6cc86",
+      "frameCount": 4,
+      "fixes": []
+    },
+    {
+      "key": "priest",
+      "animation": "hit",
+      "sourceOriginal": "raw/wizard-pack/unpacked/Wizard Pack/Hit.png",
+      "path": "processed/deflashed/priest/hit.png",
+      "sha256": "741b8c441453f8dcad603b71e1725e6b141103048a743715d3ecd495b1f6cc86",
+      "frameCount": 4,
+      "fixes": []
+    },
+    {
+      "key": "evil-wizard",
+      "animation": "hit",
+      "sourceOriginal": "raw/evil-wizard/unpacked/Evil Wizard/Sprites/Take Hit.png",
+      "path": "processed/deflashed/evil-wizard/hit.png",
+      "sha256": "21b905fb62cc4b94a14f44093778d26d2ad452fa6efcaf7c8038505a0108e3a6",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "evil-wizard",
+          "animation": "hit",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "nearest normal pose; original colors and exact pose unrecoverable",
+          "referenceAnimation": "hit",
+          "referenceFrame": 2,
+          "referenceSource": "raw/evil-wizard/unpacked/Evil Wizard/Sprites/Take Hit.png",
+          "alphaPreserved": false
+        }
+      ]
+    },
+    {
+      "key": "evil-wizard-2",
+      "animation": "hit",
+      "sourceOriginal": "raw/evil-wizard-2/unpacked/EVil Wizard 2/Sprites/Take hit.png",
+      "path": "processed/deflashed/evil-wizard-2/hit.png",
+      "sha256": "0282ae3f2c7700e351c17a41cbae2d86c1e2c226ebf318f15b18a6cabe045ae2",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "evil-wizard-3",
+      "animation": "hit",
+      "sourceOriginal": "raw/evil-wizard-3/unpacked/Evil Wizard 3/Sprites/Get hit.png",
+      "path": "processed/deflashed/evil-wizard-3/hit.png",
+      "sha256": "73d6f72e43b7a975d1acb3288f2da08a9b800fed7703048dbc234002b1e05cf8",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "fire-worm",
+      "animation": "hit",
+      "sourceOriginal": "raw/fire-worm/unpacked/Fire Worm/Sprites/Worm/Get Hit.png",
+      "path": "processed/deflashed/fire-worm/hit.png",
+      "sha256": "0a7631e4dae2c11b031e21f1ad240b6a425b56d3ac1f929faf6dab1d683e2adf",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "flying-eye",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Flying eye/Take Hit.png",
+      "path": "processed/deflashed/flying-eye/hit.png",
+      "sha256": "cbc7f5dbd584c05661911b3aca39d278fb9eae50c4b729e295574eb292cdb295",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "flying-eye",
+          "animation": "hit",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "attack",
+          "referenceFrame": 0,
+          "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Flying eye/Attack.png",
+          "sameCoordinatePalettePixels": 430,
+          "nearestPalettePixels": 12,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "goblin",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Goblin/Take Hit.png",
+      "path": "processed/deflashed/goblin/hit.png",
+      "sha256": "fcd04501a2bd7d98f4830318b1843eca27bdaa3f28bfd2284e24d8a28bcecc4f",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "goblin",
+          "animation": "hit",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 0,
+          "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Goblin/Take Hit.png",
+          "sameCoordinatePalettePixels": 505,
+          "nearestPalettePixels": 0,
+          "alphaPreserved": true
+        },
+        {
+          "key": "goblin",
+          "animation": "hit",
+          "frame": 2,
+          "humanFrame": 3,
+          "method": "remove detached pure-white impact particles; body and blade unchanged",
+          "removedNativePixels": 14
+        },
+        {
+          "key": "goblin",
+          "animation": "hit",
+          "frame": 3,
+          "humanFrame": 4,
+          "method": "remove detached pure-white impact particles; body and blade unchanged",
+          "removedNativePixels": 9
+        }
+      ]
+    },
+    {
+      "key": "skeleton",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Skeleton/Take Hit.png",
+      "path": "processed/deflashed/skeleton/hit.png",
+      "sha256": "223c9b75343e4dc293d6893717565631d33d409caae1723b8a7803b431f26c25",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "skeleton",
+          "animation": "hit",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 0,
+          "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Skeleton/Take Hit.png",
+          "sameCoordinatePalettePixels": 723,
+          "nearestPalettePixels": 1,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "mushroom",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Mushroom/Take Hit.png",
+      "path": "processed/deflashed/mushroom/hit.png",
+      "sha256": "d4ddf01879b9a6c0819c451385a4e309a13c7996a4dc28ca4713d0d6ac1dcc7b",
+      "frameCount": 4,
+      "fixes": [
+        {
+          "key": "mushroom",
+          "animation": "hit",
+          "frame": 1,
+          "humanFrame": 2,
+          "method": "palette-transfer, preserve flashed alpha",
+          "referenceAnimation": "hit",
+          "referenceFrame": 0,
+          "referenceSource": "raw/monsters-creatures-fantasy/unpacked/Monsters_Creatures_Fantasy/Mushroom/Take Hit.png",
+          "sameCoordinatePalettePixels": 589,
+          "nearestPalettePixels": 0,
+          "alphaPreserved": true
+        }
+      ]
+    },
+    {
+      "key": "mimic",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Mimic/hurt.png",
+      "path": "processed/deflashed/mimic/hit.png",
+      "sha256": "50c01ff8ad4b7202e92c5dff2794e2d2e1cd56081208663bb928b17e75322d66",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "rat",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Rat/hurt.png",
+      "path": "processed/deflashed/rat/hit.png",
+      "sha256": "2c58c88c87e7ba945e7fb4b834cedb18de6f7d0623d68b0235e550b49d89654e",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "slime",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Slime/hurt.png",
+      "path": "processed/deflashed/slime/hit.png",
+      "sha256": "443b3c6bf4e2569eb394541ba338208161399c5a9f451a9cf4fbd1eb852c303d",
+      "frameCount": 3,
+      "fixes": []
+    },
+    {
+      "key": "bat",
+      "animation": "hit",
+      "sourceOriginal": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Bat/hurt.png",
+      "path": "processed/deflashed/bat/hit.png",
+      "sha256": "6a2b90799a78753c87fa722eecc55e9711cac8aecb4f5d1d5208cd34ec8ef861",
+      "frameCount": 3,
+      "fixes": []
+    }
+  ],
+  "outputs": {
+    "hero-knight": {
+      "plainSHA256": "9f52b25796a182eeaf9af071f081061365c7c2eca93393dd5b113122368c4c83",
+      "changedAtlasFrameIndices": [
+        34
+      ]
+    },
+    "hero-knight-2": {
+      "plainSHA256": "4b77dbf3727fa80e217acf714c624dd3cb6cdd7cc4dcd541687e7eb8af0b315c",
+      "changedAtlasFrameIndices": [
+        26
+      ]
+    },
+    "medieval-king-pack": {
+      "plainSHA256": "b98c4f827f0200e07b75bca55b95f3823e67203be1d3fa34d409734474428314",
+      "changedAtlasFrameIndices": []
+    },
+    "medieval-king-pack-2": {
+      "plainSHA256": "f0ea89d8dbfec101a31387e78fa2797b2da257bd7c46edad814e962c9cd04127",
+      "changedAtlasFrameIndices": [
+        41
+      ]
+    },
+    "medieval-warrior-pack": {
+      "plainSHA256": "59e58a7710f6005a32882df2a9b14d6e7d84c7a2dd15b1c348645d6bd963bbb7",
+      "changedAtlasFrameIndices": []
+    },
+    "medieval-warrior-pack-2": {
+      "plainSHA256": "c266755bad2e0acb485bcd9bc9b5c24da897cab778416992e6bea3654c7d4465",
+      "changedAtlasFrameIndices": [
+        45
+      ]
+    },
+    "medieval-warrior-pack-3": {
+      "plainSHA256": "045b88abb22c3e719b19e2f7fe128b0e07659bd5e0d1fdc603abc0c9b605a8cd",
+      "changedAtlasFrameIndices": []
+    },
+    "fantasy-warrior": {
+      "plainSHA256": "5af5dc3cb5bd7aa980bf40d6f069655e9e841d7bca40b8730ed5ed0470b34654",
+      "changedAtlasFrameIndices": []
+    },
+    "martial-hero": {
+      "plainSHA256": "e62cd57db0b07509c4d35dbc565cf09dd779fdeb9ef71d25800164cc92e9eed6",
+      "changedAtlasFrameIndices": [
+        41
+      ]
+    },
+    "martial-hero-2": {
+      "plainSHA256": "6764e363bc71b8648ff46c9f7fde3dc518b435abe9802b6971dfbe7ee83f7cd7",
+      "changedAtlasFrameIndices": []
+    },
+    "martial-hero-3": {
+      "plainSHA256": "8a1a0a598c73caf29d7169b7bbe18f2e2f2a370dcfe0c2561b7708583c9b2d2b",
+      "changedAtlasFrameIndices": []
+    },
+    "huntress": {
+      "plainSHA256": "b7612934a6f6b5fc5a55c6cd335ea22de5dbff9c00633dccf00fff6942d3ff7b",
+      "changedAtlasFrameIndices": []
+    },
+    "huntress-2": {
+      "plainSHA256": "3974bbe054fe8cbe082b1b73baf48c5a5a902156092e67332356d8322bfc6662",
+      "changedAtlasFrameIndices": []
+    },
+    "wizard-pack": {
+      "plainSHA256": "c324874e5cd627cdbff5fd49eafb635a3b9cb88fd3399a4697e4f23acbc98123",
+      "changedAtlasFrameIndices": []
+    },
+    "priest": {
+      "plainSHA256": "c0fc95ec7760649ccafd4cad7bfe9638093ff864c4377167eb3866752f97f543",
+      "changedAtlasFrameIndices": []
+    },
+    "evil-wizard": {
+      "plainSHA256": "60c784a78a6442f24b464de548fc6095bc9414d046ac69e1cd8fe05a33824951",
+      "changedAtlasFrameIndices": [
+        25
+      ]
+    },
+    "evil-wizard-2": {
+      "plainSHA256": "2ef00cc09c5608ad743fbb388938baf06effd408e14b02268b467828e26c249d",
+      "changedAtlasFrameIndices": []
+    },
+    "evil-wizard-3": {
+      "plainSHA256": "e9acd72d5e9993874b3e36bfc44d75bc436a0c181098ad03cd2361b5c78bee56",
+      "changedAtlasFrameIndices": []
+    },
+    "fire-worm": {
+      "plainSHA256": "72667511c50574968581f00473bc3dd7b89db02cd38780009cd791f123244b7f",
+      "changedAtlasFrameIndices": []
+    },
+    "flying-eye": {
+      "plainSHA256": "8c7e9f79147ed650098fff82ae98a19b2fa7f09e7fff8f2474447b5a701b403c",
+      "changedAtlasFrameIndices": [
+        31
+      ]
+    },
+    "goblin": {
+      "plainSHA256": "47a7267c70342645d6ce71969a0e3e999e59ef1ab902540711b05d57481094f2",
+      "changedAtlasFrameIndices": [
+        41,
+        42,
+        43
+      ]
+    },
+    "skeleton": {
+      "plainSHA256": "da9b025d640b88a9a00d4c25bb5343b89b22b8b801498cbe617e1dfd5718f88d",
+      "changedAtlasFrameIndices": [
+        31
+      ]
+    },
+    "mushroom": {
+      "plainSHA256": "ebeee42a6c198b6069a84ac414ea873862cace778e219a3522d98ee5343e01fd",
+      "changedAtlasFrameIndices": [
+        40
+      ]
+    },
+    "mimic": {
+      "plainSHA256": "8e22f4f74411d13de43a63d3161c55b4bb18bc468363164ea8a095991aa0482c",
+      "changedAtlasFrameIndices": []
+    },
+    "rat": {
+      "plainSHA256": "8bf35a217b9cdeb5e83315154732a7041294aaf5b336d8db3fdd049f64e415aa",
+      "changedAtlasFrameIndices": []
+    },
+    "slime": {
+      "plainSHA256": "f1993d4c6e7955770c03f5e9db500466b457637c64841da5719656b6f0913c75",
+      "changedAtlasFrameIndices": []
+    },
+    "bat": {
+      "plainSHA256": "08ccf49c7ea564a9c2e0356cf6800056d99f11df6b137ebd2bc5cd8a33a60f41",
+      "changedAtlasFrameIndices": []
+    }
+  }
+}

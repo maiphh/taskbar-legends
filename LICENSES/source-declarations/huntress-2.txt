@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/huntress-2
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: a0b1c6904acf458b71dcfe017ba042d81ecf0c343923f89e5448d605d04a749b
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal

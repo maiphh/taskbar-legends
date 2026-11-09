@@ -1,0 +1,1637 @@
+{
+  "key": "fire-worm",
+  "image": "sprites.png",
+  "imageSize": [
+    972,
+    232
+  ],
+  "cellSize": [
+    81,
+    58
+  ],
+  "anchor": {
+    "x": 30,
+    "y": 56
+  },
+  "pivot": {
+    "x": 0.37037037037037035,
+    "y": 0.9655172413793104
+  },
+  "frames": [
+    {
+      "name": "idle/000",
+      "animation": "idle",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        6,
+        15,
+        57,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        14,
+        58,
+        57
+      ]
+    },
+    {
+      "name": "idle/001",
+      "animation": "idle",
+      "index": 1,
+      "x": 81,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        7,
+        12,
+        58,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        11,
+        59,
+        57
+      ]
+    },
+    {
+      "name": "idle/002",
+      "animation": "idle",
+      "index": 2,
+      "x": 162,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        8,
+        15,
+        58,
+        56
+      ],
+      "outlinedContentBounds": [
+        7,
+        14,
+        59,
+        57
+      ]
+    },
+    {
+      "name": "idle/003",
+      "animation": "idle",
+      "index": 3,
+      "x": 243,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        7,
+        13,
+        58,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        12,
+        59,
+        57
+      ]
+    },
+    {
+      "name": "idle/004",
+      "animation": "idle",
+      "index": 4,
+      "x": 324,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        7,
+        15,
+        56,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        14,
+        57,
+        57
+      ]
+    },
+    {
+      "name": "idle/005",
+      "animation": "idle",
+      "index": 5,
+      "x": 405,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        7,
+        19,
+        54,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        18,
+        55,
+        57
+      ]
+    },
+    {
+      "name": "idle/006",
+      "animation": "idle",
+      "index": 6,
+      "x": 486,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        7,
+        11,
+        56,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        10,
+        57,
+        57
+      ]
+    },
+    {
+      "name": "idle/007",
+      "animation": "idle",
+      "index": 7,
+      "x": 567,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        7,
+        16,
+        56,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        15,
+        57,
+        57
+      ]
+    },
+    {
+      "name": "idle/008",
+      "animation": "idle",
+      "index": 8,
+      "x": 648,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        6,
+        18,
+        54,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        17,
+        55,
+        57
+      ]
+    },
+    {
+      "name": "walk/000",
+      "animation": "walk",
+      "index": 0,
+      "x": 729,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        17,
+        55,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        16,
+        56,
+        57
+      ]
+    },
+    {
+      "name": "walk/001",
+      "animation": "walk",
+      "index": 1,
+      "x": 810,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        15,
+        57,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        14,
+        58,
+        57
+      ]
+    },
+    {
+      "name": "walk/002",
+      "animation": "walk",
+      "index": 2,
+      "x": 891,
+      "y": 0,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        13,
+        58,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        12,
+        59,
+        57
+      ]
+    },
+    {
+      "name": "walk/003",
+      "animation": "walk",
+      "index": 3,
+      "x": 0,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        21,
+        58,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        20,
+        59,
+        57
+      ]
+    },
+    {
+      "name": "walk/004",
+      "animation": "walk",
+      "index": 4,
+      "x": 81,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        13,
+        57,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        12,
+        58,
+        57
+      ]
+    },
+    {
+      "name": "walk/005",
+      "animation": "walk",
+      "index": 5,
+      "x": 162,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        14,
+        53,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        13,
+        54,
+        57
+      ]
+    },
+    {
+      "name": "walk/006",
+      "animation": "walk",
+      "index": 6,
+      "x": 243,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        16,
+        51,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        15,
+        52,
+        57
+      ]
+    },
+    {
+      "name": "walk/007",
+      "animation": "walk",
+      "index": 7,
+      "x": 324,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        15,
+        53,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        14,
+        54,
+        57
+      ]
+    },
+    {
+      "name": "walk/008",
+      "animation": "walk",
+      "index": 8,
+      "x": 405,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        14,
+        55,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        13,
+        56,
+        57
+      ]
+    },
+    {
+      "name": "attack/000",
+      "animation": "attack",
+      "index": 0,
+      "x": 486,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        15,
+        57,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        14,
+        58,
+        57
+      ]
+    },
+    {
+      "name": "attack/001",
+      "animation": "attack",
+      "index": 1,
+      "x": 567,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        10,
+        56,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        9,
+        57,
+        57
+      ]
+    },
+    {
+      "name": "attack/002",
+      "animation": "attack",
+      "index": 2,
+      "x": 648,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        10,
+        53,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        9,
+        54,
+        57
+      ]
+    },
+    {
+      "name": "attack/003",
+      "animation": "attack",
+      "index": 3,
+      "x": 729,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        7,
+        54,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        6,
+        55,
+        57
+      ]
+    },
+    {
+      "name": "attack/004",
+      "animation": "attack",
+      "index": 4,
+      "x": 810,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        5,
+        49,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        4,
+        50,
+        57
+      ]
+    },
+    {
+      "name": "attack/005",
+      "animation": "attack",
+      "index": 5,
+      "x": 891,
+      "y": 58,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        10,
+        48,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        9,
+        49,
+        57
+      ]
+    },
+    {
+      "name": "attack/006",
+      "animation": "attack",
+      "index": 6,
+      "x": 0,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        2,
+        49,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        1,
+        50,
+        57
+      ]
+    },
+    {
+      "name": "attack/007",
+      "animation": "attack",
+      "index": 7,
+      "x": 81,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        11,
+        48,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        10,
+        49,
+        57
+      ]
+    },
+    {
+      "name": "attack/008",
+      "animation": "attack",
+      "index": 8,
+      "x": 162,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        7,
+        14,
+        47,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        13,
+        48,
+        57
+      ]
+    },
+    {
+      "name": "attack/009",
+      "animation": "attack",
+      "index": 9,
+      "x": 243,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        15,
+        48,
+        56
+      ],
+      "outlinedContentBounds": [
+        5,
+        14,
+        49,
+        57
+      ]
+    },
+    {
+      "name": "attack/010",
+      "animation": "attack",
+      "index": 10,
+      "x": 324,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        11,
+        13,
+        62,
+        56
+      ],
+      "outlinedContentBounds": [
+        10,
+        12,
+        63,
+        57
+      ]
+    },
+    {
+      "name": "attack/011",
+      "animation": "attack",
+      "index": 11,
+      "x": 405,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        12,
+        12,
+        79,
+        56
+      ],
+      "outlinedContentBounds": [
+        11,
+        11,
+        80,
+        57
+      ]
+    },
+    {
+      "name": "attack/012",
+      "animation": "attack",
+      "index": 12,
+      "x": 486,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        11,
+        17,
+        79,
+        56
+      ],
+      "outlinedContentBounds": [
+        10,
+        16,
+        80,
+        57
+      ]
+    },
+    {
+      "name": "attack/013",
+      "animation": "attack",
+      "index": 13,
+      "x": 567,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        12,
+        16,
+        79,
+        56
+      ],
+      "outlinedContentBounds": [
+        11,
+        15,
+        80,
+        57
+      ]
+    },
+    {
+      "name": "attack/014",
+      "animation": "attack",
+      "index": 14,
+      "x": 648,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        11,
+        15,
+        79,
+        56
+      ],
+      "outlinedContentBounds": [
+        10,
+        14,
+        80,
+        57
+      ]
+    },
+    {
+      "name": "attack/015",
+      "animation": "attack",
+      "index": 15,
+      "x": 729,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        12,
+        14,
+        78,
+        56
+      ],
+      "outlinedContentBounds": [
+        11,
+        13,
+        79,
+        57
+      ]
+    },
+    {
+      "name": "hit/000",
+      "animation": "hit",
+      "index": 0,
+      "x": 810,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        11,
+        14,
+        51,
+        56
+      ],
+      "outlinedContentBounds": [
+        10,
+        13,
+        52,
+        57
+      ]
+    },
+    {
+      "name": "hit/001",
+      "animation": "hit",
+      "index": 1,
+      "x": 891,
+      "y": 116,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        8,
+        12,
+        52,
+        56
+      ],
+      "outlinedContentBounds": [
+        7,
+        11,
+        53,
+        57
+      ]
+    },
+    {
+      "name": "hit/002",
+      "animation": "hit",
+      "index": 2,
+      "x": 0,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        7,
+        11,
+        52,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        10,
+        53,
+        57
+      ]
+    },
+    {
+      "name": "death/000",
+      "animation": "death",
+      "index": 0,
+      "x": 81,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        7,
+        24,
+        52,
+        56
+      ],
+      "outlinedContentBounds": [
+        6,
+        23,
+        53,
+        57
+      ]
+    },
+    {
+      "name": "death/001",
+      "animation": "death",
+      "index": 1,
+      "x": 162,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        2,
+        16,
+        52,
+        56
+      ],
+      "outlinedContentBounds": [
+        1,
+        15,
+        53,
+        57
+      ]
+    },
+    {
+      "name": "death/002",
+      "animation": "death",
+      "index": 2,
+      "x": 243,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        2,
+        14,
+        52,
+        56
+      ],
+      "outlinedContentBounds": [
+        1,
+        13,
+        53,
+        57
+      ]
+    },
+    {
+      "name": "death/003",
+      "animation": "death",
+      "index": 3,
+      "x": 324,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        2,
+        10,
+        51,
+        56
+      ],
+      "outlinedContentBounds": [
+        1,
+        9,
+        52,
+        57
+      ]
+    },
+    {
+      "name": "death/004",
+      "animation": "death",
+      "index": 4,
+      "x": 405,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        2,
+        8,
+        53,
+        56
+      ],
+      "outlinedContentBounds": [
+        1,
+        7,
+        54,
+        57
+      ]
+    },
+    {
+      "name": "death/005",
+      "animation": "death",
+      "index": 5,
+      "x": 486,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        2,
+        7,
+        55,
+        56
+      ],
+      "outlinedContentBounds": [
+        1,
+        6,
+        56,
+        57
+      ]
+    },
+    {
+      "name": "death/006",
+      "animation": "death",
+      "index": 6,
+      "x": 567,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        3,
+        10,
+        63,
+        56
+      ],
+      "outlinedContentBounds": [
+        2,
+        9,
+        64,
+        57
+      ]
+    },
+    {
+      "name": "death/007",
+      "animation": "death",
+      "index": 7,
+      "x": 648,
+      "y": 174,
+      "w": 81,
+      "h": 58,
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.37037037037037035,
+        "y": 0.9655172413793104
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        3,
+        41,
+        62,
+        56
+      ],
+      "outlinedContentBounds": [
+        2,
+        40,
+        63,
+        57
+      ]
+    }
+  ],
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "from": 0,
+      "to": 8,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 140,
+      "source": "raw/fire-worm/unpacked/Fire Worm/Sprites/Worm/Idle.png",
+      "extentsFromAnchor": {
+        "above": 45,
+        "below": 0,
+        "left": 24,
+        "right": 28
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 46,
+        "below": 1,
+        "left": 25,
+        "right": 29
+      }
+    },
+    "walk": {
+      "frames": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "from": 9,
+      "to": 17,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/fire-worm/unpacked/Fire Worm/Sprites/Worm/Walk.png",
+      "extentsFromAnchor": {
+        "above": 43,
+        "below": 0,
+        "left": 24,
+        "right": 28
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 44,
+        "below": 1,
+        "left": 25,
+        "right": 29
+      }
+    },
+    "attack": {
+      "frames": [
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33
+      ],
+      "from": 18,
+      "to": 33,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/fire-worm/unpacked/Fire Worm/Sprites/Worm/Attack.png",
+      "extentsFromAnchor": {
+        "above": 54,
+        "below": 0,
+        "left": 24,
+        "right": 49
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 55,
+        "below": 1,
+        "left": 25,
+        "right": 50
+      }
+    },
+    "hit": {
+      "frames": [
+        34,
+        35,
+        36
+      ],
+      "from": 34,
+      "to": 36,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 100,
+      "source": "processed/deflashed/fire-worm/hit.png",
+      "extentsFromAnchor": {
+        "above": 45,
+        "below": 0,
+        "left": 23,
+        "right": 22
+      },
+      "sourceOriginal": "raw/fire-worm/unpacked/Fire Worm/Sprites/Worm/Get Hit.png",
+      "deFlashed": true,
+      "outlinedExtentsFromAnchor": {
+        "above": 46,
+        "below": 1,
+        "left": 24,
+        "right": 23
+      }
+    },
+    "death": {
+      "frames": [
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "from": 37,
+      "to": 44,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 110,
+      "source": "raw/fire-worm/unpacked/Fire Worm/Sprites/Worm/Death.png",
+      "extentsFromAnchor": {
+        "above": 49,
+        "below": 0,
+        "left": 28,
+        "right": 33
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 50,
+        "below": 1,
+        "left": 29,
+        "right": 34
+      }
+    },
+    "run": {
+      "frames": [
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "from": 9,
+      "to": 17,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/fire-worm/unpacked/Fire Worm/Sprites/Worm/Walk.png",
+      "aliasOf": "walk",
+      "extentsFromAnchor": {
+        "above": 43,
+        "below": 0,
+        "left": 24,
+        "right": 28
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 44,
+        "below": 1,
+        "left": 25,
+        "right": 29
+      }
+    }
+  },
+  "meta": {
+    "sourcePack": "fire-worm",
+    "author": "LuizMelo",
+    "licence": "CC0-1.0",
+    "targetBodyHeight": 48,
+    "nativeFrameSize": [
+      90,
+      90
+    ],
+    "nativeIdleBounds": [
+      17,
+      13,
+      69,
+      58
+    ],
+    "nativeBodyMeasurementBounds": [
+      17,
+      13,
+      69,
+      58
+    ],
+    "nativeBodyHeight": 45,
+    "nativeBodyEnvelopeHeight": 45,
+    "bodyHeightPx": 45,
+    "maxIdleVisibleHeightPx": 45,
+    "scaleApplied": 1,
+    "effectiveScale": {
+      "x": 1.0,
+      "y": 1.0
+    },
+    "scaleMode": "integer/half",
+    "scaledSourceSize": [
+      90,
+      90
+    ],
+    "sharedTrimBounds": [
+      13,
+      4,
+      90,
+      58
+    ],
+    "paddingPx": 2,
+    "priestPaletteMap": null,
+    "timingNote": "Suggested playback timings, not official author frame timing; tune gameplay independently.",
+    "bakedHitFlash": false,
+    "runtimeHitFlash": {
+      "bakedFlash": false,
+      "color": "#ffffff",
+      "presentationFrames": 2,
+      "durationMs": 90,
+      "previewFrameDurationsMs": [
+        40,
+        50
+      ],
+      "alpha": "preserve",
+      "trigger": "start of hit event",
+      "spriteTiming": "unchanged; flash is an independent runtime timer"
+    },
+    "deFlashedSourceReport": "../../../docs/deflash-report.json",
+    "readability": {
+      "defaultVariant": "outlined",
+      "radiusPx": 1,
+      "neighbourhood": "4-connected, cardinal neighbours only",
+      "color": "#e8e4d8",
+      "alpha": 204,
+      "alphaFraction": 0.8,
+      "opaqueThreshold": 128,
+      "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
+      "originalPixels": "unchanged, including partially transparent pixels",
+      "stage": "after nearest-neighbour scaling; independently for every atlas cell",
+      "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
+    }
+  },
+  "outlinedImage": "sprites.outlined.png"
+}

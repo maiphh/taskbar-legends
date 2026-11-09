@@ -1,0 +1,1357 @@
+{
+  "key": "martial-hero-2",
+  "image": "sprites.png",
+  "imageSize": [
+    1224,
+    228
+  ],
+  "cellSize": [
+    102,
+    76
+  ],
+  "anchor": {
+    "x": 27,
+    "y": 73
+  },
+  "pivot": {
+    "x": 0.2647058823529412,
+    "y": 0.9605263157894737
+  },
+  "frames": [
+    {
+      "name": "idle/000",
+      "animation": "idle",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        10,
+        26,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        9,
+        25,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "idle/001",
+      "animation": "idle",
+      "index": 1,
+      "x": 102,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        10,
+        26,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        9,
+        25,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "idle/002",
+      "animation": "idle",
+      "index": 2,
+      "x": 204,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        10,
+        27,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        9,
+        26,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "idle/003",
+      "animation": "idle",
+      "index": 3,
+      "x": 306,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        10,
+        27,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        9,
+        26,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "run/000",
+      "animation": "run",
+      "index": 0,
+      "x": 408,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        33,
+        40,
+        73
+      ],
+      "outlinedContentBounds": [
+        2,
+        32,
+        41,
+        74
+      ]
+    },
+    {
+      "name": "run/001",
+      "animation": "run",
+      "index": 1,
+      "x": 510,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        33,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        2,
+        32,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "run/002",
+      "animation": "run",
+      "index": 2,
+      "x": 612,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        32,
+        38,
+        74
+      ],
+      "outlinedContentBounds": [
+        2,
+        31,
+        39,
+        75
+      ]
+    },
+    {
+      "name": "run/003",
+      "animation": "run",
+      "index": 3,
+      "x": 714,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        32,
+        38,
+        69
+      ],
+      "outlinedContentBounds": [
+        2,
+        31,
+        39,
+        70
+      ]
+    },
+    {
+      "name": "run/004",
+      "animation": "run",
+      "index": 4,
+      "x": 816,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        32,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        2,
+        31,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "run/005",
+      "animation": "run",
+      "index": 5,
+      "x": 918,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        32,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        2,
+        31,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "run/006",
+      "animation": "run",
+      "index": 6,
+      "x": 1020,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        32,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        2,
+        31,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "run/007",
+      "animation": "run",
+      "index": 7,
+      "x": 1122,
+      "y": 0,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        3,
+        32,
+        40,
+        68
+      ],
+      "outlinedContentBounds": [
+        2,
+        31,
+        41,
+        69
+      ]
+    },
+    {
+      "name": "attack1/000",
+      "animation": "attack1",
+      "index": 0,
+      "x": 0,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        18,
+        32,
+        73
+      ],
+      "outlinedContentBounds": [
+        5,
+        17,
+        33,
+        74
+      ]
+    },
+    {
+      "name": "attack1/001",
+      "animation": "attack1",
+      "index": 1,
+      "x": 102,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        2,
+        18,
+        32,
+        73
+      ],
+      "outlinedContentBounds": [
+        1,
+        17,
+        33,
+        74
+      ]
+    },
+    {
+      "name": "attack1/002",
+      "animation": "attack1",
+      "index": 2,
+      "x": 204,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        18,
+        22,
+        97,
+        73
+      ],
+      "outlinedContentBounds": [
+        17,
+        21,
+        98,
+        74
+      ]
+    },
+    {
+      "name": "attack1/003",
+      "animation": "attack1",
+      "index": 3,
+      "x": 306,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        21,
+        27,
+        50,
+        73
+      ],
+      "outlinedContentBounds": [
+        20,
+        26,
+        51,
+        74
+      ]
+    },
+    {
+      "name": "attack2/000",
+      "animation": "attack2",
+      "index": 0,
+      "x": 408,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        11,
+        30,
+        50,
+        73
+      ],
+      "outlinedContentBounds": [
+        10,
+        29,
+        51,
+        74
+      ]
+    },
+    {
+      "name": "attack2/001",
+      "animation": "attack2",
+      "index": 1,
+      "x": 510,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        9,
+        27,
+        49,
+        73
+      ],
+      "outlinedContentBounds": [
+        8,
+        26,
+        50,
+        74
+      ]
+    },
+    {
+      "name": "attack2/002",
+      "animation": "attack2",
+      "index": 2,
+      "x": 612,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        18,
+        2,
+        100,
+        73
+      ],
+      "outlinedContentBounds": [
+        17,
+        1,
+        101,
+        74
+      ]
+    },
+    {
+      "name": "attack2/003",
+      "animation": "attack2",
+      "index": 3,
+      "x": 714,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        20,
+        38,
+        82,
+        73
+      ],
+      "outlinedContentBounds": [
+        19,
+        37,
+        83,
+        74
+      ]
+    },
+    {
+      "name": "hit/000",
+      "animation": "hit",
+      "index": 0,
+      "x": 816,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        9,
+        26,
+        39,
+        73
+      ],
+      "outlinedContentBounds": [
+        8,
+        25,
+        40,
+        74
+      ]
+    },
+    {
+      "name": "hit/001",
+      "animation": "hit",
+      "index": 1,
+      "x": 918,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        9,
+        26,
+        35,
+        73
+      ],
+      "outlinedContentBounds": [
+        8,
+        25,
+        36,
+        74
+      ]
+    },
+    {
+      "name": "hit/002",
+      "animation": "hit",
+      "index": 2,
+      "x": 1020,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        10,
+        26,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        9,
+        25,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "death/000",
+      "animation": "death",
+      "index": 0,
+      "x": 1122,
+      "y": 76,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        10,
+        26,
+        38,
+        73
+      ],
+      "outlinedContentBounds": [
+        9,
+        25,
+        39,
+        74
+      ]
+    },
+    {
+      "name": "death/001",
+      "animation": "death",
+      "index": 1,
+      "x": 0,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        14,
+        30,
+        41,
+        73
+      ],
+      "outlinedContentBounds": [
+        13,
+        29,
+        42,
+        74
+      ]
+    },
+    {
+      "name": "death/002",
+      "animation": "death",
+      "index": 2,
+      "x": 102,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        18,
+        38,
+        50,
+        73
+      ],
+      "outlinedContentBounds": [
+        17,
+        37,
+        51,
+        74
+      ]
+    },
+    {
+      "name": "death/003",
+      "animation": "death",
+      "index": 3,
+      "x": 204,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        16,
+        35,
+        44,
+        73
+      ],
+      "outlinedContentBounds": [
+        15,
+        34,
+        45,
+        74
+      ]
+    },
+    {
+      "name": "death/004",
+      "animation": "death",
+      "index": 4,
+      "x": 306,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        16,
+        43,
+        62,
+        73
+      ],
+      "outlinedContentBounds": [
+        15,
+        42,
+        63,
+        74
+      ]
+    },
+    {
+      "name": "death/005",
+      "animation": "death",
+      "index": 5,
+      "x": 408,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        16,
+        62,
+        78,
+        73
+      ],
+      "outlinedContentBounds": [
+        15,
+        61,
+        79,
+        74
+      ]
+    },
+    {
+      "name": "death/006",
+      "animation": "death",
+      "index": 6,
+      "x": 510,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        16,
+        67,
+        78,
+        73
+      ],
+      "outlinedContentBounds": [
+        15,
+        66,
+        79,
+        74
+      ]
+    },
+    {
+      "name": "fall/000",
+      "animation": "fall",
+      "index": 0,
+      "x": 612,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        12,
+        28,
+        43,
+        74
+      ],
+      "outlinedContentBounds": [
+        11,
+        27,
+        44,
+        75
+      ]
+    },
+    {
+      "name": "fall/001",
+      "animation": "fall",
+      "index": 1,
+      "x": 714,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        12,
+        27,
+        44,
+        74
+      ],
+      "outlinedContentBounds": [
+        11,
+        26,
+        45,
+        75
+      ]
+    },
+    {
+      "name": "jump/000",
+      "animation": "jump",
+      "index": 0,
+      "x": 816,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        15,
+        26,
+        45,
+        73
+      ],
+      "outlinedContentBounds": [
+        14,
+        25,
+        46,
+        74
+      ]
+    },
+    {
+      "name": "jump/001",
+      "animation": "jump",
+      "index": 1,
+      "x": 918,
+      "y": 152,
+      "w": 102,
+      "h": 76,
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "pivot": {
+        "x": 0.2647058823529412,
+        "y": 0.9605263157894737
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        15,
+        26,
+        45,
+        73
+      ],
+      "outlinedContentBounds": [
+        14,
+        25,
+        46,
+        74
+      ]
+    }
+  ],
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "from": 0,
+      "to": 3,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 140,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Idle.png",
+      "extentsFromAnchor": {
+        "above": 47,
+        "below": 0,
+        "left": 17,
+        "right": 11
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 48,
+        "below": 1,
+        "left": 18,
+        "right": 12
+      }
+    },
+    "run": {
+      "frames": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "from": 4,
+      "to": 11,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Run.png",
+      "extentsFromAnchor": {
+        "above": 41,
+        "below": 1,
+        "left": 24,
+        "right": 13
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 42,
+        "below": 2,
+        "left": 25,
+        "right": 14
+      }
+    },
+    "attack1": {
+      "frames": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "from": 12,
+      "to": 15,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Attack1.png",
+      "extentsFromAnchor": {
+        "above": 55,
+        "below": 0,
+        "left": 25,
+        "right": 70
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 56,
+        "below": 1,
+        "left": 26,
+        "right": 71
+      }
+    },
+    "attack2": {
+      "frames": [
+        16,
+        17,
+        18,
+        19
+      ],
+      "from": 16,
+      "to": 19,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Attack2.png",
+      "extentsFromAnchor": {
+        "above": 71,
+        "below": 0,
+        "left": 18,
+        "right": 73
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 72,
+        "below": 1,
+        "left": 19,
+        "right": 74
+      }
+    },
+    "hit": {
+      "frames": [
+        20,
+        21,
+        22
+      ],
+      "from": 20,
+      "to": 22,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 100,
+      "source": "processed/deflashed/martial-hero-2/hit.png",
+      "extentsFromAnchor": {
+        "above": 47,
+        "below": 0,
+        "left": 18,
+        "right": 12
+      },
+      "sourceOriginal": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Take hit.png",
+      "deFlashed": true,
+      "outlinedExtentsFromAnchor": {
+        "above": 48,
+        "below": 1,
+        "left": 19,
+        "right": 13
+      }
+    },
+    "death": {
+      "frames": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "from": 23,
+      "to": 29,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 110,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Death.png",
+      "extentsFromAnchor": {
+        "above": 47,
+        "below": 0,
+        "left": 17,
+        "right": 51
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 48,
+        "below": 1,
+        "left": 18,
+        "right": 52
+      }
+    },
+    "fall": {
+      "frames": [
+        30,
+        31
+      ],
+      "from": 30,
+      "to": 31,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Fall.png",
+      "extentsFromAnchor": {
+        "above": 46,
+        "below": 1,
+        "left": 15,
+        "right": 17
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 47,
+        "below": 2,
+        "left": 16,
+        "right": 18
+      }
+    },
+    "jump": {
+      "frames": [
+        32,
+        33
+      ],
+      "from": 32,
+      "to": 33,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Jump.png",
+      "extentsFromAnchor": {
+        "above": 47,
+        "below": 0,
+        "left": 12,
+        "right": 18
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 48,
+        "below": 1,
+        "left": 13,
+        "right": 19
+      }
+    },
+    "attack": {
+      "frames": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "from": 12,
+      "to": 15,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/martial-hero-2/unpacked/Martial Hero 2/Sprites/Attack1.png",
+      "aliasOf": "attack1",
+      "extentsFromAnchor": {
+        "above": 55,
+        "below": 0,
+        "left": 25,
+        "right": 70
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 56,
+        "below": 1,
+        "left": 26,
+        "right": 71
+      }
+    }
+  },
+  "meta": {
+    "sourcePack": "martial-hero-2",
+    "author": "LuizMelo",
+    "licence": "CC0-1.0",
+    "targetBodyHeight": 48,
+    "nativeFrameSize": [
+      200,
+      200
+    ],
+    "nativeIdleBounds": [
+      81,
+      72,
+      114,
+      128
+    ],
+    "nativeBodyMeasurementBounds": [
+      81,
+      72,
+      114,
+      128
+    ],
+    "nativeBodyHeight": 56,
+    "nativeBodyEnvelopeHeight": 56,
+    "bodyHeightPx": 47,
+    "maxIdleVisibleHeightPx": 47,
+    "scaleApplied": 0.8571428571428571,
+    "effectiveScale": {
+      "x": 0.855,
+      "y": 0.855
+    },
+    "scaleMode": "exact target, nearest-neighbour",
+    "scaledSourceSize": [
+      171,
+      171
+    ],
+    "sharedTrimBounds": [
+      61,
+      38,
+      159,
+      110
+    ],
+    "paddingPx": 2,
+    "priestPaletteMap": null,
+    "timingNote": "Suggested playback timings, not official author frame timing; tune gameplay independently.",
+    "bakedHitFlash": false,
+    "runtimeHitFlash": {
+      "bakedFlash": false,
+      "color": "#ffffff",
+      "presentationFrames": 2,
+      "durationMs": 90,
+      "previewFrameDurationsMs": [
+        40,
+        50
+      ],
+      "alpha": "preserve",
+      "trigger": "start of hit event",
+      "spriteTiming": "unchanged; flash is an independent runtime timer"
+    },
+    "deFlashedSourceReport": "../../../docs/deflash-report.json",
+    "readability": {
+      "defaultVariant": "outlined",
+      "radiusPx": 1,
+      "neighbourhood": "4-connected, cardinal neighbours only",
+      "color": "#e8e4d8",
+      "alpha": 204,
+      "alphaFraction": 0.8,
+      "opaqueThreshold": 128,
+      "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
+      "originalPixels": "unchanged, including partially transparent pixels",
+      "stage": "after nearest-neighbour scaling; independently for every atlas cell",
+      "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
+    }
+  },
+  "outlinedImage": "sprites.outlined.png"
+}

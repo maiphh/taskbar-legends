@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/fire-worm
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: 781d0f2f902d774a858c934e85cfb64516db12b046291a37365963bcbc805217
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal

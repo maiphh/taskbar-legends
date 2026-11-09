@@ -1,0 +1,8 @@
+Source: https://luizmelo.itch.io/wizard-pack
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: f79b0b1725898358f1a74d2f03e716d95e4ca7a5ef40a6da3547943db7855fb4
+
+License declaration excerpts:
+This package can be used freely and commercially - CC0(creative commons zero).
+Creative Commons Zero v1.0 Universal

@@ -1,0 +1,9 @@
+Source: https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons
+Author/asset: see CREDITS.md
+Official-page capture: 2026-11-09, retained with supplied art delivery
+Verified against retained original source-page.txt, SHA256: bb99a0d2ec147cb3963c7b4f52fd8951469267e7ffd066dfc9a5c88ed81c7824
+
+License declaration excerpts:
+Feel free to use this for your game (commercially or not).
+Feel free to creatively modify these sprites however you like.
+Creative Commons Zero v1.0 Universal

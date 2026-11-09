@@ -1,0 +1,1607 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-09T11:48:19.084593+07:00",
+  "targetBodyHeight": 48,
+  "heightTolerancePx": 4,
+  "sampling": "nearest-neighbour",
+  "coordinateSystem": "top-left; anchors are pixel offsets from cell top-left; draw at world minus anchor",
+  "heroes": [
+    {
+      "key": "hero-knight",
+      "path": "heroes/hero-knight/sprites.png",
+      "atlasPath": "heroes/hero-knight/atlas.json",
+      "frameSize": [
+        137,
+        85
+      ],
+      "totalFrames": 54,
+      "frameCountPerAnimation": {
+        "idle": 11,
+        "run": 8,
+        "attack1": 7,
+        "attack2": 7,
+        "hit": 4,
+        "death": 11,
+        "fall": 3,
+        "jump": 3,
+        "attack": 7
+      },
+      "anchor": {
+        "x": 51,
+        "y": 82
+      },
+      "scaleApplied": 1,
+      "effectiveScale": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "nativeBodyHeight": 51,
+      "nativeBodyEnvelopeHeight": 51,
+      "bodyHeightPx": 51,
+      "maxIdleVisibleHeightPx": 51,
+      "sourcePack": "hero-knight",
+      "sourceUrl": "https://luizmelo.itch.io/hero-knight",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 80,
+        "below": 1,
+        "left": 49,
+        "right": 84
+      },
+      "outlined": "heroes/hero-knight/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 81,
+        "below": 2,
+        "left": 50,
+        "right": 85
+      }
+    },
+    {
+      "key": "hero-knight-2",
+      "path": "heroes/hero-knight-2/sprites.png",
+      "atlasPath": "heroes/hero-knight-2/atlas.json",
+      "frameSize": [
+        109,
+        79
+      ],
+      "totalFrames": 50,
+      "frameCountPerAnimation": {
+        "idle": 11,
+        "run": 8,
+        "attack": 6,
+        "hit": 4,
+        "death": 9,
+        "dash": 4,
+        "fall": 4,
+        "jump": 4
+      },
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "scaleApplied": 1.2307692307692308,
+      "effectiveScale": {
+        "x": 1.2285714285714286,
+        "y": 1.2285714285714286
+      },
+      "nativeBodyHeight": 39,
+      "nativeBodyEnvelopeHeight": 39,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "hero-knight-2",
+      "sourceUrl": "https://luizmelo.itch.io/hero-knight-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {},
+      "allAnimationExtentsFromAnchor": {
+        "above": 75,
+        "below": 0,
+        "left": 45,
+        "right": 60
+      },
+      "outlined": "heroes/hero-knight-2/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 76,
+        "below": 1,
+        "left": 46,
+        "right": 61
+      }
+    },
+    {
+      "key": "medieval-king-pack",
+      "path": "heroes/medieval-king-pack/sprites.png",
+      "atlasPath": "heroes/medieval-king-pack/atlas.json",
+      "frameSize": [
+        92,
+        69
+      ],
+      "totalFrames": 45,
+      "frameCountPerAnimation": {
+        "idle": 6,
+        "run": 8,
+        "attack1": 6,
+        "attack2": 6,
+        "hit": 4,
+        "death": 11,
+        "fall": 2,
+        "jump": 2,
+        "attack": 6
+      },
+      "anchor": {
+        "x": 39,
+        "y": 67
+      },
+      "scaleApplied": 0.5925925925925926,
+      "effectiveScale": {
+        "x": 0.5935483870967742,
+        "y": 0.5935483870967742
+      },
+      "nativeBodyHeight": 81,
+      "nativeBodyEnvelopeHeight": 81,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "medieval-king-pack",
+      "sourceUrl": "https://luizmelo.itch.io/medieval-king-pack",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 65,
+        "below": 0,
+        "left": 37,
+        "right": 51
+      },
+      "outlined": "heroes/medieval-king-pack/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 66,
+        "below": 1,
+        "left": 38,
+        "right": 52
+      }
+    },
+    {
+      "key": "medieval-king-pack-2",
+      "path": "heroes/medieval-king-pack-2/sprites.png",
+      "atlasPath": "heroes/medieval-king-pack-2/atlas.json",
+      "frameSize": [
+        131,
+        96
+      ],
+      "totalFrames": 46,
+      "frameCountPerAnimation": {
+        "idle": 8,
+        "run": 8,
+        "attack1": 4,
+        "attack2": 4,
+        "attack3": 4,
+        "hit": 4,
+        "death": 6,
+        "fall": 2,
+        "hit-white": 4,
+        "jump": 2,
+        "attack": 4
+      },
+      "anchor": {
+        "x": 61,
+        "y": 94
+      },
+      "scaleApplied": 0.8888888888888888,
+      "effectiveScale": {
+        "x": 0.8875,
+        "y": 0.8918918918918919
+      },
+      "nativeBodyHeight": 54,
+      "nativeBodyEnvelopeHeight": 54,
+      "bodyHeightPx": 49,
+      "maxIdleVisibleHeightPx": 49,
+      "sourcePack": "medieval-king-pack-2",
+      "sourceUrl": "https://luizmelo.itch.io/medieval-king-pack-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 92,
+        "below": 0,
+        "left": 59,
+        "right": 68
+      },
+      "outlined": "heroes/medieval-king-pack-2/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 93,
+        "below": 1,
+        "left": 60,
+        "right": 69
+      }
+    },
+    {
+      "key": "medieval-warrior-pack",
+      "path": "heroes/medieval-warrior-pack/sprites.png",
+      "atlasPath": "heroes/medieval-warrior-pack/atlas.json",
+      "frameSize": [
+        108,
+        77
+      ],
+      "totalFrames": 60,
+      "frameCountPerAnimation": {
+        "idle": 6,
+        "run": 8,
+        "attack1": 4,
+        "attack2": 4,
+        "attack3": 4,
+        "hit": 3,
+        "death": 9,
+        "crouch": 4,
+        "fall": 2,
+        "jump": 2,
+        "roll": 4,
+        "run2": 8,
+        "slide": 2,
+        "attack": 4
+      },
+      "anchor": {
+        "x": 49,
+        "y": 75
+      },
+      "scaleApplied": 0.5925925925925926,
+      "effectiveScale": {
+        "x": 0.592391304347826,
+        "y": 0.5912408759124088
+      },
+      "nativeBodyHeight": 81,
+      "nativeBodyEnvelopeHeight": 81,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "medieval-warrior-pack",
+      "sourceUrl": "https://luizmelo.itch.io/medieval-warrior-pack",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 73,
+        "below": 0,
+        "left": 47,
+        "right": 57
+      },
+      "outlined": "heroes/medieval-warrior-pack/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 74,
+        "below": 1,
+        "left": 48,
+        "right": 58
+      }
+    },
+    {
+      "key": "medieval-warrior-pack-2",
+      "path": "heroes/medieval-warrior-pack-2/sprites.png",
+      "atlasPath": "heroes/medieval-warrior-pack-2/atlas.json",
+      "frameSize": [
+        140,
+        90
+      ],
+      "totalFrames": 50,
+      "frameCountPerAnimation": {
+        "idle": 8,
+        "run": 8,
+        "attack1": 4,
+        "attack2": 4,
+        "attack3": 4,
+        "attack4": 4,
+        "hit": 4,
+        "death": 6,
+        "fall": 2,
+        "hit-white": 4,
+        "jump": 2,
+        "attack": 4
+      },
+      "anchor": {
+        "x": 51,
+        "y": 88
+      },
+      "scaleApplied": 1.170731707317073,
+      "effectiveScale": {
+        "x": 1.1733333333333333,
+        "y": 1.1733333333333333
+      },
+      "nativeBodyHeight": 41,
+      "nativeBodyEnvelopeHeight": 41,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "medieval-warrior-pack-2",
+      "sourceUrl": "https://luizmelo.itch.io/medieval-warrior-pack-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 86,
+        "below": 0,
+        "left": 49,
+        "right": 87
+      },
+      "outlined": "heroes/medieval-warrior-pack-2/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 87,
+        "below": 1,
+        "left": 50,
+        "right": 88
+      }
+    },
+    {
+      "key": "medieval-warrior-pack-3",
+      "path": "heroes/medieval-warrior-pack-3/sprites.png",
+      "atlasPath": "heroes/medieval-warrior-pack-3/atlas.json",
+      "frameSize": [
+        152,
+        95
+      ],
+      "totalFrames": 45,
+      "frameCountPerAnimation": {
+        "idle": 10,
+        "run": 6,
+        "attack1": 4,
+        "attack2": 4,
+        "attack3": 5,
+        "hit": 3,
+        "death": 9,
+        "fall": 2,
+        "jump": 2,
+        "attack": 4
+      },
+      "anchor": {
+        "x": 69,
+        "y": 92
+      },
+      "scaleApplied": 1.263157894736842,
+      "effectiveScale": {
+        "x": 1.2666666666666666,
+        "y": 1.2666666666666666
+      },
+      "nativeBodyHeight": 38,
+      "nativeBodyEnvelopeHeight": 38,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "medieval-warrior-pack-3",
+      "sourceUrl": "https://luizmelo.itch.io/medieval-warrior-pack-3",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 90,
+        "below": 1,
+        "left": 67,
+        "right": 81
+      },
+      "outlined": "heroes/medieval-warrior-pack-3/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 91,
+        "below": 2,
+        "left": 68,
+        "right": 82
+      }
+    },
+    {
+      "key": "fantasy-warrior",
+      "path": "heroes/fantasy-warrior/sprites.png",
+      "atlasPath": "heroes/fantasy-warrior/atlas.json",
+      "frameSize": [
+        156,
+        107
+      ],
+      "totalFrames": 56,
+      "frameCountPerAnimation": {
+        "idle": 10,
+        "run": 8,
+        "attack1": 7,
+        "attack2": 7,
+        "attack3": 8,
+        "hit": 3,
+        "death": 7,
+        "fall": 3,
+        "jump": 3,
+        "attack": 7
+      },
+      "anchor": {
+        "x": 77,
+        "y": 102
+      },
+      "scaleApplied": 1,
+      "effectiveScale": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "nativeBodyHeight": 45,
+      "nativeBodyEnvelopeHeight": 45,
+      "bodyHeightPx": 45,
+      "maxIdleVisibleHeightPx": 45,
+      "sourcePack": "fantasy-warrior",
+      "sourceUrl": "https://luizmelo.itch.io/fantasy-warrior",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 100,
+        "below": 3,
+        "left": 75,
+        "right": 77
+      },
+      "outlined": "heroes/fantasy-warrior/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 101,
+        "below": 4,
+        "left": 76,
+        "right": 78
+      }
+    },
+    {
+      "key": "martial-hero",
+      "path": "heroes/martial-hero/sprites.png",
+      "atlasPath": "heroes/martial-hero/atlas.json",
+      "frameSize": [
+        132,
+        73
+      ],
+      "totalFrames": 46,
+      "frameCountPerAnimation": {
+        "idle": 8,
+        "run": 8,
+        "attack1": 6,
+        "attack2": 6,
+        "hit": 4,
+        "death": 6,
+        "fall": 2,
+        "hit-white": 4,
+        "jump": 2,
+        "attack": 6
+      },
+      "anchor": {
+        "x": 36,
+        "y": 71
+      },
+      "scaleApplied": 1,
+      "effectiveScale": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "nativeBodyHeight": 52,
+      "nativeBodyEnvelopeHeight": 52,
+      "bodyHeightPx": 52,
+      "maxIdleVisibleHeightPx": 52,
+      "sourcePack": "martial-hero",
+      "sourceUrl": "https://luizmelo.itch.io/martial-hero",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 69,
+        "below": 0,
+        "left": 34,
+        "right": 94
+      },
+      "outlined": "heroes/martial-hero/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 70,
+        "below": 1,
+        "left": 35,
+        "right": 95
+      }
+    },
+    {
+      "key": "martial-hero-2",
+      "path": "heroes/martial-hero-2/sprites.png",
+      "atlasPath": "heroes/martial-hero-2/atlas.json",
+      "frameSize": [
+        102,
+        76
+      ],
+      "totalFrames": 34,
+      "frameCountPerAnimation": {
+        "idle": 4,
+        "run": 8,
+        "attack1": 4,
+        "attack2": 4,
+        "hit": 3,
+        "death": 7,
+        "fall": 2,
+        "jump": 2,
+        "attack": 4
+      },
+      "anchor": {
+        "x": 27,
+        "y": 73
+      },
+      "scaleApplied": 0.8571428571428571,
+      "effectiveScale": {
+        "x": 0.855,
+        "y": 0.855
+      },
+      "nativeBodyHeight": 56,
+      "nativeBodyEnvelopeHeight": 56,
+      "bodyHeightPx": 47,
+      "maxIdleVisibleHeightPx": 47,
+      "sourcePack": "martial-hero-2",
+      "sourceUrl": "https://luizmelo.itch.io/martial-hero-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 71,
+        "below": 1,
+        "left": 25,
+        "right": 73
+      },
+      "outlined": "heroes/martial-hero-2/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 72,
+        "below": 2,
+        "left": 26,
+        "right": 74
+      }
+    },
+    {
+      "key": "martial-hero-3",
+      "path": "heroes/martial-hero-3/sprites.png",
+      "atlasPath": "heroes/martial-hero-3/atlas.json",
+      "frameSize": [
+        151,
+        115
+      ],
+      "totalFrames": 60,
+      "frameCountPerAnimation": {
+        "idle": 10,
+        "run": 8,
+        "attack1": 7,
+        "attack2": 6,
+        "attack3": 9,
+        "hit": 3,
+        "death": 11,
+        "fall": 3,
+        "jump": 3,
+        "attack": 7
+      },
+      "anchor": {
+        "x": 86,
+        "y": 96
+      },
+      "scaleApplied": 1.170731707317073,
+      "effectiveScale": {
+        "x": 1.1746031746031746,
+        "y": 1.1746031746031746
+      },
+      "nativeBodyHeight": 41,
+      "nativeBodyEnvelopeHeight": 41,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "martial-hero-3",
+      "sourceUrl": "https://luizmelo.itch.io/martial-hero-3",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 94,
+        "below": 17,
+        "left": 84,
+        "right": 63
+      },
+      "outlined": "heroes/martial-hero-3/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 95,
+        "below": 18,
+        "left": 85,
+        "right": 64
+      }
+    },
+    {
+      "key": "huntress",
+      "path": "heroes/huntress/sprites.png",
+      "atlasPath": "heroes/huntress/atlas.json",
+      "frameSize": [
+        108,
+        80
+      ],
+      "totalFrames": 48,
+      "frameCountPerAnimation": {
+        "idle": 8,
+        "run": 8,
+        "attack1": 5,
+        "attack2": 5,
+        "attack3": 7,
+        "hit": 3,
+        "death": 8,
+        "fall": 2,
+        "jump": 2,
+        "attack": 5
+      },
+      "anchor": {
+        "x": 45,
+        "y": 78
+      },
+      "scaleApplied": 1.1428571428571428,
+      "effectiveScale": {
+        "x": 1.14,
+        "y": 1.14
+      },
+      "nativeBodyHeight": 42,
+      "nativeBodyEnvelopeHeight": 42,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "huntress",
+      "sourceUrl": "https://luizmelo.itch.io/huntress",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 76,
+        "below": 0,
+        "left": 43,
+        "right": 61
+      },
+      "outlined": "heroes/huntress/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 77,
+        "below": 1,
+        "left": 44,
+        "right": 62
+      }
+    },
+    {
+      "key": "huntress-2",
+      "path": "heroes/huntress-2/sprites.png",
+      "atlasPath": "heroes/huntress-2/atlas.json",
+      "frameSize": [
+        92,
+        64
+      ],
+      "totalFrames": 41,
+      "frameCountPerAnimation": {
+        "idle": 10,
+        "run": 8,
+        "attack": 6,
+        "hit": 3,
+        "death": 10,
+        "fall": 2,
+        "jump": 2
+      },
+      "anchor": {
+        "x": 19,
+        "y": 62
+      },
+      "scaleApplied": 1.3333333333333333,
+      "effectiveScale": {
+        "x": 1.33,
+        "y": 1.33
+      },
+      "nativeBodyHeight": 36,
+      "nativeBodyEnvelopeHeight": 36,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "huntress-2",
+      "sourceUrl": "https://luizmelo.itch.io/huntress-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {},
+      "allAnimationExtentsFromAnchor": {
+        "above": 60,
+        "below": 0,
+        "left": 17,
+        "right": 71
+      },
+      "outlined": "heroes/huntress-2/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 61,
+        "below": 1,
+        "left": 18,
+        "right": 72
+      }
+    },
+    {
+      "key": "wizard-pack",
+      "path": "heroes/wizard-pack/sprites.png",
+      "atlasPath": "heroes/wizard-pack/atlas.json",
+      "frameSize": [
+        107,
+        80
+      ],
+      "totalFrames": 45,
+      "frameCountPerAnimation": {
+        "idle": 6,
+        "run": 8,
+        "attack1": 8,
+        "attack2": 8,
+        "hit": 4,
+        "death": 7,
+        "fall": 2,
+        "jump": 2,
+        "attack": 8
+      },
+      "anchor": {
+        "x": 35,
+        "y": 78
+      },
+      "scaleApplied": 0.5581395348837209,
+      "effectiveScale": {
+        "x": 0.5584415584415584,
+        "y": 0.5578947368421052
+      },
+      "nativeBodyHeight": 86,
+      "nativeBodyEnvelopeHeight": 86,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "wizard-pack",
+      "sourceUrl": "https://luizmelo.itch.io/wizard-pack",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 76,
+        "below": 0,
+        "left": 33,
+        "right": 70
+      },
+      "outlined": "heroes/wizard-pack/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 77,
+        "below": 1,
+        "left": 34,
+        "right": 71
+      }
+    },
+    {
+      "key": "priest",
+      "path": "heroes/priest/sprites.png",
+      "atlasPath": "heroes/priest/atlas.json",
+      "frameSize": [
+        107,
+        80
+      ],
+      "totalFrames": 45,
+      "frameCountPerAnimation": {
+        "idle": 6,
+        "run": 8,
+        "attack1": 8,
+        "attack2": 8,
+        "hit": 4,
+        "death": 7,
+        "fall": 2,
+        "jump": 2,
+        "attack": 8
+      },
+      "anchor": {
+        "x": 35,
+        "y": 78
+      },
+      "scaleApplied": 0.5581395348837209,
+      "effectiveScale": {
+        "x": 0.5584415584415584,
+        "y": 0.5578947368421052
+      },
+      "nativeBodyHeight": 86,
+      "nativeBodyEnvelopeHeight": 86,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "wizard-pack",
+      "sourceUrl": "https://luizmelo.itch.io/wizard-pack",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 76,
+        "below": 0,
+        "left": 33,
+        "right": 70
+      },
+      "outlined": "heroes/priest/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 77,
+        "below": 1,
+        "left": 34,
+        "right": 71
+      }
+    },
+    {
+      "key": "evil-wizard",
+      "path": "heroes/evil-wizard/sprites.png",
+      "atlasPath": "heroes/evil-wizard/atlas.json",
+      "frameSize": [
+        83,
+        62
+      ],
+      "totalFrames": 33,
+      "frameCountPerAnimation": {
+        "idle": 8,
+        "move": 8,
+        "attack": 8,
+        "hit": 4,
+        "death": 5,
+        "run": 8
+      },
+      "anchor": {
+        "x": 27,
+        "y": 60
+      },
+      "scaleApplied": 0.8421052631578947,
+      "effectiveScale": {
+        "x": 0.84,
+        "y": 0.84
+      },
+      "nativeBodyHeight": 57,
+      "nativeBodyEnvelopeHeight": 58,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "evil-wizard",
+      "sourceUrl": "https://luizmelo.itch.io/evil-wizard",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "run": "move"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 58,
+        "below": 0,
+        "left": 25,
+        "right": 54
+      },
+      "outlined": "heroes/evil-wizard/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 59,
+        "below": 1,
+        "left": 26,
+        "right": 55
+      }
+    },
+    {
+      "key": "evil-wizard-2",
+      "path": "heroes/evil-wizard-2/sprites.png",
+      "atlasPath": "heroes/evil-wizard-2/atlas.json",
+      "frameSize": [
+        157,
+        143
+      ],
+      "totalFrames": 46,
+      "frameCountPerAnimation": {
+        "idle": 8,
+        "run": 8,
+        "attack1": 8,
+        "attack2": 8,
+        "hit": 3,
+        "death": 7,
+        "fall": 2,
+        "jump": 2,
+        "attack": 8
+      },
+      "anchor": {
+        "x": 48,
+        "y": 129
+      },
+      "scaleApplied": 0.9056603773584906,
+      "effectiveScale": {
+        "x": 0.904,
+        "y": 0.904
+      },
+      "nativeBodyHeight": 53,
+      "nativeBodyEnvelopeHeight": 53,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 94,
+      "sourcePack": "evil-wizard-2",
+      "sourceUrl": "https://luizmelo.itch.io/evil-wizard-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 127,
+        "below": 12,
+        "left": 46,
+        "right": 107
+      },
+      "outlined": "heroes/evil-wizard-2/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 128,
+        "below": 13,
+        "left": 47,
+        "right": 108
+      }
+    },
+    {
+      "key": "evil-wizard-3",
+      "path": "heroes/evil-wizard-3/sprites.png",
+      "atlasPath": "heroes/evil-wizard-3/atlas.json",
+      "frameSize": [
+        83,
+        64
+      ],
+      "totalFrames": 66,
+      "frameCountPerAnimation": {
+        "idle": 10,
+        "run": 8,
+        "walk": 8,
+        "attack": 13,
+        "hit": 3,
+        "death": 18,
+        "fall": 3,
+        "jump": 3
+      },
+      "anchor": {
+        "x": 21,
+        "y": 62
+      },
+      "scaleApplied": 0.9056603773584906,
+      "effectiveScale": {
+        "x": 0.9071428571428571,
+        "y": 0.9071428571428571
+      },
+      "nativeBodyHeight": 53,
+      "nativeBodyEnvelopeHeight": 53,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "evil-wizard-3",
+      "sourceUrl": "https://luizmelo.itch.io/evil-wizard-3",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {},
+      "allAnimationExtentsFromAnchor": {
+        "above": 60,
+        "below": 0,
+        "left": 19,
+        "right": 60
+      },
+      "outlined": "heroes/evil-wizard-3/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 61,
+        "below": 1,
+        "left": 20,
+        "right": 61
+      }
+    }
+  ],
+  "enemies": [
+    {
+      "key": "fire-worm",
+      "path": "enemies/fire-worm/sprites.png",
+      "atlasPath": "enemies/fire-worm/atlas.json",
+      "frameSize": [
+        81,
+        58
+      ],
+      "totalFrames": 45,
+      "frameCountPerAnimation": {
+        "idle": 9,
+        "walk": 9,
+        "attack": 16,
+        "hit": 3,
+        "death": 8,
+        "run": 9
+      },
+      "anchor": {
+        "x": 30,
+        "y": 56
+      },
+      "scaleApplied": 1,
+      "effectiveScale": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "nativeBodyHeight": 45,
+      "nativeBodyEnvelopeHeight": 45,
+      "bodyHeightPx": 45,
+      "maxIdleVisibleHeightPx": 45,
+      "sourcePack": "fire-worm",
+      "sourceUrl": "https://luizmelo.itch.io/fire-worm",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "run": "walk"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 54,
+        "below": 0,
+        "left": 28,
+        "right": 49
+      },
+      "outlined": "enemies/fire-worm/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 55,
+        "below": 1,
+        "left": 29,
+        "right": 50
+      }
+    },
+    {
+      "key": "flying-eye",
+      "path": "enemies/flying-eye/sprites.png",
+      "atlasPath": "enemies/flying-eye/atlas.json",
+      "frameSize": [
+        88,
+        81
+      ],
+      "totalFrames": 38,
+      "frameCountPerAnimation": {
+        "flight": 8,
+        "attack": 8,
+        "attack2": 8,
+        "attack3": 6,
+        "hit": 4,
+        "death": 4,
+        "idle": 8,
+        "run": 8
+      },
+      "anchor": {
+        "x": 43,
+        "y": 68
+      },
+      "scaleApplied": 1.5,
+      "effectiveScale": {
+        "x": 1.5,
+        "y": 1.5
+      },
+      "nativeBodyHeight": 32,
+      "nativeBodyEnvelopeHeight": 33,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "monsters-creatures-fantasy",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "idle": "flight",
+        "run": "flight"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 66,
+        "below": 11,
+        "left": 41,
+        "right": 43
+      },
+      "outlined": "enemies/flying-eye/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 67,
+        "below": 12,
+        "left": 42,
+        "right": 44
+      }
+    },
+    {
+      "key": "goblin",
+      "path": "enemies/goblin/sprites.png",
+      "atlasPath": "enemies/goblin/atlas.json",
+      "frameSize": [
+        154,
+        66
+      ],
+      "totalFrames": 48,
+      "frameCountPerAnimation": {
+        "idle": 4,
+        "run": 8,
+        "attack": 8,
+        "attack2": 8,
+        "attack3": 12,
+        "hit": 4,
+        "death": 4
+      },
+      "anchor": {
+        "x": 58,
+        "y": 64
+      },
+      "scaleApplied": 1.3333333333333333,
+      "effectiveScale": {
+        "x": 1.3333333333333333,
+        "y": 1.3333333333333333
+      },
+      "nativeBodyHeight": 36,
+      "nativeBodyEnvelopeHeight": 36,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "monsters-creatures-fantasy",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {},
+      "allAnimationExtentsFromAnchor": {
+        "above": 62,
+        "below": 0,
+        "left": 56,
+        "right": 94
+      },
+      "outlined": "enemies/goblin/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 63,
+        "below": 1,
+        "left": 57,
+        "right": 95
+      }
+    },
+    {
+      "key": "skeleton",
+      "path": "enemies/skeleton/sprites.png",
+      "atlasPath": "enemies/skeleton/atlas.json",
+      "frameSize": [
+        108,
+        93
+      ],
+      "totalFrames": 42,
+      "frameCountPerAnimation": {
+        "idle": 4,
+        "walk": 4,
+        "attack": 8,
+        "attack2": 8,
+        "attack3": 6,
+        "hit": 4,
+        "death": 4,
+        "shield": 4,
+        "run": 4
+      },
+      "anchor": {
+        "x": 36,
+        "y": 89
+      },
+      "scaleApplied": 1,
+      "effectiveScale": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "nativeBodyHeight": 51,
+      "nativeBodyEnvelopeHeight": 51,
+      "bodyHeightPx": 51,
+      "maxIdleVisibleHeightPx": 51,
+      "sourcePack": "monsters-creatures-fantasy",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "run": "walk"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 87,
+        "below": 2,
+        "left": 34,
+        "right": 70
+      },
+      "outlined": "enemies/skeleton/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 88,
+        "below": 3,
+        "left": 35,
+        "right": 71
+      }
+    },
+    {
+      "key": "mushroom",
+      "path": "enemies/mushroom/sprites.png",
+      "atlasPath": "enemies/mushroom/atlas.json",
+      "frameSize": [
+        106,
+        71
+      ],
+      "totalFrames": 47,
+      "frameCountPerAnimation": {
+        "idle": 4,
+        "run": 8,
+        "attack": 8,
+        "attack2": 8,
+        "attack3": 11,
+        "hit": 4,
+        "death": 4
+      },
+      "anchor": {
+        "x": 42,
+        "y": 69
+      },
+      "scaleApplied": 1.2972972972972974,
+      "effectiveScale": {
+        "x": 1.3,
+        "y": 1.3
+      },
+      "nativeBodyHeight": 37,
+      "nativeBodyEnvelopeHeight": 37,
+      "bodyHeightPx": 48,
+      "maxIdleVisibleHeightPx": 48,
+      "sourcePack": "monsters-creatures-fantasy",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {},
+      "allAnimationExtentsFromAnchor": {
+        "above": 67,
+        "below": 0,
+        "left": 40,
+        "right": 62
+      },
+      "outlined": "enemies/mushroom/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 68,
+        "below": 1,
+        "left": 41,
+        "right": 63
+      }
+    },
+    {
+      "key": "mimic",
+      "path": "enemies/mimic/sprites.png",
+      "atlasPath": "enemies/mimic/atlas.json",
+      "frameSize": [
+        173,
+        70
+      ],
+      "totalFrames": 66,
+      "frameCountPerAnimation": {
+        "idletransformed": 9,
+        "idleclosed": 1,
+        "walk": 6,
+        "attack1": 14,
+        "attack2": 13,
+        "hit": 3,
+        "death": 6,
+        "idleopen": 1,
+        "opening": 6,
+        "transform": 7,
+        "idle": 9,
+        "run": 6,
+        "attack": 14
+      },
+      "anchor": {
+        "x": 65,
+        "y": 68
+      },
+      "scaleApplied": 1.5,
+      "effectiveScale": {
+        "x": 1.5,
+        "y": 1.5
+      },
+      "nativeBodyHeight": 30,
+      "nativeBodyEnvelopeHeight": 30,
+      "bodyHeightPx": 44,
+      "maxIdleVisibleHeightPx": 44,
+      "sourcePack": "monsters-creatures-fantasy-2",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "idle": "idletransformed",
+        "run": "walk",
+        "attack": "attack1"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 66,
+        "below": 0,
+        "left": 63,
+        "right": 106
+      },
+      "outlined": "enemies/mimic/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 67,
+        "below": 1,
+        "left": 64,
+        "right": 107
+      }
+    },
+    {
+      "key": "rat",
+      "path": "enemies/rat/sprites.png",
+      "atlasPath": "enemies/rat/atlas.json",
+      "frameSize": [
+        151,
+        59
+      ],
+      "totalFrames": 39,
+      "frameCountPerAnimation": {
+        "idle": 10,
+        "run": 8,
+        "attackbite": 12,
+        "hit": 3,
+        "death": 6,
+        "attack": 12
+      },
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "scaleApplied": 2.5,
+      "effectiveScale": {
+        "x": 2.5,
+        "y": 2.5
+      },
+      "nativeBodyHeight": 20,
+      "nativeBodyEnvelopeHeight": 20,
+      "bodyHeightPx": 50,
+      "maxIdleVisibleHeightPx": 50,
+      "sourcePack": "monsters-creatures-fantasy-2",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "attack": "attackbite"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 54,
+        "below": 1,
+        "left": 71,
+        "right": 76
+      },
+      "outlined": "enemies/rat/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 55,
+        "below": 2,
+        "left": 72,
+        "right": 77
+      }
+    },
+    {
+      "key": "slime",
+      "path": "enemies/slime/sprites.png",
+      "atlasPath": "enemies/slime/atlas.json",
+      "frameSize": [
+        281,
+        91
+      ],
+      "totalFrames": 53,
+      "frameCountPerAnimation": {
+        "idle": 14,
+        "walk": 6,
+        "attack": 19,
+        "hit": 3,
+        "death": 11,
+        "run": 6
+      },
+      "anchor": {
+        "x": 87,
+        "y": 90
+      },
+      "scaleApplied": 2.5,
+      "effectiveScale": {
+        "x": 2.5,
+        "y": 2.5
+      },
+      "nativeBodyHeight": 20,
+      "nativeBodyEnvelopeHeight": 20,
+      "bodyHeightPx": 49,
+      "maxIdleVisibleHeightPx": 49,
+      "sourcePack": "monsters-creatures-fantasy-2",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "run": "walk"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 88,
+        "below": 0,
+        "left": 85,
+        "right": 192
+      },
+      "outlined": "enemies/slime/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 89,
+        "below": 0,
+        "left": 86,
+        "right": 193
+      }
+    },
+    {
+      "key": "bat",
+      "path": "enemies/bat/sprites.png",
+      "atlasPath": "enemies/bat/atlas.json",
+      "frameSize": [
+        76,
+        61
+      ],
+      "totalFrames": 37,
+      "frameCountPerAnimation": {
+        "fly": 11,
+        "attack": 11,
+        "hit": 3,
+        "death": 4,
+        "fall": 5,
+        "flytofall": 3,
+        "idle": 11,
+        "run": 11
+      },
+      "anchor": {
+        "x": 28,
+        "y": 57
+      },
+      "scaleApplied": 1,
+      "effectiveScale": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "nativeBodyHeight": 46,
+      "nativeBodyEnvelopeHeight": 55,
+      "bodyHeightPx": 46,
+      "maxIdleVisibleHeightPx": 46,
+      "sourcePack": "monsters-creatures-fantasy-2",
+      "sourceUrl": "https://luizmelo.itch.io/monsters-creatures-fantasy-2",
+      "licence": "CC0-1.0",
+      "animationSubstitutions": {
+        "idle": "fly",
+        "run": "fly"
+      },
+      "allAnimationExtentsFromAnchor": {
+        "above": 55,
+        "below": 2,
+        "left": 26,
+        "right": 46
+      },
+      "outlined": "enemies/bat/sprites.outlined.png",
+      "allOutlinedAnimationExtentsFromAnchor": {
+        "above": 56,
+        "below": 3,
+        "left": 27,
+        "right": 47
+      }
+    }
+  ],
+  "icons": [
+    {
+      "key": "potions",
+      "path": "icons/16x16-mixed-rpg-icons/potions.png",
+      "atlasPath": "icons/16x16-mixed-rpg-icons/potions.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 315,
+      "scaleApplied": 1,
+      "sourcePack": "16x16-mixed-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/16x16-mixed-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "consumables",
+      "path": "icons/16x16-mixed-rpg-icons/consumables.png",
+      "atlasPath": "icons/16x16-mixed-rpg-icons/consumables.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 638,
+      "scaleApplied": 1,
+      "sourcePack": "16x16-mixed-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/16x16-mixed-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "armours",
+      "path": "icons/16x16-mixed-rpg-icons/armours.png",
+      "atlasPath": "icons/16x16-mixed-rpg-icons/armours.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 171,
+      "scaleApplied": 1,
+      "sourcePack": "16x16-mixed-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/16x16-mixed-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "weapons",
+      "path": "icons/16x16-mixed-rpg-icons/weapons.png",
+      "atlasPath": "icons/16x16-mixed-rpg-icons/weapons.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 72,
+      "scaleApplied": 1,
+      "sourcePack": "16x16-mixed-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/16x16-mixed-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "books",
+      "path": "icons/16x16-mixed-rpg-icons/books.png",
+      "atlasPath": "icons/16x16-mixed-rpg-icons/books.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 168,
+      "scaleApplied": 1,
+      "sourcePack": "16x16-mixed-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/16x16-mixed-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "chests",
+      "path": "icons/16x16-mixed-rpg-icons/chests.png",
+      "atlasPath": "icons/16x16-mixed-rpg-icons/chests.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 48,
+      "scaleApplied": 1,
+      "sourcePack": "16x16-mixed-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/16x16-mixed-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "iron-weapons",
+      "path": "icons/free-16x16-weapon-rpg-icons/iron-weapons.png",
+      "atlasPath": "icons/free-16x16-weapon-rpg-icons/iron-weapons.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 480,
+      "scaleApplied": 1,
+      "sourcePack": "free-16x16-weapon-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "steel-weapons",
+      "path": "icons/free-16x16-weapon-rpg-icons/steel-weapons.png",
+      "atlasPath": "icons/free-16x16-weapon-rpg-icons/steel-weapons.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 480,
+      "scaleApplied": 1,
+      "sourcePack": "free-16x16-weapon-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "bronze-weapons",
+      "path": "icons/free-16x16-weapon-rpg-icons/bronze-weapons.png",
+      "atlasPath": "icons/free-16x16-weapon-rpg-icons/bronze-weapons.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 480,
+      "scaleApplied": 1,
+      "sourcePack": "free-16x16-weapon-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons",
+      "licence": "CC0-1.0"
+    },
+    {
+      "key": "gold-weapons",
+      "path": "icons/free-16x16-weapon-rpg-icons/gold-weapons.png",
+      "atlasPath": "icons/free-16x16-weapon-rpg-icons/gold-weapons.json",
+      "frameSize": [
+        16,
+        16
+      ],
+      "frameCount": 480,
+      "scaleApplied": 1,
+      "sourcePack": "free-16x16-weapon-rpg-icons",
+      "sourceUrl": "https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons",
+      "licence": "CC0-1.0"
+    }
+  ],
+  "runtimeHitFlash": {
+    "bakedFlash": false,
+    "color": "#ffffff",
+    "presentationFrames": 2,
+    "durationMs": 90,
+    "previewFrameDurationsMs": [
+      40,
+      50
+    ],
+    "alpha": "preserve",
+    "trigger": "start of hit event",
+    "spriteTiming": "unchanged; flash is an independent runtime timer"
+  },
+  "readability": {
+    "defaultVariant": "outlined",
+    "radiusPx": 1,
+    "neighbourhood": "4-connected, cardinal neighbours only",
+    "color": "#e8e4d8",
+    "alpha": 204,
+    "alphaFraction": 0.8,
+    "opaqueThreshold": 128,
+    "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
+    "originalPixels": "unchanged, including partially transparent pixels",
+    "stage": "after nearest-neighbour scaling; independently for every atlas cell",
+    "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
+  },
+  "overlay": {
+    "heightPx": 160,
+    "hudBottomHeightPx": 80,
+    "recommendedBaselinePx": 136
+  }
+}
