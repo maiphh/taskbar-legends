@@ -7,19 +7,39 @@
   },
   "popup": {
     "heroId": "mk2",
-    "atk": 2,
-    "maxHp": 0,
-    "def": 0,
-    "dpsPct": 4.7,
-    "label": "+2 ATK +4.7% DPS"
+    "atk": 0,
+    "maxHp": 8,
+    "def": 1,
+    "dpsPct": 0,
+    "label": "+8 HP  +1 DEF",
+    "segments": [
+      {
+        "text": "+8 HP",
+        "kind": "stat"
+      },
+      {
+        "text": "+1 DEF",
+        "kind": "stat"
+      }
+    ]
   },
   "panelPopup": {
     "heroId": "mk2",
-    "atk": 2,
-    "maxHp": 0,
-    "def": 0,
-    "dpsPct": 4.4,
-    "label": "+2 ATK +4.4% DPS"
+    "atk": 0,
+    "maxHp": 8,
+    "def": 1,
+    "dpsPct": 0,
+    "label": "+8 HP  +1 DEF",
+    "segments": [
+      {
+        "text": "+8 HP",
+        "kind": "stat"
+      },
+      {
+        "text": "+1 DEF",
+        "kind": "stat"
+      }
+    ]
   },
   "stageClear": {
     "kind": "clear",

@@ -29,20 +29,25 @@ export function affordability(state: GameState): Affordability {
   };
 }
 
-export interface StatDelta { heroId: string | null; atk: number; maxHp: number; def: number; dpsPct: number; label: string }
+export interface PopupSegment { text: string; kind: 'stat' | 'dps' }
+/** `segments` carry the two-colour split (stat green, DPS blue); `label` is the same text joined by two spaces. */
+export interface StatDelta { heroId: string | null; atk: number; maxHp: number; def: number; dpsPct: number; label: string; segments: PopupSegment[] }
 /** Stat change from one gear upgrade (level - 1 -> level) on whoever wears it now. */
 export function upgradeDelta(state: GameState, gearId: ItemId, level: number): StatDelta {
   const item = state.inventory.find(gear => gear.id === gearId);
   const owner = item ? state.roster.find(hero => hero.equipment[item.slot] === gearId) : undefined;
-  if (!item || !owner) return { heroId: null, atk: 0, maxHp: 0, def: 0, dpsPct: 0, label: `+1 LV (now +${level})` };
+  const levelOnly = [{ text: `+1 LV (now +${level})`, kind: 'stat' as const }];
+  if (!item || !owner) return { heroId: null, atk: 0, maxHp: 0, def: 0, dpsPct: 0, label: levelOnly[0]?.text ?? '', segments: levelOnly };
   const at = (lv: number) => heroStats({ ...state, inventory: state.inventory.map(gear => gear.id === gearId ? { ...gear, level: lv } : gear) }, owner);
   const before = at(level - 1), after = at(level);
   const dps = (stats: typeof after) => stats.atk / stats.attackTicks;
   const delta = { atk: after.atk - before.atk, maxHp: after.maxHp - before.maxHp, def: after.def - before.def,
     dpsPct: Math.round((dps(after) / dps(before) - 1) * 1000) / 10 };
-  const parts = [delta.atk && `+${delta.atk} ATK`, delta.maxHp && `+${delta.maxHp} HP`, delta.def && `+${delta.def} DEF`,
-    delta.dpsPct >= 0.1 && `+${delta.dpsPct}% DPS`].filter((part): part is string => typeof part === 'string');
-  return { heroId: owner.id, ...delta, label: parts.slice(0, 2).join(' ') || `+1 LV (now +${level})` };
+  const parts: PopupSegment[] = [delta.atk && `+${delta.atk} ATK`, delta.maxHp && `+${delta.maxHp} HP`, delta.def && `+${delta.def} DEF`]
+    .filter((part): part is string => typeof part === 'string').map(text => ({ text, kind: 'stat' }));
+  if (delta.dpsPct >= 0.1) parts.push({ text: `+${delta.dpsPct}% DPS`, kind: 'dps' });
+  const segments = parts.length ? parts.slice(0, 2) : levelOnly;
+  return { heroId: owner.id, ...delta, label: segments.map(part => part.text).join('  '), segments };
 }
 
 export interface UpgradePopup { seq: number; age: number; gearId: ItemId; delta: StatDelta }

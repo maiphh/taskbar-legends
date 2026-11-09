@@ -1,7 +1,9 @@
 import { CONFIG, enemyKindSchema, heroConfig, stageConfig, ticksForSeconds } from './config';
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
-import { PixelUI } from './pixel-ui';
+import { PixelUI, roundHalfEven } from './pixel-ui';
+import { BODY } from './font';
+import { bannerFrame, popupFrame } from './motion';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { stageCue, upgradePopups } from './core/selectors';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
@@ -110,31 +112,40 @@ export class Renderer {
       const age = state.tick - group.tick, x = this.position(unit, state) - 10 + count * 6;
       const y = Math.max(8, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
       const label = `${group.heal ? '+' : '-'}${group.amount}`;
-      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, 16, true);
-      this.ui.text(ctx, label, x, y, group.heal ? palette.green : palette.gold, 16, true);
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, BODY, true);
+      this.ui.text(ctx, label, x, y, group.heal ? palette.green : palette.gold, BODY, true);
     }
-    if (state.enemies.length > enemies.length) this.ui.text(ctx, `+${state.enemies.length - enemies.length}`, field.x + field.width - 32, coreY + 3, palette.muted, 16);
+    if (state.enemies.length > enemies.length) this.ui.text(ctx, `+${state.enemies.length - enemies.length}`, field.x + field.width - 32, coreY + 3, palette.muted, BODY);
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, 1 / this.dpr);
-    this.drawFeedback(ctx, state, units, field, coreY, baselineY);
+    this.drawFeedback(ctx, state, units, field, coreY);
   }
-  /** Upgrade stat popups and stage/boss banners; all derived from the event log, so they are deterministic per tick. */
-  private drawFeedback(ctx: CanvasRenderingContext2D, state: GameState, units: Unit[], field: { x: number; width: number }, coreY: number, baselineY: number): void {
-    const palette = CONFIG.ui.palette;
-    const cue = this.ui.panel ? null : stageCue(state);
-    if (cue) {
-      const label = cue.kind === 'boss' ? `${cue.clearedStage ? `${stageConfig(cue.clearedStage).id} CLEAR · ` : ''}BOSS ${stageConfig(cue.stage).id} READY` : `STAGE ${stageConfig(cue.stage).id} CLEAR`;
-      ctx.save(); ctx.globalAlpha = cue.age > 0.75 ? (1 - cue.age) / 0.25 : 1;
-      this.ui.drawCue(ctx, label, cue.kind === 'boss' ? palette.red : palette.gold, field.width > 0 ? field.x + field.width / 2 : this.width / 2, coreY - 40 - Math.round(Math.min(cue.age, 0.15) * 40));
+  /**
+   * Upgrade popups and stage/boss banners (ui.md §10, ui-tokens coreLoopFeedback). Everything is derived from the event log and
+   * the sim tick, so a given tick always draws the same frame. Timings are specified on a 40 ms clock; the 20 Hz sim samples it.
+   */
+  private drawFeedback(ctx: CanvasRenderingContext2D, state: GameState, units: Unit[], field: { x: number; width: number }, coreY: number): void {
+    const spec = CONFIG.ui.coreLoopFeedback, still = this.ui.reducedMotion, chip = this.ui.panel !== null;
+    const popups = upgradePopups(state).sort((a, b) => b.seq - a.seq).slice(0, chip ? spec.upgradePopup.panelChip.maxVisible : spec.upgradePopup.maxStacked);
+    for (const [index, popup] of popups.entries()) {
+      const frame = popupFrame(popup.age * CONFIG.view.upgradePopupSeconds * 1000, chip, still), segments = popup.delta.segments;
+      if (!frame) continue;
+      ctx.save(); ctx.globalAlpha = frame.alpha;
+      if (chip) this.ui.drawPanelChip(ctx, segments, frame.rise);
+      else {
+        const hero = units.find(unit => unit.side === 'hero' && unit.sourceId === popup.delta.heroId);
+        const width = this.ui.popupWidth(segments), centre = hero ? this.position(hero, state) : this.ui.feedbackAnchorX(popup.delta.heroId ? 'heroes' : 'gear');
+        const x = Math.max(spec.upgradePopup.clampMarginPx, Math.min(this.width - spec.upgradePopup.clampMarginPx - width, roundHalfEven(centre - width / 2)));
+        this.ui.drawPopupText(ctx, segments, x, coreY + spec.upgradePopup.startTopCoreLocal - frame.rise - index * spec.upgradePopup.stackGapPx);
+      }
       ctx.restore();
     }
-    for (const [index, popup] of upgradePopups(state).entries()) {
-      const hero = this.ui.panel ? undefined : units.find(unit => unit.side === 'hero' && unit.sourceId === popup.delta.heroId);
-      const anchor = hero ? { x: this.position(hero, state) - 24, y: baselineY - 72 } : this.ui.feedbackAnchor(popup.delta.heroId ? 'heroes' : 'gear');
-      const y = Math.max(4, anchor.y - Math.round(CONFIG.view.upgradePopupRisePx * popup.age) - index * 14);
-      ctx.save(); ctx.globalAlpha = popup.age > 0.6 ? (1 - popup.age) / 0.4 : 1;
-      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, popup.delta.label, anchor.x + (dx ?? 0), y + (dy ?? 0), palette.ink, 16, true);
-      this.ui.text(ctx, popup.delta.label, anchor.x, y, palette.green, 16, true);
+    const cue = chip ? null : stageCue(state), frame = cue ? bannerFrame(cue.age * CONFIG.view.stageCueSeconds * 1000, still) : null;
+    if (cue && frame) {
+      const banner = spec.stageBanner, boss = cue.kind === 'boss', id = stageConfig(cue.stage).id;
+      ctx.save(); ctx.globalAlpha = frame.alpha;
+      // Drawn last: tall sprite effects pass behind the plate. Window y is relative to the closed overlay's top.
+      this.ui.drawBanner(ctx, (boss ? banner.boss.label : banner.stage.label).replace('{id}', id), boss, field.width > 0 ? field.x + field.width / 2 : this.width / 2, coreY - CONFIG.ui.closed.coreHeight + frame.y);
       ctx.restore();
     }
   }

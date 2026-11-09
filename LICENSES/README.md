@@ -1,9 +1,12 @@
 # Third-party redistribution notices
 
-All shipped LuizMelo sprites (including the priest recolor), Merchant-Shade icons, Kenney UI frames and Pixel Operator font are declared CC0-1.0 by their original vendor files and/or retained official-source-page declarations. CC0 allows reuse, modification and public redistribution, including commercial use. No conflicting restriction was found.
+All shipped LuizMelo sprites (including the priest recolor), Merchant-Shade icons, and Kenney UI frames are declared CC0-1.0 by their original vendor files and/or retained official-source-page declarations. CC0 allows reuse, modification and public redistribution, including commercial use. No conflicting restriction was found.
 
-- `CC0-1.0.txt`: complete CC0 legal code, retained verbatim from the supplied Pixel Operator vendor archive.
-- `Pixel-Operator.txt` and `Kenney-Pixel-UI.txt`: original vendor license texts, unmodified.
+The Galmuri fonts (Lee Minseo, https://github.com/quiple/galmuri) are licensed under the SIL Open Font License 1.1, which allows bundling, embedding and redistribution with the game; the fonts themselves may not be sold on their own. The shipped TTFs are subsets and keep their copyright/licence name records.
+
+- `CC0-1.0.txt`: complete CC0 legal code, retained verbatim (originally from a vendor archive).
+- `Galmuri-OFL-1.1.txt`: the Galmuri copyright notice and OFL-1.1 text, unmodified (same file as `public/fonts/LICENSE.txt`).
+- `Kenney-Pixel-UI.txt`: original vendor license text, unmodified.
 - `LuizMelo/`: unmodified enclosed pack notices where supplied.
 - `source-declarations/`: exact license excerpts and official URLs for every deduplicated sprite/icon pack, plus a hash of the retained official page text.
 - `../CREDITS.md`: each shipped asset and its source URL/license; `../docs/asset-licenses.md` preserves acquisition/license evidence and timestamps.

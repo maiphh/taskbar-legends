@@ -19,7 +19,7 @@ const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH ?? ['/usr/bin/google
 const browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), headless: true, args: ['--no-sandbox'] });
 const errors: string[] = [];
 try {
-  const page = await browser.newPage({ viewport: { width: CONFIG.view.defaultWidth, height: CONFIG.view.canvasHeight }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: CONFIG.view.defaultWidth, height: CONFIG.view.canvasHeight }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   page.on('pageerror', error => errors.push(String(error)));
   await page.goto(`http://127.0.0.1:4175${process.env.VITE_BASE_PATH || '/'}?shot`, { waitUntil: 'networkidle' });
   await page.evaluate(async () => { window.__game.pause(); window.__game.setSeed(1); await window.__game.whenReady(); window.__game.step(30); });
@@ -148,6 +148,14 @@ try {
   const bossReady = playUntil(1, state => state.progress.kind === 'BOSS_READY'); step(bossReady, 6);
   await page.evaluate((state: GameState) => window.__game.load(state), bossReady);
   await page.screenshot({ path: 'shots/19-boss-ready-1280.png', omitBackground: true });
+  // Galmuri layout check against the designer's mockup-galmuri-check.png: boss-ready banner, island boss button, popup, pips.
+  const bossWeapon = bossReady.inventory.find(item => bossReady.roster.some(hero => bossReady.partyIds.includes(hero.id) && hero.equipment[item.slot] === item.id));
+  for (const width of [1920, 640]) {
+    await page.setViewportSize({ width, height: 160 });
+    await page.evaluate(([state, id]) => { window.__game.load({ ...state, gold: state.gold + 5_000 }); if (id) window.__game.input({ type: 'upgrade', gearId: id }); window.__game.step(4); }, [bossReady, bossWeapon?.id ?? null] as const);
+    await page.screenshot({ path: `shots/${width === 1920 ? 20 : 21}-galmuri-check-${width}.png`, omitBackground: true });
+  }
+  await page.setViewportSize({ width: 1280, height: 160 });
   const feedback = { badges: affordability(rich), popup: upgradePopups(upgraded)[0]?.delta ?? null, panelPopup: upgradePopups(gearPanelUpgrade).at(-1)?.delta ?? null,
     stageClear: stageCue(cleared), bossReady: stageCue(bossReady) };
   if (!feedback.badges.heroes || !feedback.badges.gear || !feedback.badges.recruit || !feedback.popup?.heroId || feedback.stageClear?.kind !== 'clear' || feedback.bossReady?.kind !== 'boss') throw new Error(`Feedback cue missing: ${JSON.stringify(feedback)}`);

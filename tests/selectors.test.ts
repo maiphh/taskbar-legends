@@ -52,6 +52,10 @@ describe('upgrade feedback', () => {
     expect(popup?.delta.atk).toBeGreaterThan(0);
     expect(popup?.delta.label).toMatch(/^\+\d+ ATK/);
     expect(popup?.delta.heroId).toBe(state.roster.find(hero => hero.equipment.weapon === weapon.id)?.id);
+    // Two-colour popup: stat segment(s) green, DPS blue; label joins them with two spaces (ui.md §10).
+    expect(popup?.delta.segments[0]).toMatchObject({ kind: 'stat', text: expect.stringMatching(/^\+\d+ ATK$/) });
+    expect(popup?.delta.segments.filter(segment => segment.kind === 'dps').every(segment => /^\+[\d.]+% DPS$/.test(segment.text))).toBe(true);
+    expect(popup?.delta.label).toBe(popup?.delta.segments.map(segment => segment.text).join('  '));
     step(state, ticksForSeconds(CONFIG.view.upgradePopupSeconds));
     expect(upgradePopups(state)).toEqual([]);
   });
@@ -59,7 +63,7 @@ describe('upgrade feedback', () => {
     const state = createState(3); chest(state, 1); state.gold = 1_000_000;
     const item = state.inventory[0]; if (!item) throw new Error('no item');
     upgrade(state, item.id);
-    expect(upgradeDelta(state, item.id, 1)).toMatchObject({ heroId: null, label: '+1 LV (now +1)' });
+    expect(upgradeDelta(state, item.id, 1)).toMatchObject({ heroId: null, label: '+1 LV (now +1)', segments: [{ kind: 'stat', text: '+1 LV (now +1)' }] });
   });
 });
 
