@@ -24,13 +24,13 @@ const unitSchema = z.object({
   id: z.string(), sourceId: z.string(), side: z.enum(['hero', 'enemy']),
   hp: natural, maxHp: positive, atk: positive, def: natural, cooldown: natural, attackTicks: positive,
   range: finite.nonnegative(), x: finite, slot: natural, boss: z.boolean(), attacks: natural,
-  shield: natural, shieldUntilTick: natural, bornTick: natural,
+  shield: natural, shieldUntilTick: natural, bornTick: natural, nativeBornTick: natural.optional(),
 }).strict().refine(unit => unit.hp <= unit.maxHp, 'HP exceeds maximum');
 export type Unit = z.infer<typeof unitSchema>;
 const progressSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('PUSHING'), stage: stageNumber }).strict(),
   z.object({ kind: z.literal('BOSS_FIGHT'), stage: stageNumber, failedPower: natural, bossLosses: natural }).strict(),
-  z.object({ kind: z.literal('FARMING'), stage: stageNumber, failedStage: stageNumber, retryAtTick: natural, failedPower: natural, failures: positive }).strict(),
+  z.object({ kind: z.literal('FARMING'), stage: stageNumber, failedStage: stageNumber, retryAtTick: natural, failTick: natural.optional(), failedPower: natural, failures: positive }).strict(),
   z.object({ kind: z.literal('BOSS_READY'), stage: stageNumber, bossStage: stageNumber, failedPower: natural, bossLosses: natural }).strict(),
   z.object({ kind: z.literal('COMPLETE'), stage: stageNumber }).strict(),
 ]);
@@ -79,8 +79,10 @@ export const stateSchema = z.object({
   highestCleared: natural.max(CONFIG.stages.length), progress: progressSchema,
   phase: z.discriminatedUnion('kind', [
     z.object({ kind: z.literal('battle') }).strict(),
+    z.object({ kind: z.literal('farmPad'), settleAtTick: natural, nativeDurationTicks: natural }).strict(),
     z.object({ kind: z.literal('rest'), remainingTicks: natural, next: z.enum(['encounter', 'wave']) }).strict(),
   ]),
+  farmClock: z.object({ scale: positive.max(4), minCycleTicks: natural, elapsedTicks: natural, remainder: natural.max(3) }).strict().refine(clock => clock.remainder < clock.scale, 'Invalid unused substep budget').optional(),
   wave: positive.max(CONFIG.runtime.maxCampaignWaves), encounter: positive, stageStartedTick: natural, attemptPower: natural,
   roster: z.array(ownedHeroSchema).max(CONFIG.heroes.length), partyIds: z.array(z.string()).length(CONFIG.sim.partySize),
   inventory: z.array(gearSchema).max(CONFIG.gear.inventoryCap), nextGearId: positive,
@@ -90,7 +92,7 @@ export const stateSchema = z.object({
     goldEarned: natural, pulls: natural, chests: natural, offlineClears: natural, offlineSeconds: natural }).strict(),
   metrics: z.object({
     firstAttemptTicks: z.record(z.string(), natural), firstClearTicks: z.record(z.string(), natural),
-    fullRosterTick: natural.nullable(), farmClearSeconds: z.array(finite.nonnegative()).max(CONFIG.idle.avgFarmClearSecWindow),
+    fullRosterTick: natural.nullable(), nativeFarmClearSeconds: z.array(finite.nonnegative()).max(CONFIG.idle.avgFarmClearSecWindow).optional(), farmClearSeconds: z.array(finite.nonnegative()).max(CONFIG.idle.avgFarmClearSecWindow),
     farmMinSeconds: finite.nonnegative().nullable(), farmMaxSeconds: finite.nonnegative().nullable(), farmSamples: natural,
     maxNonBossStallSeconds: finite.nonnegative(),
   }).strict(),
@@ -121,6 +123,9 @@ export const stateSchema = z.object({
   if (progress.kind === 'FARMING' && (progress.stage !== Math.max(1, state.highestCleared) || progress.failedStage !== state.highestCleared + 1 || stageConfig(progress.failedStage).isBoss)) invalid('Invalid frontier');
   if (progress.kind === 'BOSS_READY' && (progress.stage !== state.highestCleared || progress.bossStage !== state.highestCleared + 1 || !stageConfig(progress.bossStage).isBoss)) invalid('Invalid boss gate');
   if (progress.kind === 'COMPLETE' && state.highestCleared !== CONFIG.stages.length) invalid('Campaign incomplete');
+  if (progress.kind === 'FARMING' && progress.failTick !== undefined && progress.failTick > state.tick) invalid('Failure tick cannot be in the future');
+  if (state.phase.kind === 'farmPad' && !state.farmClock) invalid('Padding needs a native encounter clock');
+  if (state.farmClock && (!(progress.kind === 'FARMING' || progress.kind === 'BOSS_READY' || progress.kind === 'COMPLETE') || progress.stage > state.highestCleared || stageConfig(progress.stage).isBoss)) invalid('Tempo clock is only valid for cleared non-boss repeats');
   for (const hero of state.roster) heroConfig(hero.id);
 });
 export type GameState = z.infer<typeof stateSchema>;

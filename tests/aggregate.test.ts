@@ -6,7 +6,7 @@ import type { ReferenceMeasurement } from '../src/sim/aggregate';
 
 const fixture = (seed: number): ReferenceMeasurement => ({ seed, days: 7, firstFiveOpenSeconds: 500,
   bossOneOpenHours: 2, bossTwoDay: 5, fullRosterDay: 7, starterHighestCleared: 7,
-  farmMinSeconds: 20, farmMaxSeconds: 40, farmSamples: 3, maxNonBossStallSeconds: 2000 });
+  farmMinSeconds: 20, farmMaxSeconds: 40, farmSamples: 3, farmTimingCounts: null, maxNonBossStallSeconds: 2000 });
 const gacha = { seeds: 10000, initialRoster: '3 starter heroes', medianPullsToFullRoster: 124,
   minPulls: 25, maxPulls: 803, pullDistribution: distribution([100, 124, 148]),
   observedRarityRates: { common: 0.5, rare: 0.33, epic: 0.13, legendary: 0.04 } };

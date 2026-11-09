@@ -23,8 +23,11 @@ const stageDefinition = z.object({ id: z.string(), index: z.number().int().posit
   isBoss: z.boolean(), timeoutSec: z.number().positive(), firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() });
 // Replace design-config.json with the designer's next delivery; config.json wins over prose.
 // Only underspecified implementation/presentation constants are added here.
+export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0) });
 export const CONFIG = {
   ...design,
+  combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
+  progression: { ...design.progression, ...z.object({ powerGainRetryMinSec: z.number().finite().nonnegative().default(0) }).parse(design.progression) },
   ui: uiTokens,
   heroes: z.array(heroDefinition).parse(design.heroes),
   stages: z.array(stageDefinition).parse(design.stages),
@@ -41,7 +44,7 @@ export const CONFIG = {
   desktop: { closedLogicalHeight: uiTokens.closed.height, expandedLogicalHeight: uiTokens.expanded.height, cursorPollMs: 16, monitorPollMs: 500, errorLimit: 30 },
   view: {
     canvasHeight: uiTokens.closed.height, stripHeight: uiTokens.closed.coreHeight, defaultWidth: 1280, minWidth: 320, maxDpr: 2,
-    baselineY: uiTokens.closed.baselineY, hitFlashMs: 90, hitFlashColor: '#ffffff', hurtFallbackMs: 200, attackFallbackMs: 500, heroWidth: 18, heroHeight: 23, enemyWidth: 18, enemyHeight: 21,
+    baselineY: uiTokens.closed.baselineY, bossCountdownWarnSec: 5, hitFlashMs: 90, hitFlashColor: '#ffffff', hurtFallbackMs: 200, attackFallbackMs: 500, heroWidth: 18, heroHeight: 23, enemyWidth: 18, enemyHeight: 21,
     bossWidth: 27, bossHeight: 31, hpWidth: 26, hpHeight: 3,
     // Core-loop feedback (renderer-only; ages derive from event ticks so pause/step can land on any frame).
     upgradePopupSeconds: 1.2, stageCueSeconds: 2,

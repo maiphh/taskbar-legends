@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -31,14 +31,14 @@
     }
   },
   "growth": {
-    "levelCap": 40,
+    "levelCap": 50,
     "perLevel": 0.1,
     "starMax": 6,
     "perStar": 0.12,
     "formula": "stat = roleBase * rarityMult * heroMod * (1 + perLevel*(L-1)) * (1 + perStar*(stars-1)) + gearFlat, then * (1 + gearPct)",
     "xpToNext": {
-      "a": 2300,
-      "p": 1.6,
+      "a": 4000,
+      "p": 1.3,
       "formula": "round(a * L^p)"
     },
     "newHeroLevelOffset": -5,
@@ -287,7 +287,9 @@
     "firstAttackDelayTicks": 0,
     "lossCondition": "all heroes dead OR stage timer >= timeoutSec",
     "hpCarriesBetweenWaves": true,
-    "fullHealBetweenStages": true
+    "fullHealBetweenStages": true,
+    "nonBossFarmTimeScale": 3,
+    "nonBossFarmMinCycleSec": 20
   },
   "enemies": {
     "scalingPerStage": 1.06,
@@ -314,7 +316,7 @@
     },
     "brute": {
       "hp": 180,
-      "atk": 32,
+      "atk": 28,
       "def": 25,
       "attackIntervalTicks": 36,
       "rangePx": 30,
@@ -324,7 +326,7 @@
     },
     "boss_ch1": {
       "name": "Chapter 1 Boss",
-      "hp": 1375,
+      "hp": 1550,
       "atk": 36,
       "def": 20,
       "attackIntervalTicks": 30,
@@ -343,7 +345,7 @@
     },
     "boss_ch2": {
       "name": "Chapter 2 Boss",
-      "hp": 1900,
+      "hp": 2150,
       "atk": 48,
       "def": 15,
       "attackIntervalTicks": 30,
@@ -368,7 +370,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -399,7 +401,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -430,7 +432,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -461,7 +463,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -495,7 +497,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -529,7 +531,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -566,7 +568,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -603,7 +605,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -646,7 +648,7 @@
       "chapter": 1,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 3,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -718,7 +720,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -752,7 +754,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -786,7 +788,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -820,7 +822,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -857,7 +859,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -894,7 +896,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -931,7 +933,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -971,7 +973,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -1011,7 +1013,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 0,
+      "firstClearTickets": 5,
       "waves": [
         {
           "enemies": [
@@ -1051,7 +1053,7 @@
       "chapter": 2,
       "isBoss": true,
       "timeoutSec": 21,
-      "firstClearTickets": 200,
+      "firstClearTickets": 100,
       "waves": [
         {
           "enemies": [
@@ -1081,9 +1083,9 @@
     "clearScaling": 1.12,
     "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
     "firstClearChest": true,
-    "farmChestChance": 0.15,
-    "farmTicketChance": 0.01,
-    "startingTickets": 10
+    "farmChestChance": 0.075,
+    "farmTicketChance": 0.0075,
+    "startingTickets": 6
   },
   "gear": {
     "slots": {
@@ -1136,7 +1138,7 @@
     "upgrade": {
       "maxLevel": 10,
       "mainPerLevel": 0.1,
-      "costBase": 30,
+      "costBase": 90,
       "costExp": 1.4,
       "costFormula": "round(costBase * scalingPerStage^(dropStage-1) * rarityMult * level^costExp)"
     },
@@ -1188,7 +1190,7 @@
       480,
       600
     ],
-    "powerGainRetryPct": 0.005,
+    "powerGainRetryPct": 0.03,
     "heroPower": "round(maxHp*0.2 + atk*4 + def*2)",
     "bossAutoRetry": false,
     "statusText": {
@@ -1196,7 +1198,8 @@
       "PUSHING": "Pushing {stage}",
       "BOSS_READY": "Boss {stage} ready, click to fight",
       "BOSS_FIGHT": "Boss {stage}!"
-    }
+    },
+    "powerGainRetryMinSec": 30
   },
   "referencePlayer": {
     "openHoursPerDay": 6,
@@ -1206,7 +1209,7 @@
       "party = top 3 by heroPower with exactly one tank in front if owned, support in slot 3 if owned",
       "auto-equip highest-score gear",
       "spend all gold on cheapest upgrade among equipped items",
-      "start boss fight as soon as BOSS_READY and partyPower >= power at last boss loss * 1.005 (first attempt immediately)"
+      "start boss fight as soon as BOSS_READY and partyPower >= power at last boss loss * 1.03 (first attempt immediately)"
     ]
   }
 }

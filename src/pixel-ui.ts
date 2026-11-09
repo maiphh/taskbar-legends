@@ -1,9 +1,9 @@
 import { CONFIG, TICK_MS, heroConfig, slotSchema, stageConfig } from './config';
 import { pulseGrowPx } from './motion';
-import { BODY, FONT_FILES, HEADING, LINE_BOX, SMALL, fontFor, slotOffsetY } from './font';
+import { BODY, FONT_FILES, HEADING, LINE_BOX, fitSize, fontFor, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
 import { cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
-import { statusText } from './core/game';
+import { bossSecondsRemaining, statusText } from './core/game';
 import { affordability } from './core/selectors';
 import type { Action, GameState, Gear, ItemId } from './core/model';
 
@@ -14,8 +14,8 @@ export interface SourceHitRegion extends Rect { kind: 'hud' | 'panel'; id: strin
 interface Control extends Rect { id: string; label: string; disabled: boolean; click(): void; tooltip: string; cardIndex?: number }
 const palette = CONFIG.ui.palette;
 const feedback = CONFIG.ui.coreLoopFeedback;
-/** Text options: `exactY` for specs that give the real Galmuri draw y; `fit` lets a non-essential label drop to Galmuri9 rather than clip. */
-export interface TextOptions { exactY?: boolean; fit?: boolean }
+/** Text options: `exactY` for specs that give the real Galmuri draw y (otherwise y is a Pixel Operator-era layout slot). */
+export interface TextOptions { exactY?: boolean }
 const rootUrl = (): URL => new URL(`${import.meta.env.BASE_URL}ui/`, window.location.href);
 function short(value: number): string { return value >= 1e6 ? `${(value / 1e6).toFixed(1)}M` : value >= 1e4 ? `${(value / 1e3).toFixed(1)}K` : value.toLocaleString('en-US'); }
 /** Round half to even, as the designer's rect tables do (e.g. banner x 894.5 -> 894, 887.5 -> 888). */
@@ -144,7 +144,7 @@ export class PixelUI {
   }
   text(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, color = palette.text, size = BODY, bold = false, maxWidth?: number, options: TextOptions = {}): void {
     if (!this.readyFlag) return;
-    if (options.fit && maxWidth !== undefined && size === BODY && this.measureText(value, size, bold) > maxWidth) size = SMALL;
+    if (maxWidth !== undefined) size = fitSize(this.measureText(value, size, bold), maxWidth, size);
     const family = fontFor(value, size, bold);
     // textBaseline 'top' at whole pixels; layout slots get the per-size optical offset.
     y = Math.round(y) + (options.exactY ? 0 : slotOffsetY(size, bold));
@@ -265,9 +265,12 @@ export class PixelUI {
     this.frame(ctx, { x: 8, y: coreY + 8, width: islandWidth, height: 64 });
     this.frame(ctx, { x: right, y: coreY + 8, width: islandWidth, height: 64 });
     const stage = CONFIG.stages[state.progress.stage - 1];
-    const heading = state.progress.kind === 'PUSHING' ? `GREENWAY / ${stage?.id ?? ''}` : statusText(state).replace(', next try in ', ' / ');
     const island = feedback.islandText, boss = feedback.bossButton, progress = state.progress, bossReady = progress.kind === 'BOSS_READY';
-    this.text(ctx, progress.kind === 'BOSS_READY' ? boss.heading.replace('{id}', stageConfig(progress.bossStage).id) : heading, 20, coreY + island.headingDrawY, palette.gold, BODY, true, islandWidth - 20, { exactY: true });
+    // Boss countdown (#3) in the heading row: `BOSS {id}` clipped to leave the timer its fixed slot at islandWidth-80. Galmuri11 Bold 12 px.
+    const bossSeconds = bossReady ? null : bossSecondsRemaining(state);
+    const heading = progress.kind === 'BOSS_READY' ? boss.heading.replace('{id}', stageConfig(progress.bossStage).id) : bossSeconds !== null ? `BOSS ${stage?.id ?? ''}` : progress.kind === 'PUSHING' ? `GREENWAY / ${stage?.id ?? ''}` : statusText(state).replace(', next try in ', ' / ');
+    this.text(ctx, heading, 20, coreY + island.headingDrawY, palette.gold, BODY, true, islandWidth - (bossSeconds !== null ? 100 : 20), { exactY: true });
+    if (bossSeconds !== null) this.text(ctx, `TIME ${Math.floor(bossSeconds / 60)}:${String(bossSeconds % 60).padStart(2, '0')}`, islandWidth - 80, coreY + island.headingDrawY, bossSeconds <= CONFIG.view.bossCountdownWarnSec ? palette.red : palette.gold, BODY, true, undefined, { exactY: true });
     if (!bossReady || !boss.hidesWaveLabel) this.text(ctx, `WAVE ${state.wave}/${stage?.waves.length ?? 3}`, 20, coreY + island.row2DrawY, palette.muted, BODY, false, undefined, { exactY: true });
     this.icon(ctx, 'gold', compact ? 108 : 160, coreY + island.coinIconY); this.text(ctx, short(state.gold), compact ? 128 : 182, coreY + island.row2DrawY, palette.gold, BODY, true, compact ? 70 : 96, { exactY: true });
     ctx.fillStyle = palette.ink; ctx.fillRect(20, coreY + 59, islandWidth - 24, 4); ctx.fillStyle = palette.blue; ctx.fillRect(20, coreY + 59, Math.round((islandWidth - 24) * (state.wave - 1) / 3), 4);
@@ -326,7 +329,7 @@ export class PixelUI {
       this.sprite(ctx, definition.id, card.x + 43, card.y + 59, state.tick); ctx.restore();
       if (active) { ctx.fillStyle = palette.green; ctx.fillRect(card.x + 74, card.y + 6, 6, 6); }
       const name = definition.name.replace('Medieval ', '').replace('Martial ', '').replace('Fantasy ', '').replace(' (recolored Wizard)', '');
-      this.text(ctx, name, card.x + 4, card.y + 60, owned ? palette.gold : palette.muted, BODY, false, 80, { fit: true });
+      this.text(ctx, name, card.x + 4, card.y + 60, owned ? palette.gold : palette.muted, BODY, false, 80);
     }
     ctx.restore();
     if (Math.ceil(CONFIG.heroes.length / columns) > 3) {

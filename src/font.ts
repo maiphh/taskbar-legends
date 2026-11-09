@@ -28,3 +28,10 @@ export function slotOffsetY(size: number, bold: boolean): number {
   const offset = font.slotOffsetY;
   return size === HEADING ? offset.heading : size === SMALL ? offset.small : bold ? offset.bodyBold : offset.body;
 }
+/**
+ * General overflow rule (Game Lead, 2026-11-09): body text wider than the box it is given (e.g. an 80 px roster card label)
+ * drops to Galmuri9 at its native 10 px instead of clipping. Headings and small text keep their size and clip.
+ */
+export function fitSize(width: number, maxWidth: number, size: number): number {
+  return size === BODY && width > maxWidth ? SMALL : size;
+}

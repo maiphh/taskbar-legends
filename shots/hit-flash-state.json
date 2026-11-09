@@ -4,12 +4,12 @@
   "hitFlashColor": "#ffffff",
   "state": {
     "version": 2,
-    "balance": "1.2.0",
+    "balance": "1.3.0",
     "tick": 1,
     "rng": 1,
     "seed": 1,
     "gold": 0,
-    "tickets": 10,
+    "tickets": 6,
     "pity": 0,
     "highestCleared": 0,
     "progress": {
