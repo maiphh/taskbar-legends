@@ -1,7 +1,8 @@
 import { CONFIG, heroConfig, raritySchema, slotSchema } from '../config';
 import type { GearSlot, Rarity } from '../config';
 import { emit, goldChange } from './events';
-import type { GameState, Gear, OwnedHero } from './model';
+import { compareItemIds, gearTemplateId, itemId } from './model';
+import type { GameState, Gear, ItemId, OwnedHero } from './model';
 import { random } from './rng';
 import type { RandomState } from './rng';
 
@@ -107,11 +108,12 @@ export function chest(state: GameState, dropStage: number): void {
     if (!key) throw new Error('Empty charm pool');
     stats[key] = Math.round(rollBetween(state, CONFIG.gear.slots.charm.oneOf[key]) * CONFIG.gear.rarityMult[rarity] * CONFIG.runtime.percentPrecision) / CONFIG.runtime.percentPrecision;
   }
-  const item: Gear = { id: state.nextGearId++, slot, rarity, dropStage, level: 0, spent: 0, stats };
+  const item: Gear = { id: itemId(state.seed, state.nextGearId++), templateId: gearTemplateId(slot, rarity), tradeable: false,
+    acquiredAt: { tick: state.tick, source: 'drop' }, slot, rarity, dropStage, level: 0, spent: 0, stats };
   state.inventory.push(item); state.stats.chests += 1; state.economyRevision += 1;
   emit(state, { type: 'gear', gearId: item.id, slot, rarity });
   if (state.inventory.length > CONFIG.gear.inventoryCap) {
-    const lowest = [...state.inventory].sort((a, b) => gearScore(a) - gearScore(b) || a.id - b.id)[0];
+    const lowest = [...state.inventory].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
     if (!lowest) return;
     state.inventory = state.inventory.filter(item => item.id !== lowest.id);
     for (const hero of state.roster) for (const slot of slotSchema.options) if (hero.equipment[slot] === lowest.id) hero.equipment[slot] = null;
@@ -121,7 +123,7 @@ export function chest(state: GameState, dropStage: number): void {
 export function upgradeCost(item: Gear): number {
   return Math.round(CONFIG.gear.upgrade.costBase * CONFIG.enemies.scalingPerStage ** (item.dropStage - 1) * CONFIG.gear.rarityMult[item.rarity] * (item.level + 1) ** CONFIG.gear.upgrade.costExp);
 }
-export function upgrade(state: GameState, id: number): void {
+export function upgrade(state: GameState, id: ItemId): void {
   const item = state.inventory.find(item => item.id === id);
   if (!item || item.level >= CONFIG.gear.upgrade.maxLevel) return;
   const cost = upgradeCost(item);
@@ -129,7 +131,7 @@ export function upgrade(state: GameState, id: number): void {
   goldChange(state, -cost, 'upgrade'); item.level += 1; item.spent += cost;
   emit(state, { type: 'upgrade', gearId: id, level: item.level, cost });
 }
-export function equip(state: GameState, heroId: string, gearId: number): void {
+export function equip(state: GameState, heroId: string, gearId: ItemId): void {
   const hero = state.roster.find(hero => hero.id === heroId);
   const item = state.inventory.find(item => item.id === gearId);
   if (!hero || !item) return;
@@ -156,7 +158,7 @@ export function autoParty(state: GameState): void {
 export function autoEquip(state: GameState): void {
   const heroes = state.partyIds.map(id => getOwned(state, id)).sort((a, b) => heroPower(state, b) - heroPower(state, a) || a.id.localeCompare(b.id));
   for (const slot of slotSchema.options) {
-    const gear = state.inventory.filter(item => item.slot === slot).sort((a, b) => gearScore(b) - gearScore(a) || a.id - b.id);
+    const gear = state.inventory.filter(item => item.slot === slot).sort((a, b) => gearScore(b) - gearScore(a) || compareItemIds(a.id, b.id));
     // Stable allocation: best item to strongest party hero, then the next. No mid-fight stat mutation.
     for (const [index, hero] of heroes.entries()) {
       const item = gear[index];
@@ -167,7 +169,7 @@ export function autoEquip(state: GameState): void {
 export function cheapestEquippedUpgrade(state: GameState): Gear | undefined {
   const ids = new Set(state.partyIds.flatMap(id => Object.values(getOwned(state, id).equipment)));
   return state.inventory.filter(item => ids.has(item.id) && item.level < CONFIG.gear.upgrade.maxLevel)
-    .sort((a, b) => upgradeCost(a) - upgradeCost(b) || a.id - b.id)[0];
+    .sort((a, b) => upgradeCost(a) - upgradeCost(b) || compareItemIds(a.id, b.id))[0];
 }
 export function equippedGear(state: GameState, id: string, slot: GearSlot): Gear | undefined {
   return state.inventory.find(item => item.id === getOwned(state, id).equipment[slot]);

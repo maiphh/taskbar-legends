@@ -5,7 +5,8 @@ import { cheapestEquippedUpgrade } from './core/economy';
 import { createState, input, load, snapshot, statusText, step } from './core/game';
 import { cloneState, parseAction } from './core/model';
 import { bindInput } from './input';
-import { readLocalSave, writeLocalSave } from './platform/storage';
+import { resumeSave } from './core/save';
+import { localSaveStore } from './platform/storage';
 import { Renderer } from './renderer';
 import type { GameDebug } from './debug';
 
@@ -18,18 +19,23 @@ const renderer = new Renderer(canvas, element('controls'));
 let state = createState(1), paused = false, accumulatorMs = 0, hidden = document.hidden;
 let lastFrame = performance.now(), lastSave = lastFrame, noticeUntil = 0;
 const showNotice = (message: string): void => { notice.textContent = message; noticeUntil = performance.now() + 7000; };
-function restore(): void {
+const store = localSaveStore();
+let restoring = false;
+async function restore(): Promise<void> {
+  restoring = true;
   try {
-    const saved = readLocalSave(Date.now());
-    if (saved) { state = saved.state; accumulatorMs = saved.remainderMs;
+    const data = await store.load();
+    if (data) { const saved = resumeSave(data, Date.now()); state = saved.state; accumulatorMs = saved.remainderMs;
       if (saved.seconds >= 1) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears${saved.capped ? ' (8h cap)' : ''}`);
     }
   } catch { showNotice('Save unavailable or incompatible. Started fresh; old save retained until next save.'); }
+  finally { restoring = false; render(); }
 }
-restore();
+void restore();
 function save(): void {
-  try { writeLocalSave(state, Date.now(), accumulatorMs); }
-  catch { showNotice('Save failed: storage unavailable/full. Export __game.snapshot().'); }
+  if (restoring) return;
+  store.save({ state, savedAtMs: Date.now(), remainderMs: accumulatorMs })
+    .catch(() => { showNotice('Save failed: storage unavailable/full. Export __game.snapshot().'); });
 }
 let rendering = false;
 function render(): void {
@@ -48,7 +54,7 @@ renderer.ui.onAction = action; renderer.ui.onPause = togglePause; renderer.ui.on
 bindInput({ action, togglePause, cheapestUpgrade: () => { const item = cheapestEquippedUpgrade(state); if (item) action({ type: 'upgrade', gearId: item.id }); } });
 window.addEventListener('resize', resize); resize();
 window.addEventListener('pagehide', () => { if (!hidden) save(); audio.dispose(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else restore(); hidden = document.hidden; lastFrame = performance.now(); render(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else void restore(); hidden = document.hidden; lastFrame = performance.now(); render(); });
 const debug: GameDebug = {
   getState: () => cloneState(state),
   step: (ticks = 1) => { if (!paused) throw new Error('Pause before stepping'); step(state, ticks); render(); return cloneState(state); },
