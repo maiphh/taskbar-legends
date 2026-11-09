@@ -2,9 +2,11 @@ import { CONFIG, heroConfig, slotSchema } from './config';
 import type { AtlasLibrary } from './atlas';
 import { cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
 import { statusText } from './core/game';
+import { affordability } from './core/selectors';
 import type { Action, GameState, Gear, ItemId } from './core/model';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
+const AVAILABLE: Record<PanelTab, string> = { heroes: ': gear upgrade affordable', gear: ': upgrade or better gear available', recruit: ': ticket ready to pull' };
 export interface Rect { x: number; y: number; width: number; height: number }
 export interface SourceHitRegion extends Rect { kind: 'hud' | 'panel'; id: string }
 interface Control extends Rect { id: string; label: string; disabled: boolean; click(): void; tooltip: string; cardIndex?: number }
@@ -14,6 +16,7 @@ function short(value: number): string { return value >= 1e6 ? `${(value / 1e6).t
 function hasPoint(rect: Rect, x: number, y: number): boolean { return x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height; }
 export class PixelUI {
   panel: PanelTab | null = null;
+  private coreY = 0;
   selectedHero = CONFIG.heroes[0]?.id ?? '';
   selectedGear: ItemId | null = null;
   targetSlot = 0;
@@ -150,22 +153,42 @@ export class PixelUI {
   private icon(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, scale = 1): void {
     const image = this.images.get(`icon-${name}.png`); if (image) ctx.drawImage(image, Math.round(x), Math.round(y), 16 * scale, 16 * scale);
   }
-  private button(ctx: CanvasRenderingContext2D, id: string, label: string, rect: Rect, click: () => void, options: { disabled?: boolean; selected?: boolean; icon?: string; tooltip?: string; cardIndex?: number } = {}): void {
+  private button(ctx: CanvasRenderingContext2D, id: string, label: string, rect: Rect, click: () => void, options: { disabled?: boolean; selected?: boolean; icon?: string; tooltip?: string; cardIndex?: number; badge?: boolean } = {}): void {
     const disabled = options.disabled ?? false;
     const hover = this.hovered === id, focus = this.focused === id;
     this.controls.set(id, { ...rect, id, label, disabled, click, tooltip: options.tooltip ?? label, ...(options.cardIndex === undefined ? {} : { cardIndex: options.cardIndex }) });
     this.frame(ctx, rect, disabled ? 'button-disabled-9slice.png' : this.pressed === id ? 'button-pressed-9slice.png' : hover ? 'button-hover-9slice.png' : 'button-9slice.png');
     if (options.selected) { ctx.fillStyle = palette.gold; ctx.fillRect(rect.x + 3, rect.y + rect.height - 3, rect.width - 6, 2); }
+    if (options.badge) this.badge(ctx, rect);
     if (options.icon) this.icon(ctx, options.icon, rect.x + 6, rect.y + Math.floor((rect.height - 16) / 2));
     this.text(ctx, label, rect.x + (options.icon ? 28 : 8), rect.y + Math.floor((rect.height - 16) / 2) + (this.pressed === id ? 1 : 0), disabled ? '#82909d' : options.selected || hover ? palette.gold : palette.text, 16, false, rect.width - (options.icon ? 30 : 12));
     if (focus) { ctx.fillStyle = palette.text; ctx.fillRect(rect.x + 3, rect.y + 3, rect.width - 6, 1); ctx.fillRect(rect.x + 3, rect.y + rect.height - 4, rect.width - 6, 1); ctx.fillRect(rect.x + 3, rect.y + 3, 1, rect.height - 6); ctx.fillRect(rect.x + rect.width - 4, rect.y + 3, 1, rect.height - 6); }
+  }
+  /** Affordability dot: gold pip with an ink rim in the button's top-right corner (token colors only). */
+  private badge(ctx: CanvasRenderingContext2D, rect: Rect): void {
+    const size = CONFIG.view.badgeSize, x = rect.x + rect.width - size - 4, y = rect.y + 3;
+    ctx.fillStyle = palette.ink; ctx.fillRect(x - 1, y - 1, size + 2, size + 2);
+    ctx.fillStyle = palette.gold; ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = palette.text; ctx.fillRect(x + 1, y + 1, 2, 2);
+  }
+  /** Where an upgrade popup starts when it is not attached to a hero on the field. */
+  feedbackAnchor(tab: 'heroes' | 'gear'): { x: number; y: number } {
+    if (this.panel) { const panel = this.panelRect(); return { x: panel.x + panel.width - 184, y: 340 }; }
+    const compact = this.width < 1000, index = tab === 'heroes' ? 0 : 1;
+    return { x: (compact ? this.width - 192 : this.width - 280) + index * (compact ? 60 : 88), y: this.coreY + 22 };
+  }
+  /** Stage-clear / boss-ready banner in the transparent band above the strip. */
+  drawCue(ctx: CanvasRenderingContext2D, label: string, color: string, centerX: number, y: number): void {
+    const width = Math.min(this.width - 16, label.length * 9 + 32), rect = { x: Math.round(centerX - width / 2), y, width, height: 28 };
+    this.frame(ctx, rect);
+    this.text(ctx, label, rect.x + 16, rect.y + 6, color, 16, true, width - 24);
   }
   private sprite(ctx: CanvasRenderingContext2D, heroId: string, x: number, y: number, tick: number, zoom = 1): void {
     const key = Object.entries(CONFIG.view.heroAssets).find(([id]) => id === heroId)?.[1];
     if (key) this.atlas.draw(ctx, key, 'idle', tick * 1000 / CONFIG.sim.ticksPerSecond, x, y, false, zoom);
   }
   draw(ctx: CanvasRenderingContext2D, state: GameState, width: number, coreY: number, paused: boolean, scaleToCss: number): void {
-    this.current = state; this.width = width; this.sourceHeight = this.height(); this.scaleToCss = scaleToCss; this.controls.clear();
+    this.current = state; this.width = width; this.coreY = coreY; this.sourceHeight = this.height(); this.scaleToCss = scaleToCss; this.controls.clear();
     if (!this.readyFlag) { this.syncControls(); return; }
     for (const event of state.events) if (event.seq > this.lastPullSeq && event.data.type === 'pull') {
       this.history.unshift(`${heroConfig(event.data.heroId).name} · ${event.data.rarity}${event.data.duplicate ? ' · duplicate +star/gold' : ' · NEW'}`);
@@ -188,14 +211,15 @@ export class PixelUI {
     const quit = this.quitHandler;
     if (quit) this.button(ctx, 'quit', 'X', this.quitRect(coreY), quit, { tooltip: 'Save and quit' });
     const start = compact ? width - 192 : width - 280;
+    const ready = affordability(state);
     const widths = compact ? [56, 56, 56] : [80, 80, 88];
     for (const [index, tab] of (['heroes', 'gear', 'recruit'] satisfies PanelTab[]).entries()) {
       const w = widths[index] ?? 80;
       const x = start + index * (compact ? 60 : 88);
       this.button(ctx, `open-${tab}`, compact ? ['Hero', 'Gear', 'Pull'][index] ?? tab : ['Heroes', 'Gear', 'Recruit'][index] ?? tab,
-        { x, y: coreY + 38, width: w, height: 28 }, () => this.togglePanel(tab), { selected: this.panel === tab, ...(compact ? {} : { icon: ['sword', 'armor', 'chest'][index] ?? 'chest' }) });
+        { x, y: coreY + 38, width: w, height: 28 }, () => this.togglePanel(tab), { selected: this.panel === tab, badge: ready[tab], tooltip: `${['Heroes', 'Gear', 'Recruit'][index] ?? tab}${ready[tab] ? AVAILABLE[tab] : ''}`, ...(compact ? {} : { icon: ['sword', 'armor', 'chest'][index] ?? 'chest' }) });
     }
-    if (state.progress.kind === 'BOSS_READY') this.button(ctx, 'boss', state.progress.bossLosses ? 'Retry boss' : 'Fight boss', { x: 80, y: coreY + 48, width: 124, height: 24 }, () => this.onAction({ type: 'retry' }), { tooltip: statusText(state) });
+    if (state.progress.kind === 'BOSS_READY') this.button(ctx, 'boss', state.progress.bossLosses ? 'Retry boss' : 'Fight boss', { x: 80, y: coreY + 48, width: 124, height: 24 }, () => this.onAction({ type: 'retry' }), { tooltip: statusText(state), badge: true });
     if (this.panel) this.drawPanel(ctx, state, paused);
     this.syncControls();
     const hovered = this.controls.get(this.hovered);
@@ -206,14 +230,14 @@ export class PixelUI {
     }
   }
   private drawPanel(ctx: CanvasRenderingContext2D, state: GameState, paused: boolean): void {
-    const panel = this.panelRect(), x = panel.x, w = panel.width;
+    const panel = this.panelRect(), x = panel.x, w = panel.width, ready = affordability(state);
     this.frame(ctx, panel);
     this.text(ctx, 'PARTY CAMP', x + 16, 9, palette.gold, 24, true);
     this.text(ctx, paused ? 'BATTLE PAUSED' : 'BATTLE CONTINUES', x + w - 288, 13, paused ? palette.gold : palette.green, 16);
     this.button(ctx, 'close-panel', 'X', { x: x + w - 40, y: 8, width: 28, height: 24 }, () => this.setPanel(null), { tooltip: 'Close management (Esc)' });
     for (const [index, tab] of (['heroes', 'gear', 'recruit'] satisfies PanelTab[]).entries()) {
       const widths = [104, 96, 112], offsets = [16, 128, 232];
-      this.button(ctx, `tab-${tab}`, ['Heroes', 'Gear', 'Recruit'][index] ?? tab, { x: x + (offsets[index] ?? 16), y: 40, width: widths[index] ?? 104, height: 28 }, () => this.setPanel(tab), { selected: this.panel === tab });
+      this.button(ctx, `tab-${tab}`, ['Heroes', 'Gear', 'Recruit'][index] ?? tab, { x: x + (offsets[index] ?? 16), y: 40, width: widths[index] ?? 104, height: 28 }, () => this.setPanel(tab), { selected: this.panel === tab, badge: ready[tab] });
     }
     this.icon(ctx, 'gold', x + w - 148, 45); this.text(ctx, state.gold.toLocaleString('en-US'), x + w - 128, 45, palette.gold, 16, true);
     ctx.fillStyle = palette.edge; ctx.fillRect(x + 16, 357, w - 32, 1);
