@@ -1,0 +1,15 @@
+{
+  "scenario": "boss wave3, HP-protected visual countdown fixture; not balance measurement",
+  "expectedInitialSeconds": 16,
+  "lastFive": {
+    "tick": 340,
+    "progress": {
+      "kind": "BOSS_FIGHT",
+      "stage": 10,
+      "failedPower": 0,
+      "bossLosses": 0
+    },
+    "wave": 3,
+    "stageStartedTick": 0
+  }
+}

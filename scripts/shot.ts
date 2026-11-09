@@ -4,10 +4,10 @@ import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { preview } from 'vite';
 import { CONFIG, ticksForSeconds } from '../src/config';
-import { createState, step } from '../src/core/game';
+import { bossSecondsRemaining, createState, step } from '../src/core/game';
 import type { GameState } from '../src/core/model';
 import { partyPower } from '../src/core/economy';
-import { beginEncounter } from '../src/core/combat';
+import { beginEncounter, spawnWave } from '../src/core/combat';
 import { referencePolicy } from '../src/core/policy';
 import { affordability, stageCue, upgradePopups } from '../src/core/selectors';
 import '../src/debug';
@@ -100,6 +100,22 @@ try {
   await page.screenshot({ path: 'shots/11-hit-recovered-1280.png', omitBackground: true });
   const recoveredWhitePixels = await page.evaluate(() => { const ctx = document.querySelector('canvas')?.getContext('2d'); if (!ctx) throw new Error('Canvas'); const data = ctx.getImageData(304, 0, 672, 160).data; let count = 0; for (let i = 0; i < data.length; i += 4) if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255) count += 1; return count; });
   if (flashWhitePixels <= 0 || recoveredWhitePixels >= flashWhitePixels) throw new Error('Uniform runtime flash did not visibly expire after two 20Hz ticks');
+  // Explicit visual fixture: long-lived boss/party so the wall countdown is legible, not a balance claim.
+  const boss = createState(1); boss.highestCleared = 9;
+  boss.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 }; beginEncounter(boss);
+  boss.wave = CONFIG.stages[9]?.waves.length ?? 3; spawnWave(boss);
+  for (const hero of boss.party) { hero.hp = 5000; hero.maxHp = 5000; }
+  for (const enemy of boss.enemies) { enemy.hp = 1e6; enemy.maxHp = 1e6; enemy.atk = 1; }
+  step(boss, ticksForSeconds(6));
+  if (bossSecondsRemaining(boss) !== (CONFIG.stages[9]?.timeoutSec ?? 21) - 6 || boss.farmClock) throw new Error('Boss countdown must use native wall time');
+  await page.evaluate((state: GameState) => window.__game.load(state), boss);
+  await page.screenshot({ path: 'shots/12-boss-countdown-1280.png', omitBackground: true });
+  await page.setViewportSize({ width: 640, height: 160 });
+  await page.screenshot({ path: 'shots/13-boss-countdown-640.png', omitBackground: true });
+  await page.setViewportSize({ width: 1280, height: 160 });
+  await page.evaluate((ticks: number) => window.__game.step(ticks), ticksForSeconds(Math.max(0, (CONFIG.stages[9]?.timeoutSec ?? 21) - 6 - CONFIG.view.bossCountdownWarnSec)));
+  await page.screenshot({ path: 'shots/14-boss-final-five-1280.png', omitBackground: true });
+  await writeFile('shots/boss-countdown-state.json', JSON.stringify({ scenario: 'boss wave3, HP-protected visual countdown fixture; not balance measurement', expectedInitialSeconds: bossSecondsRemaining(boss), lastFive: await page.evaluate(() => { const state = window.__game.getState(); return { tick: state.tick, progress: state.progress, wave: state.wave, stageStartedTick: state.stageStartedTick }; }) }, null, 2));
   const alphaCheck = await page.evaluate(() => {
     const canvas = document.querySelector('canvas'); const ctx = canvas?.getContext('2d');
     return { topAlpha: ctx?.getImageData(0, 0, 1, 1).data[3], coreAlpha: ctx?.getImageData(0, 100, 1, 1).data[3] };
@@ -154,7 +170,7 @@ try {
     uniformHitFlash: { durationMs: CONFIG.view.hitFlashMs, color: CONFIG.view.hitFlashColor, flashWhitePixels, recoveredWhitePixels, pass: true },
     fontsReady: panelState.layout.ui.fontsReady, assetErrors: assets, dpiChecks }, nativeWindows: 'NOT TESTED: real desktop click-through, OS docking, monitor transfer, work-area/fullscreen handling and Windows 100/125/150% pixel appearance require M2 Tauri/Windows.' }, null, 2));
   if (errors.length) throw new Error(errors.join('\n'));
-  process.stdout.write(JSON.stringify({ screenshots: ['01-pushing-1280.png', '02-baseline-1h-1280.png', '03-farming-1280.png', '04-farming-640.png', '05-heroes-panel-1280.png', '06-gear-panel-1280.png', '07-recruit-panel-1280.png', '08-strip-reference-1920.png', '09-dpi125-canvas.png', '10-hit-flash-1280.png', '11-hit-recovered-1280.png', '15-affordable-badges-1280.png', '16-upgrade-popup-1280.png', '17-upgrade-popup-gear-panel-1280.png', '18-stage-clear-1280.png', '19-boss-ready-1280.png'], finalState: 'shots/final-state.json', browserErrors: errors, assetErrors: assets }, null, 2) + '\n');
+  process.stdout.write(JSON.stringify({ screenshots: ['01-pushing-1280.png', '02-baseline-1h-1280.png', '03-farming-1280.png', '04-farming-640.png', '05-heroes-panel-1280.png', '06-gear-panel-1280.png', '07-recruit-panel-1280.png', '08-strip-reference-1920.png', '09-dpi125-canvas.png', '10-hit-flash-1280.png', '11-hit-recovered-1280.png', '12-boss-countdown-1280.png', '13-boss-countdown-640.png', '14-boss-final-five-1280.png', '15-affordable-badges-1280.png', '16-upgrade-popup-1280.png', '17-upgrade-popup-gear-panel-1280.png', '18-stage-clear-1280.png', '19-boss-ready-1280.png'], finalState: 'shots/final-state.json', browserErrors: errors, assetErrors: assets }, null, 2) + '\n');
 } finally {
   await browser.close();
   await new Promise<void>((resolve, reject) => { server.httpServer.close(error => error ? reject(error) : resolve()); });

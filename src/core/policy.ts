@@ -20,9 +20,11 @@ export function referencePolicy(state: GameState, cursor: PolicyCursor): void {
   const progress = state.progress;
   if (progress.kind === 'BOSS_READY' && (progress.bossLosses === 0 || partyPower(state) >= progress.failedPower * (1 + CONFIG.progression.powerGainRetryPct))) input(state, { type: 'retry' });
 }
-export function runReference(seed: number, days: number, openSecondsPerDay = CONFIG.referencePlayer.openHoursPerDay * 3600) {
+export function runReference(seed: number, days: number, openSecondsPerDay = CONFIG.referencePlayer.openHoursPerDay * 3600, collectFarmTimings = false) {
   if (!Number.isSafeInteger(days) || days < 1 || days > 365) throw new Error('Days must be an integer from 1 to 365');
   const state = createState(seed);
+  const farmTimingCounts: Record<string, number> | null = collectFarmTimings ? {} : null;
+  let measuredFarmSamples = 0;
   const cursor: PolicyCursor = { revision: -1 };
   const milestones: { firstClearDay: Record<string, number>; fullRosterDay: number | null } = { firstClearDay: {}, fullRosterDay: null };
   const daily: { day: number; summary: ReturnType<typeof summary>; offlineBeforeSession: ReturnType<typeof applyOffline> | null }[] = [];
@@ -32,13 +34,20 @@ export function runReference(seed: number, days: number, openSecondsPerDay = CON
     while (state.tick < stopTick) {
       referencePolicy(state, cursor);
       step(state);
+      if (farmTimingCounts && state.metrics.farmSamples !== measuredFarmSamples) {
+        const seconds = state.metrics.farmClearSeconds.at(-1);
+        if (seconds === undefined || state.metrics.farmSamples !== measuredFarmSamples + 1) throw new Error('Farm timing observer missed a clear');
+        const durationTicks = String(Math.round(seconds * CONFIG.sim.ticksPerSecond));
+        farmTimingCounts[durationTicks] = (farmTimingCounts[durationTicks] ?? 0) + 1;
+        measuredFarmSamples = state.metrics.farmSamples;
+      }
       if (state.metrics.fullRosterTick !== null && milestones.fullRosterDay === null) milestones.fullRosterDay = day;
       for (const stage of Object.keys(state.metrics.firstClearTicks)) milestones.firstClearDay[stage] ??= day;
     }
     referencePolicy(state, cursor);
     daily.push({ day, summary: summary(state), offlineBeforeSession });
   }
-  return { state, daily, milestones };
+  return { state, daily, milestones, farmTimingCounts };
 }
 export function gachaCohort(count: number) {
   const pulls: number[] = [];

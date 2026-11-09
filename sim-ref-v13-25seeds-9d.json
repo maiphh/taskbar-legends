@@ -1,0 +1,2081 @@
+{
+  "configSha256": "9cbbace2040cbe8963f263547f72f991fb85c064acc96f478626bdbb6486c76c",
+  "configSnapshot": {
+    "version": "1.3.0",
+    "sim": {
+      "ticksPerSecond": 20,
+      "rng": "mulberry32",
+      "laneWidthPx": 1200,
+      "stripHeightPx": 80,
+      "heroSlotX": [
+        140,
+        95,
+        50
+      ],
+      "enemySpawnX": 400,
+      "enemySpawnSpacingPx": 50,
+      "waveGapSec": 2,
+      "stageGapSec": 6,
+      "partySize": 3
+    },
+    "rarity": {
+      "order": [
+        "common",
+        "rare",
+        "epic",
+        "legendary"
+      ],
+      "statMult": {
+        "common": 1,
+        "rare": 1.15,
+        "epic": 1.35,
+        "legendary": 1.6
+      }
+    },
+    "growth": {
+      "levelCap": 50,
+      "perLevel": 0.1,
+      "starMax": 6,
+      "perStar": 0.12,
+      "formula": "stat = roleBase * rarityMult * heroMod * (1 + perLevel*(L-1)) * (1 + perStar*(stars-1)) + gearFlat, then * (1 + gearPct)",
+      "xpToNext": {
+        "a": 4000,
+        "p": 1.3,
+        "formula": "round(a * L^p)"
+      },
+      "newHeroLevelOffset": -5,
+      "newHeroLevelRule": "max(1, floor(avgPartyLevel) + newHeroLevelOffset)"
+    },
+    "roles": {
+      "tank": {
+        "hp": 300,
+        "atk": 14,
+        "def": 40,
+        "attackIntervalTicks": 24,
+        "rangePx": 160,
+        "skill": {
+          "id": "guard",
+          "everyNthAttack": 5,
+          "shieldPctMaxHp": 0.2,
+          "shieldDurationSec": 3
+        }
+      },
+      "warrior": {
+        "hp": 200,
+        "atk": 22,
+        "def": 20,
+        "attackIntervalTicks": 12,
+        "rangePx": 160,
+        "skill": {
+          "id": "cleave",
+          "everyNthAttack": 4,
+          "mainMult": 1.8,
+          "secondMult": 1,
+          "secondRadiusPx": 40
+        }
+      },
+      "ranger": {
+        "hp": 140,
+        "atk": 18,
+        "def": 10,
+        "attackIntervalTicks": 16,
+        "rangePx": 400,
+        "skill": {
+          "id": "volley",
+          "everyNthAttack": 5,
+          "targets": 3,
+          "mult": 0.8
+        }
+      },
+      "mage": {
+        "hp": 120,
+        "atk": 30,
+        "def": 5,
+        "attackIntervalTicks": 18,
+        "rangePx": 400,
+        "skill": {
+          "id": "fireball",
+          "everyNthAttack": 3,
+          "mainMult": 2,
+          "splashMult": 0.6,
+          "splashRadiusPx": 50
+        }
+      },
+      "support": {
+        "hp": 150,
+        "atk": 10,
+        "def": 10,
+        "attackIntervalTicks": 30,
+        "rangePx": 400,
+        "healThresholdPct": 0.9,
+        "healMult": 1.2,
+        "skill": {
+          "id": "prayer",
+          "everyNthAttack": 4,
+          "healAllMult": 1
+        }
+      }
+    },
+    "heroes": [
+      {
+        "id": "mw2",
+        "name": "Medieval Warrior 2",
+        "role": "tank",
+        "rarity": "common",
+        "starter": true,
+        "mod": {}
+      },
+      {
+        "id": "hu1",
+        "name": "Huntress 1",
+        "role": "ranger",
+        "rarity": "common",
+        "starter": true,
+        "mod": {}
+      },
+      {
+        "id": "wiz",
+        "name": "Wizard",
+        "role": "mage",
+        "rarity": "common",
+        "starter": true,
+        "mod": {}
+      },
+      {
+        "id": "mw1",
+        "name": "Medieval Warrior 1",
+        "role": "warrior",
+        "rarity": "common",
+        "starter": false,
+        "mod": {}
+      },
+      {
+        "id": "mw3",
+        "name": "Medieval Warrior 3",
+        "role": "warrior",
+        "rarity": "common",
+        "starter": false,
+        "mod": {
+          "hp": 1.1,
+          "atk": 0.95
+        }
+      },
+      {
+        "id": "mh1",
+        "name": "Martial Hero 1",
+        "role": "warrior",
+        "rarity": "common",
+        "starter": false,
+        "mod": {
+          "attackIntervalTicks": -2,
+          "hp": 0.9
+        }
+      },
+      {
+        "id": "hk1",
+        "name": "Hero Knight 1",
+        "role": "tank",
+        "rarity": "rare",
+        "starter": false,
+        "mod": {}
+      },
+      {
+        "id": "mh2",
+        "name": "Martial Hero 2",
+        "role": "warrior",
+        "rarity": "rare",
+        "starter": false,
+        "mod": {
+          "attackIntervalTicks": -2
+        }
+      },
+      {
+        "id": "hu2",
+        "name": "Huntress 2",
+        "role": "ranger",
+        "rarity": "rare",
+        "starter": false,
+        "mod": {}
+      },
+      {
+        "id": "ew1",
+        "name": "Evil Wizard 1",
+        "role": "mage",
+        "rarity": "rare",
+        "starter": false,
+        "mod": {}
+      },
+      {
+        "id": "priest",
+        "name": "Priest (recolored Wizard)",
+        "role": "support",
+        "rarity": "rare",
+        "starter": false,
+        "mod": {}
+      },
+      {
+        "id": "hk2",
+        "name": "Hero Knight 2",
+        "role": "tank",
+        "rarity": "epic",
+        "starter": false,
+        "mod": {}
+      },
+      {
+        "id": "mk1",
+        "name": "Medieval King 1",
+        "role": "warrior",
+        "rarity": "epic",
+        "starter": false,
+        "mod": {
+          "hp": 1.1
+        }
+      },
+      {
+        "id": "fw",
+        "name": "Fantasy Warrior",
+        "role": "warrior",
+        "rarity": "epic",
+        "starter": false,
+        "mod": {
+          "atk": 1.1,
+          "hp": 0.95
+        }
+      },
+      {
+        "id": "ew2",
+        "name": "Evil Wizard 2",
+        "role": "mage",
+        "rarity": "epic",
+        "starter": false,
+        "mod": {}
+      },
+      {
+        "id": "mk2",
+        "name": "Medieval King 2",
+        "role": "tank",
+        "rarity": "legendary",
+        "starter": false,
+        "mod": {
+          "atk": 1.15
+        }
+      },
+      {
+        "id": "mh3",
+        "name": "Martial Hero 3",
+        "role": "warrior",
+        "rarity": "legendary",
+        "starter": false,
+        "mod": {
+          "attackIntervalTicks": 0
+        }
+      },
+      {
+        "id": "ew3",
+        "name": "Evil Wizard 3",
+        "role": "mage",
+        "rarity": "legendary",
+        "starter": false,
+        "mod": {
+          "splashRadiusPx": 20
+        }
+      }
+    ],
+    "combat": {
+      "damageFormula": "max(1, round(atk * 100 / (100 + def)))",
+      "heroTargeting": "lowest-x living enemy within rangePx of hero x; idle if none",
+      "enemyTargeting": "front-most living hero (lowest slot index)",
+      "enemyMeleeStopOffsetPx": 30,
+      "firstAttackDelayTicks": 0,
+      "lossCondition": "all heroes dead OR stage timer >= timeoutSec",
+      "hpCarriesBetweenWaves": true,
+      "fullHealBetweenStages": true,
+      "nonBossFarmTimeScale": 3,
+      "nonBossFarmMinCycleSec": 20
+    },
+    "enemies": {
+      "scalingPerStage": 1.06,
+      "scalingFormula": "base * scalingPerStage^(stageIndex-1) for hp, atk, def",
+      "grunt": {
+        "hp": 80,
+        "atk": 18,
+        "def": 10,
+        "attackIntervalTicks": 24,
+        "rangePx": 30,
+        "speedPxPerSec": 80,
+        "gold": 3,
+        "xp": 3
+      },
+      "archer": {
+        "hp": 50,
+        "atk": 14,
+        "def": 5,
+        "attackIntervalTicks": 30,
+        "rangePx": 150,
+        "speedPxPerSec": 80,
+        "gold": 3,
+        "xp": 3
+      },
+      "brute": {
+        "hp": 180,
+        "atk": 28,
+        "def": 25,
+        "attackIntervalTicks": 36,
+        "rangePx": 30,
+        "speedPxPerSec": 60,
+        "gold": 8,
+        "xp": 8
+      },
+      "boss_ch1": {
+        "name": "Chapter 1 Boss",
+        "hp": 1550,
+        "atk": 36,
+        "def": 20,
+        "attackIntervalTicks": 30,
+        "rangePx": 40,
+        "speedPxPerSec": 120,
+        "skill": {
+          "id": "slam",
+          "everyNthAttack": 5,
+          "hitsAllHeroes": true,
+          "mult": 1
+        },
+        "enrageAfterSec": 60,
+        "enrageAtkMult": 1.5,
+        "gold": 200,
+        "xp": 200
+      },
+      "boss_ch2": {
+        "name": "Chapter 2 Boss",
+        "hp": 2150,
+        "atk": 48,
+        "def": 15,
+        "attackIntervalTicks": 30,
+        "rangePx": 100,
+        "speedPxPerSec": 80,
+        "skill": {
+          "id": "hex_volley",
+          "everyNthAttack": 4,
+          "hitsAllHeroes": true,
+          "mult": 0.9
+        },
+        "enrageAfterSec": 60,
+        "enrageAtkMult": 1.5,
+        "gold": 400,
+        "xp": 400
+      }
+    },
+    "stages": [
+      {
+        "id": "1-1",
+        "index": 1,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-2",
+        "index": 2,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-3",
+        "index": 3,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-4",
+        "index": 4,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-5",
+        "index": 5,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-6",
+        "index": 6,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-7",
+        "index": 7,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-8",
+        "index": 8,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "brute",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "brute",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "brute",
+              "brute",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-9",
+        "index": 9,
+        "chapter": 1,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 1,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "brute",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "brute",
+              "brute",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "brute",
+              "brute",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1-10",
+        "index": 10,
+        "chapter": 1,
+        "isBoss": true,
+        "timeoutSec": 22,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt"
+            ]
+          },
+          {
+            "boss": "boss_ch1",
+            "adds": [
+              "grunt",
+              "grunt"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-1",
+        "index": 11,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-2",
+        "index": 12,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-3",
+        "index": 13,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-4",
+        "index": 14,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-5",
+        "index": 15,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-6",
+        "index": 16,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-7",
+        "index": 17,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-8",
+        "index": 18,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-9",
+        "index": 19,
+        "chapter": 2,
+        "isBoss": false,
+        "timeoutSec": 90,
+        "firstClearTickets": 5,
+        "waves": [
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "grunt",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt",
+              "grunt",
+              "grunt",
+              "brute",
+              "archer",
+              "archer"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2-10",
+        "index": 20,
+        "chapter": 2,
+        "isBoss": true,
+        "timeoutSec": 21,
+        "firstClearTickets": 100,
+        "waves": [
+          {
+            "enemies": [
+              "grunt"
+            ]
+          },
+          {
+            "enemies": [
+              "grunt"
+            ]
+          },
+          {
+            "boss": "boss_ch2",
+            "adds": [
+              "grunt",
+              "grunt"
+            ]
+          }
+        ]
+      }
+    ],
+    "rewards": {
+      "killScaling": 1.1,
+      "killFormula": "enemy.gold|xp * killScaling^(stageIndex-1); xp goes in full to every living party hero",
+      "clearGold": 15,
+      "clearXp": 15,
+      "clearScaling": 1.12,
+      "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
+      "firstClearChest": true,
+      "farmChestChance": 0.075,
+      "farmTicketChance": 0.0075,
+      "startingTickets": 6
+    },
+    "gear": {
+      "slots": {
+        "weapon": {
+          "main": {
+            "atk": 16
+          }
+        },
+        "armor": {
+          "main": {
+            "hp": 80,
+            "def": 10
+          }
+        },
+        "charm": {
+          "oneOf": {
+            "atkPct": [
+              0.04,
+              0.08
+            ],
+            "hpPct": [
+              0.04,
+              0.08
+            ],
+            "speedPct": [
+              0.04,
+              0.08
+            ]
+          }
+        }
+      },
+      "chestRarityOdds": {
+        "common": 0.6,
+        "rare": 0.3,
+        "epic": 0.09,
+        "legendary": 0.01
+      },
+      "rarityMult": {
+        "common": 1,
+        "rare": 1.1,
+        "epic": 1.2,
+        "legendary": 1.3
+      },
+      "mainRoll": [
+        1,
+        1
+      ],
+      "mainFormula": "round(base * scalingPerStage^(dropStage-1) * rarityMult * roll)",
+      "charmFormula": "uniform(min,max) * rarityMult, rounded to 0.001",
+      "upgrade": {
+        "maxLevel": 10,
+        "mainPerLevel": 0.1,
+        "costBase": 90,
+        "costExp": 1.4,
+        "costFormula": "round(costBase * scalingPerStage^(dropStage-1) * rarityMult * level^costExp)"
+      },
+      "speedPctRule": "attackIntervalTicks = max(8, round(base / (1 + speedPct)))",
+      "inventoryCap": 50,
+      "overflow": "auto-salvage lowest score for 10% of its total upgrade cost spent + 5*rarityMult gold"
+    },
+    "gacha": {
+      "costTickets": 1,
+      "rates": {
+        "common": 0.5,
+        "rare": 0.33,
+        "epic": 0.13,
+        "legendary": 0.04
+      },
+      "pickWithinRarity": "uniform over heroes of that rarity",
+      "pity": {
+        "guaranteeEpicPlusEvery": 30,
+        "counterResetsOn": [
+          "epic",
+          "legendary"
+        ],
+        "pityRoll": "epic 0.765 / legendary 0.235 (rates renormalized)",
+        "pityPrefersUnowned": true
+      },
+      "duplicate": "+1 star up to starMax; beyond starMax converts to 100 * rarityStatMult gold"
+    },
+    "idle": {
+      "offlineCapHours": 8,
+      "offlineEfficiency": 1,
+      "offlineFormula": "clears = floor(min(t, cap) / avgFarmClearSec); gold,xp = clears * expected per-clear reward at farm stage; no tickets",
+      "avgFarmClearSecWindow": 10,
+      "avgFarmClearSecDefault": 30,
+      "offlineChestEveryHours": 2,
+      "offlineChestMax": 4,
+      "offlineAllowsProgress": false
+    },
+    "progression": {
+      "states": [
+        "PUSHING",
+        "FARMING",
+        "BOSS_READY",
+        "BOSS_FIGHT"
+      ],
+      "retryIntervalSec": 120,
+      "retryBackoff": [
+        120,
+        240,
+        480,
+        600
+      ],
+      "powerGainRetryPct": 0.03,
+      "heroPower": "round(maxHp*0.2 + atk*4 + def*2)",
+      "bossAutoRetry": false,
+      "statusText": {
+        "FARMING": "Farming {stage}, next try in {mm:ss}",
+        "PUSHING": "Pushing {stage}",
+        "BOSS_READY": "Boss {stage} ready, click to fight",
+        "BOSS_FIGHT": "Boss {stage}!"
+      },
+      "powerGainRetryMinSec": 30
+    },
+    "referencePlayer": {
+      "openHoursPerDay": 6,
+      "sessionStartHour": 0,
+      "policy": [
+        "pull every ticket immediately",
+        "party = top 3 by heroPower with exactly one tank in front if owned, support in slot 3 if owned",
+        "auto-equip highest-score gear",
+        "spend all gold on cheapest upgrade among equipped items",
+        "start boss fight as soon as BOSS_READY and partyPower >= power at last boss loss * 1.03 (first attempt immediately)"
+      ]
+    }
+  },
+  "scope": "Population reference-player cohort, not pooled ticks. Consecutive reference seeds; independent gacha seeds 1..N.",
+  "referencePlayer": {
+    "openHoursPerDay": 6,
+    "sessionStartHour": 0,
+    "policy": [
+      "pull every ticket immediately",
+      "party = top 3 by heroPower with exactly one tank in front if owned, support in slot 3 if owned",
+      "auto-equip highest-score gear",
+      "spend all gold on cheapest upgrade among equipped items",
+      "start boss fight as soon as BOSS_READY and partyPower >= power at last boss loss * 1.03 (first attempt immediately)"
+    ]
+  },
+  "days": 9,
+  "seedCount": 25,
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+  ],
+  "matchesDesignReferenceCohort": false,
+  "quantileMethod": "R-7 linear interpolation, p*(n-1). Censored/unreached values rank above finite observations and yield null when the quantile touches censoring. No survivor-only medians.",
+  "targets": [
+    {
+      "id": 1,
+      "target": "At least 95% clear 1-5 within 600 open seconds",
+      "unit": "open seconds",
+      "distribution": {
+        "count": 25,
+        "observed": 25,
+        "censored": 0,
+        "p10": 103.18,
+        "median": 123.6,
+        "p90": 150.35
+      },
+      "clearedWithin600": 25,
+      "fractionWithin600": 1,
+      "pass": true
+    },
+    {
+      "id": 2,
+      "target": "Median chapter 1 boss clear 1.5..2.5 open hours",
+      "unit": "open hours",
+      "distribution": {
+        "count": 25,
+        "observed": 25,
+        "censored": 0,
+        "p10": 0.21336944444444444,
+        "median": 2.0066111111111113,
+        "p90": 3.7159055555555556
+      },
+      "pass": true
+    },
+    {
+      "id": 3,
+      "target": "Median chapter 2 boss clear day 4..6",
+      "unit": "day",
+      "distribution": {
+        "count": 25,
+        "observed": 23,
+        "censored": 2,
+        "p10": 4,
+        "median": 6,
+        "p90": 8.600000000000001
+      },
+      "pass": true
+    },
+    {
+      "id": 4,
+      "target": "Median reference full roster day 6..8 AND median 100..140 pulls in 10k gacha cohort",
+      "unit": "day",
+      "distribution": {
+        "count": 25,
+        "observed": 21,
+        "censored": 4,
+        "p10": 1.4000000000000004,
+        "median": 5,
+        "p90": null
+      },
+      "gacha": {
+        "seeds": 10000,
+        "initialRoster": "3 starter heroes",
+        "medianPullsToFullRoster": 124,
+        "minPulls": 25,
+        "maxPulls": 803,
+        "pullDistribution": {
+          "count": 10000,
+          "observed": 10000,
+          "censored": 0,
+          "p10": 65,
+          "median": 124,
+          "p90": 246
+        },
+        "observedRarityRates": {
+          "common": 0.49954182649192747,
+          "rare": 0.32923887322841905,
+          "epic": 0.13088257068862919,
+          "legendary": 0.040336729591024266
+        },
+        "pass": true
+      },
+      "pass": false
+    },
+    {
+      "id": 5,
+      "target": "Every no-input starter seed remains below 1-8 after 1 open hour",
+      "unit": "highest cleared stage index",
+      "distribution": {
+        "count": 25,
+        "observed": 25,
+        "censored": 0,
+        "p10": 7,
+        "median": 7,
+        "p90": 7
+      },
+      "violatingSeeds": [],
+      "pass": true
+    },
+    {
+      "id": 6,
+      "target": "Every farm clear takes 20..40 seconds",
+      "unit": "seconds",
+      "distribution": {
+        "count": 25,
+        "observed": 25,
+        "censored": 0,
+        "p10": 25.37,
+        "median": 26.35,
+        "p90": 26.95
+      },
+      "minimumPerSeed": {
+        "count": 25,
+        "observed": 25,
+        "censored": 0,
+        "p10": 20,
+        "median": 20,
+        "p90": 20
+      },
+      "maximumPerSeed": {
+        "count": 25,
+        "observed": 25,
+        "censored": 0,
+        "p10": 25.37,
+        "median": 26.35,
+        "p90": 26.95
+      },
+      "samples": 225018,
+      "pass": true
+    },
+    {
+      "id": 7,
+      "target": "Every non-boss clears within 2700 open seconds of first attempt",
+      "unit": "open seconds",
+      "distribution": {
+        "count": 25,
+        "observed": 25,
+        "censored": 0,
+        "p10": 39.75,
+        "median": 48.55,
+        "p90": 63.39000000000001
+      },
+      "pass": true
+    }
+  ],
+  "farmCycles": {
+    "count": 225018,
+    "min": 20,
+    "p10": 20,
+    "median": 20,
+    "p90": 24.55,
+    "max": 30.25,
+    "countsByWallTicks": {
+      "400": 145020,
+      "402": 2,
+      "404": 44,
+      "406": 6,
+      "407": 15,
+      "408": 23,
+      "410": 5,
+      "411": 9,
+      "412": 41,
+      "414": 24,
+      "416": 38,
+      "418": 15,
+      "420": 5,
+      "421": 7,
+      "422": 2,
+      "427": 3,
+      "435": 2978,
+      "436": 445,
+      "437": 28,
+      "438": 2,
+      "442": 420,
+      "444": 13,
+      "453": 6844,
+      "458": 7,
+      "467": 28544,
+      "471": 6089,
+      "472": 2098,
+      "477": 3319,
+      "479": 1876,
+      "484": 1470,
+      "489": 653,
+      "491": 4385,
+      "492": 19,
+      "497": 2575,
+      "500": 15,
+      "501": 2640,
+      "502": 132,
+      "503": 1028,
+      "505": 5,
+      "507": 3140,
+      "508": 325,
+      "509": 7,
+      "515": 3472,
+      "516": 25,
+      "517": 1931,
+      "524": 4,
+      "525": 416,
+      "527": 2228,
+      "530": 4,
+      "531": 11,
+      "537": 1256,
+      "539": 1333,
+      "540": 10,
+      "561": 1,
+      "568": 5,
+      "605": 6
+    }
+  },
+  "perSeed": [
+    {
+      "seed": 1,
+      "days": 9,
+      "firstFiveOpenSeconds": 111.35,
+      "bossOneOpenHours": 1.687375,
+      "bossTwoDay": 5,
+      "fullRosterDay": 3,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.25,
+      "farmSamples": 8856,
+      "farmTimingCounts": {
+        "400": 4278,
+        "407": 2,
+        "453": 2860,
+        "471": 155,
+        "472": 420,
+        "484": 332,
+        "507": 416,
+        "515": 136,
+        "525": 257
+      },
+      "maxNonBossStallSeconds": 57.55
+    },
+    {
+      "seed": 2,
+      "days": 9,
+      "firstFiveOpenSeconds": 149.45,
+      "bossOneOpenHours": 0.5668333333333333,
+      "bossTwoDay": 8,
+      "fullRosterDay": 1,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.35,
+      "farmSamples": 9171,
+      "farmTimingCounts": {
+        "400": 7457,
+        "412": 11,
+        "491": 536,
+        "501": 336,
+        "515": 526,
+        "527": 305
+      },
+      "maxNonBossStallSeconds": 53.35
+    },
+    {
+      "seed": 3,
+      "days": 9,
+      "firstFiveOpenSeconds": 131.45,
+      "bossOneOpenHours": 3.1535,
+      "bossTwoDay": 7,
+      "fullRosterDay": 1,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 25.75,
+      "farmSamples": 9072,
+      "farmTimingCounts": {
+        "400": 6371,
+        "406": 4,
+        "414": 1,
+        "437": 8,
+        "444": 2,
+        "467": 924,
+        "471": 416,
+        "479": 493,
+        "501": 278,
+        "503": 313,
+        "515": 262
+      },
+      "maxNonBossStallSeconds": 51.2
+    },
+    {
+      "seed": 4,
+      "days": 9,
+      "firstFiveOpenSeconds": 153.65,
+      "bossOneOpenHours": 3.4182222222222225,
+      "bossTwoDay": 5,
+      "fullRosterDay": 5,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 30.25,
+      "farmSamples": 8863,
+      "farmTimingCounts": {
+        "400": 4851,
+        "421": 6,
+        "467": 2775,
+        "479": 132,
+        "491": 751,
+        "509": 1,
+        "515": 327,
+        "524": 4,
+        "530": 4,
+        "561": 1,
+        "568": 5,
+        "605": 6
+      },
+      "maxNonBossStallSeconds": 56.15
+    },
+    {
+      "seed": 5,
+      "days": 9,
+      "firstFiveOpenSeconds": 104.2,
+      "bossOneOpenHours": 0.20343055555555556,
+      "bossTwoDay": 6,
+      "fullRosterDay": 3,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 8843,
+      "farmTimingCounts": {
+        "400": 5318,
+        "471": 1833,
+        "491": 277,
+        "497": 423,
+        "501": 172,
+        "517": 307,
+        "527": 290,
+        "537": 137,
+        "539": 86
+      },
+      "maxNonBossStallSeconds": 41.55
+    },
+    {
+      "seed": 6,
+      "days": 9,
+      "firstFiveOpenSeconds": 102.5,
+      "bossOneOpenHours": 0.22827777777777777,
+      "bossTwoDay": 5,
+      "fullRosterDay": 1,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 25.35,
+      "farmSamples": 9094,
+      "farmTimingCounts": {
+        "400": 4248,
+        "435": 2978,
+        "436": 388,
+        "442": 420,
+        "453": 171,
+        "471": 47,
+        "472": 154,
+        "484": 290,
+        "489": 268,
+        "502": 126,
+        "507": 4
+      },
+      "maxNonBossStallSeconds": 33.8
+    },
+    {
+      "seed": 7,
+      "days": 9,
+      "firstFiveOpenSeconds": 85.15,
+      "bossOneOpenHours": 0.11466666666666667,
+      "bossTwoDay": 7,
+      "fullRosterDay": 3,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 25.4,
+      "farmSamples": 9085,
+      "farmTimingCounts": {
+        "400": 6410,
+        "471": 1236,
+        "472": 232,
+        "484": 356,
+        "507": 812,
+        "508": 39
+      },
+      "maxNonBossStallSeconds": 32.95
+    },
+    {
+      "seed": 8,
+      "days": 9,
+      "firstFiveOpenSeconds": 121.85,
+      "bossOneOpenHours": 0.389625,
+      "bossTwoDay": 5,
+      "fullRosterDay": 5,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.35,
+      "farmSamples": 8956,
+      "farmTimingCounts": {
+        "400": 5305,
+        "467": 2500,
+        "471": 272,
+        "491": 418,
+        "501": 348,
+        "503": 104,
+        "527": 9
+      },
+      "maxNonBossStallSeconds": 42.55
+    },
+    {
+      "seed": 9,
+      "days": 9,
+      "firstFiveOpenSeconds": 164.85,
+      "bossOneOpenHours": 2.0402222222222224,
+      "bossTwoDay": 8,
+      "fullRosterDay": null,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 25.75,
+      "farmSamples": 9218,
+      "farmTimingCounts": {
+        "400": 7435,
+        "411": 1,
+        "416": 18,
+        "467": 150,
+        "471": 470,
+        "479": 293,
+        "491": 166,
+        "501": 176,
+        "503": 18,
+        "515": 491
+      },
+      "maxNonBossStallSeconds": 53.35
+    },
+    {
+      "seed": 10,
+      "days": 9,
+      "firstFiveOpenSeconds": 144.3,
+      "bossOneOpenHours": 6.260055555555556,
+      "bossTwoDay": 6,
+      "fullRosterDay": 6,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.35,
+      "farmSamples": 9079,
+      "farmTimingCounts": {
+        "400": 6202,
+        "407": 3,
+        "412": 7,
+        "437": 6,
+        "444": 4,
+        "467": 1849,
+        "479": 150,
+        "491": 302,
+        "501": 81,
+        "503": 340,
+        "527": 135
+      },
+      "maxNonBossStallSeconds": 48.55
+    },
+    {
+      "seed": 11,
+      "days": 9,
+      "firstFiveOpenSeconds": 143.3,
+      "bossOneOpenHours": 0.8805416666666667,
+      "bossTwoDay": 7,
+      "fullRosterDay": 7,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 8974,
+      "farmTimingCounts": {
+        "400": 6410,
+        "436": 57,
+        "458": 7,
+        "477": 905,
+        "497": 44,
+        "500": 2,
+        "501": 225,
+        "502": 6,
+        "505": 5,
+        "507": 592,
+        "516": 25,
+        "527": 236,
+        "537": 313,
+        "539": 147
+      },
+      "maxNonBossStallSeconds": 59.4
+    },
+    {
+      "seed": 12,
+      "days": 9,
+      "firstFiveOpenSeconds": 106.15,
+      "bossOneOpenHours": 2.8900694444444444,
+      "bossTwoDay": 4,
+      "fullRosterDay": 4,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.25,
+      "farmSamples": 8741,
+      "farmTimingCounts": {
+        "400": 3165,
+        "453": 3813,
+        "471": 574,
+        "472": 343,
+        "507": 523,
+        "508": 115,
+        "515": 110,
+        "525": 98
+      },
+      "maxNonBossStallSeconds": 40.95
+    },
+    {
+      "seed": 13,
+      "days": 9,
+      "firstFiveOpenSeconds": 117.45,
+      "bossOneOpenHours": 2.640277777777778,
+      "bossTwoDay": 5,
+      "fullRosterDay": null,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.35,
+      "farmSamples": 8735,
+      "farmTimingCounts": {
+        "400": 4223,
+        "420": 4,
+        "467": 2774,
+        "471": 170,
+        "477": 603,
+        "497": 129,
+        "515": 99,
+        "517": 536,
+        "527": 197
+      },
+      "maxNonBossStallSeconds": 44.95
+    },
+    {
+      "seed": 14,
+      "days": 9,
+      "firstFiveOpenSeconds": 89.65,
+      "bossOneOpenHours": 0.15140277777777778,
+      "bossTwoDay": 4,
+      "fullRosterDay": 4,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 8556,
+      "farmTimingCounts": {
+        "400": 3169,
+        "467": 3699,
+        "491": 188,
+        "497": 384,
+        "501": 298,
+        "517": 281,
+        "527": 235,
+        "537": 214,
+        "539": 88
+      },
+      "maxNonBossStallSeconds": 38.95
+    },
+    {
+      "seed": 15,
+      "days": 9,
+      "firstFiveOpenSeconds": 104.75,
+      "bossOneOpenHours": 3.5722638888888887,
+      "bossTwoDay": null,
+      "fullRosterDay": null,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 22.2,
+      "farmSamples": 9626,
+      "farmTimingCounts": {
+        "400": 9616,
+        "414": 2,
+        "437": 3,
+        "444": 5
+      },
+      "maxNonBossStallSeconds": 51.2
+    },
+    {
+      "seed": 16,
+      "days": 9,
+      "firstFiveOpenSeconds": 149.9,
+      "bossOneOpenHours": 2.44025,
+      "bossTwoDay": 6,
+      "fullRosterDay": 6,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.55,
+      "farmSamples": 9061,
+      "farmTimingCounts": {
+        "400": 6127,
+        "408": 23,
+        "467": 1849,
+        "479": 134,
+        "484": 22,
+        "491": 749,
+        "492": 19,
+        "500": 10,
+        "509": 6,
+        "515": 111,
+        "531": 11
+      },
+      "maxNonBossStallSeconds": 66.05
+    },
+    {
+      "seed": 17,
+      "days": 9,
+      "firstFiveOpenSeconds": 123.65,
+      "bossOneOpenHours": 3.8116666666666665,
+      "bossTwoDay": null,
+      "fullRosterDay": 2,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 22.2,
+      "farmSamples": 9632,
+      "farmTimingCounts": {
+        "400": 9610,
+        "407": 3,
+        "414": 4,
+        "422": 2,
+        "437": 9,
+        "438": 2,
+        "444": 2
+      },
+      "maxNonBossStallSeconds": 48.55
+    },
+    {
+      "seed": 18,
+      "days": 9,
+      "firstFiveOpenSeconds": 149.1,
+      "bossOneOpenHours": 0.4657777777777778,
+      "bossTwoDay": 9,
+      "fullRosterDay": null,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 9489,
+      "farmTimingCounts": {
+        "400": 9077,
+        "404": 34,
+        "412": 2,
+        "539": 376
+      },
+      "maxNonBossStallSeconds": 51.1
+    },
+    {
+      "seed": 19,
+      "days": 9,
+      "firstFiveOpenSeconds": 123.6,
+      "bossOneOpenHours": 2.895305555555556,
+      "bossTwoDay": 4,
+      "fullRosterDay": 4,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 8591,
+      "farmTimingCounts": {
+        "400": 3165,
+        "467": 3700,
+        "479": 576,
+        "491": 318,
+        "515": 602,
+        "527": 203,
+        "539": 27
+      },
+      "maxNonBossStallSeconds": 43.75
+    },
+    {
+      "seed": 20,
+      "days": 9,
+      "firstFiveOpenSeconds": 127.25,
+      "bossOneOpenHours": 6.0058750000000005,
+      "bossTwoDay": 7,
+      "fullRosterDay": 7,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 9227,
+      "farmTimingCounts": {
+        "400": 7358,
+        "404": 2,
+        "406": 2,
+        "407": 7,
+        "410": 5,
+        "414": 8,
+        "421": 1,
+        "427": 3,
+        "437": 2,
+        "467": 925,
+        "497": 388,
+        "507": 1,
+        "515": 53,
+        "517": 408,
+        "539": 64
+      },
+      "maxNonBossStallSeconds": 47.55
+    },
+    {
+      "seed": 21,
+      "days": 9,
+      "firstFiveOpenSeconds": 106.8,
+      "bossOneOpenHours": 0.6891111111111111,
+      "bossTwoDay": 7,
+      "fullRosterDay": 5,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.25,
+      "farmSamples": 9050,
+      "farmTimingCounts": {
+        "400": 6400,
+        "402": 2,
+        "472": 949,
+        "484": 470,
+        "489": 385,
+        "507": 287,
+        "508": 171,
+        "515": 325,
+        "525": 61
+      },
+      "maxNonBossStallSeconds": 44
+    },
+    {
+      "seed": 22,
+      "days": 9,
+      "firstFiveOpenSeconds": 138.6,
+      "bossOneOpenHours": 0.7631388888888889,
+      "bossTwoDay": 6,
+      "fullRosterDay": 6,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 8810,
+      "farmTimingCounts": {
+        "400": 5318,
+        "404": 4,
+        "477": 1811,
+        "497": 463,
+        "501": 207,
+        "507": 193,
+        "517": 132,
+        "527": 302,
+        "537": 142,
+        "539": 238
+      },
+      "maxNonBossStallSeconds": 41.1
+    },
+    {
+      "seed": 23,
+      "days": 9,
+      "firstFiveOpenSeconds": 150.65,
+      "bossOneOpenHours": 2.0066111111111113,
+      "bossTwoDay": 4,
+      "fullRosterDay": 4,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.95,
+      "farmSamples": 8547,
+      "farmTimingCounts": {
+        "400": 3149,
+        "416": 11,
+        "467": 3699,
+        "491": 372,
+        "497": 372,
+        "501": 129,
+        "517": 267,
+        "527": 120,
+        "537": 225,
+        "539": 203
+      },
+      "maxNonBossStallSeconds": 49.75
+    },
+    {
+      "seed": 24,
+      "days": 9,
+      "firstFiveOpenSeconds": 120.4,
+      "bossOneOpenHours": 1.608277777777778,
+      "bossTwoDay": 4,
+      "fullRosterDay": 4,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 27,
+      "farmSamples": 8655,
+      "farmTimingCounts": {
+        "400": 3646,
+        "404": 4,
+        "411": 8,
+        "412": 21,
+        "414": 9,
+        "418": 15,
+        "467": 3700,
+        "497": 372,
+        "500": 3,
+        "501": 177,
+        "507": 312,
+        "527": 49,
+        "537": 225,
+        "539": 104,
+        "540": 10
+      },
+      "maxNonBossStallSeconds": 86.95
+    },
+    {
+      "seed": 25,
+      "days": 9,
+      "firstFiveOpenSeconds": 116.25,
+      "bossOneOpenHours": 3.071638888888889,
+      "bossTwoDay": 7,
+      "fullRosterDay": 7,
+      "starterHighestCleared": 7,
+      "farmMinSeconds": 20,
+      "farmMaxSeconds": 26.35,
+      "farmSamples": 9087,
+      "farmTimingCounts": {
+        "400": 6712,
+        "416": 9,
+        "420": 1,
+        "471": 916,
+        "479": 98,
+        "491": 308,
+        "501": 213,
+        "503": 253,
+        "515": 430,
+        "527": 147
+      },
+      "maxNonBossStallSeconds": 66.55
+    }
+  ],
+  "elapsedRealMs": 412531
+}

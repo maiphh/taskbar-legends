@@ -50,15 +50,14 @@ function lose(state: GameState): void {
     state.retryFailures += 1;
     const backoff = CONFIG.progression.retryBackoff[Math.min(state.retryFailures - 1, CONFIG.progression.retryBackoff.length - 1)] ?? CONFIG.progression.retryIntervalSec;
     state.progress = { kind: 'FARMING', stage: Math.max(1, state.highestCleared), failedStage: progress.stage,
-      retryAtTick: state.tick + ticksForSeconds(backoff), failedPower: state.attemptPower, failures: state.retryFailures };
+      retryAtTick: state.tick + ticksForSeconds(backoff), failTick: state.tick, failedPower: state.attemptPower, failures: state.retryFailures };
   }
+  delete state.farmClock;
   rest(state, 'encounter');
 }
-function win(state: GameState): void {
+function awardClear(state: GameState, duration: number, nativeDuration = duration): void {
   const stage = stageConfig(state.progress.stage);
-  if (state.wave < stage.waves.length) { state.wave += 1; rest(state, 'wave'); return; }
   const first = state.progress.kind === 'PUSHING' || state.progress.kind === 'BOSS_FIGHT';
-  const duration = (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond + CONFIG.sim.stageGapSec;
   const mult = CONFIG.rewards.clearScaling ** (stage.index - 1);
   goldChange(state, Math.round(CONFIG.rewards.clearGold * mult), 'clear');
   grantXp(state, Math.round(CONFIG.rewards.clearXp * mult));
@@ -73,11 +72,17 @@ function win(state: GameState): void {
     }
     if (CONFIG.rewards.firstClearChest) chest(state, stage.index);
     state.tickets += stage.firstClearTickets; state.economyRevision += 1;
-    emit(state, { type: 'tickets', amount: stage.firstClearTickets, total: state.tickets });
+    // A 0-ticket stage grants nothing, so it logs nothing (the tickets event keeps amount: positive).
+    if (stage.firstClearTickets > 0) emit(state, { type: 'tickets', amount: stage.firstClearTickets, total: state.tickets });
     if (stage.index === CONFIG.stages.length) state.progress = { kind: 'COMPLETE', stage: stage.index };
     else if (isBoss(stage.index + 1)) state.progress = { kind: 'BOSS_READY', stage: stage.index, bossStage: stage.index + 1, failedPower: 0, bossLosses: 0 };
     else state.progress = { kind: 'PUSHING', stage: stage.index + 1 };
   } else {
+    if (state.farmClock || state.metrics.nativeFarmClearSeconds) {
+      state.metrics.nativeFarmClearSeconds ??= [...state.metrics.farmClearSeconds];
+      state.metrics.nativeFarmClearSeconds.push(nativeDuration);
+      if (state.metrics.nativeFarmClearSeconds.length > CONFIG.idle.avgFarmClearSecWindow) state.metrics.nativeFarmClearSeconds.shift();
+    }
     state.metrics.farmClearSeconds.push(duration);
     if (state.metrics.farmClearSeconds.length > CONFIG.idle.avgFarmClearSecWindow) state.metrics.farmClearSeconds.shift();
     state.metrics.farmMinSeconds = Math.min(state.metrics.farmMinSeconds ?? duration, duration);
@@ -86,39 +91,83 @@ function win(state: GameState): void {
     if (random(state) < CONFIG.rewards.farmChestChance) chest(state, stage.index);
     if (random(state) < CONFIG.rewards.farmTicketChance) { state.tickets += 1; state.economyRevision += 1; emit(state, { type: 'tickets', amount: 1, total: state.tickets }); }
   }
+}
+function win(state: GameState): void {
+  const stage = stageConfig(state.progress.stage);
+  if (state.wave < stage.waves.length) { state.wave += 1; rest(state, 'wave'); return; }
+  const clock = state.farmClock;
+  if (clock) {
+    const gapTicks = ticksForSeconds(CONFIG.sim.stageGapSec);
+    state.phase = { kind: 'farmPad', settleAtTick: Math.max(state.tick + gapTicks, state.stageStartedTick + clock.minCycleTicks),
+      nativeDurationTicks: clock.elapsedTicks + gapTicks };
+    return;
+  }
+  awardClear(state, (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond + CONFIG.sim.stageGapSec);
   rest(state, 'encounter');
+}
+function inferredFailTick(state: GameState): number {
+  const progress = state.progress;
+  if (progress.kind !== 'FARMING') return state.tick;
+  const backoff = CONFIG.progression.retryBackoff[Math.min(progress.failures - 1, CONFIG.progression.retryBackoff.length - 1)] ?? CONFIG.progression.retryIntervalSec;
+  return progress.failTick ?? Math.min(state.tick, Math.max(0, progress.retryAtTick - ticksForSeconds(backoff)));
+}
+function powerRetry(state: GameState): void {
+  const progress = state.progress;
+  if (progress.kind === 'FARMING' && state.tick >= inferredFailTick(state) + CONFIG.progression.powerGainRetryMinSec * CONFIG.sim.ticksPerSecond
+    && partyPower(state) >= progress.failedPower * (1 + CONFIG.progression.powerGainRetryPct)) retry(state, false);
 }
 export function input(state: GameState, action: Action): void {
   switch (action.type) {
     case 'retry': retry(state, true); return;
-    case 'pull': pull(state); return;
-    case 'autoEquip': autoEquip(state); return;
-    case 'autoParty': autoParty(state); return;
-    case 'upgrade': upgrade(state, action.gearId); return;
-    case 'equip': equip(state, action.heroId, action.gearId); return;
-    case 'party': setParty(state, action.heroIds); return;
+    case 'pull': pull(state); powerRetry(state); return;
+    case 'autoEquip': autoEquip(state); powerRetry(state); return;
+    case 'autoParty': autoParty(state); powerRetry(state); return;
+    case 'upgrade': upgrade(state, action.gearId); powerRetry(state); return;
+    case 'equip': equip(state, action.heroId, action.gearId); powerRetry(state); return;
+    case 'party': setParty(state, action.heroIds); powerRetry(state); return;
     default: { const exhaustive: never = action; return exhaustive; }
   }
+}
+function encounterSubstep(state: GameState): void {
+  if (state.phase.kind === 'rest') {
+    state.phase.remainingTicks -= 1;
+    if (state.phase.remainingTicks <= 0) spawnWave(state);
+    return;
+  }
+  if (state.phase.kind !== 'battle') return;
+  const elapsed = state.farmClock?.elapsedTicks ?? state.tick - state.stageStartedTick;
+  if (elapsed >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec)) { lose(state); return; }
+  combatTick(state);
+  if (state.party.every(hero => hero.hp <= 0)) lose(state);
+  else if (state.enemies.every(enemy => enemy.hp <= 0)) win(state);
 }
 function tick(state: GameState): void {
   state.tick += 1;
   const progress = state.progress;
   if (progress.kind === 'FARMING' && state.tick >= progress.retryAtTick) retry(state, false);
-  if (state.phase.kind === 'rest') {
-    state.phase.remainingTicks -= 1;
-    if (state.phase.remainingTicks <= 0) {
-      const progress = state.progress;
-      if (state.phase.next === 'encounter') {
-        if (progress.kind === 'FARMING' && partyPower(state) >= progress.failedPower * (1 + CONFIG.progression.powerGainRetryPct)) retry(state, false);
-        else beginEncounter(state);
-      } else spawnWave(state);
+  powerRetry(state);
+  if (state.phase.kind === 'farmPad') {
+    if (state.tick >= state.phase.settleAtTick) {
+      const nativeSeconds = state.phase.nativeDurationTicks / CONFIG.sim.ticksPerSecond;
+      awardClear(state, (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond, nativeSeconds);
+      powerRetry(state);
+      // A power retry already started its push; do not spawn it twice.
+      if (state.phase.kind === 'farmPad') beginEncounter(state);
     }
     return;
   }
-  if (state.tick - state.stageStartedTick >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec)) { lose(state); return; }
-  combatTick(state);
-  if (state.party.every(hero => hero.hp <= 0)) lose(state);
-  else if (state.enemies.every(enemy => enemy.hp <= 0)) win(state);
+  if (state.phase.kind === 'rest' && state.phase.next === 'encounter') {
+    state.phase.remainingTicks -= 1;
+    if (state.phase.remainingTicks <= 0) beginEncounter(state);
+    return;
+  }
+  const scale = state.farmClock?.scale ?? 1;
+  for (let substep = 0; substep < scale; substep += 1) {
+    if (state.farmClock) { state.farmClock.remainder = scale - substep - 1; state.farmClock.elapsedTicks += 1; }
+    encounterSubstep(state);
+    if (state.phase.kind !== 'battle' && !(state.phase.kind === 'rest' && state.phase.next === 'wave')) break;
+  }
+  powerRetry(state);
 }
 // Mutates only the provided JSON state; never reads a clock, DOM, asset or global RNG.
 export function step(state: GameState, ticks = 1): GameState {
@@ -130,6 +179,10 @@ export function snapshot(state: GameState): string { return JSON.stringify(parse
 export function load(snapshotValue: unknown): GameState {
   const value: unknown = typeof snapshotValue === 'string' ? JSON.parse(snapshotValue) : snapshotValue;
   return cloneState(parseState(value));
+}
+export function bossSecondsRemaining(state: GameState): number | null {
+  if (!isBoss(state.progress.stage) || (state.phase.kind === 'rest' && state.phase.next === 'encounter')) return null;
+  return Math.max(0, Math.ceil(stageConfig(state.progress.stage).timeoutSec - (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond));
 }
 export function statusText(state: GameState): string {
   const progress = state.progress;

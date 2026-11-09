@@ -118,11 +118,30 @@ describe('progression, retry and boss gates', () => {
     }
     input(state, { type: 'retry' }); forceClear(state); expect(state.retryFailures).toBe(0);
   });
-  it('power growth retries only at the next stage start', () => {
-    const state = failedFrontier();
-    for (const hero of state.roster) hero.stars = 2;
-    step(state, ticksForSeconds(CONFIG.sim.stageGapSec) - 1); expect(state.stats.retries).toBe(0);
-    step(state); expect(state.stats.retries).toBe(1); expect(state.progress.kind).toBe('PUSHING');
+  it('zero-delay power growth retries on the gain action wall tick', () => {
+    // Own config: this asserts the zero-delay rule, independent of the shipped powerGainRetryMinSec.
+    const configured = CONFIG.progression.powerGainRetryMinSec;
+    CONFIG.progression.powerGainRetryMinSec = 0;
+    try {
+      const state = failedFrontier();
+      for (const hero of state.roster) hero.stars = 2;
+      const gainedAt = state.tick;
+      input(state, { type: 'autoEquip' });
+      expect(state.stats.retries).toBe(1); expect(state.progress.kind).toBe('PUSHING');
+      expect(state.events.find(event => event.data.type === 'retry')?.tick).toBe(gainedAt);
+    } finally { CONFIG.progression.powerGainRetryMinSec = configured; }
+  });
+  it('a 0-ticket first clear logs no tickets event and the save stays valid', () => {
+    const stage = CONFIG.stages[0]; if (!stage) throw new Error('stage 1');
+    const configured = stage.firstClearTickets;
+    stage.firstClearTickets = 0;
+    try {
+      const state = createState(); const tickets = state.tickets;
+      forceClear(state);
+      expect(state.highestCleared).toBe(1); expect(state.tickets).toBe(tickets);
+      expect(state.events.some(event => event.data.type === 'tickets')).toBe(false);
+      expect(() => restoreSave(makeSave(state, 0), 0)).not.toThrow();
+    } finally { stage.firstClearTickets = configured; }
   });
   it('never enters a boss without input, even after large power growth; failures wait for input', () => {
     const state = createState(); state.highestCleared = 8; state.progress = { kind: 'PUSHING', stage: 9 };
@@ -212,13 +231,16 @@ describe('offline timestamp accounting', () => {
     expect(restoreSave(save, 999).state).toEqual(state);
     expect(() => restoreSave(save, NaN)).toThrow();
   });
-  it('8h offline gold is within 1% of stable open farming at a measured stage', () => {
+  it('8h offline gold matches stable native-speed open farming within 1%', () => {
+    const priorScale = CONFIG.combat.nonBossFarmTimeScale, priorFloor = CONFIG.combat.nonBossFarmMinCycleSec;
+    CONFIG.combat.nonBossFarmTimeScale = 1; CONFIG.combat.nonBossFarmMinCycleSec = 0;
+    try {
     const state = createState(1); state.highestCleared = 9;
     state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
     for (const hero of state.roster) hero.level = CONFIG.growth.levelCap;
     beginEncounter(state); step(state, ticksForSeconds(600));
     const open = load(snapshot(state)), offline = load(snapshot(state));
     const initial = state.gold; applyOffline(offline, 8 * 3600000); step(open, ticksForSeconds(8 * 3600));
-    expect(Math.abs((offline.gold - initial) / (open.gold - initial) - 1)).toBeLessThan(0.01);
+    expect(Math.abs((offline.gold - initial) / (open.gold - initial) - 1)).toBeLessThan(0.01);    } finally { CONFIG.combat.nonBossFarmTimeScale = priorScale; CONFIG.combat.nonBossFarmMinCycleSec = priorFloor; }
   });
 });

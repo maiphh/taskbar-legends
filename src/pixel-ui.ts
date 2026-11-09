@@ -1,7 +1,7 @@
 import { CONFIG, heroConfig, slotSchema } from './config';
 import type { AtlasLibrary } from './atlas';
 import { cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
-import { statusText } from './core/game';
+import { bossSecondsRemaining, statusText } from './core/game';
 import { affordability } from './core/selectors';
 import type { Action, GameState, Gear, ItemId } from './core/model';
 
@@ -199,8 +199,10 @@ export class PixelUI {
     this.frame(ctx, { x: 8, y: coreY + 8, width: islandWidth, height: 64 });
     this.frame(ctx, { x: right, y: coreY + 8, width: islandWidth, height: 64 });
     const stage = CONFIG.stages[state.progress.stage - 1];
-    const heading = state.progress.kind === 'PUSHING' ? `GREENWAY / ${stage?.id ?? ''}` : statusText(state).replace(', next try in ', ' / ');
-    this.text(ctx, heading, 20, coreY + 13, palette.gold, 16, true, islandWidth - 20);
+    const bossSeconds = bossSecondsRemaining(state);
+    const heading = bossSeconds !== null ? `BOSS ${stage?.id ?? ''}` : state.progress.kind === 'PUSHING' ? `GREENWAY / ${stage?.id ?? ''}` : statusText(state).replace(', next try in ', ' / ');
+    this.text(ctx, heading, 20, coreY + 13, palette.gold, 16, true, islandWidth - (bossSeconds !== null ? 100 : 20));
+    if (bossSeconds !== null) this.text(ctx, `TIME ${Math.floor(bossSeconds / 60)}:${String(bossSeconds % 60).padStart(2, '0')}`, islandWidth - 80, coreY + 13, bossSeconds <= CONFIG.view.bossCountdownWarnSec ? palette.red : palette.gold, 16, true);
     this.text(ctx, `WAVE ${state.wave}/${stage?.waves.length ?? 3}`, 20, coreY + 34, palette.muted);
     this.icon(ctx, 'gold', compact ? 108 : 160, coreY + 33); this.text(ctx, short(state.gold), compact ? 128 : 182, coreY + 34, palette.gold, 16, true, compact ? 70 : 96);
     ctx.fillStyle = palette.ink; ctx.fillRect(20, coreY + 59, islandWidth - 24, 4); ctx.fillStyle = palette.blue; ctx.fillRect(20, coreY + 59, Math.round((islandWidth - 24) * (state.wave - 1) / 3), 4);

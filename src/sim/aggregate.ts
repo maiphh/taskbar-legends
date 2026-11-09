@@ -21,12 +21,29 @@ export function measureReference(run: ReturnType<typeof runReference>) {
     bossTwoDay: milestones.firstClearDay['20'] ?? null, fullRosterDay: milestones.fullRosterDay,
     starterHighestCleared: starter.highestCleared,
     farmMinSeconds: state.metrics.farmMinSeconds, farmMaxSeconds: state.metrics.farmMaxSeconds,
-    farmSamples: state.metrics.farmSamples,
+    farmSamples: state.metrics.farmSamples, farmTimingCounts: run.farmTimingCounts,
     maxNonBossStallSeconds: Math.max(state.metrics.maxNonBossStallSeconds, ...pendingStalls),
   };
 }
 export type ReferenceMeasurement = ReturnType<typeof measureReference>;
 
+export function farmCycleDistribution(histograms: readonly (Record<string, number> | null)[]) {
+  const counts: Record<string, number> = {};
+  for (const histogram of histograms) for (const [ticks, count] of Object.entries(histogram ?? {})) counts[ticks] = (counts[ticks] ?? 0) + count;
+  const values = Object.entries(counts).map(([ticks, count]) => ({ seconds: Number(ticks) / CONFIG.sim.ticksPerSecond, count })).sort((a, b) => a.seconds - b.seconds);
+  const count = values.reduce((sum, value) => sum + value.count, 0);
+  const at = (rank: number): number | null => {
+    let cumulative = 0;
+    for (const value of values) { cumulative += value.count; if (rank < cumulative) return value.seconds; }
+    return null;
+  };
+  const quantile = (fraction: number): number | null => {
+    if (!count) return null;
+    const position = (count - 1) * fraction, lower = at(Math.floor(position)), upper = at(Math.ceil(position));
+    return lower === null || upper === null ? null : lower + (upper - lower) * (position - Math.floor(position));
+  };
+  return { count, min: values[0]?.seconds ?? null, p10: quantile(0.1), median: quantile(0.5), p90: quantile(0.9), max: values.at(-1)?.seconds ?? null, countsByWallTicks: counts };
+}
 export function aggregateReference(samples: readonly ReferenceMeasurement[], gacha: ReturnType<typeof gachaCohort>) {
   if (samples.length === 0 || new Set(samples.map(sample => sample.seed)).size !== samples.length) throw new Error('Aggregate needs distinct, nonempty seed samples');
   const days = samples[0]?.days;
@@ -68,6 +85,7 @@ export function aggregateReference(samples: readonly ReferenceMeasurement[], gac
       { id: 7, target: 'Every non-boss clears within 2700 open seconds of first attempt', unit: 'open seconds', distribution: stall,
         pass: samples.every(sample => sample.maxNonBossStallSeconds <= 2700) },
     ],
+    farmCycles: farmCycleDistribution(samples.map(sample => sample.farmTimingCounts)),
     perSeed: samples,
   };
 }
@@ -77,7 +95,7 @@ export function runReferenceAggregate(options: { firstSeed: number; seeds: numbe
   const measurements: ReferenceMeasurement[] = [];
   for (let index = 0; index < options.seeds; index += 1) {
     const seed = options.firstSeed + index;
-    measurements.push(measureReference(runReference(seed, options.days)));
+    measurements.push(measureReference(runReference(seed, options.days, CONFIG.referencePlayer.openHoursPerDay * 3600, true)));
     options.onProgress?.(index + 1, seed);
   }
   return aggregateReference(measurements, gachaCohort(options.gachaSeeds));
