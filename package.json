@@ -12,13 +12,21 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "sim": "tsx scripts/sim.ts",
-    "shot": "tsx scripts/shot.ts"
+    "shot": "tsx scripts/shot.ts",
+    "tauri": "tauri",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build",
+    "native:check": "cargo check --manifest-path src-tauri/Cargo.toml --locked",
+    "native:test": "cargo test --manifest-path src-tauri/Cargo.toml --locked",
+    "shot:desktop": "tsx scripts/desktop-shot.ts"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.12.4",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tauri-apps/cli": "^2.12.4",
     "@types/node": "^26.6.6",
     "@types/pngjs": "^6.0.5",
     "eslint": "^10.14.0",

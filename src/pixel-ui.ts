@@ -2,7 +2,7 @@ import { CONFIG, heroConfig, slotSchema } from './config';
 import type { AtlasLibrary } from './atlas';
 import { cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
 import { bossSecondsRemaining, statusText } from './core/game';
-import type { Action, GameState, Gear } from './core/model';
+import type { Action, GameState, Gear, ItemId } from './core/model';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -15,7 +15,7 @@ function hasPoint(rect: Rect, x: number, y: number): boolean { return x >= rect.
 export class PixelUI {
   panel: PanelTab | null = null;
   selectedHero = CONFIG.heroes[0]?.id ?? '';
-  selectedGear: number | null = null;
+  selectedGear: ItemId | null = null;
   targetSlot = 0;
   private heroRow = 0;
   private gearRow = 0;
@@ -45,6 +45,10 @@ export class PixelUI {
   onPause: () => void = () => undefined;
   onLayoutChange: () => void = () => undefined;
   onRedraw: () => void = () => undefined;
+  /** Desktop shell only; the browser build never shows Quit. */
+  private quitHandler: (() => void) | null = null;
+  setQuitHandler(handler: (() => void) | null): void { this.quitHandler = handler; this.onRedraw(); }
+  private quitRect(coreY: number): Rect { return { x: this.width - 80, y: coreY + 12, width: 28, height: 24 }; }
   constructor(private readonly atlas: AtlasLibrary, private readonly overlay: HTMLElement) {
     this.ready = this.load();
     overlay.addEventListener('wheel', event => {
@@ -109,6 +113,7 @@ export class PixelUI {
     const islandWidth = compact ? 200 : 280;
     const regions: SourceHitRegion[] = [{ kind: 'hud', id: 'progress', x: 8, y: coreY + 8, width: islandWidth, height: 64 },
       { kind: 'hud', id: 'actions', x: this.width - islandWidth - 8, y: coreY + 8, width: islandWidth, height: 64 }];
+    if (this.quitHandler) regions.push({ ...this.quitRect(coreY), kind: 'hud', id: 'quit' });
     if (this.panel) regions.push({ ...this.panelRect(), kind: 'panel', id: 'management' });
     return regions;
   }
@@ -180,8 +185,10 @@ export class PixelUI {
     ctx.fillStyle = palette.ink; ctx.fillRect(20, coreY + 59, islandWidth - 24, 4); ctx.fillStyle = palette.blue; ctx.fillRect(20, coreY + 59, Math.round((islandWidth - 24) * (state.wave - 1) / 3), 4);
     const dps = state.events.reduce((sum, event) => event.data.type === 'hit' && event.data.side === 'enemy' && state.tick - event.tick <= CONFIG.sim.ticksPerSecond * 5 ? sum + event.data.damage : sum, 0) / Math.min(5, Math.max(1, state.tick / CONFIG.sim.ticksPerSecond));
     if (!compact) this.text(ctx, `DPS ${short(Math.round(dps))}`, right + 12, coreY + 13, palette.blue, 16, true);
-    this.text(ctx, paused ? 'PAUSED' : 'RUNNING', right + (compact ? 12 : 152), coreY + 13, paused ? palette.gold : palette.green, 16);
+    this.text(ctx, paused ? 'PAUSED' : 'RUNNING', right + (compact ? 12 : this.quitHandler ? 120 : 152), coreY + 13, paused ? palette.gold : palette.green, 16);
     this.button(ctx, 'pause', paused ? '>' : 'II', { x: width - 48, y: coreY + 12, width: 28, height: 24 }, () => this.onPause(), { tooltip: paused ? 'Resume simulation (Space)' : 'Pause simulation (Space)' });
+    const quit = this.quitHandler;
+    if (quit) this.button(ctx, 'quit', 'X', this.quitRect(coreY), quit, { tooltip: 'Save and quit' });
     const start = compact ? width - 192 : width - 280;
     const widths = compact ? [56, 56, 56] : [80, 80, 88];
     for (const [index, tab] of (['heroes', 'gear', 'recruit'] satisfies PanelTab[]).entries()) {

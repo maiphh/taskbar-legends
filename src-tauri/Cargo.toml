@@ -1,0 +1,21 @@
+[package]
+name = "taskbar-legends"
+version = "0.2.0"
+description = "Taskbar Legends local desktop shell"
+edition = "2021"
+
+[lib]
+name = "taskbar_legends_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# macOS-only API; tauri-build requires this feature/config pair on every target.
+tauri = { version = "2", features = ["macos-private-api", "tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }

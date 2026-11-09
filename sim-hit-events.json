@@ -1,7 +1,7 @@
 {
-  "configSha256": "bf5c353492f45e5627d2d3cd075c9d9775e03ea329355339015723136f236234",
+  "configSha256": "cbc1ee67a0290c29783c088873dc372950c29cbe35f349f1e455603e89e8a8d4",
   "final": {
-    "balanceVersion": "1.2.0",
+    "balanceVersion": "1.1.0",
     "tick": 40,
     "simulatedOpenSeconds": 2,
     "seed": 1,
@@ -308,5 +308,5 @@
   ],
   "eventsRetained": 23,
   "eventLogNote": "Structured tail bounded to 600; counts cover entire run",
-  "elapsedRealMs": 2
+  "elapsedRealMs": 6
 }

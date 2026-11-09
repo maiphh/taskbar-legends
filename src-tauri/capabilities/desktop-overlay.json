@@ -1,0 +1,27 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "desktop-overlay",
+  "description": "Only local overlay docking, cursor hit testing, visibility and the save-then-exit lifecycle; no filesystem, network, shell or remote URL grants.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:window:allow-current-monitor",
+    "core:window:allow-primary-monitor",
+    "core:window:allow-available-monitors",
+    "core:window:allow-cursor-position",
+    "core:window:allow-inner-position",
+    "core:window:allow-scale-factor",
+    "core:window:allow-set-ignore-cursor-events",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:window:allow-inner-size",
+    "allow-set-overlay-bounds",
+    "allow-shell-mode",
+    "allow-quit-app",
+    "allow-relaunch-app"
+  ]
+}

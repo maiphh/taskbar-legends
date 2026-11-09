@@ -1,5 +1,5 @@
 {
-  "configSha256": "bf5c353492f45e5627d2d3cd075c9d9775e03ea329355339015723136f236234",
+  "configSha256": "6e9afc12efd1eeb1d7e11127e1899935cc637a8d84d096eb5395b68f7d284ef2",
   "final": {
     "balanceVersion": "1.2.0",
     "tick": 72000,
@@ -7,12 +7,12 @@
     "seed": 1,
     "stage": "1-7",
     "highestCleared": "1-7",
-    "status": "Farming 1-7, next try in 1:03",
-    "gold": 21825,
-    "tickets": 34,
+    "status": "Farming 1-7, next try in 4:15",
+    "gold": 11582,
+    "tickets": 33,
     "partyPower": 567,
     "ownedHeroes": 3,
-    "inventory": 33,
+    "inventory": 23,
     "party": [
       {
         "id": "mw2",
@@ -34,19 +34,18 @@
       "kind": "FARMING",
       "stage": 7,
       "failedStage": 8,
-      "retryAtTick": 73245,
-      "failTick": 61245,
+      "retryAtTick": 77093,
       "failedPower": 567,
       "failures": 10
     },
     "stats": {
-      "clears": 157,
+      "clears": 84,
       "losses": 10,
       "retries": 9,
       "bossFailures": 0,
-      "goldEarned": 21825,
+      "goldEarned": 11582,
       "pulls": 0,
-      "chests": 33,
+      "chests": 23,
       "offlineClears": 0,
       "offlineSeconds": 0
     },
@@ -72,22 +71,6 @@
       },
       "fullRosterTick": null,
       "farmClearSeconds": [
-        20,
-        20,
-        20,
-        20,
-        20,
-        20,
-        20,
-        20,
-        20,
-        20
-      ],
-      "farmMinSeconds": 20,
-      "farmMaxSeconds": 20,
-      "farmSamples": 150,
-      "maxNonBossStallSeconds": 36.85,
-      "nativeFarmClearSeconds": [
         36.15,
         36.15,
         36.15,
@@ -98,26 +81,30 @@
         36.15,
         36.15,
         36.15
-      ]
+      ],
+      "farmMinSeconds": 36.15,
+      "farmMaxSeconds": 42.85,
+      "farmSamples": 77,
+      "maxNonBossStallSeconds": 36.85
     },
-    "totalEvents": 35738
+    "totalEvents": 19909
   },
   "events": {
-    "spawn": 3085,
-    "stage": 175,
-    "wave": 510,
-    "hit": 20290,
-    "death": 2563,
-    "gold": 2676,
-    "xp": 2676,
-    "skill": 3546,
-    "clear": 157,
-    "gear": 33,
-    "tickets": 8,
+    "spawn": 1674,
+    "stage": 97,
+    "wave": 275,
+    "hit": 11526,
+    "death": 1384,
+    "gold": 1425,
+    "xp": 1425,
+    "skill": 1970,
+    "clear": 84,
+    "gear": 23,
+    "tickets": 7,
     "loss": 10,
     "retry": 9
   },
   "eventsRetained": 600,
   "eventLogNote": "Structured tail bounded to 600; counts cover entire run",
-  "elapsedRealMs": 177
+  "elapsedRealMs": 40
 }
