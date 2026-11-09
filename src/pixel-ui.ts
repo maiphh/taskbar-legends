@@ -2,7 +2,7 @@ import { CONFIG, heroConfig, slotSchema } from './config';
 import type { AtlasLibrary } from './atlas';
 import { cheapestEquippedUpgrade, gearScore, heroStats, upgradeCost } from './core/economy';
 import { statusText } from './core/game';
-import type { Action, GameState, Gear } from './core/model';
+import type { Action, GameState, Gear, ItemId } from './core/model';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -15,7 +15,7 @@ function hasPoint(rect: Rect, x: number, y: number): boolean { return x >= rect.
 export class PixelUI {
   panel: PanelTab | null = null;
   selectedHero = CONFIG.heroes[0]?.id ?? '';
-  selectedGear: number | null = null;
+  selectedGear: ItemId | null = null;
   targetSlot = 0;
   private heroRow = 0;
   private gearRow = 0;
