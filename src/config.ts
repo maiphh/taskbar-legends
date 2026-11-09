@@ -27,18 +27,30 @@ export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int()
 /**
  * v1.4 code requests (design.md §18). config.json → `v14` carries the designer's *target* values; the game reads them only
  * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default and the game is 1.3.0.
- * Implemented here: CR-14-08 chestChoice, CR-14-09 farmChest. Other v14 keys are parsed loosely and stay inert.
+ * Implemented here: CR-14-08 chestChoice, CR-14-09 farmChest, CR-14-01/02 recruitPity, CR-14-03 gearFortune.
+ * Other v14 keys are parsed loosely and stay inert.
  */
 const v14Schema = z.looseObject({
   chestChoice: z.looseObject({ options: z.number().int().min(1).max(2), fromStage: z.number().int().positive() }),
   farmChest: z.looseObject({ baseChance: z.number().min(0).max(1), guaranteeEvery: z.number().int().positive(), fromStage: z.number().int().positive() }),
+  gacha: z.looseObject({ legendaryPityEvery: z.number().int().min(2), legendaryPityPrefersUnowned: z.boolean(), newHeroGuaranteeEvery: z.number().int().min(2) }),
+  gearPity: z.looseObject({ legendaryEvery: z.number().int().min(2), firstLegendaryBy: z.number().int().min(2), rollUnits: z.looseObject({ chest: z.number().int().positive() }) }),
 });
 export const V14_DESIGN = v14Schema.parse(design.v14);
-export const v14RuleSchema = z.enum(['chestChoice', 'farmChest']);
+export const v14RuleSchema = z.enum(['chestChoice', 'farmChest', 'recruitPity', 'gearFortune']);
 export type V14Rule = z.infer<typeof v14RuleSchema>;
-export interface V14Live { chestChoice: { options: number; fromStage: number }; farmChest: { baseChance: number; guaranteeEvery: number; fromStage: number } | null }
-// §18 defaults: options 1 (off) and farmChest null (→ rewards.farmChestChance everywhere).
-const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null });
+export interface V14Live {
+  chestChoice: { options: number; fromStage: number };
+  farmChest: { baseChance: number; guaranteeEvery: number; fromStage: number } | null;
+  /** CR-14-01 legendaryPityEvery / CR-14-02 newHeroGuaranteeEvery; 0 = off. */
+  recruit: { legendaryPityEvery: number; legendaryPityPrefersUnowned: boolean; newHeroGuaranteeEvery: number };
+  /** CR-14-03; 0 = off. chestUnits = Fortune roll units per normal chest. */
+  fortune: { legendaryEvery: number; firstLegendaryBy: number; chestUnits: number };
+}
+// §18 defaults: options 1 (off), farmChest null (→ rewards.farmChestChance everywhere), pity and Fortune 0 (off).
+const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null,
+  recruit: { legendaryPityEvery: 0, legendaryPityPrefersUnowned: true, newHeroGuaranteeEvery: 0 },
+  fortune: { legendaryEvery: 0, firstLegendaryBy: 0, chestUnits: 1 } });
 export const CONFIG = {
   ...design,
   v14: v14Defaults(),
@@ -85,9 +97,14 @@ export function setV14Rules(rules: readonly V14Rule[]): void {
   const on = new Set(rules.map(rule => v14RuleSchema.parse(rule)));
   CONFIG.v14.chestChoice = on.has('chestChoice') ? { options: V14_DESIGN.chestChoice.options, fromStage: V14_DESIGN.chestChoice.fromStage } : v14Defaults().chestChoice;
   CONFIG.v14.farmChest = on.has('farmChest') ? { baseChance: V14_DESIGN.farmChest.baseChance, guaranteeEvery: V14_DESIGN.farmChest.guaranteeEvery, fromStage: V14_DESIGN.farmChest.fromStage } : null;
+  const gacha = V14_DESIGN.gacha, gear = V14_DESIGN.gearPity;
+  CONFIG.v14.recruit = on.has('recruitPity') ? { legendaryPityEvery: gacha.legendaryPityEvery, legendaryPityPrefersUnowned: gacha.legendaryPityPrefersUnowned, newHeroGuaranteeEvery: gacha.newHeroGuaranteeEvery } : v14Defaults().recruit;
+  CONFIG.v14.fortune = on.has('gearFortune') ? { legendaryEvery: gear.legendaryEvery, firstLegendaryBy: gear.firstLegendaryBy, chestUnits: gear.rollUnits.chest } : v14Defaults().fortune;
 }
 export function activeV14Rules(): V14Rule[] {
-  return v14RuleSchema.options.filter(rule => rule === 'chestChoice' ? CONFIG.v14.chestChoice.options > 1 : CONFIG.v14.farmChest !== null);
+  const on: Record<V14Rule, boolean> = { chestChoice: CONFIG.v14.chestChoice.options > 1, farmChest: CONFIG.v14.farmChest !== null,
+    recruitPity: CONFIG.v14.recruit.legendaryPityEvery > 0 || CONFIG.v14.recruit.newHeroGuaranteeEvery > 0, gearFortune: CONFIG.v14.fortune.legendaryEvery > 0 };
+  return v14RuleSchema.options.filter(rule => on[rule]);
 }
 export const TICK_MS = 1000 / CONFIG.sim.ticksPerSecond;
 export const ticksForSeconds = (seconds: number): number => Math.round(seconds * CONFIG.sim.ticksPerSecond);

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CONFIG, enemyKindSchema, heroConfig, raritySchema, slotSchema, stageConfig } from '../config';
+import { CONFIG, V14_DESIGN, enemyKindSchema, heroConfig, raritySchema, slotSchema, stageConfig } from '../config';
 
 const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const positive = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
@@ -66,7 +66,7 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('pull'), heroId: z.string(), rarity: raritySchema, duplicate: z.boolean(), pity: z.boolean() }),
   z.object({ type: z.literal('gear'), gearId: itemIdSchema, slot: slotSchema, rarity: raritySchema }),
   // CR-14-08: emitted when a pick-1-of-2 chest resolves (by the player, or auto-picked by score when the queue overflows).
-  z.object({ type: z.literal('chestChoice'), options: z.tuple([itemIdSchema, itemIdSchema]), kept: itemIdSchema }),
+  z.object({ type: z.literal('chestChoice'), options: z.tuple([itemIdSchema, itemIdSchema]), kept: itemIdSchema, rarities: z.tuple([raritySchema, raritySchema]).optional() }),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema, level: positive, cost: positive }),
   z.object({ type: z.literal('tickets'), amount: positive, total: natural }),
   // seconds = applied (capped) time; rawSeconds = uncapped time away; heroes = every hero that received offline XP.
@@ -104,6 +104,12 @@ export const stateSchema = z.object({
   // and repeat farm clears since the last farm chest at stage ≥ farmChest.fromStage.
   pendingChoice: z.array(z.tuple([gearSchema, gearSchema])).max(CONFIG.runtime.chestChoiceQueueMax).optional(),
   farmChestDry: natural.optional(),
+  // v1.4 CR-14-01/02/03, optional: pulls since the last Legendary, consecutive pulls without a new hero,
+  // chest Fortune rolls since the last Legendary gear, and whether a Legendary has dropped yet.
+  pityLegendary: natural.max(V14_DESIGN.gacha.legendaryPityEvery - 1).optional(),
+  pityNewHero: natural.max(V14_DESIGN.gacha.newHeroGuaranteeEvery - 1).optional(),
+  gearSinceLegendary: natural.max(V14_DESIGN.gearPity.legendaryEvery - 1).optional(),
+  gearLegendaryFound: z.boolean().optional(),
   eventSeq: natural, eventCounts: z.record(z.string(), natural), events: z.array(eventSchema).max(CONFIG.runtime.eventLogLimit),
 }).strict().superRefine((state, context) => {
   const invalid = (message: string): void => context.addIssue({ code: 'custom', message });
@@ -119,6 +125,7 @@ export const stateSchema = z.object({
   const pendingIds = (state.pendingChoice ?? []).flat().map(item => item.id);
   if (new Set(pendingIds).size !== pendingIds.length || pendingIds.some(id => gearIds.has(id) || id >= itemId(state.seed, state.nextGearId) || !id.startsWith(itemId(state.seed, 0).slice(0, 13)))
     || (state.pendingChoice ?? []).flat().some(item => item.templateId !== gearTemplateId(item.slot, item.rarity))) invalid('Invalid pending chest choice');
+  if (state.gearLegendaryFound !== true && state.gearSinceLegendary !== undefined && state.gearSinceLegendary >= V14_DESIGN.gearPity.firstLegendaryBy) invalid('Fortune counter past the first-Legendary guarantee');
   if (state.farmChestDry !== undefined && CONFIG.v14.farmChest && state.farmChestDry >= CONFIG.v14.farmChest.guaranteeEvery) invalid('Farm chest dry run beyond its guarantee');
   const equipped = new Set<string>();
   for (const hero of state.roster) for (const slot of slotSchema.options) {

@@ -21,7 +21,11 @@
             "itm_36deb503_00000013",
             "itm_36deb503_00000014"
           ],
-          "kept": "itm_36deb503_00000014"
+          "kept": "itm_36deb503_00000014",
+          "rarities": [
+            "epic",
+            "common"
+          ]
         },
         "rules": [
           "chestChoice",
@@ -54,7 +58,11 @@
             "itm_36deb503_00000013",
             "itm_36deb503_00000014"
           ],
-          "kept": "itm_36deb503_00000014"
+          "kept": "itm_36deb503_00000014",
+          "rarities": [
+            "epic",
+            "common"
+          ]
         },
         "rules": [
           "chestChoice",
@@ -66,7 +74,66 @@
         "inside": true
       },
       "hotspotOpens": "gear"
-    }
+    },
+    "meters": {
+      "960": {
+        "regions": [
+          {
+            "id": "recruit-meter",
+            "present": true,
+            "inside": true,
+            "tooltip": "Epic+ in 28 · Legend in 45 · New hero in 19"
+          },
+          {
+            "id": "fortune-meter",
+            "present": true,
+            "inside": true,
+            "tooltip": "First Legendary gear guaranteed within 20 chest rolls"
+          }
+        ],
+        "opened": {
+          "recruit-meter": "recruit",
+          "fortune-meter": "gear"
+        },
+        "state": {
+          "pity": 2,
+          "pityLegendary": 15,
+          "pityNewHero": 1,
+          "gearSinceLegendary": 20,
+          "gearLegendaryFound": false,
+          "roster": 12
+        }
+      },
+      "1280": {
+        "regions": [
+          {
+            "id": "recruit-meter",
+            "present": true,
+            "inside": true,
+            "tooltip": "Epic+ in 28 · Legend in 45 · New hero in 19"
+          },
+          {
+            "id": "fortune-meter",
+            "present": true,
+            "inside": true,
+            "tooltip": "First Legendary gear guaranteed within 20 chest rolls"
+          }
+        ],
+        "opened": {
+          "recruit-meter": "recruit",
+          "fortune-meter": "gear"
+        },
+        "state": {
+          "pity": 2,
+          "pityLegendary": 15,
+          "pityNewHero": 1,
+          "gearSinceLegendary": 20,
+          "gearLegendaryFound": false,
+          "roster": 12
+        }
+      }
+    },
+    "metersOk": true
   },
   "ok": true,
   "errors": []

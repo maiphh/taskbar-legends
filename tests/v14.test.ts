@@ -19,12 +19,13 @@ const goldenRun = (): string => { const run = runReference(3, 1); applyOffline(r
 describe('v14 config block', () => {
   it('ships the designer block inert: no rule on by default, §18 defaults, designer values parsed', () => {
     expect(activeV14Rules()).toEqual([]);
-    expect(CONFIG.v14).toEqual({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null });
+    expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
     expect(design.version).toBe('1.3.0'); expect(design.v14.targetVersion).toBe('1.4.0');
     expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 1 });
     expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 9, fromStage: 10 });
     setV14Rules(['chestChoice', 'farmChest']); expect(activeV14Rules()).toEqual(['chestChoice', 'farmChest']);
-    setV14Rules([]); expect(CONFIG.v14).toEqual({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null });
+    setV14Rules(['recruitPity', 'gearFortune']); expect(activeV14Rules()).toEqual(['recruitPity', 'gearFortune']);
+    setV14Rules([]); expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
   });
 });
 
@@ -61,7 +62,7 @@ describe('CR-14-08 chest pick-1-of-2', () => {
     input(state, { type: 'chooseChest', keep: 1 });
     expect(state.inventory.map(item => item.id)).toEqual([pair[1].id]);
     expect(state.gold - gold).toBe(Math.round(CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[pair[0].rarity]));
-    expect(state.events.at(-1)?.data).toEqual({ type: 'chestChoice', options: [pair[0].id, pair[1].id], kept: pair[1].id });
+    expect(state.events.at(-1)?.data).toEqual({ type: 'chestChoice', options: [pair[0].id, pair[1].id], kept: pair[1].id, rarities: [pair[0].rarity, pair[1].rarity] });
     expect(state.pendingChoice).toBeUndefined();
     for (let index = 0; index < 3; index += 1) chest(state, 4);
     const oldest = state.pendingChoice?.[0] as [Gear, Gear];

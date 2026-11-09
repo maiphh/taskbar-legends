@@ -43,3 +43,10 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Boss countdown (#3) uses Galmuri11 Bold 12px at the island heading draw y (`coreLoopFeedback.islandText.headingDrawY`), `TIME m:ss` at islandWidth-80, with `BOSS {id}` clipped to islandWidth-100; red at <=5 s, no blink.
 - Core-loop feedback follows `review-core-loop-feedback.md` and ui.md §10: pip with pulse (renderer memory keyed by sim tick, 60 s cooldown, stops on hover/focus/click/panel), banner plate sized by `measureText`, two-colour popup at core-local -22 rising 16px, single panel chip, boss button in the left island row 2, management buttons 88/72/88. Centred rects use round-half-even to match the designer's tables. Timing is in `src/motion.ts` (pure, tested); `npm run shot` renders with `prefers-reduced-motion` so shots are static and byte-stable.
 - Historical handoff docs (`docs/ui-v1.md`, `docs/ui-assets.md`) still describe the M1 Pixel Operator choice and are left as written.
+
+## v1.4 chests and luck (Game Lead decisions, 2026-11-09)
+
+- `v14.chestChoice.fromStage` stays at the config value (1). The Designer tunes it; the code does not override it.
+- The pending pick-1-of-2 prompt replaces the left-island heading (a running boss countdown keeps priority). Approved.
+- `bestChoice` (reference policy and the auto-resolve of a 4th queued choice) keeps option 0 when both gear scores tie. Approved.
+- Recruit pity (CR-14-01/02) and gear Fortune (CR-14-03) follow design.md §14 and are opt-in (`recruitPity`, `gearFortune`); see docs/V14-LUCK.md for the choices made where the spec is silent.

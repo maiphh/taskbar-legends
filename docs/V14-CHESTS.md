@@ -32,6 +32,6 @@ future id or another seed's namespace, or a dry counter at or past the guarantee
   selected party slot, drop stage, salvage value of the other) and a Keep button each; `{n} WAITING` when more queue.
 - All of it sits inside the existing `progress` and `management` hit regions (checked in `shots/v14-chest-choice-checks.json`).
 
-## Not in this PR
+## Not in this PR (luck: see V14-LUCK.md)
 Recruit pity and Fortune (CR-14-01..03), Expedition Chests and offline tickets (04, 05), goblin (06, 07), Golden Wave (10),
 meters/strings (12), and `v14.economyOverrides` (§18: only together with 01, 02, 05, 06).
