@@ -1,0 +1,155 @@
+import { CONFIG, stageConfig, ticksForSeconds } from '../../src/config';
+import { beginEncounter, combatTick, spawnWave } from '../../src/core/combat';
+import { autoEquip, autoParty, blankEquipment, chest, equip, grantXp, partyPower, pull, setParty, upgrade } from '../../src/core/economy';
+import { emit, goldChange } from '../../src/core/events';
+import { cloneState, parseState } from '../../src/core/model';
+import type { Action, GameState } from '../../src/core/model';
+import { normalizeSeed, random } from '../../src/core/rng';
+
+export function stageName(stage: number): string { return stageConfig(stage).id; }
+export function isBoss(stage: number): boolean { return stageConfig(stage).isBoss; }
+export function createState(seed = 1): GameState {
+  const normalized = normalizeSeed(seed);
+  const starters = CONFIG.heroes.filter(hero => hero.starter);
+  const state: GameState = {
+    version: 1, balance: CONFIG.version, tick: 0, rng: normalized, seed: normalized, gold: 0,
+    tickets: CONFIG.rewards.startingTickets, pity: 0, highestCleared: 0, progress: { kind: 'PUSHING', stage: 1 },
+    phase: { kind: 'battle' }, wave: 1, encounter: 0, stageStartedTick: 0, attemptPower: 0,
+    roster: starters.map(hero => ({ id: hero.id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() })),
+    partyIds: starters.map(hero => hero.id), inventory: [], nextGearId: 1, party: [], enemies: [], retryFailures: 0, economyRevision: 0,
+    stats: { clears: 0, losses: 0, retries: 0, bossFailures: 0, goldEarned: 0, pulls: 0, chests: 0, offlineClears: 0, offlineSeconds: 0 },
+    metrics: { firstAttemptTicks: {}, firstClearTicks: {}, fullRosterTick: null, farmClearSeconds: [], farmMinSeconds: null,
+      farmMaxSeconds: null, farmSamples: 0, maxNonBossStallSeconds: 0 }, eventSeq: 0, eventCounts: {}, events: [],
+  };
+  beginEncounter(state);
+  return state;
+}
+function rest(state: GameState, next: 'encounter' | 'wave'): void {
+  state.phase = { kind: 'rest', remainingTicks: ticksForSeconds(next === 'wave' ? CONFIG.sim.waveGapSec : CONFIG.sim.stageGapSec), next };
+}
+export function retry(state: GameState, manual: boolean): void {
+  const progress = state.progress;
+  if (progress.kind === 'FARMING') {
+    state.progress = { kind: 'PUSHING', stage: progress.failedStage };
+  } else if (progress.kind === 'BOSS_READY' && manual) {
+    state.progress = { kind: 'BOSS_FIGHT', stage: progress.bossStage, failedPower: progress.failedPower, bossLosses: progress.bossLosses };
+  } else return;
+  state.stats.retries += 1;
+  emit(state, { type: 'retry', stage: state.progress.stage, manual });
+  beginEncounter(state);
+}
+function lose(state: GameState): void {
+  const progress = state.progress;
+  const boss = progress.kind === 'BOSS_FIGHT';
+  state.stats.losses += 1;
+  if (boss) state.stats.bossFailures += 1;
+  emit(state, { type: 'loss', stage: progress.stage, boss });
+  if (boss) state.progress = { kind: 'BOSS_READY', stage: state.highestCleared, bossStage: progress.stage,
+    failedPower: state.attemptPower, bossLosses: progress.bossLosses + 1 };
+  else if (progress.kind === 'PUSHING') {
+    state.retryFailures += 1;
+    const backoff = CONFIG.progression.retryBackoff[Math.min(state.retryFailures - 1, CONFIG.progression.retryBackoff.length - 1)] ?? CONFIG.progression.retryIntervalSec;
+    state.progress = { kind: 'FARMING', stage: Math.max(1, state.highestCleared), failedStage: progress.stage,
+      retryAtTick: state.tick + ticksForSeconds(backoff), failedPower: state.attemptPower, failures: state.retryFailures };
+  }
+  rest(state, 'encounter');
+}
+function win(state: GameState): void {
+  const stage = stageConfig(state.progress.stage);
+  if (state.wave < stage.waves.length) { state.wave += 1; rest(state, 'wave'); return; }
+  const first = state.progress.kind === 'PUSHING' || state.progress.kind === 'BOSS_FIGHT';
+  const duration = (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond + CONFIG.sim.stageGapSec;
+  const mult = CONFIG.rewards.clearScaling ** (stage.index - 1);
+  goldChange(state, Math.round(CONFIG.rewards.clearGold * mult), 'clear');
+  grantXp(state, Math.round(CONFIG.rewards.clearXp * mult));
+  state.stats.clears += 1;
+  emit(state, { type: 'clear', stage: stage.index, first, durationSeconds: duration });
+  if (first) {
+    state.highestCleared = stage.index; state.retryFailures = 0;
+    state.metrics.firstClearTicks[String(stage.index)] ??= state.tick;
+    if (!stage.isBoss) {
+      const start = state.metrics.firstAttemptTicks[String(stage.index)] ?? state.tick;
+      state.metrics.maxNonBossStallSeconds = Math.max(state.metrics.maxNonBossStallSeconds, (state.tick - start) / CONFIG.sim.ticksPerSecond);
+    }
+    if (CONFIG.rewards.firstClearChest) chest(state, stage.index);
+    state.tickets += stage.firstClearTickets; state.economyRevision += 1;
+    emit(state, { type: 'tickets', amount: stage.firstClearTickets, total: state.tickets });
+    if (stage.index === CONFIG.stages.length) state.progress = { kind: 'COMPLETE', stage: stage.index };
+    else if (isBoss(stage.index + 1)) state.progress = { kind: 'BOSS_READY', stage: stage.index, bossStage: stage.index + 1, failedPower: 0, bossLosses: 0 };
+    else state.progress = { kind: 'PUSHING', stage: stage.index + 1 };
+  } else {
+    state.metrics.farmClearSeconds.push(duration);
+    if (state.metrics.farmClearSeconds.length > CONFIG.idle.avgFarmClearSecWindow) state.metrics.farmClearSeconds.shift();
+    state.metrics.farmMinSeconds = Math.min(state.metrics.farmMinSeconds ?? duration, duration);
+    state.metrics.farmMaxSeconds = Math.max(state.metrics.farmMaxSeconds ?? duration, duration);
+    state.metrics.farmSamples += 1;
+    if (random(state) < CONFIG.rewards.farmChestChance) chest(state, stage.index);
+    if (random(state) < CONFIG.rewards.farmTicketChance) { state.tickets += 1; state.economyRevision += 1; emit(state, { type: 'tickets', amount: 1, total: state.tickets }); }
+  }
+  rest(state, 'encounter');
+}
+export function input(state: GameState, action: Action): void {
+  switch (action.type) {
+    case 'retry': retry(state, true); return;
+    case 'pull': pull(state); return;
+    case 'autoEquip': autoEquip(state); return;
+    case 'autoParty': autoParty(state); return;
+    case 'upgrade': upgrade(state, action.gearId); return;
+    case 'equip': equip(state, action.heroId, action.gearId); return;
+    case 'party': setParty(state, action.heroIds); return;
+    default: { const exhaustive: never = action; return exhaustive; }
+  }
+}
+function tick(state: GameState): void {
+  state.tick += 1;
+  const progress = state.progress;
+  if (progress.kind === 'FARMING' && state.tick >= progress.retryAtTick) retry(state, false);
+  if (state.phase.kind === 'rest') {
+    state.phase.remainingTicks -= 1;
+    if (state.phase.remainingTicks <= 0) {
+      const progress = state.progress;
+      if (state.phase.next === 'encounter') {
+        if (progress.kind === 'FARMING' && partyPower(state) >= progress.failedPower * (1 + CONFIG.progression.powerGainRetryPct)) retry(state, false);
+        else beginEncounter(state);
+      } else spawnWave(state);
+    }
+    return;
+  }
+  if (state.tick - state.stageStartedTick >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec)) { lose(state); return; }
+  combatTick(state);
+  if (state.party.every(hero => hero.hp <= 0)) lose(state);
+  else if (state.enemies.every(enemy => enemy.hp <= 0)) win(state);
+}
+// Mutates only the provided JSON state; never reads a clock, DOM, asset or global RNG.
+export function step(state: GameState, ticks = 1): GameState {
+  if (!Number.isSafeInteger(ticks) || ticks < 0 || ticks > CONFIG.runtime.maxStepTicks) throw new Error(`Ticks must be an integer from 0 to ${CONFIG.runtime.maxStepTicks}`);
+  for (let i = 0; i < ticks; i += 1) tick(state);
+  return state;
+}
+export function snapshot(state: GameState): string { return JSON.stringify(parseState(state)); }
+export function load(snapshotValue: unknown): GameState {
+  const value: unknown = typeof snapshotValue === 'string' ? JSON.parse(snapshotValue) : snapshotValue;
+  return cloneState(parseState(value));
+}
+export function statusText(state: GameState): string {
+  const progress = state.progress;
+  switch (progress.kind) {
+    case 'PUSHING': return `Pushing ${stageName(progress.stage)}`;
+    case 'BOSS_FIGHT': return `Boss ${stageName(progress.stage)}!`;
+    case 'BOSS_READY': return `Boss ${stageName(progress.bossStage)} ${progress.bossLosses ? 'failed, tap to retry' : 'ready, click to fight'}`;
+    case 'COMPLETE': return `Campaign clear · Farming ${stageName(progress.stage)}`;
+    case 'FARMING': {
+      const seconds = Math.max(0, Math.ceil((progress.retryAtTick - state.tick) / CONFIG.sim.ticksPerSecond));
+      return `Farming ${stageName(progress.stage)}, next try in ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    }
+    default: { const exhaustive: never = progress; return exhaustive; }
+  }
+}
+export function summary(state: GameState) {
+  return { balanceVersion: state.balance, tick: state.tick, simulatedOpenSeconds: state.tick / CONFIG.sim.ticksPerSecond, seed: state.seed,
+    stage: stageName(state.progress.stage), highestCleared: state.highestCleared ? stageName(state.highestCleared) : null,
+    status: statusText(state), gold: state.gold, tickets: state.tickets, partyPower: partyPower(state),
+    ownedHeroes: state.roster.length, inventory: state.inventory.length,
+    party: state.partyIds.map(id => { const hero = state.roster.find(hero => hero.id === id); return { id, level: hero?.level, stars: hero?.stars }; }),
+    progress: { ...state.progress }, stats: { ...state.stats }, metrics: structuredClone(state.metrics), totalEvents: state.eventSeq };
+}

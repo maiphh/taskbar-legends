@@ -23,8 +23,11 @@ const stageDefinition = z.object({ id: z.string(), index: z.number().int().posit
   isBoss: z.boolean(), timeoutSec: z.number().positive(), firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() });
 // Replace design-config.json with the designer's next delivery; config.json wins over prose.
 // Only underspecified implementation/presentation constants are added here.
+export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0) });
 export const CONFIG = {
   ...design,
+  combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
+  progression: { ...design.progression, ...z.object({ powerGainRetryMinSec: z.number().finite().nonnegative().default(0) }).parse(design.progression) },
   ui: uiTokens,
   heroes: z.array(heroDefinition).parse(design.heroes),
   stages: z.array(stageDefinition).parse(design.stages),
@@ -40,7 +43,7 @@ export const CONFIG = {
   },
   view: {
     canvasHeight: uiTokens.closed.height, stripHeight: uiTokens.closed.coreHeight, defaultWidth: 1280, minWidth: 320, maxDpr: 2,
-    baselineY: uiTokens.closed.baselineY, hitFlashMs: 90, hitFlashColor: '#ffffff', hurtFallbackMs: 200, attackFallbackMs: 500, heroWidth: 18, heroHeight: 23, enemyWidth: 18, enemyHeight: 21,
+    baselineY: uiTokens.closed.baselineY, bossCountdownWarnSec: 5, hitFlashMs: 90, hitFlashColor: '#ffffff', hurtFallbackMs: 200, attackFallbackMs: 500, heroWidth: 18, heroHeight: 23, enemyWidth: 18, enemyHeight: 21,
     bossWidth: 27, bossHeight: 31, hpWidth: 26, hpHeight: 3,
     background: '#101c27', floor: '#253b43', line: '#355253', text: '#e8eee5', muted: '#8babb0', gold: '#f0cf7f',
     heroAssets: { mw2: 'medieval-warrior-pack-2', hu1: 'huntress', wiz: 'wizard-pack', mw1: 'medieval-warrior-pack', mw3: 'medieval-warrior-pack-3', mh1: 'martial-hero', hk1: 'hero-knight', mh2: 'martial-hero-2', hu2: 'huntress-2', ew1: 'evil-wizard', priest: 'priest', hk2: 'hero-knight-2', mk1: 'medieval-king-pack', fw: 'fantasy-warrior', ew2: 'evil-wizard-2', mk2: 'medieval-king-pack-2', mh3: 'martial-hero-3', ew3: 'evil-wizard-3' } satisfies Record<string, string>,

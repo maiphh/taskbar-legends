@@ -113,3 +113,15 @@ CI runs typecheck, ESLint, Vitest (core, million-pull distribution/pity, determi
 ## License
 
 Copyright (c) 2026 Mai Gia Phu. All rights reserved. Game code is proprietary (`UNLICENSED`); see [LICENSE](LICENSE). Third-party assets retain their CC0 licences; see [CREDITS.md](CREDITS.md) and [LICENSES/](LICENSES/).
+
+## v1.2 repeat-only farm tempo
+
+Designer v1.2.0 is imported without number tuning; the requested overrides are `combat.nonBossFarmTimeScale=3`, `combat.nonBossFarmMinCycleSec=20`, and absent `progression.powerGainRetryMinSec=0`. Defaults1/0 keep the legacy combat/reward/rest path. Eligibility is captured at the start of cleared non-boss repeats (including BOSS_READY farming), never pushes/bosses/offline. Native substeps accelerate movement, attacks, shields, timeout and inter-wave gaps; wall ticks/retry deadlines/stage gap stay unchanged. A no-action padding phase settles at max(combat+stageGap,20s), once, with no second gap. Aborted unsettled padding earns no clear/sample. Native last-ten durations are saved separately for offline rewards. Snapshot/load includes native clock, unused substep budget and padding deadline.
+
+`powerGainRetryMinSec` gates only early power retries since the stored loss tick. Timer/manual retry and BOSS_READY policy are unchanged. Power retries now occur on the exact eligible wall tick/input action rather than the legacy encounter-boundary check, as explicitly requested. Old1.1saves and omitted failTick/native fields remain loadable. See `docs/V12-ARCHITECTURE.md` for this compatibility distinction.
+
+```sh
+npm run --silent sim -- --policy reference --days 9 --seeds 25 > sim-ref-v12-25 seeds-9d.json
+```
+
+Aggregate reports include all seven targets plus `farmCycles` (real pooled min/p10/median/p90/max/count and exact duration histogram). It observes every successful online clear; no clamping, discarded outliers or last-ten-only sampling. Boss farm repeats are included, unscaled.25 seeds are diagnostic, not the designer's required100-seed population certification. Config snapshot and SHA256 are retained in the report. Boss fights show a wall-time countdown in the opaque strip, in existing 16px gold/red tokens; new screenshots12–14cover wide/compact/final-five views. Countdown placement needs Game Graphic Designer review because no dedicated timer token was specified.

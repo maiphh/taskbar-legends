@@ -24,7 +24,7 @@ export function expectedFarmRewards(stageNumber: number) {
 export function applyOffline(state: GameState, elapsedMs: number) {
   if (!Number.isFinite(elapsedMs)) throw new Error('Invalid elapsed time');
   const seconds = Math.min(Math.max(0, elapsedMs / 1000), CONFIG.idle.offlineCapHours * 3600);
-  const samples = state.metrics.farmClearSeconds;
+  const samples = state.metrics.nativeFarmClearSeconds ?? state.metrics.farmClearSeconds;
   const average = samples.length ? samples.reduce((a, b) => a + b, 0) / samples.length : CONFIG.idle.avgFarmClearSecDefault;
   const clears = Math.floor(seconds / average);
   const stage = Math.max(1, state.highestCleared);

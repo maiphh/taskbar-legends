@@ -1,6 +1,7 @@
 import { CONFIG, enemyKindSchema, heroConfig, stageConfig, ticksForSeconds } from '../config';
 import { grantXp, heroStats, getOwned, partyPower } from './economy';
 import { emit, goldChange } from './events';
+import { captureFarmClock, combatTime } from './clock';
 import type { GameState, Unit } from './model';
 
 export function damage(atk: number, def: number): number { return Math.max(1, Math.round(atk * 100 / (100 + def))); }
@@ -26,6 +27,7 @@ export function spawnWave(state: GameState): void {
       hp: Math.round(base.hp * mult), maxHp: Math.round(base.hp * mult), atk: Math.round(base.atk * mult), def: Math.round(base.def * mult),
       attackTicks: base.attackIntervalTicks, range: base.rangePx, x: CONFIG.sim.enemySpawnX + slot * CONFIG.sim.enemySpawnSpacingPx,
       slot, cooldown: CONFIG.combat.firstAttackDelayTicks, boss: kind.startsWith('boss'), attacks: 0, shield: 0, shieldUntilTick: 0, bornTick: state.tick };
+    if (state.farmClock) unit.nativeBornTick = combatTime(state);
     emit(state, { type: 'spawn', unitId: unit.id, side: 'enemy', stage: stage.index, wave: state.wave });
     return unit;
   });
@@ -34,6 +36,7 @@ export function spawnWave(state: GameState): void {
 }
 export function beginEncounter(state: GameState): void {
   state.encounter += 1; state.wave = 1; state.stageStartedTick = state.tick;
+  captureFarmClock(state);
   state.attemptPower = partyPower(state);
   if (!(String(state.progress.stage) in state.metrics.firstAttemptTicks)) state.metrics.firstAttemptTicks[String(state.progress.stage)] = state.tick;
   spawnParty(state);
@@ -75,7 +78,7 @@ function attackHero(state: GameState, hero: Unit): void {
   if (skill) emit(state, { type: 'skill', unitId: hero.id, skill: role.skill.id });
   switch (definition.role) {
     case 'tank':
-      if (skill) { hero.shield = Math.round(hero.maxHp * CONFIG.roles.tank.skill.shieldPctMaxHp); hero.shieldUntilTick = state.tick + ticksForSeconds(CONFIG.roles.tank.skill.shieldDurationSec); }
+      if (skill) { hero.shield = Math.round(hero.maxHp * CONFIG.roles.tank.skill.shieldPctMaxHp); hero.shieldUntilTick = combatTime(state) + ticksForSeconds(CONFIG.roles.tank.skill.shieldDurationSec); }
       else if (target) hit(state, hero, target);
       return;
     case 'warrior': {
@@ -111,7 +114,7 @@ function attackHero(state: GameState, hero: Unit): void {
 }
 export function combatTick(state: GameState): void {
   for (const hero of state.party) {
-    if (hero.shieldUntilTick <= state.tick) hero.shield = 0;
+    if (hero.shieldUntilTick <= combatTime(state)) hero.shield = 0;
     if (hero.hp > 0) hero.cooldown = Math.max(0, hero.cooldown - 1);
   }
   // Position integration before targeting: integer fixed tick / configured px per second.
@@ -133,7 +136,7 @@ export function combatTick(state: GameState): void {
     enemy.attacks += 1; enemy.cooldown = enemy.attackTicks;
     const base = CONFIG.enemies[enemyKindSchema.parse(enemy.sourceId)];
     let multiplier = 1;
-    if ('enrageAfterSec' in base && state.tick - enemy.bornTick >= ticksForSeconds(base.enrageAfterSec)) multiplier *= base.enrageAtkMult;
+    if ('enrageAfterSec' in base && combatTime(state) - (enemy.nativeBornTick ?? enemy.bornTick) >= ticksForSeconds(base.enrageAfterSec)) multiplier *= base.enrageAtkMult;
     if ('skill' in base && enemy.attacks % base.skill.everyNthAttack === 0) {
       emit(state, { type: 'skill', unitId: enemy.id, skill: base.skill.id });
       for (const hero of state.party) if (hero.hp > 0) hit(state, enemy, hero, multiplier * base.skill.mult);
