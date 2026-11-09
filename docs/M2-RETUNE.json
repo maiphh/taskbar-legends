@@ -1,0 +1,204 @@
+{
+  "version": "1.2.0",
+  "sha256": "6e9afc12efd1eeb1d7e11127e1899935cc637a8d84d096eb5395b68f7d284ef2",
+  "final": {
+    "balanceVersion": "1.2.0",
+    "tick": 3024000,
+    "simulatedOpenSeconds": 151200,
+    "seed": 1,
+    "stage": "2-10",
+    "highestCleared": "2-10",
+    "status": "Campaign clear \u00b7 Farming 2-10",
+    "gold": 9141806,
+    "tickets": 0,
+    "partyPower": 6118,
+    "ownedHeroes": 18,
+    "inventory": 50,
+    "party": [
+      {
+        "id": "mk2",
+        "level": 35,
+        "stars": 6
+      },
+      {
+        "id": "mw1",
+        "level": 35,
+        "stars": 6
+      },
+      {
+        "id": "priest",
+        "level": 35,
+        "stars": 6
+      }
+    ],
+    "progress": {
+      "kind": "COMPLETE",
+      "stage": 20
+    },
+    "stats": {
+      "clears": 4562,
+      "losses": 76,
+      "retries": 78,
+      "bossFailures": 76,
+      "goldEarned": 9256100,
+      "pulls": 288,
+      "chests": 741,
+      "offlineClears": 5278,
+      "offlineSeconds": 172800
+    },
+    "metrics": {
+      "firstAttemptTicks": {
+        "1": 0,
+        "2": 425,
+        "3": 906,
+        "4": 1434,
+        "5": 2025,
+        "6": 2586,
+        "7": 3267,
+        "8": 3938,
+        "9": 4910,
+        "10": 5762,
+        "11": 259912,
+        "12": 260441,
+        "13": 260970,
+        "14": 261531,
+        "15": 262123,
+        "16": 262805,
+        "17": 263517,
+        "18": 264258,
+        "19": 265037,
+        "20": 265718
+      },
+      "firstClearTicks": {
+        "1": 305,
+        "2": 786,
+        "3": 1314,
+        "4": 1905,
+        "5": 2466,
+        "6": 3147,
+        "7": 3818,
+        "8": 4790,
+        "9": 5762,
+        "10": 259792,
+        "11": 260321,
+        "12": 260850,
+        "13": 261411,
+        "14": 262003,
+        "15": 262685,
+        "16": 263397,
+        "17": 264138,
+        "18": 264917,
+        "19": 265718,
+        "20": 2482806
+      },
+      "fullRosterTick": 2482806,
+      "farmClearSeconds": [
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15,
+        25.15
+      ],
+      "farmMinSeconds": 25.15,
+      "farmMaxSeconds": 46.05,
+      "farmSamples": 4542,
+      "maxNonBossStallSeconds": 42.6
+    },
+    "totalEvents": 660833
+  },
+  "targets": [
+    {
+      "id": 1,
+      "target": "Clear 1-5 within 600 open seconds; >=95% of seeds 1..100",
+      "measured": {
+        "openSeconds": 123.3
+      },
+      "pass": true,
+      "aggregatePass": null,
+      "requiredCohort": 100
+    },
+    {
+      "id": 2,
+      "target": "Median chapter 1 boss clear between 1.5 and 2.5 open hours",
+      "measured": {
+        "openHours": 3.6082222222222224
+      },
+      "pass": false,
+      "aggregatePass": null,
+      "requiredCohort": 100
+    },
+    {
+      "id": 3,
+      "target": "Median chapter 2 boss clear day 4..6",
+      "measured": {
+        "day": 6
+      },
+      "pass": true,
+      "aggregatePass": null,
+      "requiredCohort": 100
+    },
+    {
+      "id": 4,
+      "target": "Median 100..140 pulls for all heroes (10k gacha seeds); reference owns all on day 6..8",
+      "measured": {
+        "seeds": 10000,
+        "initialRoster": "3 starter heroes",
+        "medianPullsToFullRoster": 124,
+        "minPulls": 25,
+        "maxPulls": 803,
+        "pullDistribution": {
+          "count": 10000,
+          "observed": 10000,
+          "censored": 0,
+          "p10": 65,
+          "median": 124,
+          "p90": 246
+        },
+        "observedRarityRates": {
+          "common": 0.49954182649192747,
+          "rare": 0.32923887322841905,
+          "epic": 0.13088257068862919,
+          "legendary": 0.040336729591024266
+        },
+        "referenceRosterDay": 6
+      },
+      "pass": true,
+      "status": "measured",
+      "gachaPass": true,
+      "referenceAggregatePass": null
+    },
+    {
+      "id": 5,
+      "target": "No-input starters never clear 1-8 in 1 open hour",
+      "measured": {
+        "highestCleared": 7,
+        "firstClear1_8OpenSeconds": null
+      },
+      "pass": true
+    },
+    {
+      "id": 6,
+      "target": "Every farm clear takes 20..40 seconds",
+      "measured": {
+        "minSeconds": 25.15,
+        "maxSeconds": 46.05,
+        "samples": 4542
+      },
+      "pass": false
+    },
+    {
+      "id": 7,
+      "target": "Every non-boss clears within 2700 open seconds of first attempt",
+      "measured": {
+        "maxSeconds": 42.6,
+        "pending": []
+      },
+      "pass": true
+    }
+  ]
+}

@@ -16,7 +16,10 @@ export class Renderer {
     if (!ctx) throw new Error('Canvas 2D is unavailable');
     this.ctx = ctx; this.ui = new PixelUI(this.atlases, controls);
   }
-  getHitRegions(): HitRegion[] { return this.ui.sourceRegions().map(rect => ({ ...rect, x: rect.x / this.dpr, y: rect.y / this.dpr, width: rect.width / this.dpr, height: rect.height / this.dpr })); }
+  getHitRegions(): HitRegion[] {
+    const origin = this.canvas.getBoundingClientRect();
+    return this.ui.sourceRegions().map(rect => ({ ...rect, x: origin.left + rect.x / this.dpr, y: origin.top + rect.y / this.dpr, width: rect.width / this.dpr, height: rect.height / this.dpr }));
+  }
   getLayout() {
     const height = this.ui.height();
     return { width: this.width, height, coreY: height - CONFIG.ui.closed.coreHeight, baselineY: height - CONFIG.ui.closed.coreHeight + CONFIG.ui.closed.baselineCoreLocalY,

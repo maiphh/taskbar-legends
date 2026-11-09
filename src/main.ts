@@ -8,6 +8,7 @@ import { bindInput } from './input';
 import { readLocalSave, writeLocalSave } from './platform/storage';
 import { Renderer } from './renderer';
 import type { GameDebug } from './debug';
+import { startDesktop } from './platform/desktop/tauri';
 
 function element(id: string): HTMLElement {
   const value = document.getElementById(id); if (!value) throw new Error(`Missing UI element ${id}`); return value;
@@ -63,6 +64,7 @@ const debug: GameDebug = {
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
 };
 window.__game = debug;
+void startDesktop(debug, resize, { flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler) }).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
 void debug.whenReady().then(() => { if (debug.getAssetErrors().length) showNotice('Some UI/art unavailable; see __game.getAssetErrors().'); });
 function frame(now: number): void {

@@ -110,6 +110,26 @@ CI runs typecheck, ESLint, Vitest (core, million-pull distribution/pity, determi
 
 **M2 remains separate:** Tauri 2 transparent/frameless/always-on-top shell, actual taskbar/work-area anchoring, click-through adapter/companion windows, fullscreen policy, monitor transfer, real Windows DPI and separate compact management windows. None is claimed proven by this Linux browser prototype.
 
+## Local M2 desktop shell (not yet published)
+
+See [M2 architecture](docs/M2-ARCHITECTURE.md) and the [real-Windows checklist](docs/M2-WINDOWS-TESTS.md). `npm run desktop:dev` runs Tauri2; `npm run shot:desktop` verifies the adapter against emulated OS IPC, not native click-through. The Windows artifact workflow is ready but has not run while M2 push is on hold. Linux native compilation is blocked by unreachable apt prerequisites.
+
+M1 browser preview: https://maiphh.github.io/taskbar-legends/ ; M1 PR: https://github.com/maiphh/taskbar-legends/pull/1 (not merged). M2 source does not alter that deployed M1 build.
+
+### Population balance report (M2)
+
+```sh
+npm run --silent sim -- --policy reference --days 7 --seeds 100 > sim-ref-100seeds.json
+```
+
+Runs consecutive reference seeds 1..100 (change starting seed with `--seed`). The gacha-only target remains a **separate 10,000-seed cohort**, evaluated once, not 100 repeated gacha cohorts. `--gacha-seeds` can override that diagnostic cohort. Aggregate mode defaults to 7 days and requires `--policy reference`; it cannot combine with `--hours`, `--ticks`, or scripted inputs. Progress goes to stderr; stdout is JSON.
+
+Each of the seven targets has p10/median/p90, observation/censor counts, and its actual design pass criterion. Target 4 also includes gacha pull percentiles; target 6 reports both per-seed farm minimum and maximum distributions and applies universal bounds, not a median-only pass. Quantiles use R-7 linear interpolation. Unreached milestones rank above reached ones; censored quantiles stay `null` rather than quietly excluding unsuccessful seeds. A day-7 roster not yet acquired remains pending through day 8. Per-seed measurements and the exact designer-config SHA256 and the complete loaded config snapshot are retained for auditing. Target 1 uses its >=95% criterion; targets 5/6/7 require every sampled seed/clear to satisfy the bound. No balance numbers are changed.
+
 ## License
 
 Copyright (c) 2026 Mai Gia Phu. All rights reserved. Game code is proprietary (`UNLICENSED`); see [LICENSE](LICENSE). Third-party assets retain their CC0 licences; see [CREDITS.md](CREDITS.md) and [LICENSES/](LICENSES/).
+
+### Mac test build (M2 draft)
+
+The desktop workflow also builds universal Apple Silicon/Intel `.app.zip` and `.dmg` test artifacts, with no Developer-ID certificate or notarization (ad-hoc only for Apple Silicon). macOS 14+; see [Mac first-launch, opaque fallback and manual checks](docs/M2-MAC-TESTS.md). Both desktop builds have a tray/menu-bar icon with Show/Hide, a persistent **Opaque window** switch (relaunches) and **Save and quit**; the desktop HUD adds an X quit button (browser build unchanged). `--opaque-window` or `TASKBAR_LEGENDS_OPAQUE=1` force the opaque fallback for one launch. Real fullscreen Spaces are a known limitation; Windows behavior and the deterministic core are unchanged.
