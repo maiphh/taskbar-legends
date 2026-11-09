@@ -113,7 +113,7 @@ try {
   await page.setViewportSize({ width: 1280, height: 160 });
   await page.evaluate((ticks: number) => window.__game.step(ticks), ticksForSeconds(Math.max(0, (CONFIG.stages[9]?.timeoutSec ?? 21) - 6 - CONFIG.view.bossCountdownWarnSec)));
   await page.screenshot({ path: 'shots/14-boss-final-five-1280.png', omitBackground: true });
-  await writeFile('shots/boss-countdown-state.json', JSON.stringify({ scenario: 'boss wave3, HP-protected visual countdown fixture; not balance measurement', expectedInitialSeconds: bossSecondsRemaining(boss), lastFiveState: await page.evaluate(() => window.__game.getState()) }, null, 2));
+  await writeFile('shots/boss-countdown-state.json', JSON.stringify({ scenario: 'boss wave3, HP-protected visual countdown fixture; not balance measurement', expectedInitialSeconds: bossSecondsRemaining(boss), lastFive: await page.evaluate(() => { const state = window.__game.getState(); return { tick: state.tick, progress: state.progress, wave: state.wave, stageStartedTick: state.stageStartedTick }; }) }, null, 2));
   const alphaCheck = await page.evaluate(() => {
     const canvas = document.querySelector('canvas'); const ctx = canvas?.getContext('2d');
     return { topAlpha: ctx?.getImageData(0, 0, 1, 1).data[3], coreAlpha: ctx?.getImageData(0, 100, 1, 1).data[3] };

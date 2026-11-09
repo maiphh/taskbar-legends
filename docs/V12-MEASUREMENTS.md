@@ -1,5 +1,24 @@
 # v1.2 measured balance and verification
 
+## v1.3.0 (current)
+
+Config `src/design-config.json` = Designer v1.3.0 verbatim. SHA-256 `9cbbace2040cbe8963f263547f72f991fb85c064acc96f478626bdbb6486c76c`, identical to `/workspace/game-assets/idle-battler/design/config.json` (the report embeds the SHA and the full config). Report: `sim-ref-v13-25seeds-9d.json` (`npm run --silent sim -- --policy reference --days 9 --seeds 25`), 25 seeds × 9 days, 6 open h/day.
+
+| Target | p10 | Median | p90 | Result |
+|---|---:|---:|---:|---|
+| 1 · 1-5 within 600 open s | 103.2 | 123.6 | 150.4 | PASS (25/25) |
+| 2 · ch1 boss, open h (1.5–2.5) | 0.21 | 2.01 | 3.72 | PASS (median) |
+| 3 · ch2 boss day (4–6) | 4 | 6 | 8.6 | PASS (median) |
+| 4 · full roster day (6–8) + gacha pulls (100–140) | 1.4 | 5 | — (4/25 censored at day 9) | **FAIL**: roster median 5; gacha median 124 pulls passes |
+| 5 · no-input starter < 1-8 after 1 h | 7 | 7 | 7 | PASS |
+| 6 · farm clear 20–40 s (per-seed max) | 25.37 | 26.35 | 26.95 | PASS |
+| 7 · non-boss stall ≤ 2700 open s (per-seed max) | 39.75 | 48.55 | 63.39 | PASS |
+
+T6 across all successful cycles: 225,018 cycles; min/p10/median/p90/max = 20/20/20/24.55/30.25 s.
+
+**T4b (roster median day 5 vs 6–8) is an accepted known miss for v1.4.** The cause is structural (design.md "Tuning log v1.3"): chapter-2 tickets all land on day 1 and the finale's +100 tickets complete most rosters. These numbers match Designer's own v1.3 measurement.
+
+
 Branch balance-v1.2 is based on licensed m1-prototype 8859a5b and targets main, explicitly building on PR #1. No Tauri/M2 commits are included. Shared checkout /workspace/taskbar-legends was not changed for this work; all work is isolated in /workspace/tl-v12.
 
 ## Inputs
@@ -8,7 +27,7 @@ Designer source v1.2.0 SHA256 6e9afc12efd1eeb1d7e11127e1899935cc637a8d84d096eb53
 
 ## Measurement
 
-`npm run --silent sim -- --seed 1 --policy reference --days 9 --seeds 25 > sim-ref-v12-25 seeds-9d.json`
+`npm run --silent sim -- --seed 1 --policy reference --days 9 --seeds 25 > sim-ref-v12-25seeds-9d.json` (v1.2 report; superseded by the v1.3 report above and removed from the branch)
 
 25 seeds,9 days each,6 open hours/day, deterministic greedy policy and capped offline sessions. Independent10,000-seed gacha cohort. Runtime about5minutes on this shared box, one run; no comparative speedup claim.
 
