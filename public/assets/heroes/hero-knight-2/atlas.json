@@ -1,0 +1,1826 @@
+{
+  "key": "hero-knight-2",
+  "image": "sprites.png",
+  "imageSize": [
+    1308,
+    395
+  ],
+  "cellSize": [
+    109,
+    79
+  ],
+  "anchor": {
+    "x": 47,
+    "y": 77
+  },
+  "pivot": {
+    "x": 0.43119266055045874,
+    "y": 0.9746835443037974
+  },
+  "frames": [
+    {
+      "name": "idle/000",
+      "animation": "idle",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        29,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        28,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "idle/001",
+      "animation": "idle",
+      "index": 1,
+      "x": 109,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        29,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        28,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "idle/002",
+      "animation": "idle",
+      "index": 2,
+      "x": 218,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        30,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "idle/003",
+      "animation": "idle",
+      "index": 3,
+      "x": 327,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        30,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "idle/004",
+      "animation": "idle",
+      "index": 4,
+      "x": 436,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        32,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        31,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "idle/005",
+      "animation": "idle",
+      "index": 5,
+      "x": 545,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        32,
+        65,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        31,
+        66,
+        78
+      ]
+    },
+    {
+      "name": "idle/006",
+      "animation": "idle",
+      "index": 6,
+      "x": 654,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        32,
+        65,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        31,
+        66,
+        78
+      ]
+    },
+    {
+      "name": "idle/007",
+      "animation": "idle",
+      "index": 7,
+      "x": 763,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        30,
+        65,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        66,
+        78
+      ]
+    },
+    {
+      "name": "idle/008",
+      "animation": "idle",
+      "index": 8,
+      "x": 872,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        30,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "idle/009",
+      "animation": "idle",
+      "index": 9,
+      "x": 981,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        29,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        28,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "idle/010",
+      "animation": "idle",
+      "index": 10,
+      "x": 1090,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        27,
+        29,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        28,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "run/000",
+      "animation": "run",
+      "index": 0,
+      "x": 1199,
+      "y": 0,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        38,
+        30,
+        89,
+        77
+      ],
+      "outlinedContentBounds": [
+        37,
+        29,
+        90,
+        78
+      ]
+    },
+    {
+      "name": "run/001",
+      "animation": "run",
+      "index": 1,
+      "x": 0,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        32,
+        29,
+        92,
+        67
+      ],
+      "outlinedContentBounds": [
+        31,
+        28,
+        93,
+        68
+      ]
+    },
+    {
+      "name": "run/002",
+      "animation": "run",
+      "index": 2,
+      "x": 109,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        38,
+        29,
+        91,
+        75
+      ],
+      "outlinedContentBounds": [
+        37,
+        28,
+        92,
+        76
+      ]
+    },
+    {
+      "name": "run/003",
+      "animation": "run",
+      "index": 3,
+      "x": 218,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        42,
+        30,
+        90,
+        77
+      ],
+      "outlinedContentBounds": [
+        41,
+        29,
+        91,
+        78
+      ]
+    },
+    {
+      "name": "run/004",
+      "animation": "run",
+      "index": 4,
+      "x": 327,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        35,
+        32,
+        88,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        31,
+        89,
+        78
+      ]
+    },
+    {
+      "name": "run/005",
+      "animation": "run",
+      "index": 5,
+      "x": 436,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        32,
+        30,
+        86,
+        72
+      ],
+      "outlinedContentBounds": [
+        31,
+        29,
+        87,
+        73
+      ]
+    },
+    {
+      "name": "run/006",
+      "animation": "run",
+      "index": 6,
+      "x": 545,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        41,
+        30,
+        88,
+        76
+      ],
+      "outlinedContentBounds": [
+        40,
+        29,
+        89,
+        77
+      ]
+    },
+    {
+      "name": "run/007",
+      "animation": "run",
+      "index": 7,
+      "x": 654,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        45,
+        32,
+        88,
+        77
+      ],
+      "outlinedContentBounds": [
+        44,
+        31,
+        89,
+        78
+      ]
+    },
+    {
+      "name": "attack/000",
+      "animation": "attack",
+      "index": 0,
+      "x": 763,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        32,
+        2,
+        63,
+        77
+      ],
+      "outlinedContentBounds": [
+        31,
+        1,
+        64,
+        78
+      ]
+    },
+    {
+      "name": "attack/001",
+      "animation": "attack",
+      "index": 1,
+      "x": 872,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        30,
+        13,
+        63,
+        77
+      ],
+      "outlinedContentBounds": [
+        29,
+        12,
+        64,
+        78
+      ]
+    },
+    {
+      "name": "attack/002",
+      "animation": "attack",
+      "index": 2,
+      "x": 981,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        24,
+        19,
+        64,
+        77
+      ],
+      "outlinedContentBounds": [
+        23,
+        18,
+        65,
+        78
+      ]
+    },
+    {
+      "name": "attack/003",
+      "animation": "attack",
+      "index": 3,
+      "x": 1090,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        25,
+        19,
+        63,
+        77
+      ],
+      "outlinedContentBounds": [
+        24,
+        18,
+        64,
+        78
+      ]
+    },
+    {
+      "name": "attack/004",
+      "animation": "attack",
+      "index": 4,
+      "x": 1199,
+      "y": 79,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        2,
+        14,
+        107,
+        77
+      ],
+      "outlinedContentBounds": [
+        1,
+        13,
+        108,
+        78
+      ]
+    },
+    {
+      "name": "attack/005",
+      "animation": "attack",
+      "index": 5,
+      "x": 0,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        2,
+        38,
+        61,
+        77
+      ],
+      "outlinedContentBounds": [
+        1,
+        37,
+        62,
+        78
+      ]
+    },
+    {
+      "name": "hit/000",
+      "animation": "hit",
+      "index": 0,
+      "x": 109,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        27,
+        29,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        28,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "hit/001",
+      "animation": "hit",
+      "index": 1,
+      "x": 218,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        25,
+        33,
+        68,
+        77
+      ],
+      "outlinedContentBounds": [
+        24,
+        32,
+        69,
+        78
+      ]
+    },
+    {
+      "name": "hit/002",
+      "animation": "hit",
+      "index": 2,
+      "x": 327,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        25,
+        33,
+        68,
+        77
+      ],
+      "outlinedContentBounds": [
+        24,
+        32,
+        69,
+        78
+      ]
+    },
+    {
+      "name": "hit/003",
+      "animation": "hit",
+      "index": 3,
+      "x": 436,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        30,
+        33,
+        72,
+        77
+      ],
+      "outlinedContentBounds": [
+        29,
+        32,
+        73,
+        78
+      ]
+    },
+    {
+      "name": "death/000",
+      "animation": "death",
+      "index": 0,
+      "x": 545,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        30,
+        33,
+        72,
+        77
+      ],
+      "outlinedContentBounds": [
+        29,
+        32,
+        73,
+        78
+      ]
+    },
+    {
+      "name": "death/001",
+      "animation": "death",
+      "index": 1,
+      "x": 654,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        32,
+        35,
+        75,
+        77
+      ],
+      "outlinedContentBounds": [
+        31,
+        34,
+        76,
+        78
+      ]
+    },
+    {
+      "name": "death/002",
+      "animation": "death",
+      "index": 2,
+      "x": 763,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        35,
+        41,
+        76,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        40,
+        77,
+        78
+      ]
+    },
+    {
+      "name": "death/003",
+      "animation": "death",
+      "index": 3,
+      "x": 872,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        35,
+        43,
+        76,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        42,
+        77,
+        78
+      ]
+    },
+    {
+      "name": "death/004",
+      "animation": "death",
+      "index": 4,
+      "x": 981,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        35,
+        41,
+        76,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        40,
+        77,
+        78
+      ]
+    },
+    {
+      "name": "death/005",
+      "animation": "death",
+      "index": 5,
+      "x": 1090,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        35,
+        44,
+        76,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        43,
+        77,
+        78
+      ]
+    },
+    {
+      "name": "death/006",
+      "animation": "death",
+      "index": 6,
+      "x": 1199,
+      "y": 158,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        35,
+        44,
+        76,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        43,
+        77,
+        78
+      ]
+    },
+    {
+      "name": "death/007",
+      "animation": "death",
+      "index": 7,
+      "x": 0,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        35,
+        57,
+        76,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        56,
+        77,
+        78
+      ]
+    },
+    {
+      "name": "death/008",
+      "animation": "death",
+      "index": 8,
+      "x": 109,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        35,
+        65,
+        76,
+        77
+      ],
+      "outlinedContentBounds": [
+        34,
+        64,
+        77,
+        78
+      ]
+    },
+    {
+      "name": "dash/000",
+      "animation": "dash",
+      "index": 0,
+      "x": 218,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        22,
+        33,
+        62,
+        70
+      ],
+      "outlinedContentBounds": [
+        21,
+        32,
+        63,
+        71
+      ]
+    },
+    {
+      "name": "dash/001",
+      "animation": "dash",
+      "index": 1,
+      "x": 327,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        22,
+        33,
+        62,
+        70
+      ],
+      "outlinedContentBounds": [
+        21,
+        32,
+        63,
+        71
+      ]
+    },
+    {
+      "name": "dash/002",
+      "animation": "dash",
+      "index": 2,
+      "x": 436,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        22,
+        33,
+        62,
+        70
+      ],
+      "outlinedContentBounds": [
+        21,
+        32,
+        63,
+        71
+      ]
+    },
+    {
+      "name": "dash/003",
+      "animation": "dash",
+      "index": 3,
+      "x": 545,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        22,
+        33,
+        62,
+        70
+      ],
+      "outlinedContentBounds": [
+        21,
+        32,
+        63,
+        71
+      ]
+    },
+    {
+      "name": "fall/000",
+      "animation": "fall",
+      "index": 0,
+      "x": 654,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        27,
+        30,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "fall/001",
+      "animation": "fall",
+      "index": 1,
+      "x": 763,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        27,
+        30,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "fall/002",
+      "animation": "fall",
+      "index": 2,
+      "x": 872,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        27,
+        30,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "fall/003",
+      "animation": "fall",
+      "index": 3,
+      "x": 981,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        27,
+        30,
+        67,
+        77
+      ],
+      "outlinedContentBounds": [
+        26,
+        29,
+        68,
+        78
+      ]
+    },
+    {
+      "name": "jump/000",
+      "animation": "jump",
+      "index": 0,
+      "x": 1090,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        24,
+        32,
+        63,
+        77
+      ],
+      "outlinedContentBounds": [
+        23,
+        31,
+        64,
+        78
+      ]
+    },
+    {
+      "name": "jump/001",
+      "animation": "jump",
+      "index": 1,
+      "x": 1199,
+      "y": 237,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        24,
+        32,
+        63,
+        77
+      ],
+      "outlinedContentBounds": [
+        23,
+        31,
+        64,
+        78
+      ]
+    },
+    {
+      "name": "jump/002",
+      "animation": "jump",
+      "index": 2,
+      "x": 0,
+      "y": 316,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        24,
+        32,
+        63,
+        77
+      ],
+      "outlinedContentBounds": [
+        23,
+        31,
+        64,
+        78
+      ]
+    },
+    {
+      "name": "jump/003",
+      "animation": "jump",
+      "index": 3,
+      "x": 109,
+      "y": 316,
+      "w": 109,
+      "h": 79,
+      "anchor": {
+        "x": 47,
+        "y": 77
+      },
+      "pivot": {
+        "x": 0.43119266055045874,
+        "y": 0.9746835443037974
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        24,
+        32,
+        63,
+        77
+      ],
+      "outlinedContentBounds": [
+        23,
+        31,
+        64,
+        78
+      ]
+    }
+  ],
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "from": 0,
+      "to": 10,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 140,
+      "source": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Idle.png",
+      "extentsFromAnchor": {
+        "above": 48,
+        "below": 0,
+        "left": 20,
+        "right": 20
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 49,
+        "below": 1,
+        "left": 21,
+        "right": 21
+      }
+    },
+    "run": {
+      "frames": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "from": 11,
+      "to": 18,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Run.png",
+      "extentsFromAnchor": {
+        "above": 48,
+        "below": 0,
+        "left": 15,
+        "right": 45
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 49,
+        "below": 1,
+        "left": 16,
+        "right": 46
+      }
+    },
+    "attack": {
+      "frames": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "from": 19,
+      "to": 24,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Attack.png",
+      "extentsFromAnchor": {
+        "above": 75,
+        "below": 0,
+        "left": 45,
+        "right": 60
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 76,
+        "below": 1,
+        "left": 46,
+        "right": 61
+      }
+    },
+    "hit": {
+      "frames": [
+        25,
+        26,
+        27,
+        28
+      ],
+      "from": 25,
+      "to": 28,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 100,
+      "source": "processed/deflashed/hero-knight-2/hit.png",
+      "extentsFromAnchor": {
+        "above": 48,
+        "below": 0,
+        "left": 22,
+        "right": 25
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 49,
+        "below": 1,
+        "left": 23,
+        "right": 26
+      },
+      "sourceOriginal": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Take Hit.png",
+      "deFlashed": true
+    },
+    "death": {
+      "frames": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37
+      ],
+      "from": 29,
+      "to": 37,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 110,
+      "source": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Death.png",
+      "extentsFromAnchor": {
+        "above": 44,
+        "below": 0,
+        "left": 17,
+        "right": 29
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 45,
+        "below": 1,
+        "left": 18,
+        "right": 30
+      }
+    },
+    "dash": {
+      "frames": [
+        38,
+        39,
+        40,
+        41
+      ],
+      "from": 38,
+      "to": 41,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Dash.png",
+      "extentsFromAnchor": {
+        "above": 44,
+        "below": 0,
+        "left": 25,
+        "right": 15
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 45,
+        "below": 0,
+        "left": 26,
+        "right": 16
+      }
+    },
+    "fall": {
+      "frames": [
+        42,
+        43,
+        44,
+        45
+      ],
+      "from": 42,
+      "to": 45,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Fall.png",
+      "extentsFromAnchor": {
+        "above": 47,
+        "below": 0,
+        "left": 20,
+        "right": 20
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 48,
+        "below": 1,
+        "left": 21,
+        "right": 21
+      }
+    },
+    "jump": {
+      "frames": [
+        46,
+        47,
+        48,
+        49
+      ],
+      "from": 46,
+      "to": 49,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/hero-knight-2/unpacked/Hero Knight 2/Sprites/Jump.png",
+      "extentsFromAnchor": {
+        "above": 45,
+        "below": 0,
+        "left": 23,
+        "right": 16
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 46,
+        "below": 1,
+        "left": 24,
+        "right": 17
+      }
+    }
+  },
+  "meta": {
+    "sourcePack": "hero-knight-2",
+    "author": "LuizMelo",
+    "licence": "CC0-1.0",
+    "targetBodyHeight": 48,
+    "nativeFrameSize": [
+      140,
+      140
+    ],
+    "nativeIdleBounds": [
+      54,
+      44,
+      86,
+      83
+    ],
+    "nativeBodyMeasurementBounds": [
+      54,
+      44,
+      86,
+      83
+    ],
+    "nativeBodyHeight": 39,
+    "nativeBodyEnvelopeHeight": 39,
+    "bodyHeightPx": 48,
+    "maxIdleVisibleHeightPx": 48,
+    "scaleApplied": 1.2307692307692308,
+    "effectiveScale": {
+      "x": 1.2285714285714286,
+      "y": 1.2285714285714286
+    },
+    "scaleMode": "exact target, nearest-neighbour",
+    "scaledSourceSize": [
+      172,
+      172
+    ],
+    "sharedTrimBounds": [
+      41,
+      27,
+      146,
+      102
+    ],
+    "paddingPx": 2,
+    "priestPaletteMap": null,
+    "timingNote": "Suggested playback timings, not official author frame timing; tune gameplay independently.",
+    "readability": {
+      "defaultVariant": "outlined",
+      "radiusPx": 1,
+      "neighbourhood": "4-connected, cardinal neighbours only",
+      "color": "#e8e4d8",
+      "alpha": 204,
+      "alphaFraction": 0.8,
+      "opaqueThreshold": 128,
+      "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
+      "originalPixels": "unchanged, including partially transparent pixels",
+      "stage": "after nearest-neighbour scaling; independently for every atlas cell",
+      "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
+    },
+    "bakedHitFlash": false,
+    "runtimeHitFlash": {
+      "bakedFlash": false,
+      "color": "#ffffff",
+      "presentationFrames": 2,
+      "durationMs": 90,
+      "previewFrameDurationsMs": [
+        40,
+        50
+      ],
+      "alpha": "preserve",
+      "trigger": "start of hit event",
+      "spriteTiming": "unchanged; flash is an independent runtime timer"
+    },
+    "deFlashedSourceReport": "../../../docs/deflash-report.json"
+  },
+  "outlinedImage": "sprites.outlined.png"
+}

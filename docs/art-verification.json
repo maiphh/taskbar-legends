@@ -1,0 +1,12 @@
+{
+  "characters": 27,
+  "heroes": 18,
+  "enemies": 9,
+  "frames": 1285,
+  "maxAbove": 128,
+  "maxBelow": 18,
+  "baseline": 136,
+  "minY": 8,
+  "maxYExclusive": 154,
+  "forbiddenRuntimeFiles": []
+}

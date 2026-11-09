@@ -1,0 +1,1454 @@
+{
+  "key": "rat",
+  "image": "sprites.png",
+  "imageSize": [
+    1812,
+    236
+  ],
+  "cellSize": [
+    151,
+    59
+  ],
+  "anchor": {
+    "x": 73,
+    "y": 56
+  },
+  "pivot": {
+    "x": 0.48344370860927155,
+    "y": 0.9491525423728814
+  },
+  "frames": [
+    {
+      "name": "idle/000",
+      "animation": "idle",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        7,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/001",
+      "animation": "idle",
+      "index": 1,
+      "x": 151,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        9,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        8,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/002",
+      "animation": "idle",
+      "index": 2,
+      "x": 302,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        12,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/003",
+      "animation": "idle",
+      "index": 3,
+      "x": 453,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        12,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/004",
+      "animation": "idle",
+      "index": 4,
+      "x": 604,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        12,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/005",
+      "animation": "idle",
+      "index": 5,
+      "x": 755,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        12,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/006",
+      "animation": "idle",
+      "index": 6,
+      "x": 906,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        12,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/007",
+      "animation": "idle",
+      "index": 7,
+      "x": 1057,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        12,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/008",
+      "animation": "idle",
+      "index": 8,
+      "x": 1208,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        9,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        8,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "idle/009",
+      "animation": "idle",
+      "index": 9,
+      "x": 1359,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 140,
+      "contentBounds": [
+        31,
+        7,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "run/000",
+      "animation": "run",
+      "index": 0,
+      "x": 1510,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        2,
+        7,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        1,
+        6,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "run/001",
+      "animation": "run",
+      "index": 1,
+      "x": 1661,
+      "y": 0,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        4,
+        9,
+        144,
+        57
+      ],
+      "outlinedContentBounds": [
+        3,
+        8,
+        145,
+        58
+      ]
+    },
+    {
+      "name": "run/002",
+      "animation": "run",
+      "index": 2,
+      "x": 0,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        9,
+        9,
+        149,
+        57
+      ],
+      "outlinedContentBounds": [
+        8,
+        8,
+        150,
+        58
+      ]
+    },
+    {
+      "name": "run/003",
+      "animation": "run",
+      "index": 3,
+      "x": 151,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        11,
+        12,
+        119,
+        57
+      ],
+      "outlinedContentBounds": [
+        10,
+        11,
+        120,
+        58
+      ]
+    },
+    {
+      "name": "run/004",
+      "animation": "run",
+      "index": 4,
+      "x": 302,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        7,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        5,
+        6,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "run/005",
+      "animation": "run",
+      "index": 5,
+      "x": 453,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        9,
+        9,
+        144,
+        57
+      ],
+      "outlinedContentBounds": [
+        8,
+        8,
+        145,
+        58
+      ]
+    },
+    {
+      "name": "run/006",
+      "animation": "run",
+      "index": 6,
+      "x": 604,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        11,
+        22,
+        134,
+        57
+      ],
+      "outlinedContentBounds": [
+        10,
+        21,
+        135,
+        58
+      ]
+    },
+    {
+      "name": "run/007",
+      "animation": "run",
+      "index": 7,
+      "x": 755,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        6,
+        14,
+        119,
+        57
+      ],
+      "outlinedContentBounds": [
+        5,
+        13,
+        120,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/000",
+      "animation": "attackbite",
+      "index": 0,
+      "x": 906,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        7,
+        122,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        123,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/001",
+      "animation": "attackbite",
+      "index": 1,
+      "x": 1057,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        7,
+        117,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        118,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/002",
+      "animation": "attackbite",
+      "index": 2,
+      "x": 1208,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        2,
+        114,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        1,
+        115,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/003",
+      "animation": "attackbite",
+      "index": 3,
+      "x": 1359,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        2,
+        114,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        1,
+        115,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/004",
+      "animation": "attackbite",
+      "index": 4,
+      "x": 1510,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        2,
+        114,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        1,
+        115,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/005",
+      "animation": "attackbite",
+      "index": 5,
+      "x": 1661,
+      "y": 59,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        2,
+        114,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        1,
+        115,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/006",
+      "animation": "attackbite",
+      "index": 6,
+      "x": 0,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        2,
+        114,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        1,
+        115,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/007",
+      "animation": "attackbite",
+      "index": 7,
+      "x": 151,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        17,
+        147,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        16,
+        148,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/008",
+      "animation": "attackbite",
+      "index": 8,
+      "x": 302,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        17,
+        144,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        16,
+        145,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/009",
+      "animation": "attackbite",
+      "index": 9,
+      "x": 453,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        17,
+        144,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        16,
+        145,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/010",
+      "animation": "attackbite",
+      "index": 10,
+      "x": 604,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        14,
+        142,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        13,
+        143,
+        58
+      ]
+    },
+    {
+      "name": "attackbite/011",
+      "animation": "attackbite",
+      "index": 11,
+      "x": 755,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 90,
+      "contentBounds": [
+        31,
+        12,
+        134,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        135,
+        58
+      ]
+    },
+    {
+      "name": "hit/000",
+      "animation": "hit",
+      "index": 0,
+      "x": 906,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        31,
+        7,
+        117,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        118,
+        58
+      ]
+    },
+    {
+      "name": "hit/001",
+      "animation": "hit",
+      "index": 1,
+      "x": 1057,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        31,
+        7,
+        124,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        125,
+        58
+      ]
+    },
+    {
+      "name": "hit/002",
+      "animation": "hit",
+      "index": 2,
+      "x": 1208,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 100,
+      "contentBounds": [
+        31,
+        7,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "death/000",
+      "animation": "death",
+      "index": 0,
+      "x": 1359,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        31,
+        7,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        6,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "death/001",
+      "animation": "death",
+      "index": 1,
+      "x": 1510,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        31,
+        9,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        8,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "death/002",
+      "animation": "death",
+      "index": 2,
+      "x": 1661,
+      "y": 118,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        31,
+        12,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        11,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "death/003",
+      "animation": "death",
+      "index": 3,
+      "x": 0,
+      "y": 177,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        31,
+        24,
+        132,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        23,
+        133,
+        58
+      ]
+    },
+    {
+      "name": "death/004",
+      "animation": "death",
+      "index": 4,
+      "x": 151,
+      "y": 177,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        31,
+        29,
+        137,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        28,
+        138,
+        58
+      ]
+    },
+    {
+      "name": "death/005",
+      "animation": "death",
+      "index": 5,
+      "x": 302,
+      "y": 177,
+      "w": 151,
+      "h": 59,
+      "anchor": {
+        "x": 73,
+        "y": 56
+      },
+      "pivot": {
+        "x": 0.48344370860927155,
+        "y": 0.9491525423728814
+      },
+      "durationMs": 110,
+      "contentBounds": [
+        31,
+        27,
+        134,
+        57
+      ],
+      "outlinedContentBounds": [
+        30,
+        26,
+        135,
+        58
+      ]
+    }
+  ],
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "from": 0,
+      "to": 9,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 140,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Rat/idle.png",
+      "extentsFromAnchor": {
+        "above": 49,
+        "below": 1,
+        "left": 42,
+        "right": 59
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 50,
+        "below": 2,
+        "left": 43,
+        "right": 60
+      }
+    },
+    "run": {
+      "frames": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "from": 10,
+      "to": 17,
+      "direction": "forward",
+      "loop": true,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Rat/run.png",
+      "extentsFromAnchor": {
+        "above": 49,
+        "below": 1,
+        "left": 71,
+        "right": 76
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 50,
+        "below": 2,
+        "left": 72,
+        "right": 77
+      }
+    },
+    "attackbite": {
+      "frames": [
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "from": 18,
+      "to": 29,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Rat/attack_bite.png",
+      "extentsFromAnchor": {
+        "above": 54,
+        "below": 1,
+        "left": 42,
+        "right": 74
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 55,
+        "below": 2,
+        "left": 43,
+        "right": 75
+      }
+    },
+    "hit": {
+      "frames": [
+        30,
+        31,
+        32
+      ],
+      "from": 30,
+      "to": 32,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 100,
+      "source": "processed/deflashed/rat/hit.png",
+      "extentsFromAnchor": {
+        "above": 49,
+        "below": 1,
+        "left": 42,
+        "right": 59
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 50,
+        "below": 2,
+        "left": 43,
+        "right": 60
+      },
+      "sourceOriginal": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Rat/hurt.png",
+      "deFlashed": true
+    },
+    "death": {
+      "frames": [
+        33,
+        34,
+        35,
+        36,
+        37,
+        38
+      ],
+      "from": 33,
+      "to": 38,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 110,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Rat/rat-death.png",
+      "extentsFromAnchor": {
+        "above": 49,
+        "below": 1,
+        "left": 42,
+        "right": 64
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 50,
+        "below": 2,
+        "left": 43,
+        "right": 65
+      }
+    },
+    "attack": {
+      "frames": [
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "from": 18,
+      "to": 29,
+      "direction": "forward",
+      "loop": false,
+      "durationMs": 90,
+      "source": "raw/monsters-creatures-fantasy-2/unpacked/Monsters Creatures Fantasy 2/Rat/attack_bite.png",
+      "aliasOf": "attackbite",
+      "extentsFromAnchor": {
+        "above": 54,
+        "below": 1,
+        "left": 42,
+        "right": 74
+      },
+      "outlinedExtentsFromAnchor": {
+        "above": 55,
+        "below": 2,
+        "left": 43,
+        "right": 75
+      }
+    }
+  },
+  "meta": {
+    "sourcePack": "monsters-creatures-fantasy-2",
+    "author": "LuizMelo",
+    "licence": "CC0-1.0",
+    "targetBodyHeight": 48,
+    "nativeFrameSize": [
+      70,
+      70
+    ],
+    "nativeIdleBounds": [
+      15,
+      25,
+      55,
+      45
+    ],
+    "nativeBodyMeasurementBounds": [
+      15,
+      25,
+      55,
+      45
+    ],
+    "nativeBodyHeight": 20,
+    "nativeBodyEnvelopeHeight": 20,
+    "bodyHeightPx": 50,
+    "maxIdleVisibleHeightPx": 50,
+    "scaleApplied": 2.5,
+    "effectiveScale": {
+      "x": 2.5,
+      "y": 2.5
+    },
+    "scaleMode": "integer/half",
+    "scaledSourceSize": [
+      175,
+      175
+    ],
+    "sharedTrimBounds": [
+      8,
+      58,
+      155,
+      113
+    ],
+    "paddingPx": 2,
+    "priestPaletteMap": null,
+    "timingNote": "Suggested playback timings, not official author frame timing; tune gameplay independently.",
+    "readability": {
+      "defaultVariant": "outlined",
+      "radiusPx": 1,
+      "neighbourhood": "4-connected, cardinal neighbours only",
+      "color": "#e8e4d8",
+      "alpha": 204,
+      "alphaFraction": 0.8,
+      "opaqueThreshold": 128,
+      "placement": "only fully transparent pixels adjacent to alpha >= 128 pixels",
+      "originalPixels": "unchanged, including partially transparent pixels",
+      "stage": "after nearest-neighbour scaling; independently for every atlas cell",
+      "padding": "uses 1px of the existing 2px cell padding; geometry unchanged"
+    },
+    "bakedHitFlash": false,
+    "runtimeHitFlash": {
+      "bakedFlash": false,
+      "color": "#ffffff",
+      "presentationFrames": 2,
+      "durationMs": 90,
+      "previewFrameDurationsMs": [
+        40,
+        50
+      ],
+      "alpha": "preserve",
+      "trigger": "start of hit event",
+      "spriteTiming": "unchanged; flash is an independent runtime timer"
+    },
+    "deFlashedSourceReport": "../../../docs/deflash-report.json"
+  },
+  "outlinedImage": "sprites.outlined.png"
+}

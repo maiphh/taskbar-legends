@@ -1,0 +1,1217 @@
+{
+  "version": "1.0.0-design",
+  "sim": {
+    "ticksPerSecond": 20,
+    "rng": "mulberry32",
+    "laneWidthPx": 1200,
+    "stripHeightPx": 80,
+    "heroSlotX": [
+      140,
+      95,
+      50
+    ],
+    "enemySpawnX": 560,
+    "enemySpawnSpacingPx": 50,
+    "waveGapSec": 1.5,
+    "stageGapSec": 2.0,
+    "partySize": 3
+  },
+  "rarity": {
+    "order": [
+      "common",
+      "rare",
+      "epic",
+      "legendary"
+    ],
+    "statMult": {
+      "common": 1.0,
+      "rare": 1.15,
+      "epic": 1.35,
+      "legendary": 1.6
+    }
+  },
+  "growth": {
+    "levelCap": 60,
+    "perLevel": 0.1,
+    "starMax": 6,
+    "perStar": 0.12,
+    "formula": "stat = roleBase * rarityMult * heroMod * (1 + perLevel*(L-1)) * (1 + perStar*(stars-1)) + gearFlat, then * (1 + gearPct)",
+    "xpToNext": {
+      "a": 40,
+      "p": 1.6,
+      "formula": "round(a * L^p)"
+    },
+    "newHeroLevelOffset": -5,
+    "newHeroLevelRule": "max(1, floor(avgPartyLevel) + newHeroLevelOffset)"
+  },
+  "roles": {
+    "tank": {
+      "hp": 300,
+      "atk": 14,
+      "def": 40,
+      "attackIntervalTicks": 24,
+      "rangePx": 160,
+      "skill": {
+        "id": "guard",
+        "everyNthAttack": 5,
+        "shieldPctMaxHp": 0.2,
+        "shieldDurationSec": 3
+      }
+    },
+    "warrior": {
+      "hp": 200,
+      "atk": 22,
+      "def": 20,
+      "attackIntervalTicks": 20,
+      "rangePx": 160,
+      "skill": {
+        "id": "cleave",
+        "everyNthAttack": 4,
+        "mainMult": 1.8,
+        "secondMult": 1.0,
+        "secondRadiusPx": 40
+      }
+    },
+    "ranger": {
+      "hp": 140,
+      "atk": 18,
+      "def": 10,
+      "attackIntervalTicks": 16,
+      "rangePx": 400,
+      "skill": {
+        "id": "volley",
+        "everyNthAttack": 5,
+        "targets": 3,
+        "mult": 0.8
+      }
+    },
+    "mage": {
+      "hp": 120,
+      "atk": 30,
+      "def": 5,
+      "attackIntervalTicks": 30,
+      "rangePx": 400,
+      "skill": {
+        "id": "fireball",
+        "everyNthAttack": 3,
+        "mainMult": 2.0,
+        "splashMult": 0.6,
+        "splashRadiusPx": 50
+      }
+    },
+    "support": {
+      "hp": 150,
+      "atk": 10,
+      "def": 10,
+      "attackIntervalTicks": 30,
+      "rangePx": 400,
+      "healThresholdPct": 0.9,
+      "healMult": 1.2,
+      "skill": {
+        "id": "prayer",
+        "everyNthAttack": 4,
+        "healAllMult": 1.0
+      }
+    }
+  },
+  "heroes": [
+    {
+      "id": "mw2",
+      "name": "Medieval Warrior 2",
+      "role": "tank",
+      "rarity": "common",
+      "starter": true,
+      "mod": {}
+    },
+    {
+      "id": "hu1",
+      "name": "Huntress 1",
+      "role": "ranger",
+      "rarity": "common",
+      "starter": true,
+      "mod": {}
+    },
+    {
+      "id": "wiz",
+      "name": "Wizard",
+      "role": "mage",
+      "rarity": "common",
+      "starter": true,
+      "mod": {}
+    },
+    {
+      "id": "mw1",
+      "name": "Medieval Warrior 1",
+      "role": "warrior",
+      "rarity": "common",
+      "starter": false,
+      "mod": {}
+    },
+    {
+      "id": "mw3",
+      "name": "Medieval Warrior 3",
+      "role": "warrior",
+      "rarity": "common",
+      "starter": false,
+      "mod": {
+        "hp": 1.1,
+        "atk": 0.95
+      }
+    },
+    {
+      "id": "mh1",
+      "name": "Martial Hero 1",
+      "role": "warrior",
+      "rarity": "common",
+      "starter": false,
+      "mod": {
+        "attackIntervalTicks": -2,
+        "hp": 0.9
+      }
+    },
+    {
+      "id": "hk1",
+      "name": "Hero Knight 1",
+      "role": "tank",
+      "rarity": "rare",
+      "starter": false,
+      "mod": {}
+    },
+    {
+      "id": "mh2",
+      "name": "Martial Hero 2",
+      "role": "warrior",
+      "rarity": "rare",
+      "starter": false,
+      "mod": {
+        "attackIntervalTicks": -2
+      }
+    },
+    {
+      "id": "hu2",
+      "name": "Huntress 2",
+      "role": "ranger",
+      "rarity": "rare",
+      "starter": false,
+      "mod": {}
+    },
+    {
+      "id": "ew1",
+      "name": "Evil Wizard 1",
+      "role": "mage",
+      "rarity": "rare",
+      "starter": false,
+      "mod": {}
+    },
+    {
+      "id": "priest",
+      "name": "Priest (recolored Wizard)",
+      "role": "support",
+      "rarity": "rare",
+      "starter": false,
+      "mod": {}
+    },
+    {
+      "id": "hk2",
+      "name": "Hero Knight 2",
+      "role": "tank",
+      "rarity": "epic",
+      "starter": false,
+      "mod": {}
+    },
+    {
+      "id": "mk1",
+      "name": "Medieval King 1",
+      "role": "warrior",
+      "rarity": "epic",
+      "starter": false,
+      "mod": {
+        "hp": 1.1
+      }
+    },
+    {
+      "id": "fw",
+      "name": "Fantasy Warrior",
+      "role": "warrior",
+      "rarity": "epic",
+      "starter": false,
+      "mod": {
+        "atk": 1.1,
+        "hp": 0.95
+      }
+    },
+    {
+      "id": "ew2",
+      "name": "Evil Wizard 2",
+      "role": "mage",
+      "rarity": "epic",
+      "starter": false,
+      "mod": {}
+    },
+    {
+      "id": "mk2",
+      "name": "Medieval King 2",
+      "role": "tank",
+      "rarity": "legendary",
+      "starter": false,
+      "mod": {
+        "atk": 1.15
+      }
+    },
+    {
+      "id": "mh3",
+      "name": "Martial Hero 3",
+      "role": "warrior",
+      "rarity": "legendary",
+      "starter": false,
+      "mod": {
+        "attackIntervalTicks": -3
+      }
+    },
+    {
+      "id": "ew3",
+      "name": "Evil Wizard 3",
+      "role": "mage",
+      "rarity": "legendary",
+      "starter": false,
+      "mod": {
+        "splashRadiusPx": 20
+      }
+    }
+  ],
+  "combat": {
+    "damageFormula": "max(1, round(atk * 100 / (100 + def)))",
+    "heroTargeting": "lowest-x living enemy within rangePx of hero x; idle if none",
+    "enemyTargeting": "front-most living hero (lowest slot index)",
+    "enemyMeleeStopOffsetPx": 30,
+    "firstAttackDelayTicks": 0,
+    "lossCondition": "all heroes dead OR stage timer >= timeoutSec",
+    "hpCarriesBetweenWaves": true,
+    "fullHealBetweenStages": true
+  },
+  "enemies": {
+    "scalingPerStage": 1.12,
+    "scalingFormula": "base * scalingPerStage^(stageIndex-1) for hp, atk, def",
+    "grunt": {
+      "hp": 60,
+      "atk": 12,
+      "def": 10,
+      "attackIntervalTicks": 24,
+      "rangePx": 30,
+      "speedPxPerSec": 80,
+      "gold": 3,
+      "xp": 3
+    },
+    "archer": {
+      "hp": 40,
+      "atk": 10,
+      "def": 5,
+      "attackIntervalTicks": 30,
+      "rangePx": 150,
+      "speedPxPerSec": 80,
+      "gold": 3,
+      "xp": 3
+    },
+    "brute": {
+      "hp": 150,
+      "atk": 20,
+      "def": 25,
+      "attackIntervalTicks": 36,
+      "rangePx": 30,
+      "speedPxPerSec": 60,
+      "gold": 8,
+      "xp": 8
+    },
+    "boss_ch1": {
+      "name": "Chapter 1 Boss",
+      "hp": 2400,
+      "atk": 36,
+      "def": 20,
+      "attackIntervalTicks": 30,
+      "rangePx": 40,
+      "speedPxPerSec": 50,
+      "skill": {
+        "id": "slam",
+        "everyNthAttack": 5,
+        "hitsAllHeroes": true,
+        "mult": 1.0
+      },
+      "enrageAfterSec": 60,
+      "enrageAtkMult": 1.5,
+      "gold": 200,
+      "xp": 200
+    },
+    "boss_ch2": {
+      "name": "Chapter 2 Boss",
+      "hp": 3000,
+      "atk": 42,
+      "def": 25,
+      "attackIntervalTicks": 30,
+      "rangePx": 150,
+      "speedPxPerSec": 50,
+      "skill": {
+        "id": "hex_volley",
+        "everyNthAttack": 4,
+        "hitsAllHeroes": true,
+        "mult": 0.9
+      },
+      "enrageAfterSec": 60,
+      "enrageAtkMult": 1.5,
+      "gold": 400,
+      "xp": 400
+    }
+  },
+  "stages": [
+    {
+      "id": "1-1",
+      "index": 1,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-2",
+      "index": 2,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-3",
+      "index": 3,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-4",
+      "index": 4,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-5",
+      "index": 5,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 5,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-6",
+      "index": 6,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "brute",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-7",
+      "index": 7,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "brute",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-8",
+      "index": 8,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "brute",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-9",
+      "index": 9,
+      "chapter": 1,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "brute",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1-10",
+      "index": 10,
+      "chapter": 1,
+      "isBoss": true,
+      "timeoutSec": 120,
+      "firstClearTickets": 10,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "boss": "boss_ch1",
+          "adds": [
+            "grunt",
+            "grunt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-1",
+      "index": 11,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-2",
+      "index": 12,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-3",
+      "index": 13,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-4",
+      "index": 14,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-5",
+      "index": 15,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 5,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-6",
+      "index": 16,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "brute",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-7",
+      "index": 17,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "brute",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-8",
+      "index": 18,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "brute",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-9",
+      "index": 19,
+      "chapter": 2,
+      "isBoss": false,
+      "timeoutSec": 90,
+      "firstClearTickets": 3,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "brute",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2-10",
+      "index": 20,
+      "chapter": 2,
+      "isBoss": true,
+      "timeoutSec": 120,
+      "firstClearTickets": 10,
+      "waves": [
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "enemies": [
+            "grunt",
+            "grunt",
+            "grunt",
+            "grunt",
+            "brute",
+            "archer",
+            "archer"
+          ]
+        },
+        {
+          "boss": "boss_ch2",
+          "adds": [
+            "grunt",
+            "grunt"
+          ]
+        }
+      ]
+    }
+  ],
+  "rewards": {
+    "killScaling": 1.1,
+    "killFormula": "enemy.gold|xp * killScaling^(stageIndex-1); xp goes in full to every living party hero",
+    "clearGold": 15,
+    "clearXp": 15,
+    "clearScaling": 1.12,
+    "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
+    "firstClearChest": true,
+    "farmChestChance": 0.15,
+    "farmTicketChance": 0.01,
+    "startingTickets": 10
+  },
+  "gear": {
+    "slots": {
+      "weapon": {
+        "main": {
+          "atk": 4
+        }
+      },
+      "armor": {
+        "main": {
+          "hp": 30,
+          "def": 4
+        }
+      },
+      "charm": {
+        "oneOf": {
+          "atkPct": [
+            0.04,
+            0.08
+          ],
+          "hpPct": [
+            0.04,
+            0.08
+          ],
+          "speedPct": [
+            0.04,
+            0.08
+          ]
+        }
+      }
+    },
+    "chestRarityOdds": {
+      "common": 0.6,
+      "rare": 0.3,
+      "epic": 0.09,
+      "legendary": 0.01
+    },
+    "rarityMult": {
+      "common": 1.0,
+      "rare": 1.3,
+      "epic": 1.7,
+      "legendary": 2.2
+    },
+    "mainRoll": [
+      0.9,
+      1.1
+    ],
+    "mainFormula": "round(base * scalingPerStage^(dropStage-1) * rarityMult * roll)",
+    "charmFormula": "uniform(min,max) * rarityMult, rounded to 0.001",
+    "upgrade": {
+      "maxLevel": 10,
+      "mainPerLevel": 0.1,
+      "costBase": 25,
+      "costExp": 1.4,
+      "costFormula": "round(costBase * 1.12^(dropStage-1) * rarityMult * level^costExp)"
+    },
+    "speedPctRule": "attackIntervalTicks = max(8, round(base / (1 + speedPct)))",
+    "inventoryCap": 50,
+    "overflow": "auto-salvage lowest score for 10% of its total upgrade cost spent + 5*rarityMult gold"
+  },
+  "gacha": {
+    "costTickets": 1,
+    "rates": {
+      "common": 0.5,
+      "rare": 0.33,
+      "epic": 0.13,
+      "legendary": 0.04
+    },
+    "pickWithinRarity": "uniform over heroes of that rarity",
+    "pity": {
+      "guaranteeEpicPlusEvery": 30,
+      "counterResetsOn": [
+        "epic",
+        "legendary"
+      ],
+      "pityRoll": "epic 0.765 / legendary 0.235 (rates renormalized)",
+      "pityPrefersUnowned": true
+    },
+    "duplicate": "+1 star up to starMax; beyond starMax converts to 100 * rarityStatMult gold"
+  },
+  "idle": {
+    "offlineCapHours": 8,
+    "offlineEfficiency": 1.0,
+    "offlineFormula": "clears = floor(min(t, cap) / avgFarmClearSec); gold,xp = clears * expected per-clear reward at farm stage; no tickets",
+    "avgFarmClearSecWindow": 10,
+    "avgFarmClearSecDefault": 30,
+    "offlineChestEveryHours": 2,
+    "offlineChestMax": 4,
+    "offlineAllowsProgress": false
+  },
+  "progression": {
+    "states": [
+      "PUSHING",
+      "FARMING",
+      "BOSS_READY",
+      "BOSS_FIGHT"
+    ],
+    "retryIntervalSec": 120,
+    "retryBackoff": [
+      120,
+      240,
+      480,
+      600
+    ],
+    "powerGainRetryPct": 0.05,
+    "heroPower": "round(maxHp*0.2 + atk*4 + def*2)",
+    "bossAutoRetry": false,
+    "statusText": {
+      "FARMING": "Farming {stage}, next try in {mm:ss}",
+      "PUSHING": "Pushing {stage}",
+      "BOSS_READY": "Boss {stage} ready, click to fight",
+      "BOSS_FIGHT": "Boss {stage}!"
+    }
+  },
+  "referencePlayer": {
+    "openHoursPerDay": 6,
+    "sessionStartHour": 0,
+    "policy": [
+      "pull every ticket immediately",
+      "party = top 3 by heroPower with exactly one tank in front if owned, support in slot 3 if owned",
+      "auto-equip highest-score gear",
+      "spend all gold on cheapest upgrade among equipped items",
+      "start boss fight as soon as BOSS_READY and partyPower >= power at last boss loss * 1.05 (first attempt immediately)"
+    ]
+  }
+}

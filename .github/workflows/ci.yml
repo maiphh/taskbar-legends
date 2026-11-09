@@ -1,0 +1,29 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+      - name: Deterministic sim smoke
+        run: |
+          npm run --silent sim -- --seed 1 --ticks 600 > sim-smoke.json
+          node --input-type=module -e "import fs from 'node:fs'; const s=JSON.parse(fs.readFileSync('sim-smoke.json','utf8')); if(s.final.tick!==600 || s.final.seed!==1) throw new Error('Invalid smoke result');"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sim-smoke
+          path: sim-smoke.json

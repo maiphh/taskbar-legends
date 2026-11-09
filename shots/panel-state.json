@@ -1,0 +1,7247 @@
+{
+  "state": {
+    "version": 1,
+    "balance": "1.0.0-design",
+    "tick": 73001,
+    "rng": 4072838506,
+    "seed": 1,
+    "gold": 13541,
+    "tickets": 0,
+    "pity": 1,
+    "highestCleared": 9,
+    "progress": {
+      "kind": "BOSS_READY",
+      "stage": 9,
+      "bossStage": 10,
+      "failedPower": 0,
+      "bossLosses": 0
+    },
+    "phase": {
+      "kind": "battle"
+    },
+    "wave": 2,
+    "encounter": 103,
+    "stageStartedTick": 72790,
+    "attemptPower": 1403,
+    "roster": [
+      {
+        "id": "mw2",
+        "level": 14,
+        "xp": 222,
+        "stars": 1,
+        "equipment": {
+          "weapon": 12,
+          "armor": 29,
+          "charm": 2
+        }
+      },
+      {
+        "id": "hu1",
+        "level": 14,
+        "xp": 222,
+        "stars": 1,
+        "equipment": {
+          "weapon": 22,
+          "armor": 19,
+          "charm": 27
+        }
+      },
+      {
+        "id": "wiz",
+        "level": 14,
+        "xp": 239,
+        "stars": 1,
+        "equipment": {
+          "weapon": 9,
+          "armor": 25,
+          "charm": 28
+        }
+      },
+      {
+        "id": "priest",
+        "level": 8,
+        "xp": 0,
+        "stars": 1,
+        "equipment": {
+          "weapon": null,
+          "armor": null,
+          "charm": null
+        }
+      }
+    ],
+    "partyIds": [
+      "mw2",
+      "hu1",
+      "wiz"
+    ],
+    "inventory": [
+      {
+        "id": 1,
+        "slot": "weapon",
+        "rarity": "rare",
+        "dropStage": 1,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 5,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 2,
+        "slot": "charm",
+        "rarity": "epic",
+        "dropStage": 2,
+        "level": 1,
+        "spent": 48,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0.117,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 3,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 3,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0.046,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 4,
+        "slot": "weapon",
+        "rarity": "common",
+        "dropStage": 4,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 5,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 5,
+        "slot": "weapon",
+        "rarity": "common",
+        "dropStage": 5,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 6,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 6,
+        "slot": "weapon",
+        "rarity": "rare",
+        "dropStage": 6,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 9,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 7,
+        "slot": "armor",
+        "rarity": "common",
+        "dropStage": 7,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 60,
+          "atk": 0,
+          "def": 8,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 8,
+        "slot": "weapon",
+        "rarity": "rare",
+        "dropStage": 8,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 11,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 9,
+        "slot": "weapon",
+        "rarity": "rare",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 13,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 10,
+        "slot": "weapon",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 10,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 11,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0.06
+        }
+      },
+      {
+        "id": 12,
+        "slot": "weapon",
+        "rarity": "epic",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 16,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 13,
+        "slot": "weapon",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 10,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 14,
+        "slot": "armor",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 70,
+          "atk": 0,
+          "def": 9,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 15,
+        "slot": "weapon",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 11,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 16,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0.049
+        }
+      },
+      {
+        "id": 17,
+        "slot": "armor",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 71,
+          "atk": 0,
+          "def": 9,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 18,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0.046,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 19,
+        "slot": "armor",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 76,
+          "atk": 0,
+          "def": 10,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 20,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0.051
+        }
+      },
+      {
+        "id": 21,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0.055,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 22,
+        "slot": "weapon",
+        "rarity": "rare",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 13,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 23,
+        "slot": "armor",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 70,
+          "atk": 0,
+          "def": 9,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 24,
+        "slot": "weapon",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 10,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 25,
+        "slot": "armor",
+        "rarity": "rare",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 98,
+          "atk": 0,
+          "def": 13,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 26,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0.06,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      },
+      {
+        "id": 27,
+        "slot": "charm",
+        "rarity": "common",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0.071
+        }
+      },
+      {
+        "id": 28,
+        "slot": "charm",
+        "rarity": "rare",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 0,
+          "atk": 0,
+          "def": 0,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0.096
+        }
+      },
+      {
+        "id": 29,
+        "slot": "armor",
+        "rarity": "epic",
+        "dropStage": 9,
+        "level": 0,
+        "spent": 0,
+        "stats": {
+          "hp": 115,
+          "atk": 0,
+          "def": 15,
+          "atkPct": 0,
+          "hpPct": 0,
+          "speedPct": 0
+        }
+      }
+    ],
+    "nextGearId": 30,
+    "party": [
+      {
+        "id": "hero-mw2",
+        "sourceId": "mw2",
+        "side": "hero",
+        "hp": 909,
+        "maxHp": 909,
+        "atk": 48,
+        "def": 107,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 160,
+        "x": 140,
+        "slot": 0,
+        "boss": false,
+        "attacks": 1,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72790
+      },
+      {
+        "id": "hero-hu1",
+        "sourceId": "hu1",
+        "side": "hero",
+        "hp": 398,
+        "maxHp": 398,
+        "atk": 54,
+        "def": 33,
+        "cooldown": 5,
+        "attackTicks": 15,
+        "range": 400,
+        "x": 95,
+        "slot": 1,
+        "boss": false,
+        "attacks": 11,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72790
+      },
+      {
+        "id": "hero-wiz",
+        "sourceId": "wiz",
+        "side": "hero",
+        "hp": 374,
+        "maxHp": 374,
+        "atk": 82,
+        "def": 25,
+        "cooldown": 10,
+        "attackTicks": 27,
+        "range": 400,
+        "x": 50,
+        "slot": 2,
+        "boss": false,
+        "attacks": 6,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72790
+      }
+    ],
+    "enemies": [
+      {
+        "id": "enemy-103-2-0",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 0,
+        "maxHp": 149,
+        "atk": 30,
+        "def": 25,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 432,
+        "slot": 0,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72929
+      },
+      {
+        "id": "enemy-103-2-1",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 0,
+        "maxHp": 149,
+        "atk": 30,
+        "def": 25,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 390,
+        "slot": 1,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72929
+      },
+      {
+        "id": "enemy-103-2-2",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 32,
+        "maxHp": 149,
+        "atk": 30,
+        "def": 25,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 372,
+        "slot": 2,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72929
+      },
+      {
+        "id": "enemy-103-2-3",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 149,
+        "maxHp": 149,
+        "atk": 30,
+        "def": 25,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 422,
+        "slot": 3,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72929
+      },
+      {
+        "id": "enemy-103-2-4",
+        "sourceId": "archer",
+        "side": "enemy",
+        "hp": 99,
+        "maxHp": 99,
+        "atk": 25,
+        "def": 12,
+        "cooldown": 0,
+        "attackTicks": 30,
+        "range": 150,
+        "x": 472,
+        "slot": 4,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 72929
+      }
+    ],
+    "retryFailures": 0,
+    "economyRevision": 3270,
+    "stats": {
+      "clears": 101,
+      "losses": 1,
+      "retries": 1,
+      "bossFailures": 0,
+      "goldEarned": 13589,
+      "pulls": 1,
+      "chests": 29,
+      "offlineClears": 0,
+      "offlineSeconds": 0
+    },
+    "metrics": {
+      "firstAttemptTicks": {
+        "1": 0,
+        "2": 368,
+        "3": 736,
+        "4": 1118,
+        "5": 1656,
+        "6": 2194,
+        "7": 2827,
+        "8": 3631,
+        "9": 4479
+      },
+      "firstClearTicks": {
+        "1": 328,
+        "2": 696,
+        "3": 1078,
+        "4": 1616,
+        "5": 2154,
+        "6": 2787,
+        "7": 3591,
+        "8": 4439,
+        "9": 7148
+      },
+      "fullRosterTick": null,
+      "farmClearSeconds": [
+        34,
+        34,
+        34,
+        34,
+        34,
+        34,
+        34,
+        34,
+        34,
+        24.9
+      ],
+      "farmMinSeconds": 24.9,
+      "farmMaxSeconds": 43.75,
+      "farmSamples": 92,
+      "maxNonBossStallSeconds": 133.45
+    },
+    "eventSeq": 18942,
+    "eventCounts": {
+      "spawn": 1822,
+      "stage": 103,
+      "wave": 308,
+      "hit": 10160,
+      "death": 1512,
+      "gold": 1611,
+      "xp": 1610,
+      "skill": 1672,
+      "clear": 101,
+      "gear": 29,
+      "tickets": 10,
+      "loss": 1,
+      "retry": 1,
+      "upgrade": 1,
+      "pull": 1
+    },
+    "events": [
+      {
+        "seq": 18343,
+        "tick": 70667,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-99-3-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18344,
+        "tick": 70667,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-99-3-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18345,
+        "tick": 70667,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-99-3-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18346,
+        "tick": 70667,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18347,
+        "tick": 70684,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18348,
+        "tick": 70695,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18349,
+        "tick": 70695,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-0",
+          "damage": 106,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18350,
+        "tick": 70695,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18351,
+        "tick": 70700,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-0",
+          "damage": 11,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18352,
+        "tick": 70700,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-99-3-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18353,
+        "tick": 70700,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13061,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18354,
+        "tick": 70700,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18355,
+        "tick": 70716,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18356,
+        "tick": 70716,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-1",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18357,
+        "tick": 70716,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-2",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18358,
+        "tick": 70725,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-1",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18359,
+        "tick": 70732,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18360,
+        "tick": 70745,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-99-3-1",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18361,
+        "tick": 70745,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-99-3-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18362,
+        "tick": 70745,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13067,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18363,
+        "tick": 70745,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18364,
+        "tick": 70748,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18365,
+        "tick": 70755,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-2",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18366,
+        "tick": 70764,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18367,
+        "tick": 70769,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-99-3-2",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18368,
+        "tick": 70769,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-99-3-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18369,
+        "tick": 70769,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13073,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18370,
+        "tick": 70769,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18371,
+        "tick": 70780,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-4",
+          "damage": 36,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18372,
+        "tick": 70785,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18373,
+        "tick": 70785,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-4",
+          "damage": 63,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18374,
+        "tick": 70785,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-99-3-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18375,
+        "tick": 70785,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13079,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18376,
+        "tick": 70785,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18377,
+        "tick": 70796,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18378,
+        "tick": 70796,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-3",
+          "damage": 20,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18379,
+        "tick": 70804,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-99-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18380,
+        "tick": 70812,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18381,
+        "tick": 70815,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-3",
+          "damage": 41,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18382,
+        "tick": 70828,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-99-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18383,
+        "tick": 70828,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18384,
+        "tick": 70844,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18385,
+        "tick": 70845,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-3",
+          "damage": 41,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18386,
+        "tick": 70847,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-99-3-3",
+          "targetId": "hero-mw2",
+          "damage": 27,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18387,
+        "tick": 70852,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18388,
+        "tick": 70860,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18389,
+        "tick": 70875,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18390,
+        "tick": 70875,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-99-3-3",
+          "damage": 81,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18391,
+        "tick": 70876,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-99-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18392,
+        "tick": 70876,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18393,
+        "tick": 70876,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-3",
+          "damage": 20,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18394,
+        "tick": 70883,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-99-3-3",
+          "targetId": "hero-mw2",
+          "damage": 27,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18395,
+        "tick": 70892,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-99-3-3",
+          "damage": 11,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18396,
+        "tick": 70892,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-99-3-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18397,
+        "tick": 70892,
+        "data": {
+          "type": "gold",
+          "amount": 17,
+          "total": 13096,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18398,
+        "tick": 70892,
+        "data": {
+          "type": "xp",
+          "amount": 17,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18399,
+        "tick": 70892,
+        "data": {
+          "type": "gold",
+          "amount": 37,
+          "total": 13133,
+          "reason": "clear"
+        }
+      },
+      {
+        "seq": 18400,
+        "tick": 70892,
+        "data": {
+          "type": "xp",
+          "amount": 37,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18401,
+        "tick": 70892,
+        "data": {
+          "type": "clear",
+          "stage": 9,
+          "first": false,
+          "durationSeconds": 34
+        }
+      },
+      {
+        "seq": 18402,
+        "tick": 70892,
+        "data": {
+          "type": "tickets",
+          "amount": 1,
+          "total": 40
+        }
+      },
+      {
+        "seq": 18403,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-mw2",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18404,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-hu1",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18405,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-wiz",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18406,
+        "tick": 70932,
+        "data": {
+          "type": "stage",
+          "stage": 9,
+          "mode": "BOSS_READY"
+        }
+      },
+      {
+        "seq": 18407,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-1-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18408,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-1-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18409,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-1-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18410,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-1-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18411,
+        "tick": 70932,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-1-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18412,
+        "tick": 70932,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18413,
+        "tick": 70949,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18414,
+        "tick": 70960,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-1-0",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18415,
+        "tick": 70965,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18416,
+        "tick": 70981,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18417,
+        "tick": 70981,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-1-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18418,
+        "tick": 70981,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13139,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18419,
+        "tick": 70981,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18420,
+        "tick": 70990,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-1-1",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18421,
+        "tick": 70997,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18422,
+        "tick": 71010,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-1-1",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18423,
+        "tick": 71013,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18424,
+        "tick": 71013,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-1",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18425,
+        "tick": 71013,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-2",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18426,
+        "tick": 71013,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-3",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18427,
+        "tick": 71020,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18428,
+        "tick": 71020,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-1-1",
+          "damage": 13,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18429,
+        "tick": 71020,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-1-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18430,
+        "tick": 71020,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13145,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18431,
+        "tick": 71020,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18432,
+        "tick": 71020,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-1-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18433,
+        "tick": 71029,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18434,
+        "tick": 71034,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-1-2",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18435,
+        "tick": 71045,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18436,
+        "tick": 71050,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-1-2",
+          "damage": 2,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18437,
+        "tick": 71050,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-1-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18438,
+        "tick": 71050,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13151,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18439,
+        "tick": 71050,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18440,
+        "tick": 71050,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-1-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18441,
+        "tick": 71058,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-1-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18442,
+        "tick": 71061,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18443,
+        "tick": 71067,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-1-3",
+          "targetId": "hero-mw2",
+          "damage": 16,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18444,
+        "tick": 71077,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18445,
+        "tick": 71080,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-1-3",
+          "damage": 34,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18446,
+        "tick": 71080,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-1-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18447,
+        "tick": 71080,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13157,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18448,
+        "tick": 71080,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18449,
+        "tick": 71080,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-1-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18450,
+        "tick": 71082,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-1-4",
+          "damage": 28,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18451,
+        "tick": 71093,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18452,
+        "tick": 71093,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-4",
+          "damage": 29,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18453,
+        "tick": 71106,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18454,
+        "tick": 71109,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-1-4",
+          "damage": 36,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18455,
+        "tick": 71110,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18456,
+        "tick": 71110,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-1-4",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18457,
+        "tick": 71110,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-1-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18458,
+        "tick": 71110,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13163,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18459,
+        "tick": 71110,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18460,
+        "tick": 71140,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-2-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18461,
+        "tick": 71140,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-2-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18462,
+        "tick": 71140,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-2-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18463,
+        "tick": 71140,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-2-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18464,
+        "tick": 71140,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-2-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18465,
+        "tick": 71140,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18466,
+        "tick": 71157,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18467,
+        "tick": 71170,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-2-0",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18468,
+        "tick": 71173,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18469,
+        "tick": 71189,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18470,
+        "tick": 71189,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-2-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18471,
+        "tick": 71189,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13169,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18472,
+        "tick": 71189,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18473,
+        "tick": 71200,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-2-1",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18474,
+        "tick": 71205,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18475,
+        "tick": 71205,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-1",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18476,
+        "tick": 71205,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-2",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18477,
+        "tick": 71205,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-3",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18478,
+        "tick": 71218,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-2-1",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18479,
+        "tick": 71221,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18480,
+        "tick": 71230,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18481,
+        "tick": 71230,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-2-1",
+          "damage": 13,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18482,
+        "tick": 71230,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-2-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18483,
+        "tick": 71230,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13175,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18484,
+        "tick": 71230,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18485,
+        "tick": 71230,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-2-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18486,
+        "tick": 71237,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18487,
+        "tick": 71242,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-2-2",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18488,
+        "tick": 71253,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18489,
+        "tick": 71258,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-2-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18490,
+        "tick": 71260,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-2-2",
+          "damage": 2,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18491,
+        "tick": 71260,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-2-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18492,
+        "tick": 71260,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13181,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18493,
+        "tick": 71260,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18494,
+        "tick": 71266,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-2-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18495,
+        "tick": 71269,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18496,
+        "tick": 71275,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-2-3",
+          "targetId": "hero-mw2",
+          "damage": 16,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18497,
+        "tick": 71285,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18498,
+        "tick": 71285,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-3",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18499,
+        "tick": 71285,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-4",
+          "damage": 29,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18500,
+        "tick": 71288,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-2-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18501,
+        "tick": 71290,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-2-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18502,
+        "tick": 71290,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-2-3",
+          "damage": 15,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18503,
+        "tick": 71290,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-2-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18504,
+        "tick": 71290,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13187,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18505,
+        "tick": 71290,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18506,
+        "tick": 71301,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-4",
+          "damage": 36,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18507,
+        "tick": 71314,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18508,
+        "tick": 71317,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-2-4",
+          "damage": 34,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18509,
+        "tick": 71317,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-2-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18510,
+        "tick": 71317,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13193,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18511,
+        "tick": 71317,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18512,
+        "tick": 71347,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-3-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18513,
+        "tick": 71347,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-3-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18514,
+        "tick": 71347,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-3-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18515,
+        "tick": 71347,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-3-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18516,
+        "tick": 71347,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-100-3-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18517,
+        "tick": 71347,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18518,
+        "tick": 71364,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18519,
+        "tick": 71375,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18520,
+        "tick": 71375,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-0",
+          "damage": 106,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18521,
+        "tick": 71375,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18522,
+        "tick": 71380,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-0",
+          "damage": 11,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18523,
+        "tick": 71380,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-3-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18524,
+        "tick": 71380,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13199,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18525,
+        "tick": 71380,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18526,
+        "tick": 71396,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18527,
+        "tick": 71396,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-1",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18528,
+        "tick": 71396,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-2",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18529,
+        "tick": 71405,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-1",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18530,
+        "tick": 71412,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18531,
+        "tick": 71425,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-3-1",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18532,
+        "tick": 71425,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-3-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18533,
+        "tick": 71425,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13205,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18534,
+        "tick": 71425,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18535,
+        "tick": 71428,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18536,
+        "tick": 71435,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-2",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18537,
+        "tick": 71444,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18538,
+        "tick": 71449,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-3-2",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18539,
+        "tick": 71449,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-3-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18540,
+        "tick": 71449,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13211,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18541,
+        "tick": 71449,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18542,
+        "tick": 71460,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-4",
+          "damage": 36,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18543,
+        "tick": 71465,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18544,
+        "tick": 71465,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-4",
+          "damage": 63,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18545,
+        "tick": 71465,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-3-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18546,
+        "tick": 71465,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13217,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18547,
+        "tick": 71465,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18548,
+        "tick": 71476,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18549,
+        "tick": 71476,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-3",
+          "damage": 20,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18550,
+        "tick": 71484,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18551,
+        "tick": 71492,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18552,
+        "tick": 71495,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-3",
+          "damage": 41,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18553,
+        "tick": 71508,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18554,
+        "tick": 71508,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18555,
+        "tick": 71524,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18556,
+        "tick": 71525,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-3",
+          "damage": 41,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18557,
+        "tick": 71527,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-3-3",
+          "targetId": "hero-mw2",
+          "damage": 27,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18558,
+        "tick": 71532,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18559,
+        "tick": 71540,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18560,
+        "tick": 71555,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18561,
+        "tick": 71555,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-100-3-3",
+          "damage": 81,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18562,
+        "tick": 71556,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-100-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18563,
+        "tick": 71556,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18564,
+        "tick": 71556,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-3",
+          "damage": 20,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18565,
+        "tick": 71563,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-100-3-3",
+          "targetId": "hero-mw2",
+          "damage": 27,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18566,
+        "tick": 71572,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-100-3-3",
+          "damage": 11,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18567,
+        "tick": 71572,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-100-3-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18568,
+        "tick": 71572,
+        "data": {
+          "type": "gold",
+          "amount": 17,
+          "total": 13234,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18569,
+        "tick": 71572,
+        "data": {
+          "type": "xp",
+          "amount": 17,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18570,
+        "tick": 71572,
+        "data": {
+          "type": "gold",
+          "amount": 37,
+          "total": 13271,
+          "reason": "clear"
+        }
+      },
+      {
+        "seq": 18571,
+        "tick": 71572,
+        "data": {
+          "type": "xp",
+          "amount": 37,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18572,
+        "tick": 71572,
+        "data": {
+          "type": "clear",
+          "stage": 9,
+          "first": false,
+          "durationSeconds": 34
+        }
+      },
+      {
+        "seq": 18573,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-mw2",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18574,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-hu1",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18575,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-wiz",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18576,
+        "tick": 71612,
+        "data": {
+          "type": "stage",
+          "stage": 9,
+          "mode": "BOSS_READY"
+        }
+      },
+      {
+        "seq": 18577,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-1-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18578,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-1-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18579,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-1-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18580,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-1-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18581,
+        "tick": 71612,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-1-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18582,
+        "tick": 71612,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18583,
+        "tick": 71629,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18584,
+        "tick": 71640,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-1-0",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18585,
+        "tick": 71645,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18586,
+        "tick": 71661,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18587,
+        "tick": 71661,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-1-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18588,
+        "tick": 71661,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13277,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18589,
+        "tick": 71661,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18590,
+        "tick": 71670,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-1-1",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18591,
+        "tick": 71677,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18592,
+        "tick": 71690,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-1-1",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18593,
+        "tick": 71693,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18594,
+        "tick": 71693,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-1",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18595,
+        "tick": 71693,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-2",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18596,
+        "tick": 71693,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-3",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18597,
+        "tick": 71700,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18598,
+        "tick": 71700,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-1-1",
+          "damage": 13,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18599,
+        "tick": 71700,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-1-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18600,
+        "tick": 71700,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13283,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18601,
+        "tick": 71700,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18602,
+        "tick": 71700,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-1-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18603,
+        "tick": 71709,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18604,
+        "tick": 71714,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-1-2",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18605,
+        "tick": 71725,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18606,
+        "tick": 71730,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-1-2",
+          "damage": 2,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18607,
+        "tick": 71730,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-1-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18608,
+        "tick": 71730,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13289,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18609,
+        "tick": 71730,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18610,
+        "tick": 71730,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-1-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18611,
+        "tick": 71738,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-1-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18612,
+        "tick": 71741,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18613,
+        "tick": 71747,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-1-3",
+          "targetId": "hero-mw2",
+          "damage": 16,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18614,
+        "tick": 71757,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18615,
+        "tick": 71760,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-1-3",
+          "damage": 34,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18616,
+        "tick": 71760,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-1-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18617,
+        "tick": 71760,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13295,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18618,
+        "tick": 71760,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18619,
+        "tick": 71760,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-1-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18620,
+        "tick": 71762,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-1-4",
+          "damage": 28,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18621,
+        "tick": 71773,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18622,
+        "tick": 71773,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-4",
+          "damage": 29,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18623,
+        "tick": 71786,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18624,
+        "tick": 71789,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-1-4",
+          "damage": 36,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18625,
+        "tick": 71790,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18626,
+        "tick": 71790,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-1-4",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18627,
+        "tick": 71790,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-1-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18628,
+        "tick": 71790,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13301,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18629,
+        "tick": 71790,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18630,
+        "tick": 71820,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-2-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18631,
+        "tick": 71820,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-2-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18632,
+        "tick": 71820,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-2-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18633,
+        "tick": 71820,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-2-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18634,
+        "tick": 71820,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-2-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18635,
+        "tick": 71820,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18636,
+        "tick": 71837,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18637,
+        "tick": 71850,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-2-0",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18638,
+        "tick": 71853,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18639,
+        "tick": 71869,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18640,
+        "tick": 71869,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-2-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18641,
+        "tick": 71869,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13307,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18642,
+        "tick": 71869,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18643,
+        "tick": 71880,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-2-1",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18644,
+        "tick": 71885,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18645,
+        "tick": 71885,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-1",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18646,
+        "tick": 71885,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-2",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18647,
+        "tick": 71885,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-3",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18648,
+        "tick": 71898,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-2-1",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18649,
+        "tick": 71901,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18650,
+        "tick": 71910,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18651,
+        "tick": 71910,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-2-1",
+          "damage": 13,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18652,
+        "tick": 71910,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-2-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18653,
+        "tick": 71910,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13313,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18654,
+        "tick": 71910,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18655,
+        "tick": 71910,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-2-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18656,
+        "tick": 71917,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18657,
+        "tick": 71922,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-2-2",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18658,
+        "tick": 71933,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18659,
+        "tick": 71938,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-2-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18660,
+        "tick": 71940,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-2-2",
+          "damage": 2,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18661,
+        "tick": 71940,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-2-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18662,
+        "tick": 71940,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13319,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18663,
+        "tick": 71940,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18664,
+        "tick": 71946,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-2-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18665,
+        "tick": 71949,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18666,
+        "tick": 71955,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-2-3",
+          "targetId": "hero-mw2",
+          "damage": 16,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18667,
+        "tick": 71965,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18668,
+        "tick": 71965,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-3",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18669,
+        "tick": 71965,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-4",
+          "damage": 29,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18670,
+        "tick": 71968,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-2-4",
+          "targetId": "hero-mw2",
+          "damage": 13,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18671,
+        "tick": 71970,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-2-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18672,
+        "tick": 71970,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-2-3",
+          "damage": 15,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18673,
+        "tick": 71970,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-2-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18674,
+        "tick": 71970,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13325,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18675,
+        "tick": 71970,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18676,
+        "tick": 71981,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-4",
+          "damage": 36,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18677,
+        "tick": 71994,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18678,
+        "tick": 71997,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-2-4",
+          "damage": 34,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18679,
+        "tick": 71997,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-2-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18680,
+        "tick": 71997,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13331,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18681,
+        "tick": 71997,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18682,
+        "tick": 72000,
+        "data": {
+          "type": "gold",
+          "amount": -48,
+          "total": 13283,
+          "reason": "upgrade"
+        }
+      },
+      {
+        "seq": 18683,
+        "tick": 72000,
+        "data": {
+          "type": "upgrade",
+          "gearId": 2,
+          "level": 1,
+          "cost": 48
+        }
+      },
+      {
+        "seq": 18684,
+        "tick": 72000,
+        "data": {
+          "type": "pull",
+          "heroId": "priest",
+          "rarity": "rare",
+          "duplicate": false,
+          "pity": false
+        }
+      },
+      {
+        "seq": 18685,
+        "tick": 72027,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-3-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18686,
+        "tick": 72027,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-3-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18687,
+        "tick": 72027,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-3-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18688,
+        "tick": 72027,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-3-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18689,
+        "tick": 72027,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-101-3-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18690,
+        "tick": 72027,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18691,
+        "tick": 72044,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-0",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18692,
+        "tick": 72055,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18693,
+        "tick": 72055,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-0",
+          "damage": 106,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18694,
+        "tick": 72055,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18695,
+        "tick": 72060,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-0",
+          "damage": 11,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18696,
+        "tick": 72060,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-3-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18697,
+        "tick": 72060,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13289,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18698,
+        "tick": 72060,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18699,
+        "tick": 72076,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18700,
+        "tick": 72076,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-1",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18701,
+        "tick": 72076,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-2",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18702,
+        "tick": 72085,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-1",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18703,
+        "tick": 72092,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-1",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18704,
+        "tick": 72105,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-3-1",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18705,
+        "tick": 72105,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-3-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18706,
+        "tick": 72105,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13295,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18707,
+        "tick": 72105,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18708,
+        "tick": 72108,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18709,
+        "tick": 72115,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-2",
+          "damage": 53,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18710,
+        "tick": 72124,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18711,
+        "tick": 72129,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-3-2",
+          "damage": 6,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18712,
+        "tick": 72129,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-3-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18713,
+        "tick": 72129,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13301,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18714,
+        "tick": 72129,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18715,
+        "tick": 72140,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-4",
+          "damage": 36,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18716,
+        "tick": 72145,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18717,
+        "tick": 72145,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-4",
+          "damage": 63,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18718,
+        "tick": 72145,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-3-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18719,
+        "tick": 72145,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13307,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18720,
+        "tick": 72145,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18721,
+        "tick": 72156,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18722,
+        "tick": 72156,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-3",
+          "damage": 20,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18723,
+        "tick": 72164,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18724,
+        "tick": 72172,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18725,
+        "tick": 72175,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-3",
+          "damage": 41,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18726,
+        "tick": 72188,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18727,
+        "tick": 72188,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18728,
+        "tick": 72204,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18729,
+        "tick": 72205,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-3",
+          "damage": 41,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18730,
+        "tick": 72207,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-3-3",
+          "targetId": "hero-mw2",
+          "damage": 27,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18731,
+        "tick": 72212,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18732,
+        "tick": 72220,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-3",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18733,
+        "tick": 72235,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18734,
+        "tick": 72235,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-101-3-3",
+          "damage": 81,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18735,
+        "tick": 72236,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-101-3-3",
+          "damage": 19,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18736,
+        "tick": 72236,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18737,
+        "tick": 72236,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-3",
+          "damage": 20,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18738,
+        "tick": 72243,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-101-3-3",
+          "targetId": "hero-mw2",
+          "damage": 27,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18739,
+        "tick": 72252,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-101-3-3",
+          "damage": 11,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18740,
+        "tick": 72252,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-101-3-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18741,
+        "tick": 72252,
+        "data": {
+          "type": "gold",
+          "amount": 17,
+          "total": 13324,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18742,
+        "tick": 72252,
+        "data": {
+          "type": "xp",
+          "amount": 17,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18743,
+        "tick": 72252,
+        "data": {
+          "type": "gold",
+          "amount": 37,
+          "total": 13361,
+          "reason": "clear"
+        }
+      },
+      {
+        "seq": 18744,
+        "tick": 72252,
+        "data": {
+          "type": "xp",
+          "amount": 37,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18745,
+        "tick": 72252,
+        "data": {
+          "type": "clear",
+          "stage": 9,
+          "first": false,
+          "durationSeconds": 34
+        }
+      },
+      {
+        "seq": 18746,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-mw2",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18747,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-hu1",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18748,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-wiz",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18749,
+        "tick": 72292,
+        "data": {
+          "type": "stage",
+          "stage": 9,
+          "mode": "BOSS_READY"
+        }
+      },
+      {
+        "seq": 18750,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-1-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18751,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-1-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18752,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-1-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18753,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-1-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18754,
+        "tick": 72292,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-1-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18755,
+        "tick": 72292,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18756,
+        "tick": 72309,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-0",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18757,
+        "tick": 72320,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-1-0",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18758,
+        "tick": 72324,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-0",
+          "damage": 40,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18759,
+        "tick": 72324,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-1-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18760,
+        "tick": 72324,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13367,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18761,
+        "tick": 72324,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18762,
+        "tick": 72339,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-1",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18763,
+        "tick": 72347,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-1-1",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18764,
+        "tick": 72354,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-1",
+          "damage": 40,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18765,
+        "tick": 72354,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-1-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18766,
+        "tick": 72354,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13373,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18767,
+        "tick": 72354,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18768,
+        "tick": 72369,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18769,
+        "tick": 72369,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-2",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18770,
+        "tick": 72369,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-3",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18771,
+        "tick": 72369,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-4",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18772,
+        "tick": 72374,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18773,
+        "tick": 72374,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-1-2",
+          "damage": 114,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18774,
+        "tick": 72374,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-1-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18775,
+        "tick": 72374,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13379,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18776,
+        "tick": 72374,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18777,
+        "tick": 72374,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-1-3",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18778,
+        "tick": 72384,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-3",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18779,
+        "tick": 72395,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-102-1-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18780,
+        "tick": 72395,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-1-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18781,
+        "tick": 72395,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13385,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18782,
+        "tick": 72395,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18783,
+        "tick": 72399,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-1-4",
+          "damage": 48,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18784,
+        "tick": 72401,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-1-4",
+          "damage": 12,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18785,
+        "tick": 72401,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-1-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18786,
+        "tick": 72401,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13391,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18787,
+        "tick": 72401,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18788,
+        "tick": 72431,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-2-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18789,
+        "tick": 72431,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-2-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18790,
+        "tick": 72431,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-2-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18791,
+        "tick": 72431,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-2-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18792,
+        "tick": 72431,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-2-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18793,
+        "tick": 72431,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18794,
+        "tick": 72448,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-0",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18795,
+        "tick": 72459,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-2-0",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18796,
+        "tick": 72463,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-0",
+          "damage": 40,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18797,
+        "tick": 72463,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-2-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18798,
+        "tick": 72463,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13397,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18799,
+        "tick": 72463,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18800,
+        "tick": 72478,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18801,
+        "tick": 72478,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-1",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18802,
+        "tick": 72478,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-2",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18803,
+        "tick": 72486,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18804,
+        "tick": 72486,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-2-1",
+          "damage": 114,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18805,
+        "tick": 72486,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-2-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18806,
+        "tick": 72486,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13403,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18807,
+        "tick": 72486,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18808,
+        "tick": 72486,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-2-2",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18809,
+        "tick": 72493,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-2",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18810,
+        "tick": 72508,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-2",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18811,
+        "tick": 72508,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-2-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18812,
+        "tick": 72508,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13409,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18813,
+        "tick": 72508,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18814,
+        "tick": 72513,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-2-3",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18815,
+        "tick": 72523,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-3",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18816,
+        "tick": 72534,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-102-2-3",
+          "damage": 38,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18817,
+        "tick": 72538,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-3",
+          "damage": 2,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18818,
+        "tick": 72538,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-2-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18819,
+        "tick": 72538,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13415,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18820,
+        "tick": 72538,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18821,
+        "tick": 72540,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-2-4",
+          "damage": 73,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18822,
+        "tick": 72549,
+        "data": {
+          "type": "hit",
+          "attackerId": "enemy-102-2-4",
+          "targetId": "hero-mw2",
+          "damage": 12,
+          "side": "hero"
+        }
+      },
+      {
+        "seq": 18823,
+        "tick": 72553,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18824,
+        "tick": 72553,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-2-4",
+          "damage": 26,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18825,
+        "tick": 72553,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-2-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18826,
+        "tick": 72553,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13421,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18827,
+        "tick": 72553,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18828,
+        "tick": 72583,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-3-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18829,
+        "tick": 72583,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-3-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18830,
+        "tick": 72583,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-3-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18831,
+        "tick": 72583,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-3-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18832,
+        "tick": 72583,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-102-3-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18833,
+        "tick": 72583,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 3
+        }
+      },
+      {
+        "seq": 18834,
+        "tick": 72600,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-0",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18835,
+        "tick": 72611,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18836,
+        "tick": 72611,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-3-0",
+          "damage": 106,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18837,
+        "tick": 72611,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-3-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18838,
+        "tick": 72611,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13427,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18839,
+        "tick": 72611,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18840,
+        "tick": 72611,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-3-1",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18841,
+        "tick": 72615,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-1",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18842,
+        "tick": 72630,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-1",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18843,
+        "tick": 72638,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-3-1",
+          "damage": 24,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18844,
+        "tick": 72638,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-3-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18845,
+        "tick": 72638,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13433,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18846,
+        "tick": 72638,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18847,
+        "tick": 72645,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-2",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18848,
+        "tick": 72660,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18849,
+        "tick": 72660,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-2",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18850,
+        "tick": 72660,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-4",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18851,
+        "tick": 72660,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-3",
+          "damage": 27,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18852,
+        "tick": 72665,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-3-2",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18853,
+        "tick": 72673,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-102-3-2",
+          "damage": 5,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18854,
+        "tick": 72673,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-3-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18855,
+        "tick": 72673,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13439,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18856,
+        "tick": 72673,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18857,
+        "tick": 72675,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-4",
+          "damage": 48,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18858,
+        "tick": 72690,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-4",
+          "damage": 12,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18859,
+        "tick": 72690,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-3-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18860,
+        "tick": 72690,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13445,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18861,
+        "tick": 72690,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18862,
+        "tick": 72692,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18863,
+        "tick": 72692,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-3-3",
+          "damage": 101,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18864,
+        "tick": 72705,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-3",
+          "damage": 33,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18865,
+        "tick": 72719,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-3-3",
+          "damage": 51,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18866,
+        "tick": 72720,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-102-3-3",
+          "damage": 30,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18867,
+        "tick": 72720,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-3",
+          "damage": 33,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18868,
+        "tick": 72735,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18869,
+        "tick": 72735,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-3",
+          "damage": 27,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18870,
+        "tick": 72744,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-mw2",
+          "skill": "guard"
+        }
+      },
+      {
+        "seq": 18871,
+        "tick": 72746,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-102-3-3",
+          "damage": 51,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18872,
+        "tick": 72750,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-102-3-3",
+          "damage": 18,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18873,
+        "tick": 72750,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-102-3-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18874,
+        "tick": 72750,
+        "data": {
+          "type": "gold",
+          "amount": 17,
+          "total": 13462,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18875,
+        "tick": 72750,
+        "data": {
+          "type": "xp",
+          "amount": 17,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18876,
+        "tick": 72750,
+        "data": {
+          "type": "gold",
+          "amount": 37,
+          "total": 13499,
+          "reason": "clear"
+        }
+      },
+      {
+        "seq": 18877,
+        "tick": 72750,
+        "data": {
+          "type": "xp",
+          "amount": 37,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18878,
+        "tick": 72750,
+        "data": {
+          "type": "clear",
+          "stage": 9,
+          "first": false,
+          "durationSeconds": 24.9
+        }
+      },
+      {
+        "seq": 18879,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-mw2",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18880,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-hu1",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18881,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-wiz",
+          "side": "hero",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18882,
+        "tick": 72790,
+        "data": {
+          "type": "stage",
+          "stage": 9,
+          "mode": "BOSS_READY"
+        }
+      },
+      {
+        "seq": 18883,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-1-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18884,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-1-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18885,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-1-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18886,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-1-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18887,
+        "tick": 72790,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-1-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18888,
+        "tick": 72790,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18889,
+        "tick": 72807,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-0",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18890,
+        "tick": 72818,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-1-0",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18891,
+        "tick": 72822,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-0",
+          "damage": 40,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18892,
+        "tick": 72822,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-103-1-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18893,
+        "tick": 72822,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13505,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18894,
+        "tick": 72822,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18895,
+        "tick": 72837,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-1",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18896,
+        "tick": 72845,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-1-1",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18897,
+        "tick": 72852,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-1",
+          "damage": 40,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18898,
+        "tick": 72852,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-103-1-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18899,
+        "tick": 72852,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13511,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18900,
+        "tick": 72852,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18901,
+        "tick": 72867,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18902,
+        "tick": 72867,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-2",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18903,
+        "tick": 72867,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-3",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18904,
+        "tick": 72867,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-4",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18905,
+        "tick": 72872,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18906,
+        "tick": 72872,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-1-2",
+          "damage": 114,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18907,
+        "tick": 72872,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-103-1-2",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18908,
+        "tick": 72872,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13517,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18909,
+        "tick": 72872,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18910,
+        "tick": 72872,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-1-3",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18911,
+        "tick": 72882,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-3",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18912,
+        "tick": 72893,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-103-1-3",
+          "damage": 32,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18913,
+        "tick": 72893,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-103-1-3",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18914,
+        "tick": 72893,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13523,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18915,
+        "tick": 72893,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18916,
+        "tick": 72897,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-1-4",
+          "damage": 48,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18917,
+        "tick": 72899,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-1-4",
+          "damage": 12,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18918,
+        "tick": 72899,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-103-1-4",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18919,
+        "tick": 72899,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13529,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18920,
+        "tick": 72899,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18921,
+        "tick": 72929,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-2-0",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18922,
+        "tick": 72929,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-2-1",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18923,
+        "tick": 72929,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-2-2",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18924,
+        "tick": 72929,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-2-3",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18925,
+        "tick": 72929,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-103-2-4",
+          "side": "enemy",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18926,
+        "tick": 72929,
+        "data": {
+          "type": "wave",
+          "stage": 9,
+          "wave": 2
+        }
+      },
+      {
+        "seq": 18927,
+        "tick": 72946,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-2-0",
+          "damage": 43,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18928,
+        "tick": 72957,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-2-0",
+          "damage": 66,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18929,
+        "tick": 72961,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-2-0",
+          "damage": 40,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18930,
+        "tick": 72961,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-103-2-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18931,
+        "tick": 72961,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13535,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18932,
+        "tick": 72961,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18933,
+        "tick": 72976,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-hu1",
+          "skill": "volley"
+        }
+      },
+      {
+        "seq": 18934,
+        "tick": 72976,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-2-1",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18935,
+        "tick": 72976,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-2-2",
+          "damage": 35,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18936,
+        "tick": 72984,
+        "data": {
+          "type": "skill",
+          "unitId": "hero-wiz",
+          "skill": "fireball"
+        }
+      },
+      {
+        "seq": 18937,
+        "tick": 72984,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-2-1",
+          "damage": 114,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18938,
+        "tick": 72984,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-103-2-1",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18939,
+        "tick": 72984,
+        "data": {
+          "type": "gold",
+          "amount": 6,
+          "total": 13541,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 18940,
+        "tick": 72984,
+        "data": {
+          "type": "xp",
+          "amount": 6,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      },
+      {
+        "seq": 18941,
+        "tick": 72984,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-103-2-2",
+          "damage": 39,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 18942,
+        "tick": 72991,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-103-2-2",
+          "damage": 43,
+          "side": "enemy"
+        }
+      }
+    ]
+  },
+  "layout": {
+    "width": 1280,
+    "height": 488,
+    "coreY": 408,
+    "baselineY": 464,
+    "cssHeight": 488,
+    "dpr": 1,
+    "resizeCount": 4,
+    "sourceHitRegions": [
+      {
+        "kind": "hud",
+        "id": "progress",
+        "x": 8,
+        "y": 416,
+        "width": 280,
+        "height": 64
+      },
+      {
+        "kind": "hud",
+        "id": "actions",
+        "x": 992,
+        "y": 416,
+        "width": 280,
+        "height": 64
+      },
+      {
+        "x": 552,
+        "y": 0,
+        "width": 720,
+        "height": 400,
+        "kind": "panel",
+        "id": "management"
+      }
+    ],
+    "ui": {
+      "panel": "recruit",
+      "selectedHero": "mw2",
+      "heroRow": 0,
+      "selectedGear": 1,
+      "history": [
+        "Priest (recolored Wizard) · rare · NEW"
+      ],
+      "fontsReady": true
+    }
+  },
+  "hitRegions": [
+    {
+      "kind": "hud",
+      "id": "progress",
+      "x": 8,
+      "y": 416,
+      "width": 280,
+      "height": 64
+    },
+    {
+      "kind": "hud",
+      "id": "actions",
+      "x": 992,
+      "y": 416,
+      "width": 280,
+      "height": 64
+    },
+    {
+      "x": 552,
+      "y": 0,
+      "width": 720,
+      "height": 400,
+      "kind": "panel",
+      "id": "management"
+    }
+  ]
+}

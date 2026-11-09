@@ -1,0 +1,44 @@
+name: Deploy browser preview to Pages
+# Manual only until repository name and Pages setup are approved. No deployment occurs locally.
+on:
+  workflow_dispatch:
+    inputs:
+      base_path:
+        description: 'Vite base path; leave empty to use /repository-name/'
+        type: string
+        required: false
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck && npm run lint && npm run test
+      - uses: actions/configure-pages@v5
+      - run: npm run build
+        env:
+          VITE_BASE_PATH: ${{ inputs.base_path || format('/{0}/', github.event.repository.name) }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

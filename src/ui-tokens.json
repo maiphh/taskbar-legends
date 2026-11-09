@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "sourcePixelZoom": 1,
+  "closed": {
+    "width": "monitor work-area physical width",
+    "height": 160,
+    "effectsHeight": 80,
+    "coreY": 80,
+    "coreHeight": 80,
+    "baselineY": 136,
+    "baselineCoreLocalY": 56
+  },
+  "expanded": {
+    "height": 488,
+    "panelWidth": 720,
+    "panelHeight": 400,
+    "panelRightInset": 8,
+    "panelCoreGap": 8,
+    "coreY": 408,
+    "baselineY": 464,
+    "baselineCoreLocalY": 56
+  },
+  "spriteOutline": {
+    "defaultVariant": "outlined",
+    "manifestPathField": "outlined",
+    "atlasImageField": "outlinedImage",
+    "radius": 1,
+    "neighbours": "four cardinal only",
+    "rgb": [
+      232,
+      228,
+      216
+    ],
+    "hex": "#e8e4d8",
+    "alpha": 204,
+    "opaqueThreshold": 128,
+    "placement": "only fully transparent pixels adjacent to source alpha >=128",
+    "stage": "baked after sprite normalization/scaling and priest recolour; per cell",
+    "runtimeProcessing": "none; do not outline baked sheets again",
+    "fallback": "same rule on plain frame only if baked variant unavailable"
+  },
+  "nineSlice": {
+    "sourceSize": [
+      48,
+      48
+    ],
+    "insets": {
+      "top": 8,
+      "right": 8,
+      "bottom": 8,
+      "left": 8
+    },
+    "sampling": "nearest"
+  },
+  "font": {
+    "family": "Pixel Operator",
+    "bodySize": 16,
+    "headingSize": 24,
+    "decorativeSize": 8,
+    "licence": "CC0-1.0"
+  },
+  "palette": {
+    "ink": "#0d121b",
+    "base": "#17212d",
+    "panel": "#202c39",
+    "raised": "#293948",
+    "edge": "#536276",
+    "text": "#f2e9cf",
+    "muted": "#b0bcc8",
+    "gold": "#e9bd68",
+    "green": "#90c99b",
+    "red": "#de7c80",
+    "blue": "#8dbfe3",
+    "purple": "#c19cd9"
+  },
+  "spriteInkEnvelope": {
+    "aboveBaselineMax": 128,
+    "belowBaselineMax": 18,
+    "closedMinY": 8,
+    "closedMaxYExclusive": 154,
+    "topClearance": 8,
+    "bottomClearance": 6
+  },
+  "unitHpBars": {
+    "coreLocalY": -6,
+    "height": 6,
+    "closedY": 74,
+    "expandedY": 402,
+    "clickThrough": true
+  }
+}

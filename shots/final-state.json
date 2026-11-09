@@ -1,0 +1,919 @@
+{
+  "scenario": "failed-stage-1-8 fixture; natural no-input gate in screenshot 02",
+  "state": {
+    "version": 1,
+    "balance": "1.0.0-design",
+    "tick": 80,
+    "rng": 1,
+    "seed": 1,
+    "gold": 130,
+    "tickets": 10,
+    "pity": 0,
+    "highestCleared": 7,
+    "progress": {
+      "kind": "FARMING",
+      "stage": 7,
+      "failedStage": 8,
+      "retryAtTick": 2400,
+      "failedPower": 470,
+      "failures": 1
+    },
+    "phase": {
+      "kind": "battle"
+    },
+    "wave": 1,
+    "encounter": 2,
+    "stageStartedTick": 0,
+    "attemptPower": 470,
+    "roster": [
+      {
+        "id": "mw2",
+        "level": 1,
+        "xp": 5,
+        "stars": 1,
+        "equipment": {
+          "weapon": null,
+          "armor": null,
+          "charm": null
+        }
+      },
+      {
+        "id": "hu1",
+        "level": 1,
+        "xp": 5,
+        "stars": 1,
+        "equipment": {
+          "weapon": null,
+          "armor": null,
+          "charm": null
+        }
+      },
+      {
+        "id": "wiz",
+        "level": 1,
+        "xp": 5,
+        "stars": 1,
+        "equipment": {
+          "weapon": null,
+          "armor": null,
+          "charm": null
+        }
+      }
+    ],
+    "partyIds": [
+      "mw2",
+      "hu1",
+      "wiz"
+    ],
+    "inventory": [],
+    "nextGearId": 1,
+    "party": [
+      {
+        "id": "hero-mw2",
+        "sourceId": "mw2",
+        "side": "hero",
+        "hp": 300,
+        "maxHp": 300,
+        "atk": 14,
+        "def": 40,
+        "cooldown": 9,
+        "attackTicks": 24,
+        "range": 160,
+        "x": 140,
+        "slot": 0,
+        "boss": false,
+        "attacks": 1,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      },
+      {
+        "id": "hero-hu1",
+        "sourceId": "hu1",
+        "side": "hero",
+        "hp": 140,
+        "maxHp": 140,
+        "atk": 18,
+        "def": 10,
+        "cooldown": 1,
+        "attackTicks": 16,
+        "range": 400,
+        "x": 95,
+        "slot": 1,
+        "boss": false,
+        "attacks": 4,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      },
+      {
+        "id": "hero-wiz",
+        "sourceId": "wiz",
+        "side": "hero",
+        "hp": 120,
+        "maxHp": 120,
+        "atk": 30,
+        "def": 5,
+        "cooldown": 8,
+        "attackTicks": 30,
+        "range": 400,
+        "x": 50,
+        "slot": 2,
+        "boss": false,
+        "attacks": 2,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      }
+    ],
+    "enemies": [
+      {
+        "id": "enemy-2-1-0",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 0,
+        "maxHp": 118,
+        "atk": 24,
+        "def": 20,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 300,
+        "slot": 0,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      },
+      {
+        "id": "enemy-2-1-1",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 118,
+        "maxHp": 118,
+        "atk": 24,
+        "def": 20,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 290,
+        "slot": 1,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      },
+      {
+        "id": "enemy-2-1-2",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 118,
+        "maxHp": 118,
+        "atk": 24,
+        "def": 20,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 340,
+        "slot": 2,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      },
+      {
+        "id": "enemy-2-1-3",
+        "sourceId": "grunt",
+        "side": "enemy",
+        "hp": 118,
+        "maxHp": 118,
+        "atk": 24,
+        "def": 20,
+        "cooldown": 0,
+        "attackTicks": 24,
+        "range": 30,
+        "x": 390,
+        "slot": 3,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      },
+      {
+        "id": "enemy-2-1-4",
+        "sourceId": "archer",
+        "side": "enemy",
+        "hp": 79,
+        "maxHp": 79,
+        "atk": 20,
+        "def": 10,
+        "cooldown": 0,
+        "attackTicks": 30,
+        "range": 150,
+        "x": 440,
+        "slot": 4,
+        "boss": false,
+        "attacks": 0,
+        "shield": 0,
+        "shieldUntilTick": 0,
+        "bornTick": 0
+      }
+    ],
+    "retryFailures": 0,
+    "economyRevision": 2,
+    "stats": {
+      "clears": 0,
+      "losses": 0,
+      "retries": 0,
+      "bossFailures": 0,
+      "goldEarned": 5,
+      "pulls": 0,
+      "chests": 0,
+      "offlineClears": 0,
+      "offlineSeconds": 0
+    },
+    "metrics": {
+      "firstAttemptTicks": {
+        "1": 0,
+        "7": 0
+      },
+      "firstClearTicks": {},
+      "fullRosterTick": null,
+      "farmClearSeconds": [],
+      "farmMinSeconds": null,
+      "farmMaxSeconds": null,
+      "farmSamples": 0,
+      "maxNonBossStallSeconds": 0
+    },
+    "eventSeq": 28,
+    "eventCounts": {
+      "spawn": 14,
+      "stage": 2,
+      "wave": 2,
+      "hit": 7,
+      "death": 1,
+      "gold": 1,
+      "xp": 1
+    },
+    "events": [
+      {
+        "seq": 1,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-mw2",
+          "side": "hero",
+          "stage": 1,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 2,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-hu1",
+          "side": "hero",
+          "stage": 1,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 3,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-wiz",
+          "side": "hero",
+          "stage": 1,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 4,
+        "tick": 0,
+        "data": {
+          "type": "stage",
+          "stage": 1,
+          "mode": "PUSHING"
+        }
+      },
+      {
+        "seq": 5,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-1-1-0",
+          "side": "enemy",
+          "stage": 1,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 6,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-1-1-1",
+          "side": "enemy",
+          "stage": 1,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 7,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-1-1-2",
+          "side": "enemy",
+          "stage": 1,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 8,
+        "tick": 0,
+        "data": {
+          "type": "wave",
+          "stage": 1,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 9,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-mw2",
+          "side": "hero",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 10,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-hu1",
+          "side": "hero",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 11,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "hero-wiz",
+          "side": "hero",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 12,
+        "tick": 0,
+        "data": {
+          "type": "stage",
+          "stage": 7,
+          "mode": "FARMING"
+        }
+      },
+      {
+        "seq": 13,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-2-1-0",
+          "side": "enemy",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 14,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-2-1-1",
+          "side": "enemy",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 15,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-2-1-2",
+          "side": "enemy",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 16,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-2-1-3",
+          "side": "enemy",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 17,
+        "tick": 0,
+        "data": {
+          "type": "spawn",
+          "unitId": "enemy-2-1-4",
+          "side": "enemy",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 18,
+        "tick": 0,
+        "data": {
+          "type": "wave",
+          "stage": 7,
+          "wave": 1
+        }
+      },
+      {
+        "seq": 19,
+        "tick": 17,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-2-1-0",
+          "damage": 15,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 20,
+        "tick": 28,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-2-1-0",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 21,
+        "tick": 33,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-2-1-0",
+          "damage": 15,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 22,
+        "tick": 49,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-2-1-0",
+          "damage": 15,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 23,
+        "tick": 58,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-wiz",
+          "targetId": "enemy-2-1-0",
+          "damage": 25,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 24,
+        "tick": 65,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-mw2",
+          "targetId": "enemy-2-1-0",
+          "damage": 12,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 25,
+        "tick": 65,
+        "data": {
+          "type": "hit",
+          "attackerId": "hero-hu1",
+          "targetId": "enemy-2-1-0",
+          "damage": 11,
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 26,
+        "tick": 65,
+        "data": {
+          "type": "death",
+          "unitId": "enemy-2-1-0",
+          "side": "enemy"
+        }
+      },
+      {
+        "seq": 27,
+        "tick": 65,
+        "data": {
+          "type": "gold",
+          "amount": 5,
+          "total": 130,
+          "reason": "kill"
+        }
+      },
+      {
+        "seq": 28,
+        "tick": 65,
+        "data": {
+          "type": "xp",
+          "amount": 5,
+          "heroIds": [
+            "mw2",
+            "hu1",
+            "wiz"
+          ]
+        }
+      }
+    ]
+  },
+  "hitRegions": [
+    {
+      "kind": "hud",
+      "id": "progress",
+      "x": 8,
+      "y": 88,
+      "width": 200,
+      "height": 64
+    },
+    {
+      "kind": "hud",
+      "id": "actions",
+      "x": 432,
+      "y": 88,
+      "width": 200,
+      "height": 64
+    }
+  ],
+  "layout": {
+    "width": 640,
+    "height": 160,
+    "coreY": 80,
+    "baselineY": 136,
+    "cssHeight": 160,
+    "dpr": 1,
+    "resizeCount": 2,
+    "sourceHitRegions": [
+      {
+        "kind": "hud",
+        "id": "progress",
+        "x": 8,
+        "y": 88,
+        "width": 200,
+        "height": 64
+      },
+      {
+        "kind": "hud",
+        "id": "actions",
+        "x": 432,
+        "y": 88,
+        "width": 200,
+        "height": 64
+      }
+    ],
+    "ui": {
+      "panel": null,
+      "selectedHero": "mw2",
+      "heroRow": 0,
+      "selectedGear": null,
+      "history": [],
+      "fontsReady": true
+    }
+  },
+  "events": [
+    {
+      "seq": 1,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "hero-mw2",
+        "side": "hero",
+        "stage": 1,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 2,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "hero-hu1",
+        "side": "hero",
+        "stage": 1,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 3,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "hero-wiz",
+        "side": "hero",
+        "stage": 1,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 4,
+      "tick": 0,
+      "data": {
+        "type": "stage",
+        "stage": 1,
+        "mode": "PUSHING"
+      }
+    },
+    {
+      "seq": 5,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-1-1-0",
+        "side": "enemy",
+        "stage": 1,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 6,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-1-1-1",
+        "side": "enemy",
+        "stage": 1,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 7,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-1-1-2",
+        "side": "enemy",
+        "stage": 1,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 8,
+      "tick": 0,
+      "data": {
+        "type": "wave",
+        "stage": 1,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 9,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "hero-mw2",
+        "side": "hero",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 10,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "hero-hu1",
+        "side": "hero",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 11,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "hero-wiz",
+        "side": "hero",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 12,
+      "tick": 0,
+      "data": {
+        "type": "stage",
+        "stage": 7,
+        "mode": "FARMING"
+      }
+    },
+    {
+      "seq": 13,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-2-1-0",
+        "side": "enemy",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 14,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-2-1-1",
+        "side": "enemy",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 15,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-2-1-2",
+        "side": "enemy",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 16,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-2-1-3",
+        "side": "enemy",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 17,
+      "tick": 0,
+      "data": {
+        "type": "spawn",
+        "unitId": "enemy-2-1-4",
+        "side": "enemy",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 18,
+      "tick": 0,
+      "data": {
+        "type": "wave",
+        "stage": 7,
+        "wave": 1
+      }
+    },
+    {
+      "seq": 19,
+      "tick": 17,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-hu1",
+        "targetId": "enemy-2-1-0",
+        "damage": 15,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 20,
+      "tick": 28,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-wiz",
+        "targetId": "enemy-2-1-0",
+        "damage": 25,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 21,
+      "tick": 33,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-hu1",
+        "targetId": "enemy-2-1-0",
+        "damage": 15,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 22,
+      "tick": 49,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-hu1",
+        "targetId": "enemy-2-1-0",
+        "damage": 15,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 23,
+      "tick": 58,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-wiz",
+        "targetId": "enemy-2-1-0",
+        "damage": 25,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 24,
+      "tick": 65,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-mw2",
+        "targetId": "enemy-2-1-0",
+        "damage": 12,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 25,
+      "tick": 65,
+      "data": {
+        "type": "hit",
+        "attackerId": "hero-hu1",
+        "targetId": "enemy-2-1-0",
+        "damage": 11,
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 26,
+      "tick": 65,
+      "data": {
+        "type": "death",
+        "unitId": "enemy-2-1-0",
+        "side": "enemy"
+      }
+    },
+    {
+      "seq": 27,
+      "tick": 65,
+      "data": {
+        "type": "gold",
+        "amount": 5,
+        "total": 130,
+        "reason": "kill"
+      }
+    },
+    {
+      "seq": 28,
+      "tick": 65,
+      "data": {
+        "type": "xp",
+        "amount": 5,
+        "heroIds": [
+          "mw2",
+          "hu1",
+          "wiz"
+        ]
+      }
+    }
+  ],
+  "assetErrors": []
+}

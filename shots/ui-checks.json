@@ -1,0 +1,53 @@
+{
+  "browser": {
+    "panelOpenOneResize": true,
+    "tabSwitchNoResize": true,
+    "closeOneResize": true,
+    "baseline136_464": true,
+    "all18HeroesKeyboardReachable": true,
+    "inspectionDoesNotChangeFormation": true,
+    "actualUpgradeAndRecruitCosts": true,
+    "insufficientTicketsDisabled": true,
+    "panelDoesNotPauseBattle": true,
+    "effectsNeverResize": true,
+    "alphaCheck": {
+      "topAlpha": 0,
+      "coreAlpha": 255
+    },
+    "hitRegionCountClosed": 2,
+    "hitRegionCountExpanded": 3,
+    "uniformHitFlash": {
+      "durationMs": 90,
+      "color": "#ffffff",
+      "flashWhitePixels": 1534,
+      "recoveredWhitePixels": 0,
+      "pass": true
+    },
+    "fontsReady": true,
+    "assetErrors": [],
+    "dpiChecks": [
+      {
+        "emulatedDpr": 1,
+        "sourceWidth": 1920,
+        "sourceHeight": 160,
+        "cssHeight": 160,
+        "pass": true
+      },
+      {
+        "emulatedDpr": 1.25,
+        "sourceWidth": 1920,
+        "sourceHeight": 160,
+        "cssHeight": 128,
+        "pass": true
+      },
+      {
+        "emulatedDpr": 1.5,
+        "sourceWidth": 1920,
+        "sourceHeight": 160,
+        "cssHeight": 106.66666666666667,
+        "pass": true
+      }
+    ]
+  },
+  "nativeWindows": "NOT TESTED: real desktop click-through, OS docking, monitor transfer, work-area/fullscreen handling and Windows 100/125/150% pixel appearance require M2 Tauri/Windows."
+}
