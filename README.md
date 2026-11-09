@@ -129,3 +129,7 @@ Each of the seven targets has p10/median/p90, observation/censor counts, and its
 ## License
 
 Copyright (c) 2026 Mai Gia Phu. All rights reserved. Game code is proprietary (`UNLICENSED`); see [LICENSE](LICENSE). Third-party assets retain their CC0 licences; see [CREDITS.md](CREDITS.md) and [LICENSES/](LICENSES/).
+
+### Mac test build (M2 draft)
+
+The desktop workflow also builds universal Apple Silicon/Intel `.app.zip` and `.dmg` test artifacts, with no Developer-ID certificate or notarization (ad-hoc only for Apple Silicon). macOS 14+; see [Mac first-launch, opaque fallback and manual checks](docs/M2-MAC-TESTS.md). On Mac use `--opaque-window` or `TASKBAR_LEGENDS_OPAQUE=1` if transparency misbehaves. Real fullscreen Spaces are a known limitation; Windows behavior and the deterministic core are unchanged.

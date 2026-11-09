@@ -14,3 +14,6 @@ canvas { display: block; image-rendering: pixelated; pointer-events: none; }
 
 body.native-shell { overflow: hidden; }
 body.native-shell #app { position: absolute; bottom: 0; left: 0; }
+
+body.native-window { background: #17212d; min-height: 100vh; overflow: auto; }
+body.native-window #app { position: relative; bottom: auto; }

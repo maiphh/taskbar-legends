@@ -7,6 +7,7 @@ import { DesktopController } from './controller';
 import { monitorSchema } from './math';
 import type { DesktopMonitor } from './math';
 
+type ShellMode = 'window' | 'overlay';
 function describe(monitor: Monitor): DesktopMonitor {
   return monitorSchema.parse({ key: `${monitor.name ?? 'display'}:${monitor.position.x},${monitor.position.y}`, scaleFactor: monitor.scaleFactor,
     workArea: { x: monitor.workArea.position.x, y: monitor.workArea.position.y, width: monitor.workArea.size.width, height: monitor.workArea.size.height } });
@@ -15,10 +16,12 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
   if (!isTauri()) return;
   document.body.classList.add('native-shell');
   const win = getCurrentWindow();
+  const mode: ShellMode = window.__TASKBAR_SHELL_MODE__ === 'window' ? 'window' : 'overlay';
+  if (mode === 'window') document.body.classList.add('native-window');
   let stopped = false, timer = 0, nextMonitorPoll = 0, dockDirty = true, lastHeight = 0;
   let selected: Monitor | undefined;
   const errors: { at: number; message: string }[] = [];
-  const status = { active: false, ignoring: true, dockCount: 0, hitTests: 0, monitor: '', logicalHeight: 0 };
+  const status = { mode, active: false, ignoring: true, dockCount: 0, hitTests: 0, monitor: '', logicalHeight: 0 };
   const controller = new DesktopController({
     monitor: async () => {
       const monitor = selected ?? await currentMonitor() ?? await primaryMonitor(); selected = undefined;
@@ -47,6 +50,7 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
     getDiagnostics: () => ({ ...status, errors: structuredClone(errors), config: CONFIG.desktop }),
     monitors: async () => (await availableMonitors()).map(describe),
     selectMonitor: async index => {
+      if (mode === 'window') throw new Error('Move the opaque window with its title bar');
       const list = await availableMonitors(); const monitor = list[index];
       if (!Number.isInteger(index) || !monitor) throw new Error('Monitor index out of range');
       selected = monitor; dockDirty = true;
@@ -68,6 +72,12 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
     } catch (error) { await failSafe(error); }
   }
   try {
+    if (mode === 'window') {
+      await win.setIgnoreCursorEvents(false);
+      await game.whenReady();
+      await win.show(); status.active = true;
+      return;
+    }
     await win.setIgnoreCursorEvents(true);
     await game.whenReady();
     await poll();
@@ -76,8 +86,9 @@ export async function startDesktop(game: GameDebug, redraw: () => void): Promise
 }
 declare global {
   interface Window {
+    __TASKBAR_SHELL_MODE__?: 'window' | 'overlay';
     __shell?: {
-      getDiagnostics(): { active: boolean; ignoring: boolean; dockCount: number; hitTests: number; monitor: string; logicalHeight: number; errors: { at: number; message: string }[]; config: typeof CONFIG.desktop };
+      getDiagnostics(): { mode: 'window' | 'overlay'; active: boolean; ignoring: boolean; dockCount: number; hitTests: number; monitor: string; logicalHeight: number; errors: { at: number; message: string }[]; config: typeof CONFIG.desktop };
       monitors(): Promise<DesktopMonitor[]>; selectMonitor(index: number): Promise<void>; quit(): Promise<void>;
     };
   }

@@ -1,5 +1,8 @@
 use serde::Deserialize;
 
+#[cfg(any(target_os = "macos", test))]
+mod macos;
+
 #[derive(Deserialize)]
 struct OverlayBounds {
     x: i32,
@@ -63,9 +66,21 @@ fn set_overlay_bounds(window: tauri::WebviewWindow, bounds: OverlayBounds) -> Re
 }
 
 pub fn run() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![set_overlay_bounds])
-        .run(tauri::generate_context!())
+    let context = tauri::generate_context!();
+    #[cfg(target_os = "macos")]
+    let context = {
+        let mut context = context;
+        for window in &mut context.config_mut().app.windows {
+            window.create = false;
+        }
+        context
+    };
+    let builder =
+        tauri::Builder::default().invoke_handler(tauri::generate_handler![set_overlay_bounds]);
+    #[cfg(target_os = "macos")]
+    let builder = builder.setup(macos::setup);
+    builder
+        .run(context)
         .expect("Taskbar Legends desktop runtime failed");
 }
 

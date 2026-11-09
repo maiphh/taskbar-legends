@@ -89,3 +89,47 @@ jobs:
             src-tauri/target/release/taskbar-legends.exe
             src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/bundle/msi/*.msi
+  macos-build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: npm ci
+      - run: npm run typecheck && npm run lint && npm run test && npm run build
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+      - run: npm run native:check && npm run native:test
+      - name: Build universal test app and DMG (ad-hoc only, no Apple identity)
+        run: npm run desktop:build -- --target universal-apple-darwin --bundles app,dmg --ci
+      - name: Verify both architectures and preserve app permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=src-tauri/target/universal-apple-darwin/release/bundle
+          APP="$ROOT/macos/Taskbar Legends.app"
+          test -d "$APP"
+          lipo -verify_arch arm64 x86_64 "$APP/Contents/MacOS/taskbar-legends"
+          codesign --verify --deep --strict "$APP"
+          mkdir -p mac-artifacts
+          # upload-artifact does not preserve executable bits or app symlinks.
+          ditto -c -k --sequesterRsrc --keepParent "$APP" mac-artifacts/Taskbar-Legends-universal.app.zip
+          shopt -s nullglob
+          dmgs=("$ROOT"/dmg/*.dmg)
+          test "${#dmgs[@]}" -ge 1
+          cp "${dmgs[@]}" mac-artifacts/
+          shasum -a 256 mac-artifacts/* > mac-artifacts/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: taskbar-legends-macos-universal-unsigned
+          if-no-files-found: error
+          retention-days: 14
+          path: mac-artifacts/

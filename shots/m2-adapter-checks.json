@@ -1,6 +1,7 @@
 [
   {
     "scale": 1,
+    "mode": "overlay",
     "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
     "initial": {
       "mock": {
@@ -169,15 +170,16 @@
       ]
     },
     "failure": {
+      "mode": "overlay",
       "active": false,
       "ignoring": true,
       "dockCount": 4,
-      "hitTests": 61,
+      "hitTests": 47,
       "monitor": "emulated-display:0,0",
       "logicalHeight": 160,
       "errors": [
         {
-          "at": 1794203411287,
+          "at": 1794206676942,
           "message": "Error: emulated cursor API failure"
         }
       ],
@@ -193,6 +195,7 @@
   },
   {
     "scale": 1.25,
+    "mode": "overlay",
     "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
     "initial": {
       "mock": {
@@ -361,15 +364,16 @@
       ]
     },
     "failure": {
+      "mode": "overlay",
       "active": false,
       "ignoring": true,
       "dockCount": 4,
-      "hitTests": 69,
+      "hitTests": 63,
       "monitor": "emulated-display:0,0",
       "logicalHeight": 160,
       "errors": [
         {
-          "at": 1794203413131,
+          "at": 1794206679019,
           "message": "Error: emulated cursor API failure"
         }
       ],
@@ -385,6 +389,7 @@
   },
   {
     "scale": 1.5,
+    "mode": "overlay",
     "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
     "initial": {
       "mock": {
@@ -553,15 +558,16 @@
       ]
     },
     "failure": {
+      "mode": "overlay",
       "active": false,
       "ignoring": true,
       "dockCount": 4,
-      "hitTests": 54,
+      "hitTests": 61,
       "monitor": "emulated-display:0,0",
       "logicalHeight": 160,
       "errors": [
         {
-          "at": 1794203414841,
+          "at": 1794206680877,
           "message": "Error: emulated cursor API failure"
         }
       ],
@@ -572,6 +578,244 @@
         "monitorPollMs": 500,
         "errorLimit": 30
       }
+    },
+    "errors": []
+  },
+  {
+    "scale": 2,
+    "mode": "overlay",
+    "proof": "Browser with emulated native IPC only; not real Windows click-through proof",
+    "initial": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 720,
+          "width": 1920,
+          "height": 320
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          true,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 160,
+        "coreY": 80,
+        "baselineY": 136,
+        "cssHeight": 80,
+        "dpr": 2,
+        "resizeCount": 1,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 88,
+            "width": 280,
+            "height": 64
+          }
+        ],
+        "ui": {
+          "panel": null,
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 4,
+          "y": 124,
+          "width": 140,
+          "height": 32
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 816,
+          "y": 124,
+          "width": 140,
+          "height": 32
+        }
+      ]
+    },
+    "open": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 64,
+          "width": 1920,
+          "height": 976
+        },
+        "cursor": {
+          "x": 960,
+          "y": 1010
+        },
+        "sizeCalls": 1,
+        "ignoreCalls": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "layout": {
+        "width": 1920,
+        "height": 488,
+        "coreY": 408,
+        "baselineY": 464,
+        "cssHeight": 244,
+        "dpr": 2,
+        "resizeCount": 2,
+        "sourceHitRegions": [
+          {
+            "kind": "hud",
+            "id": "progress",
+            "x": 8,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "kind": "hud",
+            "id": "actions",
+            "x": 1632,
+            "y": 416,
+            "width": 280,
+            "height": 64
+          },
+          {
+            "x": 1192,
+            "y": 0,
+            "width": 720,
+            "height": 400,
+            "kind": "panel",
+            "id": "management"
+          }
+        ],
+        "ui": {
+          "panel": "heroes",
+          "selectedHero": "mw2",
+          "heroRow": 0,
+          "selectedGear": null,
+          "history": [],
+          "fontsReady": true
+        }
+      },
+      "regions": [
+        {
+          "kind": "hud",
+          "id": "progress",
+          "x": 4,
+          "y": 452,
+          "width": 140,
+          "height": 32
+        },
+        {
+          "kind": "hud",
+          "id": "actions",
+          "x": 816,
+          "y": 452,
+          "width": 140,
+          "height": 32
+        },
+        {
+          "x": 596,
+          "y": 244,
+          "width": 360,
+          "height": 200,
+          "kind": "panel",
+          "id": "management"
+        }
+      ]
+    },
+    "failure": {
+      "mode": "overlay",
+      "active": false,
+      "ignoring": true,
+      "dockCount": 4,
+      "hitTests": 57,
+      "monitor": "emulated-display:0,0",
+      "logicalHeight": 160,
+      "errors": [
+        {
+          "at": 1794206682783,
+          "message": "Error: emulated cursor API failure"
+        }
+      ],
+      "config": {
+        "closedLogicalHeight": 160,
+        "expandedLogicalHeight": 488,
+        "cursorPollMs": 16,
+        "monitorPollMs": 500,
+        "errorLimit": 30
+      }
+    },
+    "errors": []
+  },
+  {
+    "scale": 2,
+    "mode": "window",
+    "proof": "Emulated IPC only, not a real Mac compositor",
+    "fallback": {
+      "mock": {
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 976
+        },
+        "cursor": {
+          "x": 500,
+          "y": 500
+        },
+        "sizeCalls": 0,
+        "ignoreCalls": [
+          false
+        ],
+        "visible": true,
+        "failCursor": false
+      },
+      "shell": {
+        "mode": "window",
+        "active": true,
+        "ignoring": true,
+        "dockCount": 0,
+        "hitTests": 0,
+        "monitor": "",
+        "logicalHeight": 0,
+        "errors": [],
+        "config": {
+          "closedLogicalHeight": 160,
+          "expandedLogicalHeight": 488,
+          "cursorPollMs": 16,
+          "monitorPollMs": 500,
+          "errorLimit": 30
+        }
+      },
+      "background": "rgb(23, 33, 45)"
     },
     "errors": []
   }
