@@ -109,3 +109,7 @@ The later design overrides the initial generic tick-replay request: offline awar
 CI runs typecheck, ESLint, Vitest (core, million-pull distribution/pity, deterministic policy, actual PNG envelopes and packaging), build and JSON-validated sim smoke. The Pages workflow deploys `m1-prototype` pushes (and supports manual dispatch) once the repository and Pages are enabled. `VITE_BASE_PATH=/repo-name/ npm run build` controls app and asset paths; nested-base browser capture is verified. No repo name is hardcoded.
 
 **M2 remains separate:** Tauri 2 transparent/frameless/always-on-top shell, actual taskbar/work-area anchoring, click-through adapter/companion windows, fullscreen policy, monitor transfer, real Windows DPI and separate compact management windows. None is claimed proven by this Linux browser prototype.
+
+## License
+
+Copyright (c) 2026 Mai Gia Phu. All rights reserved. Game code is proprietary (`UNLICENSED`); see [LICENSE](LICENSE). Third-party assets retain their CC0 licences; see [CREDITS.md](CREDITS.md) and [LICENSES/](LICENSES/).
