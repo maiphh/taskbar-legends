@@ -43,6 +43,8 @@ export const CONFIG = {
     canvasHeight: uiTokens.closed.height, stripHeight: uiTokens.closed.coreHeight, defaultWidth: 1280, minWidth: 320, maxDpr: 2,
     baselineY: uiTokens.closed.baselineY, hitFlashMs: 90, hitFlashColor: '#ffffff', hurtFallbackMs: 200, attackFallbackMs: 500, heroWidth: 18, heroHeight: 23, enemyWidth: 18, enemyHeight: 21,
     bossWidth: 27, bossHeight: 31, hpWidth: 26, hpHeight: 3,
+    // Core-loop feedback (renderer-only; ages derive from event ticks so pause/step can land on any frame).
+    upgradePopupSeconds: 1.2, upgradePopupRisePx: 24, stageCueSeconds: 2, badgeSize: 6,
     background: '#101c27', floor: '#253b43', line: '#355253', text: '#e8eee5', muted: '#8babb0', gold: '#f0cf7f',
     heroAssets: { mw2: 'medieval-warrior-pack-2', hu1: 'huntress', wiz: 'wizard-pack', mw1: 'medieval-warrior-pack', mw3: 'medieval-warrior-pack-3', mh1: 'martial-hero', hk1: 'hero-knight', mh2: 'martial-hero-2', hu2: 'huntress-2', ew1: 'evil-wizard', priest: 'priest', hk2: 'hero-knight-2', mk1: 'medieval-king-pack', fw: 'fantasy-warrior', ew2: 'evil-wizard-2', mk2: 'medieval-king-pack-2', mh3: 'martial-hero-3', ew3: 'evil-wizard-3' } satisfies Record<string, string>,
     enemyAssets: { grunt: 'goblin', archer: 'skeleton', brute: 'mushroom', boss_ch1: 'fire-worm', boss_ch2: 'mimic' },

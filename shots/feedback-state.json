@@ -1,0 +1,35 @@
+{
+  "badges": {
+    "heroes": true,
+    "gear": true,
+    "recruit": true,
+    "boss": false
+  },
+  "popup": {
+    "heroId": "mk2",
+    "atk": 2,
+    "maxHp": 0,
+    "def": 0,
+    "dpsPct": 4.7,
+    "label": "+2 ATK +4.7% DPS"
+  },
+  "panelPopup": {
+    "heroId": "mk2",
+    "atk": 2,
+    "maxHp": 0,
+    "def": 0,
+    "dpsPct": 4.4,
+    "label": "+2 ATK +4.4% DPS"
+  },
+  "stageClear": {
+    "kind": "clear",
+    "stage": 1,
+    "age": 0.15
+  },
+  "bossReady": {
+    "kind": "boss",
+    "stage": 10,
+    "clearedStage": 9,
+    "age": 0.15
+  }
+}
