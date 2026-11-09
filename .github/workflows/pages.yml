@@ -1,8 +1,8 @@
 name: Deploy browser preview to Pages
-# Temporary M1 branch preview. Publishing still requires repository/Pages setup.
+# Main is the release preview source. Feature branches must not replace it.
 on:
   push:
-    branches: [m1-prototype]
+    branches: [main]
   workflow_dispatch:
     inputs:
       base_path:
@@ -18,6 +18,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +36,7 @@ jobs:
         with:
           path: dist
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
