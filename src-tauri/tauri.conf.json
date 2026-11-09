@@ -53,7 +53,8 @@
     },
     "resources": {
       "../CREDITS.md": "licenses/CREDITS.md",
-      "../LICENSES/": "licenses/LICENSES/"
+      "../LICENSES/": "licenses/LICENSES/",
+      "../LICENSE": "licenses/LICENSE"
     }
   }
 }
