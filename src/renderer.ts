@@ -1,8 +1,9 @@
-import { CONFIG, enemyKindSchema, heroConfig, ticksForSeconds } from './config';
+import { CONFIG, enemyKindSchema, heroConfig, stageConfig, ticksForSeconds } from './config';
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI } from './pixel-ui';
 import type { GameEvent, GameState, Unit } from './core/model';
+import { stageCue, upgradePopups } from './core/selectors';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -112,5 +113,26 @@ export class Renderer {
     if (state.enemies.length > enemies.length) this.ui.text(ctx, `+${state.enemies.length - enemies.length}`, field.x + field.width - 32, coreY + 3, palette.muted, 16);
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, 1 / this.dpr);
+    this.drawFeedback(ctx, state, units, field, coreY, baselineY);
+  }
+  /** Upgrade stat popups and stage/boss banners; all derived from the event log, so they are deterministic per tick. */
+  private drawFeedback(ctx: CanvasRenderingContext2D, state: GameState, units: Unit[], field: { x: number; width: number }, coreY: number, baselineY: number): void {
+    const palette = CONFIG.ui.palette;
+    const cue = this.ui.panel ? null : stageCue(state);
+    if (cue) {
+      const label = cue.kind === 'boss' ? `${cue.clearedStage ? `${stageConfig(cue.clearedStage).id} CLEAR · ` : ''}BOSS ${stageConfig(cue.stage).id} READY` : `STAGE ${stageConfig(cue.stage).id} CLEAR`;
+      ctx.save(); ctx.globalAlpha = cue.age > 0.75 ? (1 - cue.age) / 0.25 : 1;
+      this.ui.drawCue(ctx, label, cue.kind === 'boss' ? palette.red : palette.gold, field.width > 0 ? field.x + field.width / 2 : this.width / 2, coreY - 40 - Math.round(Math.min(cue.age, 0.15) * 40));
+      ctx.restore();
+    }
+    for (const [index, popup] of upgradePopups(state).entries()) {
+      const hero = this.ui.panel ? undefined : units.find(unit => unit.side === 'hero' && unit.sourceId === popup.delta.heroId);
+      const anchor = hero ? { x: this.position(hero, state) - 24, y: baselineY - 72 } : this.ui.feedbackAnchor(popup.delta.heroId ? 'heroes' : 'gear');
+      const y = Math.max(4, anchor.y - Math.round(CONFIG.view.upgradePopupRisePx * popup.age) - index * 14);
+      ctx.save(); ctx.globalAlpha = popup.age > 0.6 ? (1 - popup.age) / 0.4 : 1;
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, popup.delta.label, anchor.x + (dx ?? 0), y + (dy ?? 0), palette.ink, 16, true);
+      this.ui.text(ctx, popup.delta.label, anchor.x, y, palette.green, 16, true);
+      ctx.restore();
+    }
   }
 }
