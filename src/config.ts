@@ -52,6 +52,15 @@ export const CONFIG = {
     enemyColors: { grunt: '#e39a79', archer: '#e6b76e', brute: '#c97a91', boss_ch1: '#e0806c', boss_ch2: '#d383d4' },
   },
 };
+/** UI tokens (M3 adds rarity, badges, gacha, offlineRewards); typed from the JSON, no UI consumes the M3 blocks yet. */
+export type UiTokens = typeof uiTokens;
+export type RarityTokens = UiTokens['rarity'];
+export type BadgeTokens = UiTokens['badges'];
+export type GachaTokens = UiTokens['gacha'];
+export type OfflineRewardsTokens = UiTokens['offlineRewards'];
+export type CoreLoopFeedbackTokens = UiTokens['coreLoopFeedback'];
+export type RarityDropTokens = UiTokens['rarityDrop'];
+export type FontTokens = UiTokens['font'];
 export const TICK_MS = 1000 / CONFIG.sim.ticksPerSecond;
 export const ticksForSeconds = (seconds: number): number => Math.round(seconds * CONFIG.sim.ticksPerSecond);
 export function stageConfig(stage: number) {
