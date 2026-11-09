@@ -11,3 +11,6 @@ canvas { display: block; image-rendering: pixelated; pointer-events: none; }
 #notice:empty { display: none; }
 
 .pixel-surface { position: absolute; pointer-events: auto; background: transparent; }
+
+body.native-shell { overflow: hidden; }
+body.native-shell #app { position: absolute; bottom: 0; left: 0; }
