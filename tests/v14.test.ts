@@ -14,15 +14,18 @@ afterEach(() => { setV14Rules([]); });
 const sha = (value: string): string => createHash('sha256').update(value).digest('hex');
 // sha256(snapshot) of runReference(3, 1) + 9 h offline on origin/main c73967e (v1.3.0, before any v1.4 code).
 const V13_GOLDEN = 'e9d51b1b023947455f05b211d69c2b91c263c3542376884fdeb5ca755f4d2bcd';
+// Same recipe under config 1.4.1 with every rule off. Differs from V13_GOLDEN because option A keeps the
+// 1.4.1 first-clear ticket table at top level (and the balance string is '1.4.1').
+const V141_RULES_OFF_GOLDEN = 'd4fcedadd85052e1288ed92df69250ca4801ef38112b1becf4dac871ec92d97f';
 const goldenRun = (): string => { const run = runReference(3, 1); applyOffline(run.state, 9 * 3600 * 1000); return sha(snapshot(run.state)); };
 
 describe('v14 config block', () => {
   it('ships the designer block inert: no rule on by default, §18 defaults, designer values parsed', () => {
     expect(activeV14Rules()).toEqual([]);
     expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
-    expect(design.version).toBe('1.3.0'); expect(design.v14.targetVersion).toBe('1.4.0');
-    expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 1 });
-    expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 9, fromStage: 10 });
+    expect(design.version).toBe('1.4.1'); expect(design.v14.targetVersion).toBe('1.4.0');
+    expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 10 });
+    expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 7, fromStage: 10 });
     setV14Rules(['chestChoice', 'farmChest']); expect(activeV14Rules()).toEqual(['chestChoice', 'farmChest']);
     setV14Rules(['recruitPity', 'gearFortune']); expect(activeV14Rules()).toEqual(['recruitPity', 'gearFortune']);
     setV14Rules([]); expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
@@ -30,8 +33,10 @@ describe('v14 config block', () => {
 });
 
 describe('CR-14-08 chest pick-1-of-2', () => {
-  it('options = 1 replays byte-identical to v1.3.0 (golden from main)', { timeout: 60_000 }, () => {
-    expect(goldenRun()).toBe(V13_GOLDEN);
+  it('options = 1 is deterministic under 1.4.1 rules-off (option A: not byte-identical to 1.3.0)', { timeout: 60_000 }, () => {
+    const hash = goldenRun();
+    expect(hash).not.toBe(V13_GOLDEN);
+    expect(hash).toBe(V141_RULES_OFF_GOLDEN);
   });
   it('options = 2: a chest queues two rolled items; the reference policy keeps the higher score', { timeout: 60_000 }, () => {
     setV14Rules(['chestChoice']);
@@ -55,7 +60,7 @@ describe('CR-14-08 chest pick-1-of-2', () => {
   it('keeps the chosen item, salvages the other for salvageBase × rarityMult, queues ≤ 3 and auto-picks the oldest by score', () => {
     setV14Rules(['chestChoice']);
     const state = createState(9);
-    chest(state, 4);
+    chest(state, 10);
     const pair = state.pendingChoice?.[0]; if (!pair) throw new Error('no choice');
     expect(state.inventory).toHaveLength(0); expect(state.stats.chests).toBe(1);
     const gold = state.gold;
@@ -64,9 +69,9 @@ describe('CR-14-08 chest pick-1-of-2', () => {
     expect(state.gold - gold).toBe(Math.round(CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[pair[0].rarity]));
     expect(state.events.at(-1)?.data).toEqual({ type: 'chestChoice', options: [pair[0].id, pair[1].id], kept: pair[1].id, rarities: [pair[0].rarity, pair[1].rarity] });
     expect(state.pendingChoice).toBeUndefined();
-    for (let index = 0; index < 3; index += 1) chest(state, 4);
+    for (let index = 0; index < 3; index += 1) chest(state, 10);
     const oldest = state.pendingChoice?.[0] as [Gear, Gear];
-    chest(state, 4);
+    chest(state, 10);
     expect(state.pendingChoice).toHaveLength(3);
     expect(state.inventory.at(-1)?.id).toBe(oldest[bestChoice(oldest)].id);
     expect(() => parseState(structuredClone(state))).not.toThrow();
@@ -87,12 +92,12 @@ describe('CR-14-09 farm chest pity from stage 10', () => {
     }
     return { state, chests, maxDry, mean: clears / chests };
   };
-  it('never has a 9-clear dry run at stage ≥ 10; mean interval 8.0 ± 0.2 clears', () => {
+  it('never has a 7-clear dry run at stage ≥ 10; mean interval 6.4 ± 0.2 clears', () => {
     setV14Rules(['farmChest']);
     const result = run(12, 40_000);
-    expect(result.maxDry).toBeLessThanOrEqual(8);
-    expect(result.mean).toBeGreaterThan(7.8); expect(result.mean).toBeLessThan(8.2);
-    expect(result.state.farmChestDry).toBeLessThan(9);
+    expect(result.maxDry).toBeLessThanOrEqual(6);
+    expect(result.mean).toBeGreaterThan(6.2); expect(result.mean).toBeLessThan(6.6);
+    expect(result.state.farmChestDry).toBeLessThan(7);
   });
   it('below stage 10 the 1.3.0 farmChestChance applies and the dry counter is untouched', () => {
     setV14Rules(['farmChest']);
@@ -100,7 +105,7 @@ describe('CR-14-09 farm chest pity from stage 10', () => {
     expect(result.state.farmChestDry).toBeUndefined();
     expect(result.mean).toBeCloseTo(1 / CONFIG.rewards.farmChestChance, 0);
   });
-  it('the reference run never goes 9 farm clears at stage ≥ 10 without a chest', { timeout: 60_000 }, () => {
+  it('the reference run never goes 7 farm clears at stage ≥ 10 without a chest', { timeout: 60_000 }, () => {
     setV14Rules(['farmChest']);
     const state = createState(4), cursor = { revision: -1 }; let dry = 0, maxDry = 0, clears = 0;
     for (let tick = 0; tick < 6 * 72_000; tick += 1) {
@@ -109,14 +114,14 @@ describe('CR-14-09 farm chest pity from stage 10', () => {
       step(state);
       if (state.metrics.farmSamples > samples && stage >= 10) { clears += 1; if (state.stats.chests > chests) dry = 0; else maxDry = Math.max(maxDry, ++dry); }
     }
-    expect(clears).toBeGreaterThan(100); expect(maxDry).toBeLessThanOrEqual(8);
+    expect(clears).toBeGreaterThan(100); expect(maxDry).toBeLessThanOrEqual(6);
   });
 });
 
 describe('saves (CR-14-11)', () => {
   const withChoice = (): GameState => {
     setV14Rules(['chestChoice', 'farmChest']);
-    const state = createState(7); chest(state, 3); chest(state, 3); farmChestRoll(state, 10); state.farmChestDry = 5;
+    const state = createState(7); chest(state, 10); chest(state, 10); farmChestRoll(state, 10); state.farmChestDry = 5;
     return state;
   };
   it('pendingChoice and farmChestDry survive snapshot/load and the save envelope', () => {
@@ -126,11 +131,12 @@ describe('saves (CR-14-11)', () => {
     expect(restored.pendingChoice).toEqual(state.pendingChoice); expect(restored.farmChestDry).toBe(5);
     chooseChest(restored, 0); expect(restored.pendingChoice).toHaveLength(1);
   });
-  it('1.3.0 saves (no v14 fields) load unchanged; balance 1.4.0 is accepted', () => {
+  it('1.3.0 saves (no v14 fields) load unchanged; balance 1.3.0 and 1.4.0 are accepted', () => {
     const state = createState(3); step(state, 2_000);
     const raw = JSON.parse(snapshot(state)) as Record<string, unknown>;
     expect('pendingChoice' in raw || 'farmChestDry' in raw).toBe(false);
     expect(snapshot(load(raw))).toBe(snapshot(state));
+    expect(load({ ...raw, balance: '1.3.0' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.0' }).balance).toBe(CONFIG.version);
   });
   it('rejects a pending choice that reuses an inventory id or a future id', () => {

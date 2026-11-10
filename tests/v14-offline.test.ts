@@ -42,7 +42,9 @@ describe('CR-14-04 Expedition Chests', () => {
   });
   it('with pick-1-of-2 each Expedition Chest shows 2 items in the queue (≤ 3, oldest auto-resolved by score)', () => {
     setV14Rules(['expeditionChests', 'chestChoice']);
-    const state = farmer(), kept = state.stats.chests, seq = state.eventSeq, queued = state.pendingChoice?.length ?? 0;
+    const state = farmer();
+    state.highestCleared = Math.max(state.highestCleared, CONFIG.v14.chestChoice.fromStage);
+    const kept = state.stats.chests, seq = state.eventSeq, queued = state.pendingChoice?.length ?? 0;
     applyOffline(state, 8 * HOUR);
     expect(state.stats.chests - kept).toBe(16);
     expect(state.pendingChoice?.length).toBe(CONFIG.runtime.chestChoiceQueueMax);

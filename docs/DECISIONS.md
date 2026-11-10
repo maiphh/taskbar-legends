@@ -58,3 +58,14 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Offline ticket rate uses wall-time farm clears (`metrics.farmClearSeconds`); offline Expedition choice option B is also best-of-4 with 0 units.
 - Audio controls live in the management tab row (no spec position). `stage_clear` plays on first clears only; the hit group only for hits on enemies.
 - The gacha card beam (rarity-drops legendary beam) is deferred to PR 5 with the drop beam and ultimates.
+
+## Config 1.4.1 (Game Lead, option A, 2026-11-11)
+
+- Land the Designer's `config.json` 1.4.1 verbatim (SHA-256 `e8e8ac728829fd24fb6d6bb3936fecfc126324e00c2ffb64b6dcad406ef5605b`).
+  `chestChoice.fromStage` is 10 and `farmChest.guaranteeEvery` is 7, still read only when their rules are on.
+- Option A: keep the 1.4.1 first-clear ticket table at top level (1-1..1-10 = 1, 2-1..2-9 = 2, 2-10 = 1). Do not wire
+  CR-14-13. `economyOverrides` stays an unread record and is to be deleted in 1.5.
+- Consequence: with every v14 rule off, the game is no longer byte-identical to 1.3.0. T2 is unchanged; T4b is late
+  (Designer: 17 seeds censored, 8/25 by day 8) until the rules go default-on. The rules-off golden in `tests/v14.test.ts`
+  was regenerated (`d4fcedad…`); the 1.3.0 hash is kept as `V13_GOLDEN` for contrast.
+- The `balance` union accepts `'1.3.0'` so 1.3.0 saves load under 1.4.1.

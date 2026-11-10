@@ -106,10 +106,10 @@ describe('CR-14-03 gear Fortune', () => {
     setV14Rules(['gearFortune', 'chestChoice']);
     const state = createState(6); state.gearSinceLegendary = 38;
     expect(fortuneMeter(state)).toEqual({ found: false, since: 38, limit: 40, left: 2 });
-    chest(state, 3);
+    chest(state, 10);
     const first = state.pendingChoice?.[0]; if (!first) throw new Error('no choice');
     expect(first.some(item => item.rarity === 'legendary') ? 0 : state.gearSinceLegendary).toBe(first.some(item => item.rarity === 'legendary') ? state.gearSinceLegendary : 39);
-    if (!first.some(item => item.rarity === 'legendary')) { chest(state, 3); expect(state.pendingChoice?.[1]?.[0].rarity).toBe('legendary'); }
+    if (!first.some(item => item.rarity === 'legendary')) { chest(state, 10); expect(state.pendingChoice?.[1]?.[0].rarity).toBe('legendary'); }
     expect(state.gearSinceLegendary).toBe(0); expect(state.gearLegendaryFound).toBe(true);
     expect(fortuneMeter(state)).toMatchObject({ found: true, limit: 100 });
     chooseChest(state, 0); expect(state.events.at(-1)?.data).toMatchObject({ type: 'chestChoice' });

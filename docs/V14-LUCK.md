@@ -2,7 +2,7 @@
 
 Rules are opt-in, like the chest rules: `--v14 recruitPity,gearFortune` (or `all`) in `scripts/sim.ts`, `?v14=…` in the URL,
 `__game.setV14Rules([...])` in the debug API, `--rules` in `scripts/v14-targets.ts`. With the rules off, `CONFIG.v14.recruit`
-and `CONFIG.v14.fortune` are inert (0 = off) and 1.3.0 is byte-identical (golden hash and 25-seed aggregate checked).
+and `CONFIG.v14.fortune` are inert (0 = off). Gacha draws match 1.3.0; the rules-off golden and 25-seed aggregate do not, because config 1.4.1 option A keeps the first-clear ticket cuts at top level.
 
 ## Recruit (design.md §14.1, keys `v14.gacha`)
 
@@ -48,7 +48,8 @@ All four fields are optional and validated (bounds, and `gearSinceLegendary < 40
 
 Tests: `tests/v14-luck.test.ts` (1M pulls, full roster, pull-log kinds, Fortune units), `tests/v14-offline.test.ts`.
 
-## Open
+## Config 1.4.1
 
-- The settled 1.4.1 values (`chestChoice.fromStage` 10, `farmChest.guaranteeEvery` 7) come from the Designer's config.json when 1.4.1
-  lands; they are not hand-edited. As of PR 4 the handoff config is still 1.3.0 / `v14.targetVersion` 1.4.0 (fromStage 1, guaranteeEvery 9).
+`src/design-config.json` is the Designer's 1.4.1 file verbatim (SHA-256 `e8e8ac728829fd24fb6d6bb3936fecfc126324e00c2ffb64b6dcad406ef5605b`).
+`chestChoice.fromStage` is 10 and `farmChest.guaranteeEvery` is 7. Game Lead chose option A: keep this file, do not wire
+CR-14-13, and delete `economyOverrides` in 1.5. Rules-off therefore has a late roster (T4b) until the flags go default-on.

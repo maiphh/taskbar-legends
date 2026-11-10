@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.1",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -691,7 +691,7 @@
       "chapter": 1,
       "isBoss": true,
       "timeoutSec": 22,
-      "firstClearTickets": 5,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -720,7 +720,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -754,7 +754,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -788,7 +788,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -822,7 +822,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -859,7 +859,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -896,7 +896,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -933,7 +933,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -973,7 +973,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -1013,7 +1013,7 @@
       "chapter": 2,
       "isBoss": false,
       "timeoutSec": 90,
-      "firstClearTickets": 5,
+      "firstClearTickets": 2,
       "waves": [
         {
           "enemies": [
@@ -1053,7 +1053,7 @@
       "chapter": 2,
       "isBoss": true,
       "timeoutSec": 21,
-      "firstClearTickets": 100,
+      "firstClearTickets": 1,
       "waves": [
         {
           "enemies": [
@@ -1213,7 +1213,7 @@
     ]
   },
   "v14": {
-    "status": "SPEC ONLY for balance 1.4.0. No code reads this block yet; live values above stay 1.3.0. Developer: implement docs/design.md section 18 (CR-14-01..CR-14-12); each new key's default reproduces 1.3.0. Projections in design.md section 17 come from a scratch prototype, not shipped code.",
+    "status": "balance 1.4.1. Implemented at main 6ad6516 behind rules (off by default): CR-14-01/02 recruitPity, CR-14-03 gearFortune, CR-14-08 chestChoice, CR-14-09 farmChest. 1.4.1 ticket cuts are live at top level (first clears 1-1..1-10 = 1, 2-1..2-9 = 2, 2-10 = 1; start 6, farm 0.0075 unchanged), so with every rule off the only difference from 1.3.0 is first-clear tickets. Not yet read by code: offline, goblin, goldenWave. Values and targets: docs/design.md sections 17, 18 and Tuning log v1.4.1.",
     "targetVersion": "1.4.0",
     "gacha": {
       "legendaryPityEvery": 60,
@@ -1232,12 +1232,12 @@
     },
     "chestChoice": {
       "options": 2,
-      "fromStage": 1,
+      "fromStage": 10,
       "loserSalvage": "salvageBase * rarityMult gold"
     },
     "farmChest": {
       "baseChance": 0.03,
-      "guaranteeEvery": 9,
+      "guaranteeEvery": 7,
       "fromStage": 10,
       "note": "replaces rewards.farmChestChance from stage 10; below stage 10 farmChestChance applies"
     },
@@ -1280,10 +1280,31 @@
       "note": "optional, cheap; not in v1.4 projections"
     },
     "economyOverrides": {
-      "rewards.startingTickets": 6,
-      "rewards.farmTicketChance": 0.0042,
-      "stages[*].firstClearTickets": 1,
-      "note": "apply together with gacha/offline/goblin keys; applying alone makes the roster late"
+      "status": "applied at top level in 1.4.1 (stages[].firstClearTickets); no code reads this block",
+      "v13FirstClearTickets": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        100
+      ],
+      "startingTickets": 6,
+      "farmTicketChance": 0.0075
     }
   }
 }

@@ -26,7 +26,8 @@ const stageDefinition = z.object({ id: z.string(), index: z.number().int().posit
 export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0) });
 /**
  * v1.4 code requests (design.md §18). config.json → `v14` carries the designer's *target* values; the game reads them only
- * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default and the game is 1.3.0.
+ * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default.
+ * Under config 1.4.1 option A the live first-clear ticket table still applies with the rules off, so the replay is not 1.3.0-identical.
  * Implemented here: CR-14-08 chestChoice, CR-14-09 farmChest, CR-14-01/02 recruitPity, CR-14-03 gearFortune,
  * CR-14-04 expeditionChests, CR-14-05 offlineTickets.
  * Other v14 keys are parsed loosely and stay inert.

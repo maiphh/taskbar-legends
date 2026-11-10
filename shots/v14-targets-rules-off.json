@@ -1,0 +1,892 @@
+{
+  "rules": [],
+  "v14": {
+    "chestChoice": {
+      "options": 1,
+      "fromStage": 1
+    },
+    "farmChest": null,
+    "recruit": {
+      "legendaryPityEvery": 0,
+      "legendaryPityPrefersUnowned": true,
+      "newHeroGuaranteeEvery": 0
+    },
+    "fortune": {
+      "legendaryEvery": 0,
+      "firstLegendaryBy": 0,
+      "chestUnits": 1,
+      "expeditionUnits": 1
+    },
+    "offline": {
+      "expeditionChestsPerHour": 0,
+      "expeditionBestOf": 1,
+      "expeditionChestMax": 0,
+      "ticketRateVsOnline": 0
+    }
+  },
+  "seeds": 25,
+  "days": 9,
+  "policy": "referencePolicy (instrumented mirror, final state checked equal on every seed)",
+  "quantiles": "R-7 linear; censored (unreached) values rank last",
+  "decisionMergeSeconds": 5,
+  "targets": {
+    "T2": {
+      "target": "boss1 median 1.5–2.5 open h, p90 ≤ 4",
+      "unit": "open hours",
+      "p10": 0.213,
+      "median": 2.007,
+      "p90": 3.716,
+      "n": 25,
+      "censored": 0,
+      "pass": true
+    },
+    "T4": {
+      "T4a": {
+        "target": "median pulls to full roster 70–90 (10k cohort; v1.3 band 100–140)",
+        "p10": 65,
+        "median": 124,
+        "p90": 246,
+        "passV14Band": false,
+        "passV13Band": true
+      },
+      "T4b": {
+        "target": "roster median day 6–8, ≥ 20/25 by day 8",
+        "unit": "day",
+        "p10": 4.2,
+        "median": null,
+        "p90": null,
+        "n": 25,
+        "censored": 17,
+        "byDay8": 8,
+        "pass": false
+      }
+    },
+    "T8": {
+      "target": "luck bounds: no 60-pull window without Legendary, no 20 dupes in a row (pre-roster); first Legendary gear by roll 40, then ≤ 100-roll gaps; goblin ≤ 300 clears; offline roll units ≥ 50% of online chest rate",
+      "maxPullsWithoutLegendary": {
+        "p10": 21,
+        "median": 51,
+        "p90": 79,
+        "n": 25,
+        "censored": 0
+      },
+      "maxDuplicateStreak": {
+        "p10": 15,
+        "median": 38,
+        "p90": 52,
+        "n": 25,
+        "censored": 0
+      },
+      "firstLegendaryGearRoll": {
+        "p10": 11,
+        "median": 53,
+        "p90": 128,
+        "n": 25,
+        "censored": 0
+      },
+      "maxLegendaryGearGap": {
+        "p10": 144,
+        "median": 198,
+        "p90": 334,
+        "n": 25,
+        "censored": 0
+      },
+      "offlineVsOnlineRollRate": {
+        "p10": 0.037,
+        "median": 0.039,
+        "p90": 0.04,
+        "n": 25,
+        "censored": 0
+      },
+      "checks": {
+        "recruit60": false,
+        "dupes20": false,
+        "gearFirst40": false,
+        "gearGap100": false,
+        "offline50pct": false,
+        "goblin300": null
+      },
+      "pass": false,
+      "note": "Recruit pity (CR-14-01/02) and gear Fortune (CR-14-03) are guaranteed when their rules are on; offline50pct counts Expedition Chests × 4 roll units (CR-14-04); overall T8 cannot pass yet: goblin (CR-14-06) is not implemented, so goblin300 is unmeasured."
+    },
+    "T9": {
+      "target": "median gap ≤ 3 min and p90 ≤ 5 min in every phase (d1 h0–2, h2–6, d2–5, d6–9)",
+      "unit": "minutes",
+      "phases": {
+        "d1 h0-1": {
+          "p10": 0.35,
+          "median": 0.88,
+          "p90": 5.55,
+          "n": 780,
+          "censored": 0
+        },
+        "d1 h1-2": {
+          "p10": 0.58,
+          "median": 5.38,
+          "p90": 13.13,
+          "n": 225,
+          "censored": 0
+        },
+        "d1 h0-2": {
+          "p10": 0.36,
+          "median": 1.21,
+          "p90": 8.65,
+          "n": 1005,
+          "censored": 0
+        },
+        "d2-5": {
+          "p10": 2.67,
+          "median": 25.33,
+          "p90": 82.33,
+          "n": 1021,
+          "censored": 0
+        },
+        "d6-9": {
+          "p10": 4.49,
+          "median": 29.44,
+          "p90": 92.08,
+          "n": 869,
+          "censored": 0
+        },
+        "d1 h2-6": {
+          "p10": 0.49,
+          "median": 5.45,
+          "p90": 24.76,
+          "n": 554,
+          "censored": 0
+        }
+      },
+      "pass": false
+    },
+    "T10": {
+      "target": "≥ 95% of 1 h absences offer a meaningful decision on return",
+      "fraction": 0.1193,
+      "forks": 1350,
+      "perSeedFraction": {
+        "p10": 0.081,
+        "median": 0.111,
+        "p90": 0.167,
+        "n": 25,
+        "censored": 0
+      },
+      "byPhase": {
+        "d1": 0.64,
+        "d2-5": 0.098,
+        "d6-9": 0.01
+      },
+      "decisionTypes": {
+        "upgrade": 56,
+        "boss": 159
+      },
+      "pass": false
+    }
+  },
+  "farmChest": {
+    "clears": 216055,
+    "chests": 16202,
+    "maxDry": 134,
+    "meanInterval": 13.335
+  },
+  "perSeed": [
+    {
+      "seed": 1,
+      "bossOneOpenHours": 1.687375,
+      "bossTwoDay": 6,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 59,
+        "maxDuplicateStreak": 35,
+        "firstLegendaryGearRoll": 34,
+        "maxLegendaryGearGap": 304,
+        "gearRolls": 737,
+        "onlineChestsPerHour": 13.055555555555555,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8632,
+        "chests": 659,
+        "maxDryRun": 130,
+        "meanInterval": 13.098634294385432
+      },
+      "partyRoles": [
+        "tank",
+        "mage",
+        "support"
+      ],
+      "decisions": 146,
+      "forks": 54
+    },
+    {
+      "seed": 2,
+      "bossOneOpenHours": 0.5668333333333333,
+      "bossTwoDay": 8,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 43,
+        "maxDuplicateStreak": 46,
+        "firstLegendaryGearRoll": 147,
+        "maxLegendaryGearGap": 210,
+        "gearRolls": 720,
+        "onlineChestsPerHour": 12.74074074074074,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 9042,
+        "chests": 664,
+        "maxDryRun": 90,
+        "meanInterval": 13.617469879518072
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 126,
+      "forks": 54
+    },
+    {
+      "seed": 3,
+      "bossOneOpenHours": 3.1535,
+      "bossTwoDay": 6,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 99,
+        "maxDuplicateStreak": 57,
+        "firstLegendaryGearRoll": 56,
+        "maxLegendaryGearGap": 181,
+        "gearRolls": 721,
+        "onlineChestsPerHour": 12.75925925925926,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8298,
+        "chests": 630,
+        "maxDryRun": 134,
+        "meanInterval": 13.17142857142857
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 128,
+      "forks": 54
+    },
+    {
+      "seed": 4,
+      "bossOneOpenHours": 3.4182222222222225,
+      "bossTwoDay": 6,
+      "rosterDay": 6,
+      "t8": {
+        "maxPullsWithoutLegendary": 17,
+        "maxDuplicateStreak": 19,
+        "firstLegendaryGearRoll": 20,
+        "maxLegendaryGearGap": 140,
+        "gearRolls": 738,
+        "onlineChestsPerHour": 13.074074074074074,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8167,
+        "chests": 635,
+        "maxDryRun": 102,
+        "meanInterval": 12.861417322834646
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 119,
+      "forks": 54
+    },
+    {
+      "seed": 5,
+      "bossOneOpenHours": 0.20343055555555556,
+      "bossTwoDay": 6,
+      "rosterDay": 2,
+      "t8": {
+        "maxPullsWithoutLegendary": 20,
+        "maxDuplicateStreak": 7,
+        "firstLegendaryGearRoll": 9,
+        "maxLegendaryGearGap": 179,
+        "gearRolls": 737,
+        "onlineChestsPerHour": 13.055555555555555,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8930,
+        "chests": 685,
+        "maxDryRun": 77,
+        "meanInterval": 13.036496350364963
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 129,
+      "forks": 54
+    },
+    {
+      "seed": 6,
+      "bossOneOpenHours": 0.22827777777777777,
+      "bossTwoDay": 7,
+      "rosterDay": 3,
+      "t8": {
+        "maxPullsWithoutLegendary": 22,
+        "maxDuplicateStreak": 13,
+        "firstLegendaryGearRoll": 28,
+        "maxLegendaryGearGap": 628,
+        "gearRolls": 742,
+        "onlineChestsPerHour": 13.148148148148149,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8983,
+        "chests": 689,
+        "maxDryRun": 91,
+        "meanInterval": 13.037735849056604
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 121,
+      "forks": 54
+    },
+    {
+      "seed": 7,
+      "bossOneOpenHours": 0.11466666666666667,
+      "bossTwoDay": 7,
+      "rosterDay": 6,
+      "t8": {
+        "maxPullsWithoutLegendary": 54,
+        "maxDuplicateStreak": 47,
+        "firstLegendaryGearRoll": 55,
+        "maxLegendaryGearGap": 124,
+        "gearRolls": 746,
+        "onlineChestsPerHour": 13.222222222222221,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 9223,
+        "chests": 693,
+        "maxDryRun": 97,
+        "meanInterval": 13.308802308802308
+      },
+      "partyRoles": [
+        "tank",
+        "mage",
+        "support"
+      ],
+      "decisions": 132,
+      "forks": 54
+    },
+    {
+      "seed": 8,
+      "bossOneOpenHours": 0.389625,
+      "bossTwoDay": 6,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 51,
+        "maxDuplicateStreak": 39,
+        "firstLegendaryGearRoll": 8,
+        "maxLegendaryGearGap": 295,
+        "gearRolls": 733,
+        "onlineChestsPerHour": 12.981481481481481,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8832,
+        "chests": 678,
+        "maxDryRun": 92,
+        "meanInterval": 13.026548672566372
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 137,
+      "forks": 54
+    },
+    {
+      "seed": 9,
+      "bossOneOpenHours": 2.0402222222222224,
+      "bossTwoDay": 8,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 56,
+        "maxDuplicateStreak": 46,
+        "firstLegendaryGearRoll": 89,
+        "maxLegendaryGearGap": 328,
+        "gearRolls": 760,
+        "onlineChestsPerHour": 13.481481481481481,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8868,
+        "chests": 679,
+        "maxDryRun": 83,
+        "meanInterval": 13.060382916053019
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 143,
+      "forks": 54
+    },
+    {
+      "seed": 10,
+      "bossOneOpenHours": 6.260055555555556,
+      "bossTwoDay": 6,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 67,
+        "maxDuplicateStreak": 44,
+        "firstLegendaryGearRoll": 23,
+        "maxLegendaryGearGap": 172,
+        "gearRolls": 692,
+        "onlineChestsPerHour": 12.222222222222221,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 7878,
+        "chests": 561,
+        "maxDryRun": 90,
+        "meanInterval": 14.042780748663102
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 139,
+      "forks": 54
+    },
+    {
+      "seed": 11,
+      "bossOneOpenHours": 0.8805416666666667,
+      "bossTwoDay": 7,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 52,
+        "maxDuplicateStreak": 21,
+        "firstLegendaryGearRoll": 125,
+        "maxLegendaryGearGap": 212,
+        "gearRolls": 718,
+        "onlineChestsPerHour": 12.703703703703704,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8953,
+        "chests": 661,
+        "maxDryRun": 105,
+        "meanInterval": 13.5446293494705
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 140,
+      "forks": 54
+    },
+    {
+      "seed": 12,
+      "bossOneOpenHours": 2.8900694444444444,
+      "bossTwoDay": 5,
+      "rosterDay": 6,
+      "t8": {
+        "maxPullsWithoutLegendary": 30,
+        "maxDuplicateStreak": 17,
+        "firstLegendaryGearRoll": 59,
+        "maxLegendaryGearGap": 227,
+        "gearRolls": 713,
+        "onlineChestsPerHour": 12.61111111111111,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8376,
+        "chests": 626,
+        "maxDryRun": 83,
+        "meanInterval": 13.380191693290735
+      },
+      "partyRoles": [
+        "tank",
+        "mage",
+        "support"
+      ],
+      "decisions": 139,
+      "forks": 54
+    },
+    {
+      "seed": 13,
+      "bossOneOpenHours": 2.640277777777778,
+      "bossTwoDay": 6,
+      "rosterDay": 7,
+      "t8": {
+        "maxPullsWithoutLegendary": 39,
+        "maxDuplicateStreak": 29,
+        "firstLegendaryGearRoll": 9,
+        "maxLegendaryGearGap": 202,
+        "gearRolls": 711,
+        "onlineChestsPerHour": 12.574074074074074,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8425,
+        "chests": 627,
+        "maxDryRun": 87,
+        "meanInterval": 13.437001594896332
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 145,
+      "forks": 54
+    },
+    {
+      "seed": 14,
+      "bossOneOpenHours": 0.15140277777777778,
+      "bossTwoDay": 5,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 46,
+        "maxDuplicateStreak": 36,
+        "firstLegendaryGearRoll": 15,
+        "maxLegendaryGearGap": 338,
+        "gearRolls": 678,
+        "onlineChestsPerHour": 11.962962962962964,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8790,
+        "chests": 625,
+        "maxDryRun": 97,
+        "meanInterval": 14.064
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 136,
+      "forks": 54
+    },
+    {
+      "seed": 15,
+      "bossOneOpenHours": 3.5722638888888887,
+      "bossTwoDay": null,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 41,
+        "maxDuplicateStreak": 42,
+        "firstLegendaryGearRoll": 23,
+        "maxLegendaryGearGap": 172,
+        "gearRolls": 807,
+        "onlineChestsPerHour": 14.351851851851851,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 9030,
+        "chests": 705,
+        "maxDryRun": 78,
+        "meanInterval": 12.808510638297872
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 149,
+      "forks": 54
+    },
+    {
+      "seed": 16,
+      "bossOneOpenHours": 2.44025,
+      "bossTwoDay": 8,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 28,
+        "maxDuplicateStreak": 39,
+        "firstLegendaryGearRoll": 52,
+        "maxLegendaryGearGap": 167,
+        "gearRolls": 717,
+        "onlineChestsPerHour": 12.685185185185185,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8772,
+        "chests": 634,
+        "maxDryRun": 84,
+        "meanInterval": 13.83596214511041
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 129,
+      "forks": 54
+    },
+    {
+      "seed": 17,
+      "bossOneOpenHours": 3.8116666666666665,
+      "bossTwoDay": 9,
+      "rosterDay": 7,
+      "t8": {
+        "maxPullsWithoutLegendary": 47,
+        "maxDuplicateStreak": 42,
+        "firstLegendaryGearRoll": 287,
+        "maxLegendaryGearGap": 202,
+        "gearRolls": 808,
+        "onlineChestsPerHour": 14.37037037037037,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8973,
+        "chests": 710,
+        "maxDryRun": 85,
+        "meanInterval": 12.638028169014085
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 143,
+      "forks": 54
+    },
+    {
+      "seed": 18,
+      "bossOneOpenHours": 0.4657777777777778,
+      "bossTwoDay": 5,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 84,
+        "maxDuplicateStreak": 61,
+        "firstLegendaryGearRoll": 72,
+        "maxLegendaryGearGap": 307,
+        "gearRolls": 724,
+        "onlineChestsPerHour": 12.814814814814815,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8797,
+        "chests": 669,
+        "maxDryRun": 85,
+        "meanInterval": 13.149476831091182
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 145,
+      "forks": 54
+    },
+    {
+      "seed": 19,
+      "bossOneOpenHours": 2.895305555555556,
+      "bossTwoDay": 6,
+      "rosterDay": 3,
+      "t8": {
+        "maxPullsWithoutLegendary": 14,
+        "maxDuplicateStreak": 11,
+        "firstLegendaryGearRoll": 18,
+        "maxLegendaryGearGap": 170,
+        "gearRolls": 735,
+        "onlineChestsPerHour": 13.018518518518519,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8313,
+        "chests": 643,
+        "maxDryRun": 70,
+        "meanInterval": 12.92846034214619
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 127,
+      "forks": 54
+    },
+    {
+      "seed": 20,
+      "bossOneOpenHours": 6.0058750000000005,
+      "bossTwoDay": 7,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 63,
+        "maxDuplicateStreak": 26,
+        "firstLegendaryGearRoll": 130,
+        "maxLegendaryGearGap": 150,
+        "gearRolls": 709,
+        "onlineChestsPerHour": 12.537037037037036,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8031,
+        "chests": 561,
+        "maxDryRun": 82,
+        "meanInterval": 14.315508021390375
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 137,
+      "forks": 54
+    },
+    {
+      "seed": 21,
+      "bossOneOpenHours": 0.6891111111111111,
+      "bossTwoDay": 2,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 72,
+        "maxDuplicateStreak": 24,
+        "firstLegendaryGearRoll": 81,
+        "maxLegendaryGearGap": 198,
+        "gearRolls": 665,
+        "onlineChestsPerHour": 11.722222222222221,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8061,
+        "chests": 608,
+        "maxDryRun": 114,
+        "meanInterval": 13.258223684210526
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 123,
+      "forks": 54
+    },
+    {
+      "seed": 22,
+      "bossOneOpenHours": 0.7631388888888889,
+      "bossTwoDay": 6,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 66,
+        "maxDuplicateStreak": 54,
+        "firstLegendaryGearRoll": 26,
+        "maxLegendaryGearGap": 169,
+        "gearRolls": 714,
+        "onlineChestsPerHour": 12.62962962962963,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8945,
+        "chests": 653,
+        "maxDryRun": 129,
+        "meanInterval": 13.698315467075039
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 129,
+      "forks": 54
+    },
+    {
+      "seed": 23,
+      "bossOneOpenHours": 2.0066111111111113,
+      "bossTwoDay": 4,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 36,
+        "maxDuplicateStreak": 24,
+        "firstLegendaryGearRoll": 53,
+        "maxLegendaryGearGap": 352,
+        "gearRolls": 722,
+        "onlineChestsPerHour": 12.777777777777779,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8359,
+        "chests": 639,
+        "maxDryRun": 94,
+        "meanInterval": 13.081377151799687
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 129,
+      "forks": 54
+    },
+    {
+      "seed": 24,
+      "bossOneOpenHours": 1.608277777777778,
+      "bossTwoDay": 5,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 53,
+        "maxDuplicateStreak": 48,
+        "firstLegendaryGearRoll": 109,
+        "maxLegendaryGearGap": 106,
+        "gearRolls": 709,
+        "onlineChestsPerHour": 12.537037037037036,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8714,
+        "chests": 639,
+        "maxDryRun": 106,
+        "meanInterval": 13.636932707355243
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 123,
+      "forks": 54
+    },
+    {
+      "seed": 25,
+      "bossOneOpenHours": 3.071638888888889,
+      "bossTwoDay": 8,
+      "rosterDay": null,
+      "t8": {
+        "maxPullsWithoutLegendary": 89,
+        "maxDuplicateStreak": 38,
+        "firstLegendaryGearRoll": 106,
+        "maxLegendaryGearGap": 188,
+        "gearRolls": 714,
+        "onlineChestsPerHour": 12.62962962962963,
+        "offlineRollUnitsPerHour": 0.5
+      },
+      "farmChest": {
+        "clearsAtStage10Plus": 8663,
+        "chests": 629,
+        "maxDryRun": 108,
+        "meanInterval": 13.772655007949126
+      },
+      "partyRoles": [
+        "tank",
+        "warrior",
+        "support"
+      ],
+      "decisions": 130,
+      "forks": 54
+    }
+  ]
+}
