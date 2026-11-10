@@ -2,7 +2,7 @@ import type { AudioAdapter } from './audio';
 import type { V14Rule } from './config';
 import type { GameEvent, GameState } from './core/model';
 import type { HitRegion, Renderer } from './renderer';
-import type { PanelTab } from './pixel-ui';
+import type { PanelTab, PixelUI } from './pixel-ui';
 export interface GameDebug {
   getState(): GameState;
   step(n?: number): GameState;
@@ -15,6 +15,8 @@ export interface GameDebug {
   load(snapshot: unknown): GameState;
   getEvents(): GameEvent[];
   getHitRegions(): HitRegion[];
+  /** Compact preview: the gacha reveal playing inside the PARTY CAMP Recruit tab, or null. */
+  getManagementReveal?(): ReturnType<PixelUI['revealState']>;
   getLayout(): ReturnType<Renderer['getLayout']>;
   getCombatProjection(state?: GameState): ReturnType<Renderer['getCombatProjection']>;
   openPanel(tab: PanelTab | null): void;

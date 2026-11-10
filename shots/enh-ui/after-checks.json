@@ -1,0 +1,450 @@
+{
+  "label": "after",
+  "ok": true,
+  "errors": [],
+  "failures": [],
+  "shots": [
+    "shots/enh-ui/after-lane-1280.png",
+    "shots/enh-ui/after-menu-party-1280.png",
+    "shots/enh-ui/after-menu-stash-1280.png",
+    "shots/enh-ui/after-menu-recruit-1280.png",
+    "shots/enh-ui/after-menu-upgrades-1280.png",
+    "shots/enh-ui/after-menu-settings-1280.png",
+    "shots/enh-ui/after-menu-stash-dropdown-1280.png",
+    "shots/enh-ui/after-menu-stash-selected-1280.png",
+    "shots/enh-ui/after-menu-upgrades-gold-1280.png",
+    "shots/enh-ui/after-reveal-x1-1280.png",
+    "shots/enh-ui/after-reveal-x10-1280.png",
+    "shots/enh-ui/after-lane-edit-1280.png",
+    "shots/enh-ui/after-lane-960.png",
+    "shots/enh-ui/after-menu-party-960.png",
+    "shots/enh-ui/after-menu-stash-960.png",
+    "shots/enh-ui/after-menu-recruit-960.png",
+    "shots/enh-ui/after-menu-upgrades-960.png",
+    "shots/enh-ui/after-menu-settings-960.png",
+    "shots/enh-ui/after-menu-stash-dropdown-960.png",
+    "shots/enh-ui/after-menu-stash-selected-960.png",
+    "shots/enh-ui/after-menu-upgrades-gold-960.png",
+    "shots/enh-ui/after-reveal-x1-960.png",
+    "shots/enh-ui/after-reveal-x10-960.png",
+    "shots/enh-ui/after-lane-edit-960.png",
+    "shots/enh-ui/after-lane-640.png",
+    "shots/enh-ui/after-menu-party-640.png",
+    "shots/enh-ui/after-menu-stash-640.png",
+    "shots/enh-ui/after-menu-recruit-640.png",
+    "shots/enh-ui/after-menu-upgrades-640.png",
+    "shots/enh-ui/after-menu-settings-640.png",
+    "shots/enh-ui/after-reveal-x10-640.png",
+    "shots/enh-ui/after-reveal-x1-640.png",
+    "shots/enh-ui/after-menu-recruit-v14-640.png",
+    "shots/enh-ui/after-native-party.png",
+    "shots/enh-ui/after-native-stash.png",
+    "shots/enh-ui/after-native-recruit.png",
+    "shots/enh-ui/after-native-upgrades.png",
+    "shots/enh-ui/after-native-settings.png",
+    "shots/enh-ui/compare-lane.png",
+    "shots/enh-ui/compare-browser.png",
+    "shots/enh-ui/compare-recruit-x10.png",
+    "shots/enh-ui/compare-native.png",
+    "shots/enh-ui/compare-party.png",
+    "shots/enh-ui/compare-stash.png",
+    "shots/enh-ui/compare-recruit.png",
+    "shots/enh-ui/compare-upgrades.png",
+    "shots/enh-ui/compare-settings.png"
+  ],
+  "checks": {
+    "640": {
+      "dock": "above",
+      "regions": {
+        "controls": 18,
+        "outside": []
+      },
+      "menuSelected": "true",
+      "revealX10": 10,
+      "revealX10Regions": {
+        "controls": 12,
+        "outside": []
+      },
+      "revealX10Fits": true,
+      "revealX1Regions": {
+        "controls": 12,
+        "outside": []
+      }
+    },
+    "960": {
+      "windowRequest": 568,
+      "inspectorClearance": 8,
+      "pageScrolls": false,
+      "layout": {
+        "lane": {
+          "top": 0,
+          "bottom": 160,
+          "left": 0,
+          "right": 640
+        },
+        "sheet": {
+          "top": 168,
+          "bottom": 568,
+          "left": 8,
+          "right": 728
+        },
+        "laneCovered": false
+      },
+      "partyRegions": {
+        "controls": 21,
+        "outside": []
+      },
+      "stashRegions": {
+        "controls": 18,
+        "outside": []
+      },
+      "recruitRegions": {
+        "controls": 10,
+        "outside": []
+      },
+      "upgradesRegions": {
+        "controls": 12,
+        "outside": []
+      },
+      "settingsRegions": {
+        "controls": 18,
+        "outside": []
+      },
+      "freshInventory": [
+        "common weapon starter",
+        "common armor starter",
+        "common charm starter"
+      ],
+      "freshEquipped": [
+        "mw2",
+        "mw1",
+        "priest"
+      ],
+      "dropdownRegions": {
+        "controls": 22,
+        "outside": []
+      },
+      "slotFilterVisible": 1,
+      "dropdownEscClosed": true,
+      "stashSelectedRegions": {
+        "controls": 18,
+        "outside": []
+      },
+      "ownerChanged": [
+        "Owner: All stash",
+        "Owner: Medieval Warrior 2"
+      ],
+      "upgradeRows": 3,
+      "upgradeDisabledAtZeroGold": true,
+      "upgradeEnabled": true,
+      "upgradeApplied": 1,
+      "volumeStep": [
+        0.5,
+        0.55
+      ],
+      "musicBus": 0.25,
+      "sliderCount": 4,
+      "muteToggled": true,
+      "presetApplied": "fastFarm",
+      "revealX1": {
+        "count": 1,
+        "done": true,
+        "pulls": [
+          {
+            "heroId": "hk1",
+            "rarity": "rare",
+            "pity": false,
+            "badge": "new",
+            "gold": 115
+          }
+        ]
+      },
+      "revealRegions": {
+        "controls": 12,
+        "outside": []
+      },
+      "revealClosedAfterOk": null,
+      "revealX10": {
+        "count": 10,
+        "done": true,
+        "pulls": [
+          {
+            "heroId": "priest",
+            "rarity": "rare",
+            "pity": false,
+            "badge": "star",
+            "gold": 115
+          },
+          {
+            "heroId": "mk2",
+            "rarity": "legendary",
+            "pity": false,
+            "badge": "new",
+            "gold": 160
+          },
+          {
+            "heroId": "ew1",
+            "rarity": "rare",
+            "pity": false,
+            "badge": "new",
+            "gold": 115
+          },
+          {
+            "heroId": "mh1",
+            "rarity": "common",
+            "pity": false,
+            "badge": "new",
+            "gold": 100
+          },
+          {
+            "heroId": "wiz",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "wiz",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "mw2",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "mw2",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "mw3",
+            "rarity": "common",
+            "pity": false,
+            "badge": "new",
+            "gold": 100
+          },
+          {
+            "heroId": "hu1",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          }
+        ]
+      },
+      "revealX10Regions": {
+        "controls": 12,
+        "outside": []
+      },
+      "againPulls": 21,
+      "revealClearedByTab": null,
+      "windowRequestCleared": true,
+      "closedRegions": {
+        "controls": 2,
+        "outside": []
+      },
+      "editOutside": [],
+      "editHidesEdit": true
+    },
+    "1280": {
+      "windowRequest": 568,
+      "inspectorClearance": 8,
+      "pageScrolls": false,
+      "layout": {
+        "lane": {
+          "top": 0,
+          "bottom": 160,
+          "left": 0,
+          "right": 640
+        },
+        "sheet": {
+          "top": 168,
+          "bottom": 568,
+          "left": 8,
+          "right": 728
+        },
+        "laneCovered": false
+      },
+      "partyRegions": {
+        "controls": 21,
+        "outside": []
+      },
+      "stashRegions": {
+        "controls": 18,
+        "outside": []
+      },
+      "recruitRegions": {
+        "controls": 10,
+        "outside": []
+      },
+      "upgradesRegions": {
+        "controls": 12,
+        "outside": []
+      },
+      "settingsRegions": {
+        "controls": 18,
+        "outside": []
+      },
+      "freshInventory": [
+        "common weapon starter",
+        "common armor starter",
+        "common charm starter"
+      ],
+      "freshEquipped": [
+        "mw2",
+        "mw1",
+        "priest"
+      ],
+      "dropdownRegions": {
+        "controls": 22,
+        "outside": []
+      },
+      "slotFilterVisible": 1,
+      "dropdownEscClosed": true,
+      "stashSelectedRegions": {
+        "controls": 18,
+        "outside": []
+      },
+      "ownerChanged": [
+        "Owner: All stash",
+        "Owner: Medieval Warrior 2"
+      ],
+      "upgradeRows": 3,
+      "upgradeDisabledAtZeroGold": true,
+      "upgradeEnabled": true,
+      "upgradeApplied": 1,
+      "volumeStep": [
+        0.5,
+        0.55
+      ],
+      "musicBus": 0.25,
+      "sliderCount": 4,
+      "muteToggled": true,
+      "presetApplied": "fastFarm",
+      "revealX1": {
+        "count": 1,
+        "done": true,
+        "pulls": [
+          {
+            "heroId": "hk1",
+            "rarity": "rare",
+            "pity": false,
+            "badge": "new",
+            "gold": 115
+          }
+        ]
+      },
+      "revealRegions": {
+        "controls": 12,
+        "outside": []
+      },
+      "revealClosedAfterOk": null,
+      "revealX10": {
+        "count": 10,
+        "done": true,
+        "pulls": [
+          {
+            "heroId": "priest",
+            "rarity": "rare",
+            "pity": false,
+            "badge": "star",
+            "gold": 115
+          },
+          {
+            "heroId": "mk2",
+            "rarity": "legendary",
+            "pity": false,
+            "badge": "new",
+            "gold": 160
+          },
+          {
+            "heroId": "ew1",
+            "rarity": "rare",
+            "pity": false,
+            "badge": "new",
+            "gold": 115
+          },
+          {
+            "heroId": "mh1",
+            "rarity": "common",
+            "pity": false,
+            "badge": "new",
+            "gold": 100
+          },
+          {
+            "heroId": "wiz",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "wiz",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "mw2",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "mw2",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          },
+          {
+            "heroId": "mw3",
+            "rarity": "common",
+            "pity": false,
+            "badge": "new",
+            "gold": 100
+          },
+          {
+            "heroId": "hu1",
+            "rarity": "common",
+            "pity": false,
+            "badge": "star",
+            "gold": 100
+          }
+        ]
+      },
+      "revealX10Regions": {
+        "controls": 12,
+        "outside": []
+      },
+      "againPulls": 21,
+      "revealClearedByTab": null,
+      "windowRequestCleared": true,
+      "closedRegions": {
+        "controls": 2,
+        "outside": []
+      },
+      "editOutside": [],
+      "editHidesEdit": true
+    },
+    "v14": {
+      "odds": "ACTUAL ODDS\nCOMMON\n50%\nRARE\n33%\nEPIC\n13%\nLEGENDARY\n4%\n\nEpic+ in 30 · Legend in 60\n\nNew hero in 20\n\nDuplicates: +1 star (max 6), then gold.\n\nEarned tickets only."
+    },
+    "native": {
+      "regions": {
+        "controls": 18,
+        "outside": []
+      }
+    }
+  }
+}

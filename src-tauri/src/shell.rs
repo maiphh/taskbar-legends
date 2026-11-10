@@ -16,27 +16,75 @@ pub const RELAUNCH_EVENT: &str = "shell://relaunch";
 const PREFS_FILE: &str = "shell.json";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct PixelRect { x: i32, y: i32, width: u32, height: u32 }
+struct PixelRect {
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct Insets { left: u32, top: u32, right: u32, bottom: u32 }
+struct Insets {
+    left: u32,
+    top: u32,
+    right: u32,
+    bottom: u32,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct ManagedBounds { frame: PixelRect, client_width: u32, client_height: u32 }
+struct ManagedBounds {
+    frame: PixelRect,
+    client_width: u32,
+    client_height: u32,
+}
 
-fn fit_managed_bounds(frame: PixelRect, client_width: u32, client_height: u32, insets: Insets, work: PixelRect) -> ManagedBounds {
-    let fits = frame.x >= work.x && frame.y >= work.y
+fn fit_managed_bounds(
+    frame: PixelRect,
+    client_width: u32,
+    client_height: u32,
+    insets: Insets,
+    work: PixelRect,
+) -> ManagedBounds {
+    let fits = frame.x >= work.x
+        && frame.y >= work.y
         && i64::from(frame.x) + i64::from(frame.width) <= i64::from(work.x) + i64::from(work.width)
-        && i64::from(frame.y) + i64::from(frame.height) <= i64::from(work.y) + i64::from(work.height);
-    if fits { return ManagedBounds { frame, client_width, client_height }; }
-    let max_client_width = work.width.saturating_sub(insets.left.saturating_add(insets.right)).max(1);
-    let max_client_height = work.height.saturating_sub(insets.top.saturating_add(insets.bottom)).max(1);
+        && i64::from(frame.y) + i64::from(frame.height)
+            <= i64::from(work.y) + i64::from(work.height);
+    if fits {
+        return ManagedBounds {
+            frame,
+            client_width,
+            client_height,
+        };
+    }
+    let max_client_width = work
+        .width
+        .saturating_sub(insets.left.saturating_add(insets.right))
+        .max(1);
+    let max_client_height = work
+        .height
+        .saturating_sub(insets.top.saturating_add(insets.bottom))
+        .max(1);
     let client_width = client_width.min(max_client_width).max(1);
     let client_height = client_height.min(max_client_height).max(1);
-    let width = client_width.saturating_add(insets.left).saturating_add(insets.right).min(work.width);
-    let height = client_height.saturating_add(insets.top).saturating_add(insets.bottom).min(work.height);
+    let width = client_width
+        .saturating_add(insets.left)
+        .saturating_add(insets.right)
+        .min(work.width);
+    let height = client_height
+        .saturating_add(insets.top)
+        .saturating_add(insets.bottom)
+        .min(work.height);
     let max_x = i64::from(work.x) + i64::from(work.width - width);
     let max_y = i64::from(work.y) + i64::from(work.height - height);
-    ManagedBounds { frame: PixelRect { x: i64::from(frame.x).clamp(i64::from(work.x), max_x) as i32,
-      y: i64::from(frame.y).clamp(i64::from(work.y), max_y) as i32, width, height }, client_width, client_height }
+    ManagedBounds {
+        frame: PixelRect {
+            x: i64::from(frame.x).clamp(i64::from(work.x), max_x) as i32,
+            y: i64::from(frame.y).clamp(i64::from(work.y), max_y) as i32,
+            width,
+            height,
+        },
+        client_width,
+        client_height,
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -89,7 +137,11 @@ pub fn visibility_label(visible: bool) -> &'static str {
 }
 
 fn relaunch_arguments(party_preview: bool) -> Vec<&'static str> {
-    if party_preview { vec!["--party-preview"] } else { Vec::new() }
+    if party_preview {
+        vec!["--party-preview"]
+    } else {
+        Vec::new()
+    }
 }
 
 /// Exit requests are idempotent: the first one wins, the rest are ignored.
@@ -118,7 +170,11 @@ pub struct ShellState {
 }
 
 #[derive(Default)]
-struct VisibilitySnapshot { hidden_by_tray: bool, controls: bool, management: bool }
+struct VisibilitySnapshot {
+    hidden_by_tray: bool,
+    controls: bool,
+    management: bool,
+}
 
 pub fn write_prefs(path: &std::path::Path, prefs: &ShellPrefs) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
@@ -137,7 +193,7 @@ pub mod native {
     use super::*;
     use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem};
     use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-    use tauri::{AppHandle, Emitter, Manager, State, Wry, WebviewUrl};
+    use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, Wry};
 
     pub fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         let prefs_path = app
@@ -170,7 +226,9 @@ pub mod native {
             .ok_or("Missing main window")?
             .clone();
         let party_preview = std::env::args().any(|arg| arg == "--party-preview");
-        if party_preview { config.url = WebviewUrl::App("party-preview.html".into()); }
+        if party_preview {
+            config.url = WebviewUrl::App("party-preview.html".into());
+        }
         let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
         let builder = match mode {
             ShellMode::Window => builder
@@ -197,10 +255,17 @@ pub mod native {
         });
         builder.build()?;
         let extra_windows = &app.config().app.windows;
-        let controls = extra_windows.iter().find(|window| window.label == "controls").ok_or("Missing controls window config")?;
+        let controls = extra_windows
+            .iter()
+            .find(|window| window.label == "controls")
+            .ok_or("Missing controls window config")?;
         tauri::WebviewWindowBuilder::from_config(app.handle(), controls)?.build()?;
-        let management = extra_windows.iter().find(|window| window.label == "management").ok_or("Missing management window config")?;
-        let management_window = tauri::WebviewWindowBuilder::from_config(app.handle(), management)?.build()?;
+        let management = extra_windows
+            .iter()
+            .find(|window| window.label == "management")
+            .ok_or("Missing management window config")?;
+        let management_window =
+            tauri::WebviewWindowBuilder::from_config(app.handle(), management)?.build()?;
         let management_for_close = management_window.clone();
         management_window.on_window_event(move |event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -233,8 +298,10 @@ pub mod native {
     fn build_tray(app: &AppHandle, mode: ShellMode) -> tauri::Result<()> {
         let show_hide =
             MenuItem::with_id(app, "show-hide", visibility_label(true), true, None::<&str>)?;
-        let open_management = MenuItem::with_id(app, "management", "Open management", true, None::<&str>)?;
-        let reset_position = MenuItem::with_id(app, "reset-position", "Reset position", true, None::<&str>)?;
+        let open_management =
+            MenuItem::with_id(app, "management", "Open management", true, None::<&str>)?;
+        let reset_position =
+            MenuItem::with_id(app, "reset-position", "Reset position", true, None::<&str>)?;
         let reset_size = MenuItem::with_id(app, "reset-size", "Reset size", true, None::<&str>)?;
         let opaque = CheckMenuItem::with_id(
             app,
@@ -271,8 +338,12 @@ pub mod native {
             .on_menu_event(move |app, event| match event.id().as_ref() {
                 "show-hide" => toggle_visibility(app, &menu_label),
                 "management" => show_management(app),
-                "reset-position" => { let _ = app.emit_to("main", "compact://reset-position", ()); }
-                "reset-size" => { let _ = app.emit_to("main", "compact://reset-size", ()); }
+                "reset-position" => {
+                    let _ = app.emit_to("main", "compact://reset-position", ());
+                }
+                "reset-size" => {
+                    let _ = app.emit_to("main", "compact://reset-size", ());
+                }
                 "opaque" => switch_mode(app, &opaque),
                 "quit" => request_exit(app, ExitKind::Quit),
                 _ => {}
@@ -300,18 +371,41 @@ pub mod native {
         };
         let visible = window.is_visible().unwrap_or(false);
         let state = app.state::<ShellState>();
-        let mut snapshot = state.visibility.lock().unwrap_or_else(|poison| poison.into_inner());
+        let mut snapshot = state
+            .visibility
+            .lock()
+            .unwrap_or_else(|poison| poison.into_inner());
         let control = app.get_webview_window("controls");
         let management = app.get_webview_window("management");
         if visible {
             snapshot.hidden_by_tray = true;
-            snapshot.controls = control.as_ref().is_some_and(|value| value.is_visible().unwrap_or(false));
-            snapshot.management = management.as_ref().is_some_and(|value| value.is_visible().unwrap_or(false));
-            let _ = window.hide(); if let Some(value) = control { let _ = value.hide(); } if let Some(value) = management { let _ = value.hide(); }
+            snapshot.controls = control
+                .as_ref()
+                .is_some_and(|value| value.is_visible().unwrap_or(false));
+            snapshot.management = management
+                .as_ref()
+                .is_some_and(|value| value.is_visible().unwrap_or(false));
+            let _ = window.hide();
+            if let Some(value) = control {
+                let _ = value.hide();
+            }
+            if let Some(value) = management {
+                let _ = value.hide();
+            }
         } else {
             if window.show().is_ok() {
-                if snapshot.hidden_by_tray && snapshot.controls { if let Some(value) = control { let _ = value.show(); } }
-                if snapshot.hidden_by_tray && snapshot.management { if let Some(value) = management { fit_management_window(app, &value); let _ = value.show(); let _ = value.emit("management://open", ()); } }
+                if snapshot.hidden_by_tray && snapshot.controls {
+                    if let Some(value) = control {
+                        let _ = value.show();
+                    }
+                }
+                if snapshot.hidden_by_tray && snapshot.management {
+                    if let Some(value) = management {
+                        fit_management_window(app, &value);
+                        let _ = value.show();
+                        let _ = value.emit("management://open", ());
+                    }
+                }
                 snapshot.hidden_by_tray = false;
             }
         }
@@ -321,33 +415,79 @@ pub mod native {
     fn show_management(app: &AppHandle) {
         if let Some(window) = app.get_webview_window("management") {
             fit_management_window(app, &window);
-            let _ = window.show(); let _ = window.set_focus(); let _ = window.emit("management://open", ());
+            let _ = window.show();
+            let _ = window.set_focus();
+            let _ = window.emit("management://open", ());
         }
     }
 
     /// Preserve a contained manager frame; otherwise fit the decorated frame and client to a live work area.
     fn fit_management_window(app: &AppHandle, window: &tauri::WebviewWindow) {
-        let monitor = window.current_monitor().ok().flatten()
-            .or_else(|| app.get_webview_window("main").and_then(|main| main.current_monitor().ok().flatten()))
+        let monitor = window
+            .current_monitor()
+            .ok()
+            .flatten()
+            .or_else(|| {
+                app.get_webview_window("main")
+                    .and_then(|main| main.current_monitor().ok().flatten())
+            })
             .or_else(|| window.primary_monitor().ok().flatten())
-            .or_else(|| window.available_monitors().ok().and_then(|all| all.into_iter().next()));
-        let Some(monitor) = monitor else { return; };
+            .or_else(|| {
+                window
+                    .available_monitors()
+                    .ok()
+                    .and_then(|all| all.into_iter().next())
+            });
+        let Some(monitor) = monitor else {
+            return;
+        };
         let work_area = monitor.work_area();
-        let Ok(outer_position) = window.outer_position() else { return; };
-        let Ok(outer_size) = window.outer_size() else { return; };
-        let Ok(inner_position) = window.inner_position() else { return; };
-        let Ok(inner_size) = window.inner_size() else { return; };
+        let Ok(outer_position) = window.outer_position() else {
+            return;
+        };
+        let Ok(outer_size) = window.outer_size() else {
+            return;
+        };
+        let Ok(inner_position) = window.inner_position() else {
+            return;
+        };
+        let Ok(inner_size) = window.inner_size() else {
+            return;
+        };
         let left = u32::try_from((inner_position.x - outer_position.x).max(0)).unwrap_or(0);
         let top = u32::try_from((inner_position.y - outer_position.y).max(0)).unwrap_or(0);
-        let insets = Insets { left, top,
-            right: outer_size.width.saturating_sub(inner_size.width).saturating_sub(left),
-            bottom: outer_size.height.saturating_sub(inner_size.height).saturating_sub(top) };
-        let frame = PixelRect { x: outer_position.x, y: outer_position.y, width: outer_size.width, height: outer_size.height };
-        let work = PixelRect { x: work_area.position.x, y: work_area.position.y, width: work_area.size.width, height: work_area.size.height };
+        let insets = Insets {
+            left,
+            top,
+            right: outer_size
+                .width
+                .saturating_sub(inner_size.width)
+                .saturating_sub(left),
+            bottom: outer_size
+                .height
+                .saturating_sub(inner_size.height)
+                .saturating_sub(top),
+        };
+        let frame = PixelRect {
+            x: outer_position.x,
+            y: outer_position.y,
+            width: outer_size.width,
+            height: outer_size.height,
+        };
+        let work = PixelRect {
+            x: work_area.position.x,
+            y: work_area.position.y,
+            width: work_area.size.width,
+            height: work_area.size.height,
+        };
         let target = fit_managed_bounds(frame, inner_size.width, inner_size.height, insets, work);
         if target.frame != frame {
-            let _ = window.set_size(tauri::PhysicalSize::new(target.client_width, target.client_height));
-            let _ = window.set_position(tauri::PhysicalPosition::new(target.frame.x, target.frame.y));
+            let _ = window.set_size(tauri::PhysicalSize::new(
+                target.client_width,
+                target.client_height,
+            ));
+            let _ =
+                window.set_position(tauri::PhysicalPosition::new(target.frame.x, target.frame.y));
         }
     }
 
@@ -421,22 +561,35 @@ pub mod native {
 
     #[tauri::command]
     pub fn open_management(window: tauri::WebviewWindow, app: AppHandle) -> Result<(), String> {
-        if window.label() != "controls" { return Err("Only the compact controls may open management".into()); }
-        show_management(&app); Ok(())
+        if window.label() != "controls" {
+            return Err("Only the compact controls may open management".into());
+        }
+        show_management(&app);
+        Ok(())
     }
 
     #[tauri::command]
     pub fn hide_management(window: tauri::WebviewWindow) -> Result<(), String> {
-        if window.label() != "management" { return Err("Only management may hide its own view".into()); }
+        if window.label() != "management" {
+            return Err("Only management may hide its own view".into());
+        }
         window.hide().map_err(|error| error.to_string())
     }
 
     #[tauri::command]
-    pub fn request_compact_edit(window: tauri::WebviewWindow, app: AppHandle) -> Result<(), String> {
-        if window.label() != "controls" { return Err("Only the compact controls may request edit mode".into()); }
+    pub fn request_compact_edit(
+        window: tauri::WebviewWindow,
+        app: AppHandle,
+    ) -> Result<(), String> {
+        if window.label() != "controls" {
+            return Err("Only the compact controls may request edit mode".into());
+        }
         use tauri::Emitter;
-        let main = app.get_webview_window("main").ok_or("Main battlefield is closed")?;
-        main.emit("compact://edit", ()).map_err(|error| error.to_string())
+        let main = app
+            .get_webview_window("main")
+            .ok_or("Main battlefield is closed")?;
+        main.emit("compact://edit", ())
+            .map_err(|error| error.to_string())
     }
 
     /// Called by the webview after it has written its save.
@@ -458,14 +611,52 @@ pub use native::setup;
 mod tests {
     #[test]
     fn manager_frame_is_preserved_if_contained_and_clamped_when_a_monitor_shrinks() {
-        let work = super::PixelRect { x: -1280, y: 0, width: 1280, height: 800 };
-        let insets = super::Insets { left: 8, top: 32, right: 8, bottom: 8 };
-        let contained = super::PixelRect { x: -900, y: 100, width: 776, height: 600 };
-        assert_eq!(super::fit_managed_bounds(contained, 760, 560, insets, work), super::ManagedBounds { frame: contained, client_width: 760, client_height: 560 });
-        let offscreen = super::PixelRect { x: 100, y: 500, width: 776, height: 600 };
-        assert_eq!(super::fit_managed_bounds(offscreen, 760, 560, insets, work), super::ManagedBounds {
-            frame: super::PixelRect { x: -776, y: 0, width: 776, height: 800 }, client_width: 760, client_height: 760,
-        });
+        let work = super::PixelRect {
+            x: -1280,
+            y: 0,
+            width: 1280,
+            height: 800,
+        };
+        let insets = super::Insets {
+            left: 8,
+            top: 32,
+            right: 8,
+            bottom: 8,
+        };
+        let contained = super::PixelRect {
+            x: -900,
+            y: 100,
+            width: 776,
+            height: 600,
+        };
+        assert_eq!(
+            super::fit_managed_bounds(contained, 760, 560, insets, work),
+            super::ManagedBounds {
+                frame: contained,
+                client_width: 760,
+                client_height: 560
+            }
+        );
+        let offscreen = super::PixelRect {
+            x: 100,
+            y: 500,
+            width: 776,
+            height: 600,
+        };
+        assert_eq!(
+            super::fit_managed_bounds(offscreen, 760, 560, insets, work),
+            super::ManagedBounds {
+                // Off-screen: keep the requested 760x560 client (it fits the work area) and clamp the frame into the monitor.
+                frame: super::PixelRect {
+                    x: -776,
+                    y: 200,
+                    width: 776,
+                    height: 600
+                },
+                client_width: 760,
+                client_height: 560,
+            }
+        );
     }
 
     #[test]

@@ -3,7 +3,7 @@ import { beginEncounter, combatTick, spawnWave } from './combat';
 import { cancelPartyEncounterEffects, expireFriendlyDeadTargetProjectiles, hasPendingHostileImpact } from './party-combat';
 import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setParty, upgrade, togglePartyLock } from './economy';
 import { emit, goldChange } from './events';
-import { cloneState, parseState } from './model';
+import { cloneState, gearTemplateId, itemId, parseState } from './model';
 import type { Action, GameState } from './model';
 import { normalizeSeed, random } from './rng';
 
@@ -25,14 +25,35 @@ export function createState(seed = 1): GameState {
   beginEncounter(state);
   return state;
 }
+/**
+ * Party-v2 fresh-account kit: one common weapon (melee DPS), armor (tank) and charm (healer), equipped, so Stash and Upgrades
+ * are not empty on a new seed. Deterministic: fixed stage-1 common stats (`gear.mainRoll` is [1, 1]; charm uses the low end of
+ * its range), ids from `nextGearId`, no RNG drawn. Only `createPartyState(seed, { starterGear: true })` (the browser/native
+ * party preview) calls it; legacy `createState` and its golden output are unchanged.
+ */
+export function addStarterGear(state: GameState): void {
+  const kit = [['mw1', 'weapon'], ['mw2', 'armor'], ['priest', 'charm']] as const, slots = CONFIG.gear.slots;
+  for (const [heroId, slot] of kit) {
+    const hero = state.roster.find(value => value.id === heroId); if (!hero || hero.equipment[slot]) continue;
+    const stats = { hp: 0, atk: 0, def: 0, hpPct: 0, atkPct: 0, speedPct: 0 };
+    if (slot === 'weapon') stats.atk = slots.weapon.main.atk;
+    if (slot === 'armor') { stats.hp = slots.armor.main.hp; stats.def = slots.armor.main.def; }
+    if (slot === 'charm') stats.atkPct = slots.charm.oneOf.atkPct[0] ?? 0;
+    const id = itemId(state.seed, state.nextGearId++);
+    state.inventory.push({ id, templateId: gearTemplateId(slot, 'common'), tradeable: false, acquiredAt: { tick: state.tick, source: 'starter' },
+      slot, rarity: 'common', dropStage: 1, level: 0, spent: 0, stats });
+    hero.equipment[slot] = id;
+  }
+}
 /** Isolated opt-in rules preview. Legacy createState and its serialized output remain unchanged. */
-export function createPartyState(seed = 1): GameState {
+export function createPartyState(seed = 1, options: { starterGear?: boolean } = {}): GameState {
   const state = createState(seed);
   state.combatRules = 'party-v2';
   for (const id of ['mw1', 'priest']) if (!state.roster.some(hero => hero.id === id)) {
     state.roster.push({ id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() });
   }
   state.partyIds = ['mw2', 'mw1', 'priest'];
+  if (options.starterGear) addStarterGear(state);
   state.party = []; state.enemies = []; state.encounter = 0; state.wave = 1;
   state.events = []; state.eventSeq = 0; state.eventCounts = {};
   beginEncounter(state);
