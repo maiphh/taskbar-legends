@@ -1144,6 +1144,11 @@
     },
     "speedPctRule": "attackIntervalTicks = max(8, round(base / (1 + speedPct)))",
     "inventoryCap": 50,
+    "salvage": {
+      "protectEquipped": true,
+      "protectLocked": true,
+      "lockMax": 30
+    },
     "overflow": "auto-salvage lowest score for 10% of its total upgrade cost spent + 5*rarityMult gold"
   },
   "gacha": {

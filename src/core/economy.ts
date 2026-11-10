@@ -181,17 +181,45 @@ function rollGear(state: GameState, dropStage: number, units = CONFIG.v14.fortun
   return { id: itemId(state.seed, state.nextGearId++), templateId: gearTemplateId(slot, rarity), tradeable: false,
     acquiredAt: { tick: state.tick, source: 'drop' }, slot, rarity, dropStage, level: 0, spent: 0, stats };
 }
-/** Adds an item to the inventory; over the cap the lowest-score item is salvaged (1.3.0 rule). */
-function addGear(state: GameState, item: Gear): void {
+export function isEquipped(state: GameState, id: ItemId): boolean {
+  return state.roster.some(hero => slotSchema.options.some(slot => hero.equipment[slot] === id));
+}
+export function lockedCount(state: GameState): number {
+  return state.inventory.filter(item => item.locked).length;
+}
+/** Adds an item to the inventory; over the cap the lowest-score candidate is salvaged. */
+export function addGear(state: GameState, item: Gear): void {
   state.inventory.push(item); state.economyRevision += 1;
   emit(state, { type: 'gear', gearId: item.id, slot: item.slot, rarity: item.rarity });
-  if (state.inventory.length > CONFIG.gear.inventoryCap) {
-    const lowest = [...state.inventory].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
-    if (!lowest) return;
-    state.inventory = state.inventory.filter(item => item.id !== lowest.id);
-    for (const hero of state.roster) for (const slot of slotSchema.options) if (hero.equipment[slot] === lowest.id) hero.equipment[slot] = null;
-    goldChange(state, Math.round(lowest.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[lowest.rarity]), 'salvage');
+  if (state.inventory.length <= CONFIG.gear.inventoryCap) return;
+  const rules = CONFIG.gear.salvage;
+  const candidates = state.inventory.filter(entry => entry.id === item.id
+    || !((rules.protectEquipped && isEquipped(state, entry.id)) || (rules.protectLocked && entry.locked)));
+  const lowest = [...candidates].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
+  if (!lowest) return;
+  const equipped = isEquipped(state, lowest.id);
+  const gold = Math.round(lowest.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[lowest.rarity]);
+  state.inventory = state.inventory.filter(entry => entry.id !== lowest.id);
+  for (const hero of state.roster) for (const slot of slotSchema.options) if (hero.equipment[slot] === lowest.id) hero.equipment[slot] = null;
+  goldChange(state, gold, 'salvage');
+  if (rules.protectEquipped || rules.protectLocked) {
+    emit(state, { type: 'salvage', gearId: lowest.id, rarity: lowest.rarity, slot: lowest.slot, gold, reason: lowest.id === item.id ? 'incoming' : 'overflow' });
+    if (equipped) state.metrics.salvageEquippedRemoved = (state.metrics.salvageEquippedRemoved ?? 0) + 1;
   }
+}
+/** Toggle or set a lock. lockMax 0 disables locking. A save over the cap still loads; further locks are refused until under the limit. Never auto-unlocks. */
+export function setLocked(state: GameState, id: ItemId, locked: boolean): void {
+  const item = state.inventory.find(entry => entry.id === id), max = CONFIG.gear.salvage.lockMax;
+  if (!item || max <= 0) return;
+  if (locked) {
+    if (item.locked) return;
+    if (lockedCount(state) >= max) return;
+    item.locked = true;
+  } else {
+    if (!item.locked) return;
+    delete item.locked;
+  }
+  state.economyRevision += 1;
 }
 /**
  * One chest. With v14.chestChoice.options 2 (CR-14-08) at dropStage ≥ fromStage it rolls two items into

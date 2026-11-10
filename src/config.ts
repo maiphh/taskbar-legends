@@ -57,8 +57,20 @@ const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 },
   recruit: { legendaryPityEvery: 0, legendaryPityPrefersUnowned: true, newHeroGuaranteeEvery: 0 },
   fortune: { legendaryEvery: 0, firstLegendaryBy: 0, chestUnits: 1, expeditionUnits: 1 },
   offline: { expeditionChestsPerHour: 0, expeditionBestOf: 1, expeditionChestMax: 0, ticketRateVsOnline: 0 } });
+export const salvageSchema = z.object({ protectEquipped: z.boolean(), protectLocked: z.boolean(), lockMax: z.number().int().nonnegative() }).strict();
+export type SalvageRules = z.infer<typeof salvageSchema>;
+/** Code defaults when `gear.salvage` is absent: 1.4.2 behaviour (overflow may salvage equipped items; locking disabled). */
+export const SALVAGE_DEFAULTS: SalvageRules = { protectEquipped: false, protectLocked: false, lockMax: 0 };
+export const SALVAGE_DESIGN: SalvageRules | null = salvageSchema.optional().parse((design.gear as { salvage?: unknown }).salvage) ?? null;
+export function setSalvageRules(rules: SalvageRules | 'design' | 'default'): SalvageRules {
+  const next = rules === 'design' ? { ...(SALVAGE_DESIGN ?? SALVAGE_DEFAULTS) } : rules === 'default' ? { ...SALVAGE_DEFAULTS } : salvageSchema.parse(rules);
+  CONFIG.gear.salvage = next;
+  return { ...CONFIG.gear.salvage };
+}
+export function activeSalvageRules(): SalvageRules { return { ...CONFIG.gear.salvage }; }
 export const CONFIG = {
   ...design,
+  gear: { ...design.gear, salvage: { ...SALVAGE_DEFAULTS } },
   v14: v14Defaults(),
   combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
   progression: { ...design.progression, ...z.object({ powerGainRetryMinSec: z.number().finite().nonnegative().default(0) }).parse(design.progression) },

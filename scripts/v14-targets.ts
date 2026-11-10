@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { availableParallelism } from 'node:os';
 import { writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
-import { CONFIG, V14_DESIGN, activeV14Rules, heroConfig, setV14Rules, ticksForSeconds, v14RuleSchema } from '../src/config';
+import { CONFIG, V14_DESIGN, activeSalvageRules, activeV14Rules, heroConfig, setSalvageRules, setV14Rules, ticksForSeconds, v14RuleSchema } from '../src/config';
 import type { V14Rule } from '../src/config';
 import { autoEquip, autoParty, bestChoice, cheapestEquippedUpgrade, chooseChest, getOwned, partyPower, pull, upgrade, upgradeCost } from '../src/core/economy';
 import { createState, input, snapshot, step } from '../src/core/game';
@@ -17,10 +17,11 @@ import { applyOffline } from '../src/core/save';
 import { distribution } from '../src/core/statistics';
 
 const { values } = parseArgs({ options: { rules: { type: 'string', default: 'all' }, seeds: { type: 'string', default: '25' }, days: { type: 'string', default: '9' },
-  worker: { type: 'string' }, out: { type: 'string', default: 'shots/v14-targets.json' }, 'gacha-seeds': { type: 'string', default: '10000' } } });
+  worker: { type: 'string' }, out: { type: 'string', default: 'shots/v14-targets.json' }, 'gacha-seeds': { type: 'string', default: '10000' }, salvage: { type: 'string', default: 'on' } } });
 const rules = (values.rules === 'none' ? [] : values.rules === 'all' ? [...v14RuleSchema.options] : (values.rules ?? '').split(',').filter(Boolean)).map(rule => v14RuleSchema.parse(rule)) satisfies V14Rule[];
 const days = Number(values.days), SESSION = CONFIG.referencePlayer.openHoursPerDay * 3600, HOUR_TICKS = 3600 * CONFIG.sim.ticksPerSecond;
 setV14Rules(rules);
+setSalvageRules(values.salvage === 'off' ? 'default' : 'design');
 
 type Decision = [day: number, seconds: number, types: string[]];
 const equipped = (state: GameState): Set<string> => new Set(state.partyIds.flatMap(id => Object.values(getOwned(state, id).equipment)).filter((id): id is NonNullable<typeof id> => id !== null));
@@ -120,6 +121,7 @@ function runSeed(seed: number) {
       maxLegendaryGearGap: gaps.length ? Math.max(...gaps) : null, gearRolls: gearRarity.length,
       onlineChestsPerHour: onlineChests / (onlineOpenSeconds / 3600), offlineRollUnitsPerHour: offlineSeconds ? offlineChests / (offlineSeconds / 3600) : 0 },
     farmChest: { clearsAtStage10Plus: farmClearsHigh, chests: farmChestsHigh, maxDryRun: maxDry, meanInterval: farmChestsHigh ? farmClearsHigh / farmChestsHigh : null },
+    salvageEquippedRemoved: state.metrics.salvageEquippedRemoved ?? 0,
     partyRoles: state.partyIds.map(id => heroConfig(id).role) };
 }
 type SeedResult = ReturnType<typeof runSeed>;
@@ -127,7 +129,7 @@ if (values.worker !== undefined) { process.stdout.write(JSON.stringify(runSeed(N
 
 const seeds = Array.from({ length: Number(values.seeds) }, (_, index) => index + 1);
 const worker = (seed: number): Promise<SeedResult> => new Promise((resolve, reject) => {
-  const child = spawn(process.execPath, [...process.execArgv, process.argv[1] ?? '', '--worker', String(seed), '--rules', values.rules ?? 'none', '--days', String(days)], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const child = spawn(process.execPath, [...process.execArgv, process.argv[1] ?? '', '--worker', String(seed), '--rules', values.rules ?? 'none', '--days', String(days), '--salvage', values.salvage ?? 'on'], { stdio: ['ignore', 'pipe', 'inherit'] });
   let out = ''; child.stdout.on('data', (chunk: Buffer) => { out += chunk.toString(); });
   child.on('exit', code => { if (code === 0) resolve(JSON.parse(out) as SeedResult); else reject(new Error(`seed ${seed} exited ${code}`)); });
 });
@@ -172,7 +174,7 @@ const t8Checks = { recruit60: results.every(r => r.t8.maxPullsWithoutLegendary <
   offline50pct: results.every(r => r.t8.offlineRollUnitsPerHour >= 0.5 * r.t8.onlineChestsPerHour), goblin300: null };
 const farm = results.reduce((sum, r) => ({ clears: sum.clears + r.farmChest.clearsAtStage10Plus, chests: sum.chests + r.farmChest.chests, maxDry: Math.max(sum.maxDry, r.farmChest.maxDryRun) }), { clears: 0, chests: 0, maxDry: 0 });
 const report = {
-  rules: activeV14Rules(), v14: CONFIG.v14, seeds: seeds.length, days, policy: 'referencePolicy (instrumented mirror, final state checked equal on every seed)',
+  rules: activeV14Rules(), salvage: activeSalvageRules(), v14: CONFIG.v14, seeds: seeds.length, days, policy: 'referencePolicy (instrumented mirror, final state checked equal on every seed)',
   quantiles: 'R-7 linear; censored (unreached) values rank last', decisionMergeSeconds: MERGE_SECONDS,
   targets: {
     T1: { target: 'At least 95% clear 1-5 within 600 open seconds', unit: 'open seconds', ...dist(results.map(r => r.firstFiveOpenSeconds), 1),
@@ -206,6 +208,9 @@ const report = {
     T10: { target: '≥ 95% of 1 h absences offer a meaningful decision on return', ...t10, pass: (t10.fraction ?? 0) >= 0.95 },
   },
   farmChest: { ...farm, meanInterval: farm.chests ? round(farm.clears / farm.chests, 3) : null },
+  salvageEquipped: { removedEquipped: results.reduce((sum, r) => sum + r.salvageEquippedRemoved, 0),
+    violatingSeeds: results.filter(r => r.salvageEquippedRemoved > 0).map(r => ({ seed: r.seed, removed: r.salvageEquippedRemoved })),
+    pass: results.every(r => r.salvageEquippedRemoved === 0) },
   perSeed: results.map(({ decisions, forks, ...rest }) => ({ ...rest, decisions: decisions.length, forks: forks.length })),
 };
 await writeFile(values.out ?? 'shots/v14-targets.json', JSON.stringify(report, null, 2) + '\n');

@@ -1,6 +1,6 @@
 import { CONFIG, stageConfig, ticksForSeconds } from '../config';
 import { beginEncounter, combatTick, spawnWave } from './combat';
-import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setParty, upgrade } from './economy';
+import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setLocked, setParty, upgrade } from './economy';
 import { emit, goldChange } from './events';
 import { cloneState, parseState } from './model';
 import type { Action, GameState } from './model';
@@ -126,6 +126,7 @@ export function input(state: GameState, action: Action): void {
     case 'equip': equip(state, action.heroId, action.gearId); powerRetry(state); return;
     case 'party': setParty(state, action.heroIds); powerRetry(state); return;
     case 'chooseChest': chooseChest(state, action.keep); powerRetry(state); return;
+    case 'lock': setLocked(state, action.gearId, action.locked); return;
     default: { const exhaustive: never = action; return exhaustive; }
   }
 }
