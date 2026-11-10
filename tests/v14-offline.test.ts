@@ -12,14 +12,14 @@ function farmer(seed = 9): GameState { const state = createState(seed); step(sta
 const lastOffline = (state: GameState) => { const data = state.events.at(-1)?.data; if (data?.type !== 'offline') throw new Error('offline event last'); return data; };
 
 describe('CR-14-04 Expedition Chests', () => {
-  it('1 h → 2 chests; 12 h equals 8 h → 16 (cap); the event and result carry expeditionChests', () => {
+  it('1 h → 3 chests (floor 3.5); 12 h equals 8 h → 28 (cap); the event and result carry expeditionChests', () => {
     setV14Rules(['expeditionChests']);
-    expect(applyOffline(farmer(), 1 * HOUR)).toMatchObject({ chests: 2, expeditionChests: 2 });
+    expect(applyOffline(farmer(), 1 * HOUR)).toMatchObject({ chests: 3, expeditionChests: 3 });
     expect(applyOffline(farmer(), 30 * 60_000)).toMatchObject({ chests: 1 });
     const a = farmer(), b = farmer();
-    expect(applyOffline(a, 12 * HOUR).chests).toBe(16); applyOffline(b, 8 * HOUR);
+    expect(applyOffline(a, 12 * HOUR).chests).toBe(28); applyOffline(b, 8 * HOUR);
     expect(snapshot(a)).toBe(snapshot(b).replace(/"rawSeconds":28800/g, '"rawSeconds":43200'));
-    expect(lastOffline(a)).toMatchObject({ chests: 16, expeditionChests: 16 });
+    expect(lastOffline(a)).toMatchObject({ chests: 28, expeditionChests: 28 });
   });
   it('best of 4 chest rolls: Legendary share 3.94% ± 0.2 over 1M (Rare+ 87%, Epic+ 34.4%)', { timeout: 60_000 }, () => {
     const rng = { rng: 12345 }, count = { common: 0, rare: 0, epic: 0, legendary: 0 }, n = 1_000_000;
@@ -34,7 +34,7 @@ describe('CR-14-04 Expedition Chests', () => {
     const before = state.inventory.length;
     applyOffline(state, 1 * HOUR);
     const legendary = state.inventory.slice(before).some(item => item.rarity === 'legendary');
-    if (!legendary) expect(state.gearSinceLegendary).toBe(8);
+    if (!legendary) expect(state.gearSinceLegendary).toBe(12);
     setV14Rules(['gearFortune']);
     const plain = farmer(); plain.gearLegendaryFound = true; plain.gearSinceLegendary = 0;
     applyOffline(plain, 4 * HOUR);
@@ -46,9 +46,9 @@ describe('CR-14-04 Expedition Chests', () => {
     state.highestCleared = Math.max(state.highestCleared, CONFIG.v14.chestChoice.fromStage);
     const kept = state.stats.chests, seq = state.eventSeq, queued = state.pendingChoice?.length ?? 0;
     applyOffline(state, 8 * HOUR);
-    expect(state.stats.chests - kept).toBe(16);
+    expect(state.stats.chests - kept).toBe(28);
     expect(state.pendingChoice?.length).toBe(CONFIG.runtime.chestChoiceQueueMax);
-    expect(state.events.filter(event => event.seq > seq && event.data.type === 'chestChoice').length).toBe(16 + queued - CONFIG.runtime.chestChoiceQueueMax);
+    expect(state.events.filter(event => event.seq > seq && event.data.type === 'chestChoice').length).toBe(28 + queued - CONFIG.runtime.chestChoiceQueueMax);
   });
   it('rule off: 1.3.0 offline chests (1 per 2 h, max 4) and no new event fields', () => {
     const state = farmer(), result = applyOffline(state, 12 * HOUR);

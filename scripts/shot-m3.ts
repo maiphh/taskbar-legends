@@ -137,7 +137,7 @@ try {
     return controls.every(id => c[id]?.present && c[id]?.inside) && c.audioBeforeGesture === false && c.audioUnlockedAfterGesture === true && c.mutedAfterToggle === true
       && c.singleReveal?.count === 1 && c.singleReveal?.pulls?.[0]?.rarity === 'legendary' && c.singleReveal?.pulls?.[0]?.pity === true
       && c.afterSkip?.done === true && c.afterOk === null && c.tenReveal?.length === 10 && c.tenDone === true && c.afterTabSwitch === null
-      && c.welcome?.chests === 16 && c.welcome?.capped === true && c.afterCollect === null && (c.closingAfterX === true || (width === '960' && c.closingAfterX === null))
+      && c.welcome?.chests === 28 && c.welcome?.capped === true && c.afterCollect === null && (c.closingAfterX === true || (width === '960' && c.closingAfterX === null))
       && JSON.parse(c.audioAfterReload?.stored ?? 'null')?.volume === c.audioAfterReload?.engine?.volume
       && ['ui_click', 'gacha_pull', 'gacha_legendary_sting', 'ui_open'].every(key => (c.cues as string[]).includes(key));
   };

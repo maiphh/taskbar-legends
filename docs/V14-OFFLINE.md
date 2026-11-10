@@ -1,20 +1,19 @@
 # v1.4 M3: offline Expedition Chests, offline tickets, gacha reveal, welcome-back, audio
 
-## Rules (opt-in, not saved)
+## Rules (on by default from 1.4.2, not saved)
 
-`expeditionChests` (CR-14-04) and `offlineTickets` (CR-14-05) join the v14 rule list: `--v14 all` (sim), `?v14=all` (URL),
-`__game.setV14Rules([...])`, `--rules all` (`scripts/v14-targets.ts`, now the default). With them off `CONFIG.v14.offline`
-is `{ expeditionChestsPerHour 0, expeditionBestOf 1, expeditionChestMax 0, ticketRateVsOnline 0 }`. Offline reward math
-is unchanged with the rules off; the 1.4.1 first-clear ticket table (option A) still makes the rules-off golden and
-25-seed aggregate differ from 1.3.0.
+`expeditionChests` (CR-14-04) and `offlineTickets` (CR-14-05) join the v14 rule list. From 1.4.2 the six rules are on
+by default in the game and `npm run sim`. Opt out with `?v14=none` or `--v14 none`. With them off `CONFIG.v14.offline`
+is `{ expeditionChestsPerHour 0, expeditionBestOf 1, expeditionChestMax 0, ticketRateVsOnline 0 }`. 1.4.2 also lowers
+`rewards.farmTicketChance` to 0.005 (top-level), so the rules-off golden is `V142_RULES_OFF_GOLDEN` (`6b332874…`).
 
 ## Expedition Chests (design.md §14.3, keys `v14.offline`, `v14.gearPity.rollUnits.expeditionChest`)
 
-- Count `floor(min(t, 8 h) × 2 / h)`, so at most 16. They replace the 1.3.0 offline chest count while the rule is on.
+- Count `floor(min(t, 8 h) × 3.5 / h)`, so at most 28 (1.4.2). They replace the 1.3.0 offline chest count while the rule is on.
 - Each is the best of 4 chest-rarity rolls (Legendary 3.94 %, Epic+ ≈ 34 %, Rare+ ≈ 87 %, checked over 1M chests) and counts
   4 Fortune units.
 - With `chestChoice` on and the drop stage ≥ `fromStage`, each goes to the pick-1-of-2 queue (both options best-of-4; option B 0
-  units). The queue keeps ≤ 3; a 4th auto-resolves the oldest by score (1.3.0 queue rule), so most of a 16-chest return resolves itself.
+  units). The queue keeps ≤ 3; a 4th auto-resolves the oldest by score (1.3.0 queue rule), so most of a 28-chest return resolves itself.
 
 ## Offline tickets (CR-14-05, key `v14.offline.ticketRateVsOnline` 0.5)
 
@@ -35,7 +34,7 @@ is unchanged with the rules off; the 1.4.1 first-clear ticket table (option A) s
 ## Welcome back (ui/offline-rewards.md)
 
 - Shown on restore when the away time earned anything. It shows time away, a capped note when raw time > the 8 h cap, gold count-up,
-  levels `before → after` per hero, Expedition Chests (16-slot strip, best rarity), offline tickets, and pending choices.
+  levels `before → after` per hero, Expedition Chests (28-slot grid at 14×2, 26 px, stride 29; shorter 60 ms stagger over 16 chests), offline tickets, and pending choices.
 - Hotspots `welcome-collect`, `welcome-close`. 1.3.0 (rules off) shows the same panel without the Expedition and ticket rows.
 
 ## Audio (docs/audio.md, audio/manifest.json)

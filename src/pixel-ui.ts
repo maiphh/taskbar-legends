@@ -1,7 +1,7 @@
 import { CONFIG, TICK_MS, heroConfig, raritySchema, slotSchema, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
-import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
+import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeChestGrid, welcomeDoneMs } from './reveal-timeline';
 import type { CardFace } from './reveal-timeline';
 import { BODY, FONT_FILES, HEADING, LINE_BOX, fitSize, fontFor, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
@@ -590,12 +590,11 @@ export class PixelUI {
     this.text(ctx, title, x + cx + 16, cy + 8, palette.text, BODY, true);
     const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour · max ${max} · best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h · max ${max}`;
     this.text(ctx, rule, x + cx + 16 + this.measureText(title, BODY, true) + 12, cy + 8, palette.muted, BODY, false, cw - 40 - this.measureText(title, BODY, true));
-    const slots = Math.max(max, 4), perRow = Math.min(slots, 8), slot = layout.chestSlot;
+    const slots = Math.max(max, 4), slot = layout.chestSlot, grid = welcomeChestGrid(slots), perRow = grid.perRow;
     for (let i = 0; i < slots; i += 1) {
-      // 4 slots: the spec's 40 px at stride 48. Expedition (16): two rows of 8 at 28 px, stride 34, 1× chest icon.
-      const dense = slots > 8, stride = dense ? 34 : slot.stride, size = dense ? 28 : slot.size;
-      const sxp = x + slot.x + (i % perRow) * stride, syp = (dense ? cy + 26 : slot.y) + Math.floor(i / perRow) * stride;
-      const shown = i < data.chests ? chestSlot(i, ms, rm) : { shown: false, pop: false };
+      // 4 slots: 40 px at stride 48. 9–16: two rows of 8 at 28 px, stride 34. 17–28: two rows of 14 at 26 px, stride 29 (ends at cy + 81).
+      const size = grid.size, sxp = x + slot.x + (i % perRow) * grid.stride, syp = (grid.originY ? cy + grid.originY : slot.y) + Math.floor(i / perRow) * grid.stride;
+      const shown = i < data.chests ? chestSlot(i, ms, rm, data.chests) : { shown: false, pop: false };
       if (!shown.shown) { ctx.fillStyle = palette.edge; ctx.fillRect(sxp, syp, size, 1); ctx.fillRect(sxp, syp + size - 1, size, 1); ctx.fillRect(sxp, syp, 1, size); ctx.fillRect(sxp + size - 1, syp, 1, size); continue; }
       const lift = shown.pop ? -1 : 0, scale = size >= 40 ? 2 : 1; this.frame(ctx, { x: sxp, y: syp + lift, width: size, height: size }, 'button-9slice.png'); this.icon(ctx, 'chest', sxp + Math.floor((size - 16 * scale) / 2), syp + lift + Math.floor((size - 16 * scale) / 2), scale);
     }

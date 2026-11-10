@@ -4,15 +4,15 @@ import { runReferenceAggregate } from '../src/sim/aggregate';
 import design from '../src/design-config.json';
 import { parseArgs } from 'node:util';
 import { z } from 'zod';
-import { CONFIG, activeV14Rules, setV14Rules, ticksForSeconds, v14RuleSchema } from '../src/config';
+import { CONFIG, activeV14Rules, parseV14Flag, setV14Rules, ticksForSeconds } from '../src/config';
 import { createState, input, step, summary } from '../src/core/game';
 import { actionSchema } from '../src/core/model';
 import { balanceReport, referencePolicy, runReference } from '../src/core/policy';
 
 const { values } = parseArgs({ options: { seed: { type: 'string', default: '1' }, ticks: { type: 'string' }, hours: { type: 'string' },
-  seeds: { type: 'string' }, days: { type: 'string' }, policy: { type: 'string' }, inputs: { type: 'string' }, events: { type: 'string', default: 'summary' }, 'gacha-seeds': { type: 'string', default: '10000' }, v14: { type: 'string', default: 'none' } } });
-// --v14 chestChoice,farmChest (or all) switches implemented v1.4 rules on; default none reproduces 1.3.0.
-setV14Rules(values.v14 === 'none' ? [] : values.v14 === 'all' ? v14RuleSchema.options : (values.v14 ?? '').split(',').map(rule => v14RuleSchema.parse(rule)));
+  seeds: { type: 'string' }, days: { type: 'string' }, policy: { type: 'string' }, inputs: { type: 'string' }, events: { type: 'string', default: 'summary' }, 'gacha-seeds': { type: 'string', default: '10000' }, v14: { type: 'string', default: 'all' } } });
+// --v14 all is the 1.4.2 default; --v14 none opts out. A comma list still selects a subset.
+setV14Rules(parseV14Flag(values.v14));
 function numberOption(value: string | undefined, fallback: number, name: string): number {
   const result = value === undefined ? fallback : Number(value);
   if (!Number.isFinite(result) || result < 0) throw new Error(`Invalid ${name}`);

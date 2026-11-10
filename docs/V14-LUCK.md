@@ -2,7 +2,7 @@
 
 Rules are opt-in, like the chest rules: `--v14 recruitPity,gearFortune` (or `all`) in `scripts/sim.ts`, `?v14=…` in the URL,
 `__game.setV14Rules([...])` in the debug API, `--rules` in `scripts/v14-targets.ts`. With the rules off, `CONFIG.v14.recruit`
-and `CONFIG.v14.fortune` are inert (0 = off). Gacha draws match 1.3.0; the rules-off golden and 25-seed aggregate do not, because config 1.4.1 option A keeps the first-clear ticket cuts at top level.
+and `CONFIG.v14.fortune` are inert (0 = off). From 1.4.2 the game and sim default to all six rules on; `?v14=none` / `--v14 none` opts out. The rules-off golden is `V142_RULES_OFF_GOLDEN` (farm ticket chance is live at top level).
 
 ## Recruit (design.md §14.1, keys `v14.gacha`)
 
@@ -48,8 +48,8 @@ All four fields are optional and validated (bounds, and `gearSinceLegendary < 40
 
 Tests: `tests/v14-luck.test.ts` (1M pulls, full roster, pull-log kinds, Fortune units), `tests/v14-offline.test.ts`.
 
-## Config 1.4.1
+## Config 1.4.2
 
-`src/design-config.json` is the Designer's 1.4.1 file verbatim (SHA-256 `e8e8ac728829fd24fb6d6bb3936fecfc126324e00c2ffb64b6dcad406ef5605b`).
-`chestChoice.fromStage` is 10 and `farmChest.guaranteeEvery` is 7. Game Lead chose option A: keep this file, do not wire
-CR-14-13, and delete `economyOverrides` in 1.5. Rules-off therefore has a late roster (T4b) until the flags go default-on.
+`src/design-config.json` is the Designer's 1.4.2 file verbatim (SHA-256 `5da9e34cf80aebfed587c410712918291289f25cfbe2109a31e605e50f4db172`).
+Changes from 1.4.1: `v14.offline.expeditionChestsPerHour` 3.5, `expeditionChestMax` 28, `rewards.farmTicketChance` 0.005.
+The six rules are on by default. `economyOverrides` stays an unread record (and now also records farm 0.005) to be deleted in 1.5.

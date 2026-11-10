@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
+  "version": "1.4.2",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -1084,7 +1084,7 @@
     "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
     "firstClearChest": true,
     "farmChestChance": 0.075,
-    "farmTicketChance": 0.0075,
+    "farmTicketChance": 0.005,
     "startingTickets": 6
   },
   "gear": {
@@ -1242,9 +1242,9 @@
       "note": "replaces rewards.farmChestChance from stage 10; below stage 10 farmChestChance applies"
     },
     "offline": {
-      "expeditionChestsPerHour": 2,
+      "expeditionChestsPerHour": 3.5,
       "expeditionBestOf": 4,
-      "expeditionChestMax": 16,
+      "expeditionChestMax": 28,
       "ticketRateVsOnline": 0.5,
       "goblinRateVsOnline": 0.6,
       "note": "replaces idle.offlineChestEveryHours/offlineChestMax; all capped by idle.offlineCapHours"
@@ -1304,7 +1304,7 @@
         100
       ],
       "startingTickets": 6,
-      "farmTicketChance": 0.0075
+      "farmTicketChance": 0.005
     }
   }
 }
