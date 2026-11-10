@@ -88,16 +88,37 @@ function dockManagement(): void {
   if (!compactPreview || '__TAURI_INTERNALS__' in window) return;
   if (nativeMenuShot) { managementRoot.style.left = '0px'; managementRoot.style.top = '0px'; return; }
   const app = element('app'), laneHeight = app.getBoundingClientRect().height, [, , , panelHeight = 400] = MENU_TOKENS.panel, gap = MENU_TOKENS.gapPx;
-  const above = window.innerHeight >= laneHeight + gap + panelHeight;
+  // The side is chosen once per open (§5: the window resizes once; switching tabs or the one-shot growth never re-docks).
+  const above = openDock?.above ?? window.innerHeight >= laneHeight + gap + panelHeight;
   document.body.classList.toggle('compact-dock-above', above);
   // W is the page viewport (the browser stand-in for the compact window): 624 at 640, 720 from 736 up.
   const lane = app.getBoundingClientRect(), width = window.innerWidth >= 736 ? 720 : Math.max(MENU_TOKENS.panelSize[0] ?? 624, window.innerWidth - 16);
-  // Below keeps the 8 px gap (window 640×568); a shorter viewport scrolls rather than collapsing it (compact-menu.md §5).
+  // Below keeps the 8 px gap (window 640×568, top edge fixed, bottom grows — see growForDock); never collapse the gap.
   const top = above ? lane.top - gap - panelHeight : lane.bottom + gap;
   managementRoot.style.setProperty('--px-panel-w', `${width}px`);
   // Document coordinates (the panel lives on <body>): a viewport too short for lane + panel scrolls instead of overlapping.
   managementRoot.style.left = `${Math.round(window.scrollX + Math.max(0, Math.min(lane.left + 8, window.innerWidth - width - 8)))}px`; managementRoot.style.top = `${Math.round(window.scrollY + top)}px`;
   managementRoot.dataset.dock = above ? 'above' : 'below';
+}
+/** Dock side and one-shot window growth for the open panel; null while the panel is closed. */
+let openDock: { above: boolean; grewBy: number } | null = null;
+/**
+ * Window on open is lane + 8 + panel (640×568, compact-menu.md §5). Docked below, the top edge stays fixed and the bottom
+ * grows once by the shortfall, so the page never scrolls; close restores it once. `resizeBy` is honoured by standalone /
+ * script-opened windows; `data-window-height` publishes the requested client height for hosts (and the shot harness)
+ * that size the window themselves.
+ */
+function growForDock(): void {
+  if (!compactPreview || '__TAURI_INTERNALS__' in window || nativeMenuShot || openDock) return;
+  const laneHeight = element('app').getBoundingClientRect().height, [, , , panelHeight = 400] = MENU_TOKENS.panel, need = Math.ceil(laneHeight + MENU_TOKENS.gapPx + panelHeight);
+  const above = window.innerHeight >= need, grewBy = above ? 0 : Math.max(0, need - window.innerHeight);
+  openDock = { above, grewBy };
+  if (grewBy > 0) { try { window.resizeBy(0, grewBy); } catch { /* not resizable from script */ } managementRoot.dataset.windowHeight = String(need); }
+}
+function shrinkAfterDock(): void {
+  if (!openDock) return;
+  const { grewBy } = openDock; openDock = null; delete managementRoot.dataset.windowHeight;
+  if (grewBy > 0) { try { window.resizeBy(0, -grewBy); } catch { /* not resizable from script */ } }
 }
 /** Compact HUD buttons follow the lane's source-pixel scale (zoom / devicePixelRatio). */
 function syncCompactScale(): void {
@@ -116,7 +137,8 @@ function domHitRegions(): HitRegion[] {
 }
 function openManagement(): void {
   if (!compactPreview) { renderer.ui.setPanel('heroes'); return; }
-  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
+  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; shrinkAfterDock(); element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
+  if (managementRoot.hidden) growForDock();
   dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open();
 }
 function setEditing(value: boolean): void {

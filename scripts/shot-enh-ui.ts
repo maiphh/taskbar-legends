@@ -43,7 +43,15 @@ try {
     await shot(page, `lane-${width}`);
     await page.click('#compact-menu-button');
     await page.locator('#management').waitFor({ state: 'visible' });
+    // Docked below, the app asks the window to grow once to lane + 8 + panel (640×568 at W=640); the harness is that window.
+    const requested = Number(await page.locator('#management').getAttribute('data-window-height') ?? 0);
+    c.windowRequest = requested;
+    if (requested > HEIGHT) await page.setViewportSize({ width, height: requested });
     await page.waitForTimeout(300);
+    // Browser inspector: stat line B's 12 px glyph (line top + 12) clears the Assign/Lock buttons by 8 px (compact-menu.md §6).
+    c.inspectorClearance = await page.evaluate(() => { const insp = document.querySelector('#management .px-insp-party'), lines = insp ? [...insp.querySelectorAll('.px-insp-stats > p')].filter(n => n.getBoundingClientRect().height > 1) : [], button = insp?.querySelector('.px-insp-foot .px-btn');
+      if (!lines.length || !button) return null; const last = lines[lines.length - 1]!.getBoundingClientRect(); return Math.round(button.getBoundingClientRect().top - (last.top + 12)); });
+    c.pageScrolls = await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight || document.documentElement.scrollWidth > window.innerWidth);
     const lane = await page.evaluate(() => { const lane = document.getElementById('game')!.getBoundingClientRect(), sheet = document.getElementById('management')!.getBoundingClientRect();
       return { lane: { top: lane.top, bottom: lane.bottom, left: lane.left, right: lane.right }, sheet: { top: sheet.top, bottom: sheet.bottom, left: sheet.left, right: sheet.right }, laneCovered: sheet.top < lane.bottom - 0.5 && sheet.bottom > lane.top + 0.5 && sheet.left < lane.right - 0.5 && sheet.right > lane.left + 0.5 }; });
     c.layout = lane;
@@ -119,6 +127,8 @@ try {
       await page.click('[data-tab="stash"]'); await page.waitForTimeout(200);
       c.revealClearedByTab = await page.evaluate(() => window.__game.getManagementReveal?.() ?? null);
       await page.click('[data-close]'); await page.locator('#management').waitFor({ state: 'hidden' });
+      c.windowRequestCleared = await page.locator('#management').getAttribute('data-window-height') === null;
+      if (requested > HEIGHT) await page.setViewportSize({ width, height: HEIGHT });
       c.closedRegions = await regionCheck(page);
       // Edit mode: Done replaces Edit, Move/Resize sit on the HUD band and are hit-testable.
       await page.click('#compact-edit-button'); await page.waitForTimeout(150);
@@ -215,6 +225,12 @@ if (after) {
   if (c.revealX10 !== 10 || !c.revealX10Fits) failures.push('640: compact x10 reveal missing or its controls overflow the 624 panel');
   for (const key of ['regions', 'revealX10Regions', 'revealX1Regions']) if ((c[key] as { outside: string[] }).outside.length) failures.push(`640: ${key} outside hit regions`);
   if (!/Legend in \d+/.test(String((checks.v14 as { odds: string }).odds)) || !/New hero in \d+/.test(String((checks.v14 as { odds: string }).odds))) failures.push('v14: Recruit odds miss Legend in / New hero in');
+  for (const width of ['1280', '960']) { const w = checks[width] as { windowRequest: number; pageScrolls: boolean; windowRequestCleared: boolean; layout: { sheet: { bottom: number } } };
+    if (w.windowRequest !== 568) failures.push(`${width}: docked-below open did not request a 568 px window`);
+    if ((checks[width] as { inspectorClearance: number | null }).inspectorClearance !== 8) failures.push(`${width}: inspector stat line B to buttons is not 8 px`);
+    if (w.pageScrolls) failures.push(`${width}: page scrolls with the panel docked below`);
+    if (!w.windowRequestCleared) failures.push(`${width}: closing did not restore the window`);
+    if (Math.round(w.layout.sheet.bottom) > 568) failures.push(`${width}: docked-below panel extends past 568`); }
   for (const width of ['1280', '960']) { const layout = (checks[width] as { layout: { lane: { bottom: number }; sheet: { top: number } } }).layout; if (Math.round(layout.sheet.top - layout.lane.bottom) !== 8) failures.push(`${width}: docked-below gap is not 8 px`); }
 }
 const report = { label, ok: !errors.length && !failures.length, errors, failures, shots, checks };

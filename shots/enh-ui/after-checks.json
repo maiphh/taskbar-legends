@@ -72,6 +72,9 @@
       }
     },
     "960": {
+      "windowRequest": 568,
+      "inspectorClearance": 8,
+      "pageScrolls": false,
       "layout": {
         "lane": {
           "top": 0,
@@ -243,6 +246,7 @@
       },
       "againPulls": 21,
       "revealClearedByTab": null,
+      "windowRequestCleared": true,
       "closedRegions": {
         "controls": 2,
         "outside": []
@@ -251,6 +255,9 @@
       "editHidesEdit": true
     },
     "1280": {
+      "windowRequest": 568,
+      "inspectorClearance": 8,
+      "pageScrolls": false,
       "layout": {
         "lane": {
           "top": 0,
@@ -422,6 +429,7 @@
       },
       "againPulls": 21,
       "revealClearedByTab": null,
+      "windowRequestCleared": true,
       "closedRegions": {
         "controls": 2,
         "outside": []

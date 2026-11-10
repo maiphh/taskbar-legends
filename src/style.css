@@ -185,6 +185,9 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .px-insp-flavour { margin-top: 2px; height: calc(100% - 30px); overflow-y: auto; }
 .px-insp-flavour p { white-space: normal; }
 .px-insp-party .px-insp-foot { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; align-items: flex-start; }
+/* Browser inspector (190 tall): buttons sit 4 px lower (ih-32) so stat line B (ends y150) clears them by 8 px; 14 px leading kept per §6. */
+.px-menu[data-variant="browser"] .px-insp-party .px-insp-foot { height: 32px; padding-bottom: 2px; }
+.px-menu[data-variant="browser"] .px-insp-stats { bottom: 32px; }
 .px-deltas p { white-space: nowrap; line-height: 14px; }
 .px-dl { display: inline-block; width: 40px; }
 .px-equip { display: flex; gap: 2px; }
