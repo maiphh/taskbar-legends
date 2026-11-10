@@ -11,6 +11,7 @@ import { raritySchema } from './config';
 import { localSaveStore } from './platform/storage';
 import { Renderer } from './renderer';
 import type { GameDebug } from './debug';
+import type { HitRegion } from './renderer';
 import { startDesktop } from './platform/desktop/tauri';
 import { ManagementAuthority } from './management/authority';
 import { ManagementView } from './management/view';
@@ -27,6 +28,8 @@ function element(id: string): HTMLElement {
 const query = new URLSearchParams(location.search);
 const partyV2Preview = query.get('combat') === 'party-v2';
 const compactPreview = partyV2Preview && query.get('compact') === '1';
+/** Shot harness only (`?shot&menu=native`): render the 760×560 native-window variant in the page to compare it with its mockups. */
+const nativeMenuShot = compactPreview && query.has('shot') && query.get('menu') === 'native';
 const v14Param = query.get('v14');
 if (v14Param) setV14Rules(v14Param === 'all' ? v14RuleSchema.options : v14Param.split(',').filter(rule => v14RuleSchema.safeParse(rule).success).map(rule => v14RuleSchema.parse(rule)));
 const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing canvas');
@@ -36,7 +39,7 @@ const recoveryTitle = element('save-recovery-title'), recoveryDescription = elem
 const renderer = new Renderer(canvas, element('controls'));
 let compactPrefs: CompactPrefs | null = compactPreview ? readCompactPrefs() : null;
 if (compactPreview && compactPrefs) { document.body.classList.add('compact-preview'); renderer.setCompactViewport(true, compactPrefs.zoom); }
-const newSelectedState = (seed = 1) => partyV2Preview ? createPartyState(seed) : createState(seed);
+const newSelectedState = (seed = 1) => partyV2Preview ? createPartyState(seed, { starterGear: true }) : createState(seed);
 let state = newSelectedState(), paused = false, accumulatorMs = 0, hidden = document.hidden;
 const managementAuthority = new ManagementAuthority(state, paused, next => { state = next; render(); });
 function replaceSelectedState(next: typeof state): void { managementAuthority.replaceState(next); }
@@ -58,6 +61,8 @@ if (partyV2Preview && !compactPreview) {
 }
 if (compactPreview) {
   compactMenu.hidden = false;
+  // #app clips the lane (overflow:hidden); the docked panel sits beside it, so it is hosted on <body>.
+  if (!('__TAURI_INTERNALS__' in window)) document.body.append(managementRoot);
   canvas.setAttribute('aria-label', 'Compact party preview: a movable battlefield. Use Menu for management or Edit to move and resize.');
 }
 function managementClient(): ManagementClient {
@@ -70,15 +75,55 @@ function managementClient(): ManagementClient {
     pause: async value => { paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); }, close: () => undefined,
     getAudio: async () => audio.settings(), setAudio: async value => { audio.set(value); renderer.ui.audio = audio.settings(); render(); },
     getCompactPrefs: async () => compactPrefs ?? readCompactPrefs(), setCompactPrefs: async value => setCompactSettings(value),
+    cue: key => { audio.play(key); },
   };
+}
+const MENU_TOKENS = CONFIG.ui.compactMenu.browser;
+/**
+ * Browser dock (compact-menu.md §5): the PARTY CAMP panel sits 8 px above the lane when the viewport has room for
+ * lane + gap + panel (the lane is then bottom-anchored, like the native window at the taskbar), otherwise directly below
+ * it. Width is W-16 (624 at W=640), 720 once W ≥ 736; it never overlaps the lane.
+ */
+function dockManagement(): void {
+  if (!compactPreview || '__TAURI_INTERNALS__' in window) return;
+  if (nativeMenuShot) { managementRoot.style.left = '0px'; managementRoot.style.top = '0px'; return; }
+  const app = element('app'), laneHeight = app.getBoundingClientRect().height, [, , , panelHeight = 400] = MENU_TOKENS.panel, gap = MENU_TOKENS.gapPx;
+  const above = window.innerHeight >= laneHeight + gap + panelHeight;
+  document.body.classList.toggle('compact-dock-above', above);
+  // W is the page viewport (the browser stand-in for the compact window): 624 at 640, 720 from 736 up.
+  const lane = app.getBoundingClientRect(), width = window.innerWidth >= 736 ? 720 : Math.max(MENU_TOKENS.panelSize[0] ?? 624, window.innerWidth - 16);
+  const top = above ? lane.top - gap - panelHeight : lane.bottom + Math.max(0, Math.min(gap, window.innerHeight - lane.bottom - panelHeight));
+  managementRoot.style.setProperty('--px-panel-w', `${width}px`);
+  // Document coordinates (the panel lives on <body>): a viewport too short for lane + panel scrolls instead of overlapping.
+  managementRoot.style.left = `${Math.round(window.scrollX + Math.max(0, Math.min(lane.left + 8, window.innerWidth - width - 8)))}px`; managementRoot.style.top = `${Math.round(window.scrollY + top)}px`;
+  managementRoot.dataset.dock = above ? 'above' : 'below';
+}
+/** Compact HUD buttons follow the lane's source-pixel scale (zoom / devicePixelRatio). */
+function syncCompactScale(): void {
+  if (!compactPreview) return;
+  const z = (compactPrefs?.zoom ?? 1) / (window.devicePixelRatio || 1);
+  element('app').style.setProperty('--px-z', String(z));
+}
+/** DOM controls that receive input in the compact lane (Menu/Edit, edit handles) and the docked panel, in client CSS px. */
+function domHitRegions(): HitRegion[] {
+  if (!compactPreview) return [];
+  const regions: HitRegion[] = [];
+  const add = (node: Element, kind: HitRegion['kind'], id: string) => { const box = node.getBoundingClientRect(); if (box.width > 0 && box.height > 0) regions.push({ kind, id, x: box.left, y: box.top, width: box.width, height: box.height }); };
+  for (const node of document.querySelectorAll('#compact-menu-bar:not([hidden]) button, #edit-overlay:not([hidden]) button')) if (!(node as HTMLElement).hidden) add(node, 'hud', node.id);
+  if (!managementRoot.hidden) add(managementRoot, 'panel', 'management');
+  return regions;
 }
 function openManagement(): void {
   if (!compactPreview) { renderer.ui.setPanel('heroes'); return; }
-  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; element('compact-menu-button').focus(); });
-  managementRoot.hidden = false; void managementView.open();
+  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
+  dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open();
 }
 function setEditing(value: boolean): void {
   const overlay = document.getElementById('edit-overlay'); if (overlay) overlay.toggleAttribute('hidden', !value);
+  // Done takes Edit's rect while editing (compact-menu.md §2.3); the lane draws the gold/ink HUD-band frame.
+  element('compact-edit-button').hidden = value; element('compact-edit-button').setAttribute('aria-pressed', String(value));
+  renderer.ui.compactEditing = value; render();
+  if (!value && document.activeElement?.closest('#edit-overlay')) element('compact-edit-button').focus();
 }
 element('compact-menu-button').addEventListener('click', openManagement);
 element('compact-edit-button').addEventListener('click', () => setEditing(document.getElementById('edit-overlay')?.hasAttribute('hidden') ?? false));
@@ -168,7 +213,7 @@ function resize(): void {
   const native = '__TAURI_INTERNALS__' in window;
   const cssWidth = compactPreview && !native && compactPrefs ? compactPrefs.sourceWidth * compactPrefs.zoom / (window.devicePixelRatio || 1) : window.innerWidth;
   if (compactPreview && !native && compactPrefs) document.getElementById('app')!.style.width = `${cssWidth}px`;
-  renderer.resize(cssWidth); render();
+  renderer.resize(cssWidth); syncCompactScale(); dockManagement(); render();
 }
 renderer.ui.onAction = action; renderer.ui.onPause = togglePause; renderer.ui.onLayoutChange = resize; renderer.ui.onRedraw = render;
 renderer.ui.onCue = key => { audio.play(key); };
@@ -196,7 +241,7 @@ const debug: GameDebug = {
     if (next.combatRules !== expected) throw new Error(`Snapshot rules mismatch: expected ${expected ?? 'legacy'}; got ${next.combatRules ?? 'legacy'}.`);
     replaceSelectedState(next); renderer.ui.resetHistory(); accumulatorMs = 0; lastFrame = performance.now(); render(); return cloneState(state);
   },
-  getEvents: () => structuredClone(state.events), getHitRegions: () => renderer.getHitRegions(), getLayout: () => renderer.getLayout(),
+  getEvents: () => structuredClone(state.events), getHitRegions: () => [...renderer.getHitRegions(), ...domHitRegions()], getManagementReveal: () => managementView?.revealState() ?? null, getLayout: () => renderer.getLayout(),
   getCombatProjection: (source = state) => renderer.getCombatProjection(source),
   openPanel: tab => renderer.ui.setPanel(tab),
   whenReady: () => Promise.all([renderer.atlases.ready, renderer.ui.ready]).then(() => { render(); }),

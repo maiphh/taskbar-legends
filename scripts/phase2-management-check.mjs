@@ -1,11 +1,17 @@
-/* global window, localStorage, console, process, document */
+/* global window, localStorage, console, process, document, URL */
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
 const baseUrl = process.env.PHASE2_BASE_URL ?? 'http://127.0.0.1:5173/?combat=party-v2&compact=1';
-const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const context = await browser.newContext({ viewport: { width: 960, height: 360 } });
 const errors = [];
+// PixelUI dropdowns (ui/compact-menu.md §4) replace native <select>: open the 9-slice button, click the 20 px option row.
+const pick = async (page, name, value) => {
+  await page.locator(`[data-dd-toggle="${name}"]`).click();
+  await page.locator(`[data-dd-option="${name}"][data-value="${value}"]`).click();
+};
+const picked = (page, name) => page.locator(`[data-dropdown="${name}"]`).getAttribute('data-value');
 try {
   await context.addInitScript(() => {
     const active = new Set();
@@ -51,7 +57,7 @@ try {
   }
 
   await page.locator('[data-tab="party"]').click();
-  await page.locator('[data-setting="party-preset"]').selectOption('fastFarm');
+  await pick(page, 'party-preset', 'fastFarm');
   await page.waitForFunction(() => window.__management.snapshot().partyPreset === 'fastFarm');
   let partySnapshot = await page.evaluate(() => window.__management.snapshot());
   assert.equal(partySnapshot.partyIds.length, 3);
@@ -59,7 +65,7 @@ try {
   assert.ok(partySnapshot.partyIds.includes('wiz'), 'Fast farm selects its owned AoE damage hero');
   await page.locator('[data-lock-hero="mw2"]').click();
   await page.waitForFunction(() => window.__management.snapshot().roster.find(hero => hero.id === 'mw2')?.partyLocked === true);
-  await page.locator('[data-setting="party-preset"]').selectOption('bossSustain');
+  await pick(page, 'party-preset', 'bossSustain');
   await page.waitForFunction(() => window.__management.snapshot().partyPreset === 'bossSustain');
   partySnapshot = await page.evaluate(() => window.__management.snapshot());
   assert.equal(partySnapshot.partyIds[0], 'mw2', 'preset change preserves the locked deployed slot');
@@ -113,21 +119,23 @@ try {
   await page.locator('[data-action="pull-ten"]').click();
   await page.waitForFunction(value => window.__management.snapshot().tickets === value - 10, ticketsBeforeTen);
   assert.equal(await page.evaluate(() => window.__management.snapshot().stats.pulls), pullsBeforeTen + 10, 'x10 recruitment commits ten real pulls');
+  await page.locator('#management main ol li').first().waitFor({ state: 'attached' });
+  await page.locator('[data-tab="recruit"]').click();
   await page.locator('#management main ol li').first().waitFor();
 
   await page.locator('[data-tab="stash"]').click();
-  const filter = page.locator('[data-filter="slot"]');
-  await filter.selectOption('weapon');
+  await pick(page, 'slot', 'weapon');
+  const filter = page.locator('[data-dd-toggle="slot"]');
   await filter.focus();
   await page.waitForTimeout(700);
-  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-filter')), 'slot', '5Hz snapshots preserve focused controls');
-  assert.equal(await filter.inputValue(), 'weapon');
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('data-dd-toggle')), 'slot', '5Hz snapshots preserve focused controls');
+  assert.equal(await picked(page, 'slot'), 'weapon');
   await page.keyboard.press('Tab');
-  assert.notEqual(await page.evaluate(() => document.activeElement?.getAttribute('data-filter')), 'slot', 'keyboard navigation advances from the persistent filter');
+  assert.notEqual(await page.evaluate(() => document.activeElement?.getAttribute('data-dd-toggle')), 'slot', 'keyboard navigation advances from the persistent filter');
 
   await page.locator(`[data-gear="${gearId}"]`).click();
   assert.match(await page.locator('#management main').innerText(), /HP% 5 · ATK% 10 · speed 15%/, 'fractional gear percentages display as percent points');
-  await page.locator('[data-select="hero"]').selectOption('mw2');
+  await pick(page, 'hero', 'mw2');
   await page.locator('main').getByText(/Hero before → after/).waitFor();
   await page.locator('main').getByText(/Party utility gain/).waitFor();
   const compareDps = await page.evaluate(async id => {
@@ -182,11 +190,11 @@ try {
   assert.equal(await page.evaluate(() => window.__management.snapshot().revision), revisionBeforeSecondAction + 1, 'reopened view has one active click handler');
 
   await page.locator('[data-tab="stash"]').click();
-  await page.locator('[data-filter="owner"]').selectOption('mw1');
-  assert.equal(await page.locator('[data-filter="owner"]').inputValue(), 'mw1', 'owner filter retains its own selected value');
-  assert.equal(await page.locator('[data-select="hero"]').inputValue(), 'mw2', 'comparison target remains independent from the owner filter');
-  await page.locator('[data-filter="owner"]').selectOption('mw2');
-  assert.equal(await page.locator('[data-filter="owner"]').inputValue(), 'mw2');
+  await pick(page, 'owner', 'mw1');
+  assert.equal(await picked(page, 'owner'), 'mw1', 'owner filter retains its own selected value');
+  assert.equal(await picked(page, 'hero'), 'mw2', 'comparison target remains independent from the owner filter');
+  await pick(page, 'owner', 'mw2');
+  assert.equal(await picked(page, 'owner'), 'mw2');
   await root.locator('[data-close]').click();
   await root.waitFor({ state: 'hidden' });
   assert.equal(await page.evaluate(() => window.__managementTimerCount), 0, 'close leaves no active poll before the deferred-response probe');
@@ -284,7 +292,7 @@ try {
   const legacyContext = await browser.newContext({ viewport: { width: 960, height: 360 } });
   try {
     const legacy = await legacyContext.newPage();
-    await legacy.goto('http://127.0.0.1:5173/');
+    await legacy.goto(new URL('/', baseUrl).href);
     await legacy.waitForFunction(() => !!window.__game);
     const legacyState = await legacy.evaluate(() => ({ state: window.__game.getState(), layout: window.__game.getLayout() }));
     assert.equal(legacyState.state.combatRules, undefined, 'the default browser entry remains legacy');

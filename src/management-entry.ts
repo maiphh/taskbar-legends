@@ -8,7 +8,9 @@ import type { HeroGearComparison } from './management/authority';
 import type { CompactPrefs } from './platform/desktop/compact-geometry';
 import type { Action } from './core/model';
 import { NativeRpc } from './management/native-rpc';
+import { CONFIG } from './config';
 
+type AudioValue = Awaited<ReturnType<ManagementClient['getAudio']>>;
 interface ReplyEnvelope { requestId: string; accepted: boolean; snapshot?: unknown; result?: unknown; reason?: string }
 class NativeManagementClient implements ManagementClient {
   private readonly rpc: NativeRpc<ReplyEnvelope>;
@@ -41,8 +43,10 @@ class NativeManagementClient implements ManagementClient {
     const result = await this.request('compare', { heroId, gearId }); return (result.result as HeroGearComparison | null) ?? null;
   }
   async pause(paused: boolean): Promise<void> { await this.request('pause', { paused }); }
-  async getAudio(): Promise<{ muted: boolean; volume: number }> { const result = await this.request('audio-get'); return result.result as { muted: boolean; volume: number }; }
-  async setAudio(value: { muted: boolean; volume: number }): Promise<void> { await this.request('audio-set', { settings: value }); }
+  async getAudio(): Promise<AudioValue> { const result = await this.request('audio-get'); return result.result as AudioValue; }
+  async setAudio(value: AudioValue): Promise<void> { await this.request('audio-set', { settings: value }); }
+  /** UI sounds play in the game window (the one audio context); a lost cue is harmless. */
+  cue(key: string): void { void this.request('cue', { cue: key }).catch(() => undefined); }
   async getCompactPrefs(): Promise<CompactPrefs> { const result = await this.request('compact-get'); return result.result as CompactPrefs; }
   async setCompactPrefs(value: CompactPrefs): Promise<void> { await this.request('compact-set', { prefs: value }); }
   close(): void {
@@ -55,7 +59,11 @@ class NativeManagementClient implements ManagementClient {
 const root = document.getElementById('management-app');
 if (!root) throw new Error('Management root is missing');
 const client = new NativeManagementClient();
-const view = new ManagementView(root, client, () => { root.hidden = true; });
+const view = new ManagementView(root, client, () => { root.hidden = true; }, { variant: 'native' });
+// Native resize (Game Lead answer 3): the 760×560 panel scales by whole integers and letterboxes; below 760×560 it scrolls.
+const [panelWidth = 760, panelHeight = 560] = CONFIG.ui.compactMenu.native.client;
+const fit = (): void => { root.style.setProperty('--px-scale', String(Math.max(1, Math.floor(Math.min(window.innerWidth / panelWidth, window.innerHeight / panelHeight))))); };
+window.addEventListener('resize', fit); fit();
 let stopOpen: (() => void) | undefined, stopClose: (() => void) | undefined;
 const onVisibility = (): void => { if (document.hidden) view.close(); else void view.open(); };
 document.addEventListener('visibilitychange', onVisibility);
