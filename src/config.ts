@@ -23,7 +23,9 @@ const stageDefinition = z.object({ id: z.string(), index: z.number().int().posit
   isBoss: z.boolean(), timeoutSec: z.number().positive(), firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() });
 // Replace design-config.json with the designer's next delivery; config.json wins over prose.
 // Only underspecified implementation/presentation constants are added here.
-export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0) });
+export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0),
+  // design.md §20: pad COMPLETE boss repeats to the farm floor at native speed. Absent = 1.4.3 behaviour (no pad).
+  bossRepeatMinCycle: z.boolean().optional() });
 /**
  * v1.4 code requests (design.md §18). config.json → `v14` carries the designer's *target* values; the game reads them only
  * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default.

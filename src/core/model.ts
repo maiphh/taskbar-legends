@@ -155,7 +155,8 @@ export const stateSchema = z.object({
   if (progress.kind === 'COMPLETE' && state.highestCleared !== CONFIG.stages.length) invalid('Campaign incomplete');
   if (progress.kind === 'FARMING' && progress.failTick !== undefined && progress.failTick > state.tick) invalid('Failure tick cannot be in the future');
   if (state.phase.kind === 'farmPad' && !state.farmClock) invalid('Padding needs a native encounter clock');
-  if (state.farmClock && (!(progress.kind === 'FARMING' || progress.kind === 'BOSS_READY' || progress.kind === 'COMPLETE') || progress.stage > state.highestCleared || stageConfig(progress.stage).isBoss)) invalid('Tempo clock is only valid for cleared non-boss repeats');
+  if (state.farmClock && (!(progress.kind === 'FARMING' || progress.kind === 'BOSS_READY' || progress.kind === 'COMPLETE') || progress.stage > state.highestCleared
+    || (stageConfig(progress.stage).isBoss && !(progress.kind === 'COMPLETE' && state.farmClock.scale === 1)))) invalid('Tempo clock is only valid for cleared non-boss repeats (or a scale-1 COMPLETE boss repeat, §20)');
   for (const hero of state.roster) heroConfig(hero.id);
 });
 export type GameState = z.infer<typeof stateSchema>;

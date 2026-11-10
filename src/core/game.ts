@@ -183,7 +183,8 @@ export function load(snapshotValue: unknown): GameState {
   return cloneState(parseState(value));
 }
 export function bossSecondsRemaining(state: GameState): number | null {
-  if (!isBoss(state.progress.stage) || (state.phase.kind === 'rest' && state.phase.next === 'encounter')) return null;
+  // farmPad only reaches a boss stage via the §20 COMPLETE repeat pad; like the stage rest, it shows no countdown.
+  if (!isBoss(state.progress.stage) || state.phase.kind === 'farmPad' || (state.phase.kind === 'rest' && state.phase.next === 'encounter')) return null;
   return Math.max(0, Math.ceil(stageConfig(state.progress.stage).timeoutSec - (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond));
 }
 export function statusText(state: GameState): string {
