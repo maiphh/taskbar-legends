@@ -12,7 +12,7 @@ import { autoEquip, autoParty, bestChoice, cheapestEquippedUpgrade, chooseChest,
 import { createState, input, snapshot, step } from '../src/core/game';
 import { cloneState } from '../src/core/model';
 import type { GameState } from '../src/core/model';
-import { gachaCohort, runReference } from '../src/core/policy';
+import { farmClearInTarget, gachaCohort, runReference } from '../src/core/policy';
 import { applyOffline } from '../src/core/save';
 import { distribution } from '../src/core/statistics';
 
@@ -191,10 +191,11 @@ const report = {
       ...dist(results.map(r => r.starterHighestCleared), 0),
       violatingSeeds: results.filter(r => r.starterHighestCleared >= 8).map(r => r.seed),
       pass: results.every(r => r.starterHighestCleared < 8) },
-    T6: { target: 'Every farm clear takes 20–40 seconds', unit: 'seconds',
+    T6: { target: 'Every farm clear takes 20–40 seconds (1-tick / 0.05 s epsilon)', unit: 'seconds',
       minimumPerSeed: dist(results.map(r => r.farmMinSeconds), 2), maximumPerSeed: dist(results.map(r => r.farmMaxSeconds), 2),
       samples: results.reduce((sum, r) => sum + r.farmSamples, 0),
-      pass: results.some(r => (r.farmMinSeconds !== null && r.farmMinSeconds < 20) || (r.farmMaxSeconds !== null && r.farmMaxSeconds > 40)) ? false
+      violatingSeeds: results.filter(r => farmClearInTarget(r.farmMinSeconds, r.farmMaxSeconds) === false).map(r => ({ seed: r.seed, farmMinSeconds: r.farmMinSeconds, farmMaxSeconds: r.farmMaxSeconds })),
+      pass: results.some(r => farmClearInTarget(r.farmMinSeconds, r.farmMaxSeconds) === false) ? false
         : results.some(r => r.farmSamples === 0) ? null : true },
     T7: { target: 'Every non-boss clears within 2700 open seconds of first attempt', unit: 'open seconds',
       ...dist(results.map(r => r.maxNonBossStallSeconds), 2),

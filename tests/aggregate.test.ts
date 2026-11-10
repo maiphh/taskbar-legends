@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gachaCohort, runReference } from '../src/core/policy';
+import { FARM_CLEAR_TARGET, farmClearInTarget, gachaCohort, runReference } from '../src/core/policy';
 import { distribution } from '../src/core/statistics';
 import { aggregateReference, measureReference, runReferenceAggregate } from '../src/sim/aggregate';
 import type { ReferenceMeasurement } from '../src/sim/aggregate';
@@ -25,7 +25,7 @@ describe('aggregate reference-player reports', () => {
     expect(good.targets.map(target => target.pass)).toEqual([true, true, true, true, true, true, true]);
     for (const sample of samples.slice(0, 6)) sample.firstFiveOpenSeconds = 601;
     const last = samples.at(-1); if (!last) throw new Error('Fixture');
-    last.farmMaxSeconds = 40.05; last.maxNonBossStallSeconds = 2700.05; last.starterHighestCleared = 8;
+    last.farmMaxSeconds = 40.1; last.maxNonBossStallSeconds = 2700.05; last.starterHighestCleared = 8;
     const failed = aggregateReference(samples, gacha);
     expect(failed.targets.map(target => target.pass)).toEqual([false, true, true, true, false, false, false]);
     expect(failed.targets[0]?.distribution.median).toBe(500);
@@ -45,5 +45,18 @@ describe('aggregate reference-player reports', () => {
     expect(run()).toEqual(run());
     expect(() => runReferenceAggregate({ firstSeed: 1, seeds: 0, days: 7, gachaSeeds: 10 })).toThrow();
     expect(() => runReferenceAggregate({ firstSeed: 0xffffffff, seeds: 2, days: 7, gachaSeeds: 10 })).toThrow();
+  });
+  it('allows a 1-tick (0.05 s) epsilon on the 20–40 s farm-clear band', () => {
+    expect(FARM_CLEAR_TARGET.epsilonSeconds).toBe(0.05);
+    expect(farmClearInTarget(20, 40)).toBe(true);
+    expect(farmClearInTarget(19.95, 40.05)).toBe(true);
+    expect(farmClearInTarget(19.4, 26.9)).toBe(false);
+    expect(farmClearInTarget(20, 40.1)).toBe(false);
+    expect(farmClearInTarget(null, 30)).toBeNull();
+    const samples = Array.from({ length: 100 }, (_, index) => fixture(index + 1));
+    samples[91]!.farmMinSeconds = 19.95; // seed 92: one tick under 20, now a pass
+    expect(aggregateReference(samples, gacha).targets[5]?.pass).toBe(true);
+    samples[57]!.farmMinSeconds = 19.4; // seed 58: a real miss
+    expect(aggregateReference(samples, gacha).targets[5]?.pass).toBe(false);
   });
 });

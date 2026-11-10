@@ -77,3 +77,5 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - The six v1.4 rules are on by default in the game and sim. `?v14=none` and `--v14 none` opt out. Saves still do not store the rule flags; compatibility is via the `balance` union, which now also accepts `'1.4.1'`.
 - Rules-off golden regenerated to `V142_RULES_OFF_GOLDEN` (`6b332874…`) because the farm ticket chance is top-level. The 1.4.1 hash is kept as `V141_RULES_OFF_GOLDEN`.
 - Welcome-back grid for more than 16 chests: 14 per row, 26 px, stride 29, last row ends at cy + 81. Stagger 60 ms (`chestStaggerMsOver16`).
+
+- T6 farm-clear band (20–40 s) allows a 1-tick epsilon (0.05 s at 20 Hz). A 19.95 s clear passes; a 19.4 s clear is still a miss. This is a checker-only change; farm tempo itself is unchanged.
