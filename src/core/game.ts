@@ -1,6 +1,7 @@
 import { CONFIG, stageConfig, ticksForSeconds } from '../config';
 import { beginEncounter, combatTick, spawnWave } from './combat';
-import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setParty, upgrade } from './economy';
+import { cancelPartyEncounterEffects, expireFriendlyDeadTargetProjectiles, hasPendingHostileImpact } from './party-combat';
+import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setParty, upgrade, togglePartyLock } from './economy';
 import { emit, goldChange } from './events';
 import { cloneState, parseState } from './model';
 import type { Action, GameState } from './model';
@@ -23,6 +24,19 @@ export function createState(seed = 1): GameState {
   };
   beginEncounter(state);
   return state;
+}
+/** Isolated opt-in rules preview. Legacy createState and its serialized output remain unchanged. */
+export function createPartyState(seed = 1): GameState {
+  const state = createState(seed);
+  state.combatRules = 'party-v2';
+  for (const id of ['mw1', 'priest']) if (!state.roster.some(hero => hero.id === id)) {
+    state.roster.push({ id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() });
+  }
+  state.partyIds = ['mw2', 'mw1', 'priest'];
+  state.party = []; state.enemies = []; state.encounter = 0; state.wave = 1;
+  state.events = []; state.eventSeq = 0; state.eventCounts = {};
+  beginEncounter(state);
+  return parseState(state);
 }
 function rest(state: GameState, next: 'encounter' | 'wave'): void {
   state.phase = { kind: 'rest', remainingTicks: ticksForSeconds(next === 'wave' ? CONFIG.sim.waveGapSec : CONFIG.sim.stageGapSec), next };
@@ -99,7 +113,7 @@ function win(state: GameState): void {
   if (clock) {
     const gapTicks = ticksForSeconds(CONFIG.sim.stageGapSec);
     state.phase = { kind: 'farmPad', settleAtTick: Math.max(state.tick + gapTicks, state.stageStartedTick + clock.minCycleTicks),
-      nativeDurationTicks: clock.elapsedTicks + gapTicks };
+      nativeDurationTicks: clock.elapsedTicks + gapTicks, ...(state.combatRules === 'party-v2' ? { presentationStartedAtTick: state.tick } : {}) };
     return;
   }
   awardClear(state, (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond + CONFIG.sim.stageGapSec);
@@ -121,7 +135,8 @@ export function input(state: GameState, action: Action): void {
     case 'retry': retry(state, true); return;
     case 'pull': pull(state); powerRetry(state); return;
     case 'autoEquip': autoEquip(state); powerRetry(state); return;
-    case 'autoParty': autoParty(state); powerRetry(state); return;
+    case 'autoParty': autoParty(state, action.preset); powerRetry(state); return;
+    case 'lockHero': togglePartyLock(state, action.heroId, action.locked); return;
     case 'upgrade': upgrade(state, action.gearId); powerRetry(state); return;
     case 'equip': equip(state, action.heroId, action.gearId); powerRetry(state); return;
     case 'party': setParty(state, action.heroIds); powerRetry(state); return;
@@ -139,8 +154,11 @@ function encounterSubstep(state: GameState): void {
   const elapsed = state.farmClock?.elapsedTicks ?? state.tick - state.stageStartedTick;
   if (elapsed >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec)) { lose(state); return; }
   combatTick(state);
-  if (state.party.every(hero => hero.hp <= 0)) lose(state);
-  else if (state.enemies.every(enemy => enemy.hp <= 0)) win(state);
+  if (state.party.every(hero => hero.hp <= 0)) { if (state.combatRules === 'party-v2') cancelPartyEncounterEffects(state); lose(state); }
+  else if (state.enemies.every(enemy => enemy.hp <= 0)) {
+    if (state.combatRules === 'party-v2') expireFriendlyDeadTargetProjectiles(state);
+    if (state.combatRules !== 'party-v2' || !hasPendingHostileImpact(state)) win(state);
+  }
 }
 function tick(state: GameState): void {
   state.tick += 1;

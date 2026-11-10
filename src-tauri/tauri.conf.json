@@ -14,6 +14,7 @@
     "windows": [
       {
         "label": "main",
+        "url": "index.html",
         "title": "Taskbar Legends",
         "width": 1280,
         "height": 160,
@@ -26,12 +27,47 @@
         "focus": false,
         "visible": false,
         "backgroundColor": "#00000000"
+      },
+      {
+        "label": "controls",
+        "title": "Taskbar Legends Controls",
+        "url": "control.html",
+        "width": 136,
+        "height": 36,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": false,
+        "focus": false,
+        "visible": false,
+        "backgroundColor": "#00000000"
+      },
+      {
+        "label": "management",
+        "title": "Taskbar Legends Management",
+        "url": "management.html",
+        "width": 760,
+        "height": 560,
+        "transparent": false,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "resizable": true,
+        "shadow": true,
+        "focus": true,
+        "visible": false,
+        "center": true,
+        "backgroundColor": "#17212d"
       }
     ],
     "security": {
       "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src ipc: http://ipc.localhost 'self'",
       "capabilities": [
-        "desktop-overlay"
+        "desktop-overlay",
+        "compact-controls",
+        "compact-management"
       ]
     }
   },

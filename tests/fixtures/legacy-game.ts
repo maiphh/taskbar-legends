@@ -94,6 +94,7 @@ export function input(state: GameState, action: Action): void {
     case 'pull': pull(state); return;
     case 'autoEquip': autoEquip(state); return;
     case 'autoParty': autoParty(state); return;
+    case 'lockHero': return;
     case 'upgrade': upgrade(state, action.gearId); return;
     case 'equip': equip(state, action.heroId, action.gearId); return;
     case 'party': setParty(state, action.heroIds); return;

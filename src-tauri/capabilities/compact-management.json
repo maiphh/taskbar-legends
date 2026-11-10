@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "compact-management",
+  "description": "Snapshot, validated management commands, settings, and close for the owned local management view.",
+  "windows": ["management"],
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten", "allow-submit-management-message", "allow-hide-management"]
+}

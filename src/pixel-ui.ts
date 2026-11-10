@@ -52,6 +52,7 @@ export class PixelUI {
   private controls = new Map<string, Control>();
   private current: GameState | null = null;
   private width = CONFIG.view.defaultWidth;
+  private compactMode = false;
   private sourceHeight = CONFIG.ui.closed.height;
   private scaleToCss = 1;
   private hovered = '';
@@ -202,7 +203,8 @@ export class PixelUI {
   }
   private finishReveal(ok: boolean): void { if (ok) { this.onCue(CONFIG.ui.gacha.audio.click); } this.reveal = null; this.onRedraw(); }
   private togglePanel(tab: PanelTab): void { this.setPanel(this.panel === tab ? null : tab); }
-  height(): number { return this.isOpen() ? CONFIG.ui.expanded.height : CONFIG.ui.closed.height; }
+  setCompactMode(value: boolean): void { this.compactMode = value; if (value) this.setPanel(null); this.onLayoutChange(); }
+  height(): number { return this.compactMode ? CONFIG.ui.closed.height : this.isOpen() ? CONFIG.ui.expanded.height : CONFIG.ui.closed.height; }
   private rosterColumns(): number { return this.width >= 736 ? 4 : 3; }
   private gearColumns(): number { return this.width >= 736 ? 8 : 6; }
   panelRect(): Rect {
@@ -210,6 +212,7 @@ export class PixelUI {
     return { x: Math.max(8, this.width - width - CONFIG.ui.expanded.panelRightInset), y: 0, width, height: CONFIG.ui.expanded.panelHeight };
   }
   sourceRegions(): SourceHitRegion[] {
+    if (this.compactMode) return [];
     const coreY = this.height() - CONFIG.ui.closed.coreHeight;
     const compact = this.width < 1000;
     const islandWidth = compact ? 200 : 280;
@@ -357,6 +360,19 @@ export class PixelUI {
     for (const event of state.events) if (event.seq > this.lastPullSeq && event.data.type === 'pull') {
       this.history.unshift(`${heroConfig(event.data.heroId).name} · ${event.data.rarity}${event.data.duplicate ? ' · duplicate +star/gold' : ' · NEW'}`);
       if (this.history.length > 10) this.history.pop(); this.lastPullSeq = event.seq;
+    }
+    if (this.compactMode) {
+      const progress = state.progress, stage = CONFIG.stages[progress.stage - 1], header = progress.kind === 'BOSS_READY'
+        ? `BOSS ${stageConfig(progress.bossStage).id} READY · START IN MANAGEMENT`
+        : progress.kind === 'BOSS_FIGHT' ? `BOSS ${stage?.id ?? ''} · WAVE ${state.wave}`
+          : `${progress.kind === 'FARMING' ? 'FARM' : 'STAGE'} ${stage?.id ?? ''} · WAVE ${state.wave}/${stage?.waves.length ?? 3}`;
+      ctx.fillStyle = palette.base;
+      ctx.fillRect(4, 1, Math.max(100, width - 156), 34);
+      ctx.fillRect(Math.max(4, width - 108), this.sourceHeight - 17, Math.min(104, width - 8), 16);
+      this.text(ctx, header, 8, 4, palette.gold, BODY, true, Math.max(100, width - 152), { exactY: true });
+      this.text(ctx, paused ? 'PAUSED' : 'RUNNING', 8, 22, paused ? palette.gold : palette.green, BODY, false, 80, { exactY: true });
+      this.text(ctx, `${short(state.gold)} G`, Math.max(8, width - 104), this.sourceHeight - 14, palette.gold, BODY, true, 96, { exactY: true });
+      this.syncControls(); return;
     }
     const compact = width < 1000, islandWidth = compact ? 200 : 280;
     const right = width - islandWidth - 8;

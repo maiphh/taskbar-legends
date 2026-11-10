@@ -16,6 +16,7 @@ export interface GameDebug {
   getEvents(): GameEvent[];
   getHitRegions(): HitRegion[];
   getLayout(): ReturnType<Renderer['getLayout']>;
+  getCombatProjection(state?: GameState): ReturnType<Renderer['getCombatProjection']>;
   openPanel(tab: PanelTab | null): void;
   whenReady(): Promise<void>;
   getAssetErrors(): string[];

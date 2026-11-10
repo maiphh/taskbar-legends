@@ -5,6 +5,7 @@ import { compareItemIds, gearTemplateId, itemId } from './model';
 import type { GameState, Gear, ItemId, LevelChange, OwnedHero } from './model';
 import { random } from './rng';
 import type { RandomState } from './rng';
+import { getPartyHeroDefinition, partyBasicDamageCoefficient } from './party-definitions';
 
 export function getOwned(state: GameState, id: string): OwnedHero {
   const hero = state.roster.find(hero => hero.id === id);
@@ -14,11 +15,13 @@ export function getOwned(state: GameState, id: string): OwnedHero {
 export function blankEquipment(): OwnedHero['equipment'] { return { weapon: null, armor: null, charm: null }; }
 export function heroStats(state: GameState, hero: OwnedHero) {
   const definition = heroConfig(hero.id);
-  const role = CONFIG.roles[definition.role];
+  const legacyRole = CONFIG.roles[definition.role];
+  const partyDefinition = state.combatRules === 'party-v2' ? getPartyHeroDefinition(hero.id) : undefined;
+  const profile = partyDefinition?.familyStats ?? legacyRole;
   const growth = CONFIG.rarity.statMult[definition.rarity] * (1 + CONFIG.growth.perLevel * (hero.level - 1)) * (1 + CONFIG.growth.perStar * (hero.stars - 1));
-  let hp = role.hp * (definition.mod.hp ?? 1) * growth;
-  let atk = role.atk * (definition.mod.atk ?? 1) * growth;
-  let def = role.def * (definition.mod.def ?? 1) * growth;
+  let hp = profile.hp * (definition.mod.hp ?? 1) * growth;
+  let atk = profile.atk * (definition.mod.atk ?? 1) * growth;
+  let def = profile.def * (definition.mod.def ?? 1) * growth;
   let hpPct = 0, atkPct = 0, speedPct = 0;
   for (const id of Object.values(hero.equipment)) {
     const gear = state.inventory.find(item => item.id === id);
@@ -27,9 +30,18 @@ export function heroStats(state: GameState, hero: OwnedHero) {
     hp += gear.stats.hp * mult; atk += gear.stats.atk * mult; def += gear.stats.def * mult;
     hpPct += gear.stats.hpPct * mult; atkPct += gear.stats.atkPct * mult; speedPct += gear.stats.speedPct * mult;
   }
-  const baseAttackTicks = role.attackIntervalTicks + (definition.mod.attackIntervalTicks ?? 0);
+  const baseAttackTicks = ('attackTicks' in profile ? profile.attackTicks : profile.attackIntervalTicks) + (definition.mod.attackIntervalTicks ?? 0);
   return { maxHp: Math.round(hp * (1 + hpPct)), atk: Math.round(atk * (1 + atkPct)), def: Math.round(def),
-    attackTicks: Math.max(CONFIG.runtime.minAttackIntervalTicks, Math.round(baseAttackTicks / (1 + speedPct))), range: role.rangePx };
+    attackTicks: Math.max(CONFIG.runtime.minAttackIntervalTicks, Math.round(baseAttackTicks / (1 + speedPct))), range: partyDefinition?.basic.range ?? legacyRole.rangePx };
+}
+export function realizedBasicCycleTicks(stats: Pick<ReturnType<typeof heroStats>, 'attackTicks'>): number {
+  return Math.max(stats.attackTicks, 4 + 2);
+}
+export function partyBasicDps(state: GameState, hero: OwnedHero): number {
+  return partyBasicDpsForStats(hero.id, heroStats(state, hero));
+}
+export function partyBasicDpsForStats(heroId: string, stats: Pick<ReturnType<typeof heroStats>, 'atk' | 'attackTicks'>): number {
+  return stats.atk * partyBasicDamageCoefficient(getPartyHeroDefinition(heroId)) * CONFIG.sim.ticksPerSecond / realizedBasicCycleTicks(stats);
 }
 export function heroPower(state: GameState, hero: OwnedHero): number {
   const stats = heroStats(state, hero);
@@ -253,7 +265,8 @@ export function setParty(state: GameState, ids: string[]): void {
   if (ids.every((id, i) => state.partyIds[i] === id)) return;
   state.partyIds = [...ids]; state.economyRevision += 1;
 }
-export function autoParty(state: GameState): void {
+export function autoParty(state: GameState, requestedPreset?: 'balanced' | 'fastFarm' | 'bossSustain'): void {
+  if (state.combatRules === 'party-v2') { autoPartyV2(state, requestedPreset ?? state.partyPreset ?? 'balanced'); return; }
   const sorted = [...state.roster].sort((a, b) => heroPower(state, b) - heroPower(state, a) || a.id.localeCompare(b.id));
   const tank = sorted.find(hero => heroConfig(hero.id).role === 'tank');
   const support = sorted.find(hero => heroConfig(hero.id).role === 'support');
@@ -265,7 +278,78 @@ export function autoParty(state: GameState): void {
   if (support) ids.push(support.id);
   setParty(state, ids);
 }
+function autoPartyV2(state: GameState, preset: 'balanced' | 'fastFarm' | 'bossSustain'): void {
+  const roster = state.roster;
+  const byId = new Map(roster.map(hero => [hero.id, hero]));
+  const lockedSlots = state.partyIds.map((id, index) => ({ id, index, hero: byId.get(id) })).filter(slot => slot.hero?.partyLocked);
+  const selected = new Set(lockedSlots.map(slot => slot.id));
+  const tags = (hero: OwnedHero) => getPartyHeroDefinition(hero.id).tags;
+  const def = (hero: OwnedHero) => getPartyHeroDefinition(hero.id);
+  const stats = (hero: OwnedHero) => heroStats(state, hero);
+  const ehp = (hero: OwnedHero) => { const value = stats(hero); return value.maxHp * (1 + value.def / 100); };
+  const cycle = (hero: OwnedHero) => realizedBasicCycleTicks(stats(hero));
+  const dps = (hero: OwnedHero) => stats(hero).atk * partyBasicDamageCoefficient(def(hero)) / cycle(hero);
+  const support = (hero: OwnedHero) => supportOutput(def(hero), stats(hero));
+  const stable = (a: OwnedHero, b: OwnedHero) => a.id.localeCompare(b.id);
+  const requested: { key: string; matches: (hero: OwnedHero) => boolean; score: (hero: OwnedHero) => number }[] = preset === 'fastFarm' ? [
+    { key: 'aoe', matches: hero => tags(hero).includes('aoe'), score: hero => dps(hero) * 1.2 },
+    { key: 'singleDps', matches: hero => def(hero).role === 'dps' && !tags(hero).includes('aoe'), score: dps },
+    { key: 'tank', matches: hero => def(hero).role === 'tank', score: hero => ehp(hero) * (tags(hero).includes('guardian') ? 1.08 : 1) },
+  ] : preset === 'bossSustain' ? [
+    { key: 'tank', matches: hero => def(hero).role === 'tank', score: hero => ehp(hero) * (tags(hero).includes('guardian') ? 1.12 : 1) },
+    { key: 'singleDps', matches: hero => def(hero).role === 'dps' && !tags(hero).includes('aoe'), score: dps },
+    { key: 'healer', matches: hero => def(hero).role === 'support', score: hero => (tags(hero).includes('healer') ? 1e9 : 0) + support(hero) },
+  ] : [
+    { key: 'tank', matches: hero => def(hero).role === 'tank', score: hero => ehp(hero) * (tags(hero).includes('guardian') ? 1.08 : 1) },
+    { key: 'dps', matches: hero => def(hero).role === 'dps', score: dps },
+    { key: 'support', matches: hero => def(hero).role === 'support', score: hero => (tags(hero).includes('healer') ? 1e9 : 0) + support(hero) },
+  ];
+  const chosen = [...selected];
+  for (const category of requested) {
+    if (chosen.length >= CONFIG.sim.partySize) break;
+    // A locked deployed member satisfies the first compatible category; selected units never satisfy a second DPS slot.
+    if ([...selected].some(id => { const hero = byId.get(id); return hero && category.matches(hero); })) continue;
+    const candidate = roster.filter(hero => !selected.has(hero.id) && category.matches(hero)).sort((a, b) => category.score(b) - category.score(a) || stable(a, b))[0];
+    if (candidate) { chosen.push(candidate.id); selected.add(candidate.id); }
+  }
+  const useful = roster.filter(hero => !selected.has(hero.id)).sort((a, b) => heroPower(state, b) - heroPower(state, a) || stable(a, b));
+  chosen.push(...useful.slice(0, CONFIG.sim.partySize - chosen.length).map(hero => hero.id));
+  const lockedPositions = new Map(lockedSlots.map(slot => [slot.index, slot.id]));
+  const unlocked = chosen.filter(id => !lockedPositions.has(state.partyIds.indexOf(id))).map(id => byId.get(id)!).sort((a, b) => placement(a) - placement(b) || stable(a, b)).map(hero => hero.id);
+  const result: string[] = Array(CONFIG.sim.partySize).fill('');
+  for (const [index, id] of lockedPositions) result[index] = id;
+  let next = 0;
+  for (let i = 0; i < result.length; i += 1) if (!result[i]) result[i] = unlocked[next++] ?? chosen.find(id => !result.includes(id)) ?? '';
+  state.partyPreset = preset;
+  setParty(state, result);
+}
+function placement(hero: OwnedHero): number {
+  const definition = getPartyHeroDefinition(hero.id);
+  if (definition.role === 'tank') return 0;
+  if (definition.role === 'support') return 4;
+  if (definition.tags.includes('melee')) return 1;
+  if (definition.tags.includes('aoe')) return 3;
+  return 2;
+}
+/** Support output per tick = heal ATK output + effect uptime×ATK + shield maxHP output + intercept range×maxHP/cooldown. */
+function supportOutput(definition: ReturnType<typeof getPartyHeroDefinition>, stats: ReturnType<typeof heroStats>): number {
+  const active = definition.active, passive = definition.passive;
+  const uptime = active.cooldownTicks > 0 ? Math.max(active.durationTicks ?? 0, 1) / active.cooldownTicks : 0;
+  const heal = ((active.healCoefficient ?? 0) / Math.max(active.cooldownTicks, 1) + (definition.basic.style === 'heal' ? definition.basic.coefficient / Math.max(stats.attackTicks, 6) : 0)) * stats.atk;
+  const effect = (((active.atkBonus ?? 0) + (active.atkReduction ?? 0) + (active.defReduction ?? 0)) * uptime
+    + (passive.atkReduction ?? 0) + (passive.atkBonus ?? 0)) * stats.atk;
+  const shields = ((active.shieldFraction ?? 0) / Math.max(active.cooldownTicks, 1) + (passive.shieldFraction ?? 0) / Math.max(passive.durationTicks ?? 1, 1)) * stats.maxHp;
+  const guard = passive.kind === 'intercept' ? (passive.range ?? 0) / Math.max(passive.cooldownTicks ?? 1, 1) * stats.maxHp / 100 : 0;
+  return heal + effect + shields + guard;
+}
+export function togglePartyLock(state: GameState, heroId: string, locked: boolean): void {
+  if (state.combatRules !== 'party-v2') return;
+  const hero = state.roster.find(value => value.id === heroId); if (!hero || hero.partyLocked === locked) return;
+  if (locked) hero.partyLocked = true; else delete hero.partyLocked;
+  state.economyRevision += 1;
+}
 export function autoEquip(state: GameState): void {
+  if (state.combatRules === 'party-v2') { autoEquipV2(state); return; }
   const heroes = state.partyIds.map(id => getOwned(state, id)).sort((a, b) => heroPower(state, b) - heroPower(state, a) || a.id.localeCompare(b.id));
   for (const slot of slotSchema.options) {
     const gear = state.inventory.filter(item => item.slot === slot).sort((a, b) => gearScore(b) - gearScore(a) || compareItemIds(a.id, b.id));
@@ -275,6 +359,60 @@ export function autoEquip(state: GameState): void {
       if (item && hero.equipment[slot] !== item.id) equip(state, hero.id, item.id);
     }
   }
+}
+function gearUtility(state: GameState): number {
+  const baselineRoster = state.roster.map(hero => ({ ...hero, equipment: { weapon: null, armor: null, charm: null } }));
+  const baselineState = { ...state, roster: baselineRoster } as GameState;
+  let total = 0;
+  // Keep every owned contributor stable across before/after projections so a
+  // bench donor's base utility cannot disappear when its last item moves.
+  const relevantIds = state.roster.map(hero => hero.id);
+  for (const id of relevantIds) {
+    const hero = state.roster.find(value => value.id === id); const baselineHero = baselineRoster.find(value => value.id === id);
+    if (!hero || !baselineHero) continue;
+    const definition = getPartyHeroDefinition(id), current = heroStats(state, hero), base = heroStats(baselineState, baselineHero);
+    const coefficient = partyBasicDamageCoefficient(definition);
+    const throughput = current.atk * coefficient / realizedBasicCycleTicks(current), baseThroughput = base.atk * coefficient / realizedBasicCycleTicks(base);
+    const ehp = current.maxHp * (1 + current.def / 100), baseEhp = base.maxHp * (1 + base.def / 100);
+    const supportValue = supportOutput(definition, current), baseSupport = supportOutput(definition, base);
+    const supportRatio = baseSupport > 0 ? supportValue / baseSupport : 1;
+    const weights = definition.role === 'tank' ? [0.2, 1, 0.7] : definition.role === 'support' ? [0.25, 0.5, 1.2] : [1, 0.25, 0.1];
+    total += weights[0]! * (throughput / Math.max(baseThroughput, 1e-9)) + weights[1]! * (ehp / Math.max(baseEhp, 1e-9)) + weights[2]! * supportRatio;
+  }
+  return total;
+}
+function autoEquipV2(state: GameState): void {
+  const stableHeroes = [...state.partyIds].sort((a, b) => a.localeCompare(b));
+  for (const slot of slotSchema.options) {
+    for (let pass = 0; pass < 128; pass += 1) {
+      const baseScore = gearUtility(state);
+      let best: { heroId: string; itemId: ItemId; gain: number } | undefined;
+      const items = state.inventory.filter(item => item.slot === slot).sort((a, b) => compareItemIds(a.id, b.id));
+      for (const heroId of stableHeroes) for (const item of items) {
+        const currentOwner = state.roster.find(hero => hero.equipment[slot] === item.id);
+        if (currentOwner?.id === heroId) continue;
+        const candidateRoster = state.roster.map(hero => ({ ...hero, equipment: { ...hero.equipment } }));
+        for (const hero of candidateRoster) if (hero.equipment[slot] === item.id) hero.equipment[slot] = null;
+        const wearer = candidateRoster.find(hero => hero.id === heroId)!; wearer.equipment[slot] = item.id;
+        const candidate = { ...state, roster: candidateRoster } as GameState;
+        const gain = gearUtility(candidate) - baseScore;
+        if (gain > 1e-9 && (!best || gain > best.gain + 1e-9 || Math.abs(gain - best.gain) <= 1e-9 && (heroId.localeCompare(best.heroId) < 0 || heroId === best.heroId && compareItemIds(item.id, best.itemId) < 0)))
+          best = { heroId, itemId: item.id, gain };
+      }
+      if (!best) break;
+      //
+      equip(state, best.heroId, best.itemId);
+    }
+  }
+}
+export function partyGearUtilityGain(state: GameState, heroId: string, gearId: ItemId): number {
+  if (state.combatRules !== 'party-v2') return 0;
+  const item = state.inventory.find(value => value.id === gearId), hero = state.roster.find(value => value.id === heroId);
+  if (!item || !hero || !state.partyIds.includes(heroId)) return 0;
+  const roster = state.roster.map(value => ({ ...value, equipment: { ...value.equipment } }));
+  for (const owned of roster) if (owned.equipment[item.slot] === item.id) owned.equipment[item.slot] = null;
+  roster.find(value => value.id === heroId)!.equipment[item.slot] = item.id;
+  return gearUtility({ ...state, roster } as GameState) - gearUtility(state);
 }
 export function cheapestEquippedUpgrade(state: GameState): Gear | undefined {
   const ids = new Set(state.partyIds.flatMap(id => Object.values(getOwned(state, id).equipment)));

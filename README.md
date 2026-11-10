@@ -2,9 +2,21 @@
 
 Local fantasy idle auto-battler: TypeScript + Vite + hand-written Canvas 2D, no engine. Branch `m1-prototype` comes from local `main`. **No remote repository, push, deployment or merge has been created.**
 
+## Phase 3 party preview
+
+Run `npm ci` and `npm run dev`, then open **[the compact party preview](http://127.0.0.1:5173/?combat=party-v2&compact=1)**. This opt-in preview uses the separate `taskbar-legends:v1:party-v2` save slot. A normal no-query launch continues using the legacy game/account; account migration and default activation have not started.
+
+The preview adds Tank/DPS/Support definitions for all 18 existing heroes, timed melee contact, projectiles, healing/buffs/debuffs, guardian interception, local AoE and marked assassins. Menu opens Party, Stash, Recruit, Upgrades and Settings. Party presets preserve locked deployed positions; equipment comparisons and recommendations use the wearer's stats. Hero locks constrain presets; item protection/salvage remains a later phase. Kit values and roster variants are provisional, not a completed population-balance certification.
+
+The initial compact viewport is 640×160 with separate 1×/2× zoom. The native opt-in flag is `--party-preview`; native compilation, actual OS click-through, window gestures and monitor/DPI acceptance remain unverified under the user's explicit deferral. Browser checks do not establish native acceptance.
+
+Implementation and review evidence: [compact party implementation log](docs/COMPACT-PARTY-IMPLEMENTATION.md). Current stopping boundary is Phase 3, including its final review; Phases 4–5 remain unstarted. The milestone-one descriptions below describe the legacy path unless stated otherwise.
+
 ## Run / verify
 
 Node 24 LTS recommended.
+
+On Windows, stop Vite before rerunning `npm ci`; its native module can otherwise stay locked while npm removes the dependency tree.
 
 ```sh
 npm ci

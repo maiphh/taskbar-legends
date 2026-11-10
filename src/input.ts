@@ -7,7 +7,9 @@ export function bindInput(handlers: InputHandlers): void {
   on('equip', () => { handlers.action({ type: 'autoParty' }); handlers.action({ type: 'autoEquip' }); });
   on('upgrade', handlers.cheapestUpgrade);
   window.addEventListener('keydown', event => {
-    if (event.target instanceof HTMLButtonElement || event.repeat) return;
+    const target = event.target;
+    if (event.repeat || target instanceof HTMLButtonElement || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+      || target instanceof HTMLSelectElement || target instanceof HTMLElement && (target.isContentEditable || target.closest('[data-management-input]'))) return;
     switch (event.code) {
       case 'Space': event.preventDefault(); handlers.togglePause(); break;
       case 'KeyR': handlers.action({ type: 'retry' }); break;

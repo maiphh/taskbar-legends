@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CONFIG, V14_DESIGN, enemyKindSchema, heroConfig, raritySchema, slotSchema, stageConfig } from '../config';
+import { isPartyEnemyId } from './party-enemies';
 
 const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const positive = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
@@ -11,7 +12,7 @@ export const itemIdSchema = z.string().regex(/^itm_[0-9a-f]{8}_[0-9a-f]{8}$/).br
 export type ItemId = z.infer<typeof itemIdSchema>;
 export const itemSourceSchema = z.enum(['drop', 'gacha', 'starter', 'migration']);
 const equipmentSchema = z.object({ weapon: itemIdSchema.nullable(), armor: itemIdSchema.nullable(), charm: itemIdSchema.nullable() }).strict();
-export const ownedHeroSchema = z.object({ id: z.string(), level: positive.max(CONFIG.growth.levelCap), xp: natural, stars: positive.max(CONFIG.growth.starMax), equipment: equipmentSchema }).strict();
+export const ownedHeroSchema = z.object({ id: z.string(), level: positive.max(CONFIG.growth.levelCap), xp: natural, stars: positive.max(CONFIG.growth.starMax), equipment: equipmentSchema, partyLocked: z.boolean().optional() }).strict();
 export type OwnedHero = z.infer<typeof ownedHeroSchema>;
 const gearFields = { slot: slotSchema, rarity: raritySchema, dropStage: stageNumber,
   level: natural.max(CONFIG.gear.upgrade.maxLevel), spent: natural, stats: statsSchema };
@@ -24,9 +25,27 @@ const unitSchema = z.object({
   id: z.string(), sourceId: z.string(), side: z.enum(['hero', 'enemy']),
   hp: natural, maxHp: positive, atk: positive, def: natural, cooldown: natural, attackTicks: positive,
   range: finite.nonnegative(), x: finite, slot: natural, boss: z.boolean(), attacks: natural,
-  shield: natural, shieldUntilTick: natural, bornTick: natural, nativeBornTick: natural.optional(),
+  shield: natural, shieldUntilTick: natural, shieldProviderId: z.string().optional(), bornTick: natural, nativeBornTick: natural.optional(),
+  radius: finite.nonnegative().optional(), speed: finite.nonnegative().optional(), facing: z.union([z.literal(-1), z.literal(1)]).optional(),
+  targetId: z.string().nullable().optional(), moving: z.boolean().optional(),
+  partyCooldowns: z.record(z.string(), natural).optional(), procCounters: z.record(z.string(), finite.nonnegative()).optional(),
+  guardReadyTick: natural.optional(), lastBasicTargetId: z.string().nullable().optional(), lastBasicRamp: finite.nonnegative().optional(),
+  specialAction: z.discriminatedUnion('state', [
+    z.object({ state: z.literal('assassinMark'), targetId: z.string(), startTick: natural, impactTick: natural }).strict(),
+    z.object({ state: z.literal('assassinDash'), targetId: z.string(), targetX: finite, startX: finite, startTick: natural, impactTick: natural }).strict(),
+    z.object({ state: z.literal('areaMark'), targetId: z.string(), centerX: finite, radius: finite.nonnegative(), startTick: natural, impactTick: natural, abilityId: z.string(), global: z.boolean().optional() }).strict(),
+  ]).optional(),
+  action: z.discriminatedUnion('state', [
+    z.object({ state: z.literal('idle') }).strict(),
+    z.object({ state: z.literal('windup'), kind: z.enum(['attack', 'heal']), targetId: z.string(), startTick: natural, impactTick: natural, abilityId: z.string().optional(), centerX: finite.optional(), radius: finite.nonnegative().optional(), interceptable: z.boolean().optional() }).strict(),
+    z.object({ state: z.literal('recovery'), kind: z.enum(['attack', 'heal']), targetId: z.string(), startTick: natural, impactTick: natural, readyTick: natural, abilityId: z.string().optional() }).strict(),
+  ]).optional(),
 }).strict().refine(unit => unit.hp <= unit.maxHp, 'HP exceeds maximum');
 export type Unit = z.infer<typeof unitSchema>;
+const effectSchema = z.object({ id: z.string().min(1), sourceId: z.string().min(1), targetId: z.string().min(1), group: z.string().min(1), kind: z.enum(['atkBonus', 'atkReduction', 'defReduction', 'damageReduction']), magnitude: finite.nonnegative(), appliedAtTick: natural, expiresAtTick: natural, stackPolicy: z.enum(['strongestRefresh', 'sourceAura']) }).strict();
+export type PartyEffect = z.infer<typeof effectSchema>;
+const projectileSchema = z.object({ id: z.string().min(1), sourceId: z.string().min(1), sourceSide: z.enum(['hero', 'enemy']), targetId: z.string().min(1), targetSide: z.enum(['hero', 'enemy']), abilityId: z.string().min(1), delivery: z.enum(['homing', 'ground']), basic: z.boolean().optional(), x: finite, speed: finite.positive(), atk: finite.nonnegative(), coefficient: finite.nonnegative(), splashCoefficient: finite.nonnegative().optional(), radius: finite.nonnegative().optional(), centerX: finite.optional(), releasedAtTick: natural, impactNotBeforeTick: natural, expiresAtTick: natural }).strict();
+export type PartyProjectile = z.infer<typeof projectileSchema>;
 const progressSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('PUSHING'), stage: stageNumber }).strict(),
   z.object({ kind: z.literal('BOSS_FIGHT'), stage: stageNumber, failedPower: natural, bossLosses: natural }).strict(),
@@ -39,12 +58,13 @@ export const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('retry') }).strict(),
   z.object({ type: z.literal('pull') }).strict(),
   z.object({ type: z.literal('autoEquip') }).strict(),
-  z.object({ type: z.literal('autoParty') }).strict(),
+  z.object({ type: z.literal('autoParty'), preset: z.enum(['balanced', 'fastFarm', 'bossSustain']).optional() }).strict(),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema }).strict(),
   z.object({ type: z.literal('equip'), heroId: z.string(), gearId: itemIdSchema }).strict(),
   // CR-14-08: keep option 0 or 1 of the oldest pending chest choice; the other is salvaged.
   z.object({ type: z.literal('chooseChest'), keep: z.number().int().min(0).max(1) }).strict(),
   z.object({ type: z.literal('party'), heroIds: z.array(z.string()).length(CONFIG.sim.partySize) }).strict(),
+  z.object({ type: z.literal('lockHero'), heroId: z.string(), locked: z.boolean() }).strict(),
 ]);
 export type Action = z.infer<typeof actionSchema>;
 export const levelChangeSchema = z.object({ id: z.string(), levelBefore: positive.max(CONFIG.growth.levelCap), levelAfter: positive.max(CONFIG.growth.levelCap) }).strict();
@@ -52,7 +72,13 @@ export type LevelChange = z.infer<typeof levelChangeSchema>;
 const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('spawn'), unitId: z.string(), side: z.enum(['hero', 'enemy']), stage: stageNumber, wave: positive }),
   z.object({ type: z.literal('hit'), attackerId: z.string(), targetId: z.string(), damage: positive, side: z.enum(['hero', 'enemy']) }),
+  z.object({ type: z.literal('actionStart'), unitId: z.string(), targetId: z.string(), kind: z.enum(['attack', 'heal']), startTick: natural, impactTick: natural }),
+  z.object({ type: z.literal('miss'), unitId: z.string(), targetId: z.string(), kind: z.enum(['attack', 'heal']), reason: z.enum(['target', 'range', 'facing', 'unneeded']) }),
   z.object({ type: z.literal('heal'), sourceId: z.string(), targetId: z.string(), amount: natural }),
+  z.object({ type: z.literal('shieldAbsorb'), attackerId: z.string(), targetId: z.string(), providerId: z.string().optional(), amount: positive }),
+  z.object({ type: z.literal('guard'), guardianId: z.string(), fromTargetId: z.string(), toTargetId: z.string() }),
+  z.object({ type: z.literal('effect'), sourceId: z.string(), targetId: z.string(), effectId: z.string(), group: z.string(), expiresAtTick: natural }),
+  z.object({ type: z.literal('projectile'), projectileId: z.string(), sourceId: z.string(), action: z.enum(['release', 'impact', 'expire']) }),
   z.object({ type: z.literal('skill'), unitId: z.string(), skill: z.string() }),
   z.object({ type: z.literal('death'), unitId: z.string(), side: z.enum(['hero', 'enemy']) }),
   z.object({ type: z.literal('gold'), amount: finite.int(), total: natural, reason: z.string() }),
@@ -75,17 +101,19 @@ const eventDataSchema = z.discriminatedUnion('type', [
     expeditionChests: natural.optional(), tickets: natural.optional() }),
 ]);
 export type EventData = z.infer<typeof eventDataSchema>;
-const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSchema }).strict();
+const eventSchema = z.object({ seq: positive, tick: natural, combatTick: natural.optional(), combatEncounter: natural.optional(), data: eventDataSchema }).strict();
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
   // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
   version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.4.0')]).transform(() => CONFIG.version), tick: natural,
+  combatRules: z.literal('party-v2').optional(),
+  partyPreset: z.enum(['balanced', 'fastFarm', 'bossSustain']).optional(),
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
   highestCleared: natural.max(CONFIG.stages.length), progress: progressSchema,
   phase: z.discriminatedUnion('kind', [
     z.object({ kind: z.literal('battle') }).strict(),
-    z.object({ kind: z.literal('farmPad'), settleAtTick: natural, nativeDurationTicks: natural }).strict(),
+    z.object({ kind: z.literal('farmPad'), settleAtTick: natural, nativeDurationTicks: natural, presentationStartedAtTick: natural.optional() }).strict(),
     z.object({ kind: z.literal('rest'), remainingTicks: natural, next: z.enum(['encounter', 'wave']) }).strict(),
   ]),
   farmClock: z.object({ scale: positive.max(4), minCycleTicks: natural, elapsedTicks: natural, remainder: natural.max(3) }).strict().refine(clock => clock.remainder < clock.scale, 'Invalid unused substep budget').optional(),
@@ -93,6 +121,7 @@ export const stateSchema = z.object({
   roster: z.array(ownedHeroSchema).max(CONFIG.heroes.length), partyIds: z.array(z.string()).length(CONFIG.sim.partySize),
   inventory: z.array(gearSchema).max(CONFIG.gear.inventoryCap), nextGearId: positive,
   party: z.array(unitSchema).length(CONFIG.sim.partySize), enemies: z.array(unitSchema).max(CONFIG.runtime.maxEnemiesPerWave),
+  partyEffects: z.array(effectSchema).max(512).optional(), projectiles: z.array(projectileSchema).max(256).optional(), nextProjectileId: natural.optional(),
   retryFailures: natural, economyRevision: natural,
   stats: z.object({ clears: natural, losses: natural, retries: natural, bossFailures: natural,
     goldEarned: natural, pulls: natural, chests: natural, offlineClears: natural, offlineSeconds: natural }).strict(),
@@ -121,7 +150,11 @@ export const stateSchema = z.object({
   if (owned.size !== state.roster.length || state.roster.some(hero => !CONFIG.heroes.some(def => def.id === hero.id))) invalid('Invalid roster');
   if (new Set(state.partyIds).size !== CONFIG.sim.partySize || state.partyIds.some(id => !owned.has(id))) invalid('Invalid party');
   if (state.party.some(unit => unit.side !== 'hero') || state.enemies.some(unit => unit.side !== 'enemy')) invalid('Invalid unit side');
-  if (state.enemies.some(unit => !enemyKindSchema.safeParse(unit.sourceId).success)) invalid('Invalid enemy');
+  if (state.combatRules === 'party-v2') {
+    for (const unit of [...state.party, ...state.enemies]) if (unit.hp > 0 && (unit.radius === undefined || unit.speed === undefined || unit.facing === undefined
+      || unit.targetId === undefined || unit.moving === undefined || unit.action === undefined)) invalid(`Party v2 unit ${unit.id} is missing combat state`);
+  }
+  if (state.enemies.some(unit => !(state.combatRules === 'party-v2' ? isPartyEnemyId(unit.sourceId) : enemyKindSchema.safeParse(unit.sourceId).success))) invalid('Invalid enemy');
   if (state.party.some(unit => !owned.has(unit.sourceId))) invalid('Invalid combat party');
   const gearIds = new Set(state.inventory.map(item => item.id));
   if (gearIds.size !== state.inventory.length || state.inventory.some(item => item.id >= itemId(state.seed, state.nextGearId) || !item.id.startsWith(itemId(state.seed, 0).slice(0, 13))

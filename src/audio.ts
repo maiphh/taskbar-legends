@@ -96,8 +96,13 @@ function detectEngine(): Engine {
   if (/AppleWebKit/.test(ua)) return 'webkit';
   return 'other';
 }
-export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null = typeof localStorage === 'undefined' ? null : localStorage): AudioAdapter {
-  let settings = parseSettings(storage?.getItem(AUDIO_STORAGE_KEY) ?? null);
+function safeBrowserStorage(): Pick<Storage, 'getItem' | 'setItem'> | null {
+  try { return typeof window === 'undefined' ? null : window.localStorage; } catch { return null; }
+}
+export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null = safeBrowserStorage()): AudioAdapter {
+  let stored: string | null = null;
+  try { stored = storage?.getItem(AUDIO_STORAGE_KEY) ?? null; } catch { /* storage may be denied; audio still uses defaults */ }
+  let settings = parseSettings(stored);
   const engine = detectEngine(), gate = new GroupGate(), played: string[] = [], buffers = new Map<string, AudioBuffer>();
   let context: AudioContext | null = null, master: GainNode | null = null, buses: Record<Bus, GainNode> | null = null, lastSeq = -1, disposed = false;
   let loop: { format: string; offsetSamples: number; loopStart: number; loopEnd: number } | null = null;
@@ -163,7 +168,7 @@ export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null
     },
     play: cue,
     settings: () => ({ ...settings }),
-    set(next) { settings = { muted: next.muted, volume: Math.max(0, Math.min(1, next.volume)) }; storage?.setItem(AUDIO_STORAGE_KEY, JSON.stringify(settings)); apply(); },
+    set(next) { settings = { muted: next.muted, volume: Math.max(0, Math.min(1, next.volume)) }; try { storage?.setItem(AUDIO_STORAGE_KEY, JSON.stringify(settings)); } catch { /* persistence is optional for audio settings */ } apply(); },
     debug: () => ({ unlocked: context !== null, engine, loaded: [...buffers.keys()], played: [...played], loop, settings: { ...settings } }),
     dispose() { disposed = true; void context?.close(); context = null; },
   };

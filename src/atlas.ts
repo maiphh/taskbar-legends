@@ -6,7 +6,7 @@ const atlasSchema = z.object({ image: z.string(), anchor: z.object({ x: z.number
 const assetSchema = z.object({ key: z.string(), path: z.string(), outlined: z.string(), atlasPath: z.string() });
 const manifestSchema = z.object({ heroes: z.array(assetSchema), enemies: z.array(assetSchema) });
 type Atlas = z.infer<typeof atlasSchema>;
-export type AnimationName = 'idle' | 'run' | 'attack' | 'hit' | 'death';
+export type AnimationName = 'idle' | 'run' | 'attack' | 'cast' | 'hit' | 'death';
 interface LoadedAtlas { atlas: Atlas; image: HTMLImageElement; white: HTMLCanvasElement }
 async function json(url: URL): Promise<unknown> {
   const response = await fetch(url);
@@ -18,6 +18,12 @@ export class AtlasLibrary {
   readonly errors: string[] = [];
   readonly ready: Promise<void>;
   constructor() { this.ready = this.load(); }
+  private animation(key: string, name: AnimationName) {
+    const animations = this.loaded.get(key)?.atlas.animations;
+    if (!animations) return undefined;
+    if (name === 'cast') return animations.attack2 ?? animations.attack ?? animations.idle;
+    return animations[name];
+  }
   private async load(): Promise<void> {
     const root = new URL(`${import.meta.env.BASE_URL}assets/`, window.location.href);
     try {
@@ -39,14 +45,14 @@ export class AtlasLibrary {
     } catch (error) { this.errors.push(`manifest: ${String(error)}`); }
   }
   durationMs(key: string, name: AnimationName): number | undefined {
-    const tag = this.loaded.get(key)?.atlas.animations[name];
+    const tag = this.animation(key, name);
     return tag ? tag.frames.length * tag.durationMs : undefined;
   }
   draw(ctx: CanvasRenderingContext2D, key: string, name: AnimationName, ageMs: number, x: number, baseline: number, flip: boolean, zoom = 1, flash = false): boolean {
     const loaded = this.loaded.get(key);
     if (!loaded) return false;
     const { atlas, image } = loaded;
-    const tag = atlas.animations[name] ?? atlas.animations.idle;
+    const tag = this.animation(key, name) ?? atlas.animations.idle;
     if (!tag) return false;
     const framePosition = Math.floor(Math.max(0, ageMs) / tag.durationMs);
     const index = tag.frames[tag.loop ? framePosition % tag.frames.length : Math.min(framePosition, tag.frames.length - 1)];
