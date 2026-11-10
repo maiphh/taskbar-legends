@@ -1,7 +1,8 @@
 import './style.css';
-import { CONFIG, TICK_MS, activeV14Rules, parseV14Flag, setV14Rules } from './config';
+import { CONFIG, TICK_MS, activeSalvageRules, activeV14Rules, parseV14Flag, setSalvageRules, setV14Rules } from './config';
 import { audio } from './audio';
 import { cheapestEquippedUpgrade } from './core/economy';
+import { salvageToast } from './salvage-copy';
 import { createState, input, load, snapshot, statusText, step } from './core/game';
 import { cloneState, parseAction } from './core/model';
 import { bindInput } from './input';
@@ -17,7 +18,10 @@ function element(id: string): HTMLElement {
   const value = document.getElementById(id); if (!value) throw new Error(`Missing UI element ${id}`); return value;
 }
 // v1.4: the six rules are on by default from 1.4.2. `?v14=none` opts out; `?v14=all` or a comma list still work.
-setV14Rules(parseV14Flag(new URLSearchParams(location.search).get('v14')));
+const params = new URLSearchParams(location.search);
+setV14Rules(parseV14Flag(params.get('v14')));
+// §19: config carries protectEquipped/protectLocked/lockMax true/true/30; `?salvage=off` uses the 1.4.2 defaults (keys absent).
+setSalvageRules(params.get('salvage') === 'off' ? 'default' : 'design');
 const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing canvas');
 const notice = element('notice'), liveStatus = element('live-status');
 const renderer = new Renderer(canvas, element('controls'));
@@ -61,7 +65,12 @@ function render(): void {
   if (performance.now() > noticeUntil) notice.textContent = '';
   } finally { rendering = false; }
 }
-function action(value: unknown): void { input(state, parseAction(value)); render(); }
+function action(value: unknown): void {
+  const before = state.eventSeq;
+  input(state, parseAction(value));
+  for (const event of state.events) if (event.seq > before && event.data.type === 'salvage') showNotice(salvageToast(event.data));
+  render();
+}
 function togglePause(): void { paused = !paused; lastFrame = performance.now(); render(); }
 function resize(): void { renderer.resize(window.innerWidth); render(); }
 renderer.ui.onAction = action; renderer.ui.onPause = togglePause; renderer.ui.onLayoutChange = resize; renderer.ui.onRedraw = render;
@@ -85,6 +94,7 @@ const debug: GameDebug = {
   whenReady: () => Promise.all([renderer.atlases.ready, renderer.ui.ready]).then(() => { render(); }),
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
   setV14Rules: rules => { setV14Rules(rules); render(); return activeV14Rules(); }, getV14Rules: () => activeV14Rules(),
+  setSalvageRules: rules => { const next = setSalvageRules(rules); render(); return next; }, getSalvageRules: () => activeSalvageRules(),
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
   getAudio: () => audio.debug(),

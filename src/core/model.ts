@@ -16,7 +16,9 @@ export type OwnedHero = z.infer<typeof ownedHeroSchema>;
 const gearFields = { slot: slotSchema, rarity: raritySchema, dropStage: stageNumber,
   level: natural.max(CONFIG.gear.upgrade.maxLevel), spent: natural, stats: statsSchema };
 export const gearSchema = z.object({ id: itemIdSchema, templateId: z.string().min(1), tradeable: z.boolean(),
-  acquiredAt: z.object({ tick: natural, source: itemSourceSchema }).strict(), ...gearFields }).strict();
+  acquiredAt: z.object({ tick: natural, source: itemSourceSchema }).strict(), ...gearFields,
+  // §19: optional; absent means unlocked. Only `true` is stored, so older saves without the field load unchanged.
+  locked: z.literal(true).optional() }).strict();
 /** Save v1 gear: a per-save numeric id and no provenance. Only used to migrate old saves. */
 export const gearV1Schema = z.object({ id: positive, ...gearFields }).strict();
 export type Gear = z.infer<typeof gearSchema>;
@@ -45,6 +47,7 @@ export const actionSchema = z.discriminatedUnion('type', [
   // CR-14-08: keep option 0 or 1 of the oldest pending chest choice; the other is salvaged.
   z.object({ type: z.literal('chooseChest'), keep: z.number().int().min(0).max(1) }).strict(),
   z.object({ type: z.literal('party'), heroIds: z.array(z.string()).length(CONFIG.sim.partySize) }).strict(),
+  z.object({ type: z.literal('lock'), gearId: itemIdSchema, locked: z.boolean() }).strict(),
 ]);
 export type Action = z.infer<typeof actionSchema>;
 export const levelChangeSchema = z.object({ id: z.string(), levelBefore: positive.max(CONFIG.growth.levelCap), levelAfter: positive.max(CONFIG.growth.levelCap) }).strict();
@@ -65,6 +68,8 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('retry'), stage: stageNumber, manual: z.boolean() }),
   z.object({ type: z.literal('pull'), heroId: z.string(), rarity: raritySchema, duplicate: z.boolean(), pity: z.union([z.boolean(), z.enum(['legend', 'epic', 'newHero']), z.null()]) }),
   z.object({ type: z.literal('gear'), gearId: itemIdSchema, slot: slotSchema, rarity: raritySchema }),
+  // §19: only emitted when protectEquipped or protectLocked is on, so a flags-off golden stays unchanged.
+  z.object({ type: z.literal('salvage'), gearId: itemIdSchema, rarity: raritySchema, slot: slotSchema, gold: natural, reason: z.enum(['overflow', 'incoming']) }),
   // CR-14-08: emitted when a pick-1-of-2 chest resolves (by the player, or auto-picked by score when the queue overflows).
   z.object({ type: z.literal('chestChoice'), options: z.tuple([itemIdSchema, itemIdSchema]), kept: itemIdSchema, rarities: z.tuple([raritySchema, raritySchema]).optional() }),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema, level: positive, cost: positive }),
@@ -79,7 +84,7 @@ const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSche
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
   // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
-  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1')]).transform(() => CONFIG.version), tick: natural,
+  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2')]).transform(() => CONFIG.version), tick: natural,
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
   highestCleared: natural.max(CONFIG.stages.length), progress: progressSchema,
@@ -101,6 +106,8 @@ export const stateSchema = z.object({
     fullRosterTick: natural.nullable(), nativeFarmClearSeconds: z.array(finite.nonnegative()).max(CONFIG.idle.avgFarmClearSecWindow).optional(), farmClearSeconds: z.array(finite.nonnegative()).max(CONFIG.idle.avgFarmClearSecWindow),
     farmMinSeconds: finite.nonnegative().nullable(), farmMaxSeconds: finite.nonnegative().nullable(), farmSamples: natural,
     maxNonBossStallSeconds: finite.nonnegative(),
+    // §19: equipped items removed by overflow; only written when protection is on (so flags-off goldens stay unchanged).
+    salvageEquippedRemoved: natural.optional(),
   }).strict(),
   // v1.4 (CR-14-08/09), optional so 1.3.0 saves load unchanged: unresolved pick-1-of-2 chests (oldest first, ≤ 3)
   // and repeat farm clears since the last farm chest at stage ≥ farmChest.fromStage.

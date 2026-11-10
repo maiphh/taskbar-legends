@@ -79,3 +79,11 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Welcome-back grid for more than 16 chests: 14 per row, 26 px, stride 29, last row ends at cy + 81. Stagger 60 ms (`chestStaggerMsOver16`).
 
 - T6 farm-clear band (20–40 s) allows a 1-tick epsilon (0.05 s at 20 Hz). A 19.95 s clear passes; a 19.4 s clear is still a miss. This is a checker-only change; farm tempo itself is unchanged.
+
+## Item lock and protected salvage (spec #4, stacks on 1.4.2)
+
+- New `gear.salvage` block in `config.json`: `protectEquipped` / `protectLocked` / `lockMax` proposed **true / true / 30**. The code default when the block is absent is false / false / 0, which is byte-identical to 1.4.2 (same `V142_RULES_OFF_GOLDEN` and the same 2-seed 1-day aggregate).
+- The game and sim apply the file values at their entry points (`?salvage=off` / `--salvage off` opt out). Tests start from the code defaults so existing goldens stay stable.
+- Overflow candidates skip equipped items (when `protectEquipped`) and locked items (when `protectLocked`). The incoming item is always a candidate. Gold and tie-break (lowest `gearScore`, then lowest id) are unchanged. A `{ type: 'salvage', ..., reason: 'overflow' | 'incoming' }` event is emitted only when protection is on.
+- Optional `locked: true` on a Gear item; absent means unlocked. Saves with more than `lockMax` locks still load; further locks are refused until the count is under the cap. Never auto-unlock.
+- The reference player never locks. Designer will retune with protection on; this branch does not retune economy numbers.

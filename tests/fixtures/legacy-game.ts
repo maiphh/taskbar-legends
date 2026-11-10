@@ -98,6 +98,7 @@ export function input(state: GameState, action: Action): void {
     case 'equip': equip(state, action.heroId, action.gearId); return;
     case 'party': setParty(state, action.heroIds); return;
     case 'chooseChest': return; // not in the legacy (pre-v1.4) game
+    case 'lock': return; // §19 lock is not in the legacy game
     default: { const exhaustive: never = action; return exhaustive; }
   }
 }

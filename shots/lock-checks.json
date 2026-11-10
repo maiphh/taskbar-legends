@@ -1,0 +1,56 @@
+{
+  "fixture": "seed 2, 8 bag items, design salvage true/true/30; cap fixture seed 3 with 30 locks",
+  "checks": {
+    "960": {
+      "lockButton": {
+        "present": true,
+        "disabled": false,
+        "inside": true,
+        "tooltip": "Lock",
+        "label": "Lock"
+      },
+      "afterClick": {
+        "locked": true,
+        "button": "Unlock",
+        "headerHint": true
+      },
+      "unlockButton": {
+        "present": true,
+        "disabled": false,
+        "inside": true,
+        "tooltip": "Locked: never auto-salvaged",
+        "label": "Unlock"
+      }
+    },
+    "1280": {
+      "lockButton": {
+        "present": true,
+        "disabled": false,
+        "inside": true,
+        "tooltip": "Lock",
+        "label": "Lock"
+      },
+      "afterClick": {
+        "locked": true,
+        "button": "Unlock",
+        "headerHint": true
+      },
+      "unlockButton": {
+        "present": true,
+        "disabled": false,
+        "inside": true,
+        "tooltip": "Locked: never auto-salvaged",
+        "label": "Unlock"
+      }
+    },
+    "cap": {
+      "present": true,
+      "disabled": true,
+      "inside": true,
+      "tooltip": "Lock limit 30 reached",
+      "label": "Lock"
+    }
+  },
+  "ok": true,
+  "errors": []
+}
