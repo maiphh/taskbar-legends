@@ -1,7 +1,7 @@
 // v1.4 code requests implemented in this PR (design.md §18): CR-14-08 chest pick-1-of-2, CR-14-09 farm chest pity, CR-14-11 zero tickets.
 import { createHash } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
-import { CONFIG, V14_DESIGN, activeV14Rules, setV14Rules } from '../src/config';
+import { CONFIG, V14_DESIGN, activeV14Rules, parseV14Flag, setV14Rules, v14RuleSchema } from '../src/config';
 import { bestChoice, chest, chooseChest, farmChestRoll, gearScore } from '../src/core/economy';
 import { createState, input, load, snapshot, step } from '../src/core/game';
 import { parseState } from '../src/core/model';
@@ -14,29 +14,38 @@ afterEach(() => { setV14Rules([]); });
 const sha = (value: string): string => createHash('sha256').update(value).digest('hex');
 // sha256(snapshot) of runReference(3, 1) + 9 h offline on origin/main c73967e (v1.3.0, before any v1.4 code).
 const V13_GOLDEN = 'e9d51b1b023947455f05b211d69c2b91c263c3542376884fdeb5ca755f4d2bcd';
-// Same recipe under config 1.4.1 with every rule off. Differs from V13_GOLDEN because option A keeps the
-// 1.4.1 first-clear ticket table at top level (and the balance string is '1.4.1').
+// Same recipe under config 1.4.1 with every rule off (kept for contrast).
 const V141_RULES_OFF_GOLDEN = 'd4fcedadd85052e1288ed92df69250ca4801ef38112b1becf4dac871ec92d97f';
-const goldenRun = (): string => { const run = runReference(3, 1); applyOffline(run.state, 9 * 3600 * 1000); return sha(snapshot(run.state)); };
+// 1.4.2 rules-off: farmTicketChance 0.0075 → 0.005 is top-level, so it is read with the rules off (and balance is '1.4.2').
+const V142_RULES_OFF_GOLDEN = '6b332874faa6e156d0ace6a428480fd98c7e730ebaf8030777060d7fa51bf8c1';
+// 1.4.3 rules-off: sim.stageGapSec 6 → 8 and combat.nonBossFarmMinCycleSec 20 → 21 are top-level, so they are read with the rules off (and balance is '1.4.3').
+const V143_RULES_OFF_GOLDEN = '7e9ee45a8fdaf5e1400b561423d47774ed4609dc5aa77d9f9cd974180b3828ba';
+const goldenRun = (): string => { setV14Rules([]); const run = runReference(3, 1); applyOffline(run.state, 9 * 3600 * 1000); return sha(snapshot(run.state)); };
 
 describe('v14 config block', () => {
   it('ships the designer block inert: no rule on by default, §18 defaults, designer values parsed', () => {
     expect(activeV14Rules()).toEqual([]);
     expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
-    expect(design.version).toBe('1.4.1'); expect(design.v14.targetVersion).toBe('1.4.0');
-    expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 10 });
-    expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 7, fromStage: 10 });
+    expect(design.version).toBe('1.4.3'); expect(design.v14.targetVersion).toBe('1.4.0');
+    expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 9 });
+    expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 7, fromStage: 9 });
     setV14Rules(['chestChoice', 'farmChest']); expect(activeV14Rules()).toEqual(['chestChoice', 'farmChest']);
     setV14Rules(['recruitPity', 'gearFortune']); expect(activeV14Rules()).toEqual(['recruitPity', 'gearFortune']);
     setV14Rules([]); expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
+    expect(parseV14Flag(null)).toEqual([...v14RuleSchema.options]);
+    expect(parseV14Flag('all')).toEqual([...v14RuleSchema.options]);
+    expect(parseV14Flag('none')).toEqual([]);
+    expect(parseV14Flag('chestChoice,farmChest')).toEqual(['chestChoice', 'farmChest']);
   });
 });
 
 describe('CR-14-08 chest pick-1-of-2', () => {
-  it('options = 1 is deterministic under 1.4.1 rules-off (option A: not byte-identical to 1.3.0)', { timeout: 60_000 }, () => {
+  it('options = 1 is deterministic under 1.4.3 rules-off (farmTicketChance, stageGapSec and the farm floor are live at top level)', { timeout: 60_000 }, () => {
     const hash = goldenRun();
     expect(hash).not.toBe(V13_GOLDEN);
-    expect(hash).toBe(V141_RULES_OFF_GOLDEN);
+    expect(hash).not.toBe(V141_RULES_OFF_GOLDEN);
+    expect(hash).not.toBe(V142_RULES_OFF_GOLDEN);
+    expect(hash).toBe(V143_RULES_OFF_GOLDEN);
   });
   it('options = 2: a chest queues two rolled items; the reference policy keeps the higher score', { timeout: 60_000 }, () => {
     setV14Rules(['chestChoice']);
@@ -83,7 +92,7 @@ describe('CR-14-08 chest pick-1-of-2', () => {
   });
 });
 
-describe('CR-14-09 farm chest pity from stage 10', () => {
+describe('CR-14-09 farm chest pity from fromStage (design 9)', () => {
   const run = (stage: number, clears: number) => {
     const state = createState(11); let dry = 0, maxDry = 0, chests = 0;
     for (let clear = 0; clear < clears; clear += 1) {
@@ -92,27 +101,27 @@ describe('CR-14-09 farm chest pity from stage 10', () => {
     }
     return { state, chests, maxDry, mean: clears / chests };
   };
-  it('never has a 7-clear dry run at stage ≥ 10; mean interval 6.4 ± 0.2 clears', () => {
+  it('never has a 7-clear dry run at stage ≥ fromStage; mean interval = (1 − (1 − b)^7) / b ± 0.2 clears', () => {
     setV14Rules(['farmChest']);
-    const result = run(12, 40_000);
+    const result = run(12, 40_000), b = CONFIG.v14.farmChest?.baseChance ?? 0, expected = (1 - (1 - b) ** 7) / b;
     expect(result.maxDry).toBeLessThanOrEqual(6);
-    expect(result.mean).toBeGreaterThan(6.2); expect(result.mean).toBeLessThan(6.6);
+    expect(result.mean).toBeGreaterThan(expected - 0.2); expect(result.mean).toBeLessThan(expected + 0.2);
     expect(result.state.farmChestDry).toBeLessThan(7);
   });
-  it('below stage 10 the 1.3.0 farmChestChance applies and the dry counter is untouched', () => {
+  it('below fromStage the 1.3.0 farmChestChance applies and the dry counter is untouched', () => {
     setV14Rules(['farmChest']);
-    const result = run(9, 20_000);
+    const result = run((CONFIG.v14.farmChest?.fromStage ?? 10) - 1, 20_000);
     expect(result.state.farmChestDry).toBeUndefined();
     expect(result.mean).toBeCloseTo(1 / CONFIG.rewards.farmChestChance, 0);
   });
-  it('the reference run never goes 7 farm clears at stage ≥ 10 without a chest', { timeout: 60_000 }, () => {
+  it('the reference run never goes 7 farm clears at stage ≥ fromStage without a chest', { timeout: 60_000 }, () => {
     setV14Rules(['farmChest']);
     const state = createState(4), cursor = { revision: -1 }; let dry = 0, maxDry = 0, clears = 0;
     for (let tick = 0; tick < 6 * 72_000; tick += 1) {
       referencePolicy(state, cursor);
       const samples = state.metrics.farmSamples, chests = state.stats.chests, stage = state.progress.stage;
       step(state);
-      if (state.metrics.farmSamples > samples && stage >= 10) { clears += 1; if (state.stats.chests > chests) dry = 0; else maxDry = Math.max(maxDry, ++dry); }
+      if (state.metrics.farmSamples > samples && stage >= (CONFIG.v14.farmChest?.fromStage ?? 10)) { clears += 1; if (state.stats.chests > chests) dry = 0; else maxDry = Math.max(maxDry, ++dry); }
     }
     expect(clears).toBeGreaterThan(100); expect(maxDry).toBeLessThanOrEqual(6);
   });
@@ -138,6 +147,8 @@ describe('saves (CR-14-11)', () => {
     expect(snapshot(load(raw))).toBe(snapshot(state));
     expect(load({ ...raw, balance: '1.3.0' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.0' }).balance).toBe(CONFIG.version);
+    expect(load({ ...raw, balance: '1.4.1' }).balance).toBe(CONFIG.version);
+    expect(load({ ...raw, balance: '1.4.2' }).balance).toBe(CONFIG.version);
   });
   it('rejects a pending choice that reuses an inventory id or a future id', () => {
     const state = withChoice(); chooseChest(state, 0);

@@ -89,16 +89,16 @@
       },
       "afterOk": null,
       "tenReveal": [
-        "rare/star",
         "epic/star",
-        "rare/gold",
-        "common/gold",
-        "rare/star",
-        "common/gold",
+        "legendary/new",
+        "epic/new",
         "common/star",
-        "rare/gold",
-        "common/gold",
-        "rare/gold"
+        "common/star",
+        "rare/star",
+        "rare/new",
+        "rare/star",
+        "common/star",
+        "common/new"
       ],
       "tenDone": true,
       "tenAgain": {
@@ -108,10 +108,10 @@
       },
       "afterTabSwitch": null,
       "cues": [
+        "hit_2",
         "hit_1",
-        "hit_3",
         "enemy_death",
-        "coin_pickup_2",
+        "coin_pickup_1",
         "enemy_death",
         "ui_open",
         "ui_click",
@@ -121,34 +121,34 @@
         "ui_click",
         "ui_click",
         "gacha_pull",
-        "gacha_reveal_epic"
+        "gacha_legendary_sting"
       ],
       "away": {
         "seconds": 28800,
         "rawSeconds": 45600,
-        "clears": 736,
-        "gold": 349600,
-        "xp": 349600,
-        "chests": 16,
+        "clears": 625,
+        "gold": 163750,
+        "xp": 163750,
+        "chests": 28,
         "heroes": [
           {
             "id": "mw2",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
-            "id": "fw",
+            "id": "mk1",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
             "id": "priest",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           }
         ],
-        "expeditionChests": 16,
-        "tickets": 5,
+        "expeditionChests": 28,
+        "tickets": 3,
         "capped": true
       },
       "welcome-collect": {
@@ -164,36 +164,36 @@
       "welcome": {
         "seconds": 28800,
         "rawSeconds": 45600,
-        "clears": 736,
-        "gold": 349600,
-        "xp": 349600,
-        "chests": 16,
+        "clears": 625,
+        "gold": 163750,
+        "xp": 163750,
+        "chests": 28,
         "heroes": [
           {
             "id": "mw2",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
-            "id": "fw",
+            "id": "mk1",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
             "id": "priest",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           }
         ],
-        "expeditionChests": 16,
-        "tickets": 5,
+        "expeditionChests": 28,
+        "tickets": 3,
         "capped": true,
-        "stage": 19,
+        "stage": 9,
         "best": {
           "rarity": "legendary",
-          "slot": "armor"
+          "slot": "charm"
         },
-        "choices": 3,
+        "choices": 0,
         "closing": false
       },
       "afterCollect": null,
@@ -304,16 +304,16 @@
       },
       "afterOk": null,
       "tenReveal": [
-        "rare/star",
         "epic/star",
-        "rare/gold",
-        "common/gold",
-        "rare/star",
-        "common/gold",
+        "legendary/new",
+        "epic/new",
         "common/star",
-        "rare/gold",
-        "common/gold",
-        "rare/gold"
+        "common/star",
+        "rare/star",
+        "rare/new",
+        "rare/star",
+        "common/star",
+        "common/new"
       ],
       "tenDone": true,
       "tenAgain": {
@@ -323,10 +323,10 @@
       },
       "afterTabSwitch": null,
       "cues": [
+        "hit_3",
         "hit_1",
-        "hit_2",
         "enemy_death",
-        "coin_pickup_2",
+        "coin_pickup_3",
         "enemy_death",
         "ui_open",
         "ui_click",
@@ -336,34 +336,34 @@
         "ui_click",
         "ui_click",
         "gacha_pull",
-        "gacha_reveal_epic"
+        "gacha_legendary_sting"
       ],
       "away": {
         "seconds": 28800,
         "rawSeconds": 45600,
-        "clears": 736,
-        "gold": 349600,
-        "xp": 349600,
-        "chests": 16,
+        "clears": 625,
+        "gold": 163750,
+        "xp": 163750,
+        "chests": 28,
         "heroes": [
           {
             "id": "mw2",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
-            "id": "fw",
+            "id": "mk1",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
             "id": "priest",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           }
         ],
-        "expeditionChests": 16,
-        "tickets": 5,
+        "expeditionChests": 28,
+        "tickets": 3,
         "capped": true
       },
       "welcome-collect": {
@@ -379,36 +379,36 @@
       "welcome": {
         "seconds": 28800,
         "rawSeconds": 45600,
-        "clears": 736,
-        "gold": 349600,
-        "xp": 349600,
-        "chests": 16,
+        "clears": 625,
+        "gold": 163750,
+        "xp": 163750,
+        "chests": 28,
         "heroes": [
           {
             "id": "mw2",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
-            "id": "fw",
+            "id": "mk1",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           },
           {
             "id": "priest",
             "levelBefore": 3,
-            "levelAfter": 10
+            "levelAfter": 8
           }
         ],
-        "expeditionChests": 16,
-        "tickets": 5,
+        "expeditionChests": 28,
+        "tickets": 3,
         "capped": true,
-        "stage": 19,
+        "stage": 9,
         "best": {
           "rarity": "legendary",
-          "slot": "armor"
+          "slot": "charm"
         },
-        "choices": 3,
+        "choices": 0,
         "closing": false
       },
       "afterCollect": null,
@@ -416,31 +416,31 @@
       "welcome13": {
         "seconds": 19200,
         "rawSeconds": 19200,
-        "clears": 491,
-        "gold": 233225,
-        "xp": 233225,
+        "clears": 416,
+        "gold": 108992,
+        "xp": 108992,
         "chests": 2,
         "heroes": [
           {
             "id": "mw2",
-            "levelBefore": 12,
-            "levelAfter": 14
+            "levelBefore": 9,
+            "levelAfter": 10
           },
           {
-            "id": "fw",
-            "levelBefore": 12,
-            "levelAfter": 14
+            "id": "mk1",
+            "levelBefore": 9,
+            "levelAfter": 10
           },
           {
             "id": "priest",
-            "levelBefore": 12,
-            "levelAfter": 14
+            "levelBefore": 9,
+            "levelAfter": 10
           }
         ],
         "capped": false,
-        "stage": 19,
+        "stage": 9,
         "best": {
-          "rarity": "legendary",
+          "rarity": "common",
           "slot": "charm"
         },
         "choices": 0,

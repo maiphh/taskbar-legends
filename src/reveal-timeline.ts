@@ -139,15 +139,26 @@ export function countUp(total: number, ms: number, startMs: number, reducedMotio
   const p = (frames(ms - startMs) * STEP) / spec.durationMs, eased = 1 - (1 - p) ** 3;
   return Math.floor(total * eased);
 }
+/** Stagger between welcome-back chest pops. More than 16 chests use the shorter Over16 token (60 ms at 1.4.2). */
+export function chestStaggerMs(chests: number): number {
+  const spec = CONFIG.ui.offlineRewards.countUp;
+  return chests > 16 ? spec.chestStaggerMsOver16 : spec.chestStaggerMs;
+}
+/** Dense 28-slot welcome grid (design.md §18.3 #10): 14 per row, 26 px, stride 29, last row ends at cy + 81. */
+export function welcomeChestGrid(slots: number): { perRow: number; size: number; stride: number; originY: number } {
+  if (slots > 16) return { perRow: 14, size: 26, stride: 29, originY: 26 };
+  if (slots > 8) return { perRow: Math.min(slots, 8), size: 28, stride: 34, originY: 26 };
+  return { perRow: Math.min(slots, 8), size: CONFIG.ui.offlineRewards.layout.chestSlot.size, stride: CONFIG.ui.offlineRewards.layout.chestSlot.stride, originY: 0 };
+}
 /** Chest slot i visible, and whether it is in its 1 px pop frame. */
-export function chestSlot(index: number, ms: number, reducedMotion = false): { shown: boolean; pop: boolean } {
-  const spec = CONFIG.ui.offlineRewards.countUp, at = spec.chestFirstMs + index * spec.chestStaggerMs;
+export function chestSlot(index: number, ms: number, reducedMotion = false, chests = 0): { shown: boolean; pop: boolean } {
+  const spec = CONFIG.ui.offlineRewards.countUp, at = spec.chestFirstMs + index * chestStaggerMs(chests);
   if (reducedMotion) return { shown: true, pop: false };
   return { shown: ms >= at, pop: ms >= at && ms < at + spec.chestPopMs };
 }
 export function welcomeDoneMs(chests: number): number {
   const spec = CONFIG.ui.offlineRewards.countUp;
-  return Math.max(spec.xpStartMs + spec.durationMs, spec.chestFirstMs + Math.max(0, chests - 1) * spec.chestStaggerMs + spec.chestPopMs);
+  return Math.max(spec.xpStartMs + spec.durationMs, spec.chestFirstMs + Math.max(0, chests - 1) * chestStaggerMs(chests) + spec.chestPopMs);
 }
 /** Time-away label: < 1 h `42m`, < 24 h `3h 05m`, else `1d 4h`. */
 export function awayLabel(rawSeconds: number): string {

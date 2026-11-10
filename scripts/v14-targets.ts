@@ -6,21 +6,22 @@ import { spawn } from 'node:child_process';
 import { availableParallelism } from 'node:os';
 import { writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
-import { CONFIG, V14_DESIGN, activeV14Rules, heroConfig, setV14Rules, v14RuleSchema } from '../src/config';
+import { CONFIG, V14_DESIGN, activeSalvageRules, activeV14Rules, heroConfig, setSalvageRules, setV14Rules, ticksForSeconds, v14RuleSchema } from '../src/config';
 import type { V14Rule } from '../src/config';
 import { autoEquip, autoParty, bestChoice, cheapestEquippedUpgrade, chooseChest, getOwned, partyPower, pull, upgrade, upgradeCost } from '../src/core/economy';
 import { createState, input, snapshot, step } from '../src/core/game';
 import { cloneState } from '../src/core/model';
 import type { GameState } from '../src/core/model';
-import { gachaCohort, runReference } from '../src/core/policy';
+import { farmClearInTarget, gachaCohort, runReference } from '../src/core/policy';
 import { applyOffline } from '../src/core/save';
 import { distribution } from '../src/core/statistics';
 
 const { values } = parseArgs({ options: { rules: { type: 'string', default: 'all' }, seeds: { type: 'string', default: '25' }, days: { type: 'string', default: '9' },
-  worker: { type: 'string' }, out: { type: 'string', default: 'shots/v14-targets.json' }, 'gacha-seeds': { type: 'string', default: '10000' } } });
+  worker: { type: 'string' }, out: { type: 'string', default: 'shots/v14-targets.json' }, 'gacha-seeds': { type: 'string', default: '10000' }, salvage: { type: 'string', default: 'on' } } });
 const rules = (values.rules === 'none' ? [] : values.rules === 'all' ? [...v14RuleSchema.options] : (values.rules ?? '').split(',').filter(Boolean)).map(rule => v14RuleSchema.parse(rule)) satisfies V14Rule[];
 const days = Number(values.days), SESSION = CONFIG.referencePlayer.openHoursPerDay * 3600, HOUR_TICKS = 3600 * CONFIG.sim.ticksPerSecond;
 setV14Rules(rules);
+setSalvageRules(values.salvage === 'off' ? 'default' : 'design');
 
 type Decision = [day: number, seconds: number, types: string[]];
 const equipped = (state: GameState): Set<string> => new Set(state.partyIds.flatMap(id => Object.values(getOwned(state, id).equipment)).filter((id): id is NonNullable<typeof id> => id !== null));
@@ -107,12 +108,20 @@ function runSeed(seed: number) {
   pullsRarity.forEach((rarity, index) => { window = rarity === 'legendary' ? 0 : window + 1; maxNoLegendary = Math.max(maxNoLegendary, window); streak = pullsDupe[index] ? streak + 1 : 0; maxDupes = Math.max(maxDupes, streak); });
   const legendaryRolls = gearRarity.flatMap((rarity, index) => rarity === 'legendary' ? [index + 1] : []);
   const gaps = legendaryRolls.slice(1).map((roll, index) => roll - (legendaryRolls[index] ?? 0));
-  const boss1 = state.metrics.firstClearTicks['10'];
-  return { seed, bossOneOpenHours: boss1 === undefined ? null : boss1 / CONFIG.sim.ticksPerSecond / 3600, bossTwoDay: milestones['20'] ?? null, rosterDay,
+  const boss1 = state.metrics.firstClearTicks['10'], first5 = state.metrics.firstClearTicks['5'];
+  const starter = createState(seed); step(starter, ticksForSeconds(3600));
+  const pendingStalls = Object.entries(state.metrics.firstAttemptTicks)
+    .filter(([stage]) => !state.metrics.firstClearTicks[stage] && !CONFIG.stages[Number(stage) - 1]?.isBoss)
+    .map(([, tick]) => (state.tick - tick) / CONFIG.sim.ticksPerSecond);
+  return { seed, firstFiveOpenSeconds: first5 === undefined ? null : first5 / CONFIG.sim.ticksPerSecond,
+    bossOneOpenHours: boss1 === undefined ? null : boss1 / CONFIG.sim.ticksPerSecond / 3600, bossTwoDay: milestones['20'] ?? null, rosterDay,
+    starterHighestCleared: starter.highestCleared, farmMinSeconds: state.metrics.farmMinSeconds, farmMaxSeconds: state.metrics.farmMaxSeconds,
+    farmSamples: state.metrics.farmSamples, maxNonBossStallSeconds: Math.max(state.metrics.maxNonBossStallSeconds, ...pendingStalls),
     decisions, forks, t8: { maxPullsWithoutLegendary: maxNoLegendary, maxDuplicateStreak: maxDupes, firstLegendaryGearRoll: legendaryRolls[0] ?? null,
       maxLegendaryGearGap: gaps.length ? Math.max(...gaps) : null, gearRolls: gearRarity.length,
       onlineChestsPerHour: onlineChests / (onlineOpenSeconds / 3600), offlineRollUnitsPerHour: offlineSeconds ? offlineChests / (offlineSeconds / 3600) : 0 },
     farmChest: { clearsAtStage10Plus: farmClearsHigh, chests: farmChestsHigh, maxDryRun: maxDry, meanInterval: farmChestsHigh ? farmClearsHigh / farmChestsHigh : null },
+    salvageEquippedRemoved: state.metrics.salvageEquippedRemoved ?? 0,
     partyRoles: state.partyIds.map(id => heroConfig(id).role) };
 }
 type SeedResult = ReturnType<typeof runSeed>;
@@ -120,7 +129,7 @@ if (values.worker !== undefined) { process.stdout.write(JSON.stringify(runSeed(N
 
 const seeds = Array.from({ length: Number(values.seeds) }, (_, index) => index + 1);
 const worker = (seed: number): Promise<SeedResult> => new Promise((resolve, reject) => {
-  const child = spawn(process.execPath, [...process.execArgv, process.argv[1] ?? '', '--worker', String(seed), '--rules', values.rules ?? 'none', '--days', String(days)], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const child = spawn(process.execPath, [...process.execArgv, process.argv[1] ?? '', '--worker', String(seed), '--rules', values.rules ?? 'none', '--days', String(days), '--salvage', values.salvage ?? 'on'], { stdio: ['ignore', 'pipe', 'inherit'] });
   let out = ''; child.stdout.on('data', (chunk: Buffer) => { out += chunk.toString(); });
   child.on('exit', code => { if (code === 0) resolve(JSON.parse(out) as SeedResult); else reject(new Error(`seed ${seed} exited ${code}`)); });
 });
@@ -165,20 +174,43 @@ const t8Checks = { recruit60: results.every(r => r.t8.maxPullsWithoutLegendary <
   offline50pct: results.every(r => r.t8.offlineRollUnitsPerHour >= 0.5 * r.t8.onlineChestsPerHour), goblin300: null };
 const farm = results.reduce((sum, r) => ({ clears: sum.clears + r.farmChest.clearsAtStage10Plus, chests: sum.chests + r.farmChest.chests, maxDry: Math.max(sum.maxDry, r.farmChest.maxDryRun) }), { clears: 0, chests: 0, maxDry: 0 });
 const report = {
-  rules: activeV14Rules(), v14: CONFIG.v14, seeds: seeds.length, days, policy: 'referencePolicy (instrumented mirror, final state checked equal on every seed)',
+  rules: activeV14Rules(), salvage: activeSalvageRules(), v14: CONFIG.v14, seeds: seeds.length, days, policy: 'referencePolicy (instrumented mirror, final state checked equal on every seed)',
   quantiles: 'R-7 linear; censored (unreached) values rank last', decisionMergeSeconds: MERGE_SECONDS,
   targets: {
+    T1: { target: 'At least 95% clear 1-5 within 600 open seconds', unit: 'open seconds', ...dist(results.map(r => r.firstFiveOpenSeconds), 1),
+      clearedWithin600: results.filter(r => r.firstFiveOpenSeconds !== null && r.firstFiveOpenSeconds <= 600).length,
+      fractionWithin600: round(results.filter(r => r.firstFiveOpenSeconds !== null && r.firstFiveOpenSeconds <= 600).length / results.length, 4),
+      pass: results.filter(r => r.firstFiveOpenSeconds !== null && r.firstFiveOpenSeconds <= 600).length / results.length >= 0.95 },
     T2: { target: 'boss1 median 1.5–2.5 open h, p90 ≤ 4', unit: 'open hours', ...t2, pass: t2.median !== null && t2.median >= 1.5 && t2.median <= 2.5 && t2.p90 !== null && t2.p90 <= 4 },
+    T3: { target: 'Median chapter 2 boss clear day 4–6', unit: 'day', ...dist(results.map(r => r.bossTwoDay), 1),
+      byDay9: results.filter(r => r.bossTwoDay !== null && r.bossTwoDay <= 9).length,
+      pass: (() => { const d = dist(results.map(r => r.bossTwoDay), 1); return d.median !== null && d.median >= 4 && d.median <= 6; })() },
     T4: { T4a: { target: 'median pulls to full roster 70–90 (10k cohort; v1.3 band 100–140)', p10: cohort.pullDistribution.p10, median: cohort.medianPullsToFullRoster, p90: cohort.pullDistribution.p90,
         passV14Band: cohort.medianPullsToFullRoster >= 70 && cohort.medianPullsToFullRoster <= 90, passV13Band: cohort.medianPullsToFullRoster >= 100 && cohort.medianPullsToFullRoster <= 140 },
-      T4b: { target: 'roster median day 6–8, ≥ 20/25 by day 8', unit: 'day', ...roster, byDay8: results.filter(r => r.rosterDay !== null && r.rosterDay <= 8).length,
+      T4b: { target: 'roster median day 6–8, ≥ 80% by day 8', unit: 'day', ...roster, byDay8: results.filter(r => r.rosterDay !== null && r.rosterDay <= 8).length,
         pass: roster.median !== null && roster.median >= 6 && roster.median <= 8 && results.filter(r => r.rosterDay !== null && r.rosterDay <= 8).length >= Math.ceil(results.length * 0.8) } },
+    T5: { target: 'Every no-input starter seed remains below 1-8 after 1 open hour', unit: 'highest cleared stage index',
+      ...dist(results.map(r => r.starterHighestCleared), 0),
+      violatingSeeds: results.filter(r => r.starterHighestCleared >= 8).map(r => r.seed),
+      pass: results.every(r => r.starterHighestCleared < 8) },
+    T6: { target: 'Every farm clear takes 20–40 seconds (1-tick / 0.05 s epsilon)', unit: 'seconds',
+      minimumPerSeed: dist(results.map(r => r.farmMinSeconds), 2), maximumPerSeed: dist(results.map(r => r.farmMaxSeconds), 2),
+      samples: results.reduce((sum, r) => sum + r.farmSamples, 0),
+      violatingSeeds: results.filter(r => farmClearInTarget(r.farmMinSeconds, r.farmMaxSeconds) === false).map(r => ({ seed: r.seed, farmMinSeconds: r.farmMinSeconds, farmMaxSeconds: r.farmMaxSeconds })),
+      pass: results.some(r => farmClearInTarget(r.farmMinSeconds, r.farmMaxSeconds) === false) ? false
+        : results.some(r => r.farmSamples === 0) ? null : true },
+    T7: { target: 'Every non-boss clears within 2700 open seconds of first attempt', unit: 'open seconds',
+      ...dist(results.map(r => r.maxNonBossStallSeconds), 2),
+      pass: results.every(r => r.maxNonBossStallSeconds <= 2700) },
     T8: { target: 'luck bounds: no 60-pull window without Legendary, no 20 dupes in a row (pre-roster); first Legendary gear by roll 40, then ≤ 100-roll gaps; goblin ≤ 300 clears; offline roll units ≥ 50% of online chest rate',
       ...t8, checks: t8Checks, pass: Object.values(t8Checks).every(value => value !== false) && t8Checks.goblin300 !== null, note: 'Recruit pity (CR-14-01/02) and gear Fortune (CR-14-03) are guaranteed when their rules are on; offline50pct counts Expedition Chests × 4 roll units (CR-14-04); overall T8 cannot pass yet: goblin (CR-14-06) is not implemented, so goblin300 is unmeasured.' },
     T9: { target: 'median gap ≤ 3 min and p90 ≤ 5 min in every phase (d1 h0–2, h2–6, d2–5, d6–9)', unit: 'minutes', phases: t9, pass: t9Pass },
     T10: { target: '≥ 95% of 1 h absences offer a meaningful decision on return', ...t10, pass: (t10.fraction ?? 0) >= 0.95 },
   },
   farmChest: { ...farm, meanInterval: farm.chests ? round(farm.clears / farm.chests, 3) : null },
+  salvageEquipped: { removedEquipped: results.reduce((sum, r) => sum + r.salvageEquippedRemoved, 0),
+    violatingSeeds: results.filter(r => r.salvageEquippedRemoved > 0).map(r => ({ seed: r.seed, removed: r.salvageEquippedRemoved })),
+    pass: results.every(r => r.salvageEquippedRemoved === 0) },
   perSeed: results.map(({ decisions, forks, ...rest }) => ({ ...rest, decisions: decisions.length, forks: forks.length })),
 };
 await writeFile(values.out ?? 'shots/v14-targets.json', JSON.stringify(report, null, 2) + '\n');

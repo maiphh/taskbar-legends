@@ -1,6 +1,6 @@
 import { CONFIG, ticksForSeconds } from '../config';
 import { createState, step } from '../core/game';
-import { gachaCohort, runReference } from '../core/policy';
+import { farmClearInTarget, gachaCohort, runReference } from '../core/policy';
 import { distribution } from '../core/statistics';
 
 export function measureReference(run: ReturnType<typeof runReference>) {
@@ -77,10 +77,10 @@ export function aggregateReference(samples: readonly ReferenceMeasurement[], gac
       { id: 5, target: 'Every no-input starter seed remains below 1-8 after 1 open hour', unit: 'highest cleared stage index', distribution: starters,
         violatingSeeds: samples.filter(sample => sample.starterHighestCleared >= 8).map(sample => sample.seed),
         pass: samples.every(sample => sample.starterHighestCleared < 8) },
-      { id: 6, target: 'Every farm clear takes 20..40 seconds', unit: 'seconds', distribution: farmMax,
+      { id: 6, target: 'Every farm clear takes 20..40 seconds (1-tick / 0.05 s epsilon)', unit: 'seconds', distribution: farmMax,
         minimumPerSeed: farmMin, maximumPerSeed: farmMax,
         samples: samples.reduce((sum, sample) => sum + sample.farmSamples, 0),
-        pass: samples.some(sample => (sample.farmMinSeconds !== null && sample.farmMinSeconds < 20) || (sample.farmMaxSeconds !== null && sample.farmMaxSeconds > 40)) ? false
+        pass: samples.some(sample => farmClearInTarget(sample.farmMinSeconds, sample.farmMaxSeconds) === false) ? false
           : samples.some(sample => sample.farmSamples === 0) ? null : true },
       { id: 7, target: 'Every non-boss clears within 2700 open seconds of first attempt', unit: 'open seconds', distribution: stall,
         pass: samples.every(sample => sample.maxNonBossStallSeconds <= 2700) },

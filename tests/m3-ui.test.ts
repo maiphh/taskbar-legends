@@ -1,7 +1,7 @@
 // M3 presentation logic: gacha reveal timeline (ui/gacha.md), welcome-back count-up (ui/offline-rewards.md), audio rules.
 import { describe, expect, it } from 'vitest';
 import { AUDIO_STORAGE_KEY, GroupGate, PRIMING_OFFSETS, chooseFormat, clipGain, createAudio, eventCues, loopWindow, parseSettings } from '../src/audio';
-import { FlashLimiter, awayLabel, burstCue, chestSlot, countUp, highestCard, particles, rewardLabel, singleFrame, tenFrame, tenSchedule, tierTotalMs, welcomeDoneMs } from '../src/reveal-timeline';
+import { FlashLimiter, awayLabel, burstCue, chestSlot, chestStaggerMs, countUp, highestCard, particles, rewardLabel, singleFrame, tenFrame, tenSchedule, tierTotalMs, welcomeChestGrid, welcomeDoneMs } from '../src/reveal-timeline';
 import manifest from '../src/audio-manifest.json';
 
 describe('gacha single reveal', () => {
@@ -68,6 +68,16 @@ describe('welcome back', () => {
     expect(countUp(1000, 0, 160, true)).toBe(1000);
     expect([chestSlot(0, 1159), chestSlot(0, 1160), chestSlot(0, 1240), chestSlot(1, 1280)]).toEqual([{ shown: false, pop: false }, { shown: true, pop: true }, { shown: true, pop: false }, { shown: true, pop: true }]);
     expect(welcomeDoneMs(4)).toBe(1160 + 3 * 120 + 80);
+  });
+  it('packs more than 16 welcome chests into 14 per row at 26 px / stride 29, and pops them at 60 ms', () => {
+    expect(welcomeChestGrid(16)).toMatchObject({ perRow: 8, size: 28, stride: 34, originY: 26 });
+    const grid = welcomeChestGrid(28);
+    expect(grid).toEqual({ perRow: 14, size: 26, stride: 29, originY: 26 });
+    expect(13 * grid.stride + grid.size).toBe(403);
+    expect(26 + grid.stride + grid.size).toBe(81);
+    expect(chestStaggerMs(16)).toBe(120); expect(chestStaggerMs(28)).toBe(60);
+    expect(welcomeDoneMs(28)).toBe(1160 + 27 * 60 + 80);
+    expect(welcomeDoneMs(28)).toBeLessThan(1160 + 15 * 120 + 80);
   });
 });
 

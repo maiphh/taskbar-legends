@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
+  "version": "1.4.3",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -13,7 +13,7 @@
     "enemySpawnX": 400,
     "enemySpawnSpacingPx": 50,
     "waveGapSec": 2,
-    "stageGapSec": 6,
+    "stageGapSec": 8,
     "partySize": 3
   },
   "rarity": {
@@ -289,7 +289,7 @@
     "hpCarriesBetweenWaves": true,
     "fullHealBetweenStages": true,
     "nonBossFarmTimeScale": 3,
-    "nonBossFarmMinCycleSec": 20
+    "nonBossFarmMinCycleSec": 21
   },
   "enemies": {
     "scalingPerStage": 1.06,
@@ -1084,7 +1084,7 @@
     "clearFormula": "clearGold|clearXp * clearScaling^(stageIndex-1)",
     "firstClearChest": true,
     "farmChestChance": 0.075,
-    "farmTicketChance": 0.0075,
+    "farmTicketChance": 0.005,
     "startingTickets": 6
   },
   "gear": {
@@ -1144,6 +1144,11 @@
     },
     "speedPctRule": "attackIntervalTicks = max(8, round(base / (1 + speedPct)))",
     "inventoryCap": 50,
+    "salvage": {
+      "protectEquipped": true,
+      "protectLocked": true,
+      "lockMax": 30
+    },
     "overflow": "auto-salvage lowest score for 10% of its total upgrade cost spent + 5*rarityMult gold"
   },
   "gacha": {
@@ -1232,19 +1237,19 @@
     },
     "chestChoice": {
       "options": 2,
-      "fromStage": 10,
+      "fromStage": 9,
       "loserSalvage": "salvageBase * rarityMult gold"
     },
     "farmChest": {
       "baseChance": 0.03,
       "guaranteeEvery": 7,
-      "fromStage": 10,
-      "note": "replaces rewards.farmChestChance from stage 10; below stage 10 farmChestChance applies"
+      "fromStage": 9,
+      "note": "replaces rewards.farmChestChance from stage 9; below stage 9 farmChestChance applies"
     },
     "offline": {
-      "expeditionChestsPerHour": 2,
+      "expeditionChestsPerHour": 3.5,
       "expeditionBestOf": 4,
-      "expeditionChestMax": 16,
+      "expeditionChestMax": 28,
       "ticketRateVsOnline": 0.5,
       "goblinRateVsOnline": 0.6,
       "note": "replaces idle.offlineChestEveryHours/offlineChestMax; all capped by idle.offlineCapHours"
@@ -1304,7 +1309,7 @@
         100
       ],
       "startingTickets": 6,
-      "farmTicketChance": 0.0075
+      "farmTicketChance": 0.005
     }
   }
 }

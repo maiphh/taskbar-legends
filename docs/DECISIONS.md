@@ -69,3 +69,21 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
   (Designer: 17 seeds censored, 8/25 by day 8) until the rules go default-on. The rules-off golden in `tests/v14.test.ts`
   was regenerated (`d4fcedad…`); the 1.3.0 hash is kept as `V13_GOLDEN` for contrast.
 - The `balance` union accepts `'1.3.0'` so 1.3.0 saves load under 1.4.1.
+
+## Config 1.4.2 (2026-11-11)
+
+- Land the Designer's `config.json` 1.4.2 verbatim (SHA-256 `5da9e34cf80aebfed587c410712918291289f25cfbe2109a31e605e50f4db172`).
+  Expedition Chests are 3.5 per hour, max 28; `rewards.farmTicketChance` is 0.005.
+- The six v1.4 rules are on by default in the game and sim. `?v14=none` and `--v14 none` opt out. Saves still do not store the rule flags; compatibility is via the `balance` union, which now also accepts `'1.4.1'`.
+- Rules-off golden regenerated to `V142_RULES_OFF_GOLDEN` (`6b332874…`) because the farm ticket chance is top-level. The 1.4.1 hash is kept as `V141_RULES_OFF_GOLDEN`.
+- Welcome-back grid for more than 16 chests: 14 per row, 26 px, stride 29, last row ends at cy + 81. Stagger 60 ms (`chestStaggerMsOver16`).
+
+- T6 farm-clear band (20–40 s) allows a 1-tick epsilon (0.05 s at 20 Hz). A 19.95 s clear passes; a 19.4 s clear is still a miss. This is a checker-only change; farm tempo itself is unchanged.
+
+## Item lock and protected salvage (spec #4, stacks on 1.4.2)
+
+- New `gear.salvage` block in `config.json`: `protectEquipped` / `protectLocked` / `lockMax` proposed **true / true / 30**. The code default when the block is absent is false / false / 0, which is byte-identical to 1.4.2 (same `V142_RULES_OFF_GOLDEN` and the same 2-seed 1-day aggregate).
+- The game and sim apply the file values at their entry points (`?salvage=off` / `--salvage off` opt out). Tests start from the code defaults so existing goldens stay stable.
+- Overflow candidates skip equipped items (when `protectEquipped`) and locked items (when `protectLocked`). The incoming item is always a candidate. Gold and tie-break (lowest `gearScore`, then lowest id) are unchanged. A `{ type: 'salvage', ..., reason: 'overflow' | 'incoming' }` event is emitted only when protection is on.
+- Optional `locked: true` on a Gear item; absent means unlocked. Saves with more than `lockMax` locks still load; further locks are refused until the count is under the cap. Never auto-unlock.
+- The reference player never locks. Designer will retune with protection on; this branch does not retune economy numbers.

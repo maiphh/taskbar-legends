@@ -27,7 +27,7 @@ export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int()
 /**
  * v1.4 code requests (design.md §18). config.json → `v14` carries the designer's *target* values; the game reads them only
  * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default.
- * Under config 1.4.1 option A the live first-clear ticket table still applies with the rules off, so the replay is not 1.3.0-identical.
+ * Under 1.4.2 the first-clear ticket table and farmTicketChance are live at top level, so a rules-off replay is not 1.3.0-identical.
  * Implemented here: CR-14-08 chestChoice, CR-14-09 farmChest, CR-14-01/02 recruitPity, CR-14-03 gearFortune,
  * CR-14-04 expeditionChests, CR-14-05 offlineTickets.
  * Other v14 keys are parsed loosely and stay inert.
@@ -57,8 +57,20 @@ const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 },
   recruit: { legendaryPityEvery: 0, legendaryPityPrefersUnowned: true, newHeroGuaranteeEvery: 0 },
   fortune: { legendaryEvery: 0, firstLegendaryBy: 0, chestUnits: 1, expeditionUnits: 1 },
   offline: { expeditionChestsPerHour: 0, expeditionBestOf: 1, expeditionChestMax: 0, ticketRateVsOnline: 0 } });
+export const salvageSchema = z.object({ protectEquipped: z.boolean(), protectLocked: z.boolean(), lockMax: z.number().int().nonnegative() }).strict();
+export type SalvageRules = z.infer<typeof salvageSchema>;
+/** Code defaults when `gear.salvage` is absent: 1.4.2 behaviour (overflow may salvage equipped items; locking disabled). */
+export const SALVAGE_DEFAULTS: SalvageRules = { protectEquipped: false, protectLocked: false, lockMax: 0 };
+export const SALVAGE_DESIGN: SalvageRules | null = salvageSchema.optional().parse((design.gear as { salvage?: unknown }).salvage) ?? null;
+export function setSalvageRules(rules: SalvageRules | 'design' | 'default'): SalvageRules {
+  const next = rules === 'design' ? { ...(SALVAGE_DESIGN ?? SALVAGE_DEFAULTS) } : rules === 'default' ? { ...SALVAGE_DEFAULTS } : salvageSchema.parse(rules);
+  CONFIG.gear.salvage = next;
+  return { ...CONFIG.gear.salvage };
+}
+export function activeSalvageRules(): SalvageRules { return { ...CONFIG.gear.salvage }; }
 export const CONFIG = {
   ...design,
+  gear: { ...design.gear, salvage: { ...SALVAGE_DEFAULTS } },
   v14: v14Defaults(),
   combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
   progression: { ...design.progression, ...z.object({ powerGainRetryMinSec: z.number().finite().nonnegative().default(0) }).parse(design.progression) },
@@ -98,7 +110,7 @@ export type OfflineRewardsTokens = UiTokens['offlineRewards'];
 export type CoreLoopFeedbackTokens = UiTokens['coreLoopFeedback'];
 export type RarityDropTokens = UiTokens['rarityDrop'];
 export type FontTokens = UiTokens['font'];
-/** Switches v1.4 rules on (designer values) or back to their 1.3.0 defaults. Rules are not saved; sims and the preview opt in. */
+/** Switches v1.4 rules on (designer values) or back to their §18 defaults (off). Rules are not saved. From 1.4.2 the game and sim default to all six on; pass none to opt out. */
 export function setV14Rules(rules: readonly V14Rule[]): void {
   const on = new Set(rules.map(rule => v14RuleSchema.parse(rule)));
   CONFIG.v14.chestChoice = on.has('chestChoice') ? { options: V14_DESIGN.chestChoice.options, fromStage: V14_DESIGN.chestChoice.fromStage } : v14Defaults().chestChoice;
@@ -117,6 +129,12 @@ export function activeV14Rules(): V14Rule[] {
     recruitPity: CONFIG.v14.recruit.legendaryPityEvery > 0 || CONFIG.v14.recruit.newHeroGuaranteeEvery > 0, gearFortune: CONFIG.v14.fortune.legendaryEvery > 0,
     expeditionChests: CONFIG.v14.offline.expeditionChestsPerHour > 0, offlineTickets: CONFIG.v14.offline.ticketRateVsOnline > 0 };
   return v14RuleSchema.options.filter(rule => on[rule]);
+}
+/** Parse `?v14=` / `--v14`. 1.4.2 default is all six rules; `none` opts out. Unknown comma-list names are ignored. */
+export function parseV14Flag(value: string | null | undefined): V14Rule[] {
+  if (value === 'none') return [];
+  if (value === 'all' || value === null || value === undefined) return [...v14RuleSchema.options];
+  return value.split(',').filter(rule => v14RuleSchema.safeParse(rule).success).map(rule => v14RuleSchema.parse(rule));
 }
 export const TICK_MS = 1000 / CONFIG.sim.ticksPerSecond;
 export const ticksForSeconds = (seconds: number): number => Math.round(seconds * CONFIG.sim.ticksPerSecond);

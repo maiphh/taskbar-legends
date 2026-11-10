@@ -1,11 +1,11 @@
 import { CONFIG, TICK_MS, heroConfig, raritySchema, slotSchema, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
-import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
+import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeChestGrid, welcomeDoneMs } from './reveal-timeline';
 import type { CardFace } from './reveal-timeline';
 import { BODY, FONT_FILES, HEADING, LINE_BOX, fitSize, fontFor, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
-import { bestChoice, cheapestEquippedUpgrade, fortuneMeter, gearScore, heroStats, recruitMeters, upgradeCost } from './core/economy';
+import { bestChoice, cheapestEquippedUpgrade, fortuneMeter, gearScore, heroStats, lockedCount, recruitMeters, upgradeCost } from './core/economy';
 import { bossSecondsRemaining, statusText } from './core/game';
 import { affordability } from './core/selectors';
 import type { Action, GameState, Gear, ItemId } from './core/model';
@@ -590,12 +590,11 @@ export class PixelUI {
     this.text(ctx, title, x + cx + 16, cy + 8, palette.text, BODY, true);
     const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour · max ${max} · best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h · max ${max}`;
     this.text(ctx, rule, x + cx + 16 + this.measureText(title, BODY, true) + 12, cy + 8, palette.muted, BODY, false, cw - 40 - this.measureText(title, BODY, true));
-    const slots = Math.max(max, 4), perRow = Math.min(slots, 8), slot = layout.chestSlot;
+    const slots = Math.max(max, 4), slot = layout.chestSlot, grid = welcomeChestGrid(slots), perRow = grid.perRow;
     for (let i = 0; i < slots; i += 1) {
-      // 4 slots: the spec's 40 px at stride 48. Expedition (16): two rows of 8 at 28 px, stride 34, 1× chest icon.
-      const dense = slots > 8, stride = dense ? 34 : slot.stride, size = dense ? 28 : slot.size;
-      const sxp = x + slot.x + (i % perRow) * stride, syp = (dense ? cy + 26 : slot.y) + Math.floor(i / perRow) * stride;
-      const shown = i < data.chests ? chestSlot(i, ms, rm) : { shown: false, pop: false };
+      // 4 slots: 40 px at stride 48. 9–16: two rows of 8 at 28 px, stride 34. 17–28: two rows of 14 at 26 px, stride 29 (ends at cy + 81).
+      const size = grid.size, sxp = x + slot.x + (i % perRow) * grid.stride, syp = (grid.originY ? cy + grid.originY : slot.y) + Math.floor(i / perRow) * grid.stride;
+      const shown = i < data.chests ? chestSlot(i, ms, rm, data.chests) : { shown: false, pop: false };
       if (!shown.shown) { ctx.fillStyle = palette.edge; ctx.fillRect(sxp, syp, size, 1); ctx.fillRect(sxp, syp + size - 1, size, 1); ctx.fillRect(sxp, syp, 1, size); ctx.fillRect(sxp + size - 1, syp, 1, size); continue; }
       const lift = shown.pop ? -1 : 0, scale = size >= 40 ? 2 : 1; this.frame(ctx, { x: sxp, y: syp + lift, width: size, height: size }, 'button-9slice.png'); this.icon(ctx, 'chest', sxp + Math.floor((size - 16 * scale) / 2), syp + lift + Math.floor((size - 16 * scale) / 2), scale);
     }
@@ -679,7 +678,11 @@ export class PixelUI {
     const choice = state.pendingChoice?.[0];
     if (choice) this.drawChestChoice(ctx, state, choice, x + 16, detailX - 16, state.pendingChoice?.length ?? 1);
     else {
-      this.text(ctx, `INVENTORY ${state.inventory.length}/${CONFIG.gear.inventoryCap}`, x + 16, 80, palette.text, BODY, true);
+      const cap = CONFIG.gear.inventoryCap, locked = lockedCount(state);
+      const bag = CONFIG.gear.salvage.lockMax > 0
+        ? (panel.width >= 720 ? `Bag ${state.inventory.length}/${cap} · ${locked} locked` : `Bag ${state.inventory.length}/${cap}`)
+        : `INVENTORY ${state.inventory.length}/${cap}`;
+      this.text(ctx, bag, x + 16, 80, palette.text, BODY, true);
       const fortune = fortuneMeter(state);
       if (fortune) { const label = fortune.found ? `Fortune ${fortune.since}/${fortune.limit}` : `Legend in ${fortune.left}`; this.text(ctx, label, detailX - 16 - this.measureText(label), 80, CONFIG.ui.rarity.legendary.label, BODY); }
     }
@@ -691,12 +694,19 @@ export class PixelUI {
       this.button(ctx, `gear-${item.id}`, '', rect, () => { this.selectedGear = item.id; this.onRedraw(); }, { selected: item.id === this.selectedGear, tooltip: `${item.rarity} ${item.slot} +${item.level}` });
       this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', rect.x + 12, rect.y + 9);
       this.text(ctx, String(item.level), rect.x + 24, rect.y + 24, palette.gold, BODY);
+      if (item.locked) { ctx.fillStyle = palette.gold; ctx.fillRect(rect.x + 3, rect.y + 4, 7, 5); ctx.fillRect(rect.x + 4, rect.y + 2, 1, 3); ctx.fillRect(rect.x + 8, rect.y + 2, 1, 3); ctx.fillRect(rect.x + 5, rect.y + 1, 3, 1); }
     }
     this.frame(ctx, { x: detailX, y: 80, width: detailWidth, height: 272 });
     const item = state.inventory.find(item => item.id === this.selectedGear);
     if (!item) { this.text(ctx, 'No gear yet.', detailX + 16, 112, palette.text); this.text(ctx, 'Defeat a wave.', detailX + 16, 136, palette.muted); }
     else this.gearDetail(ctx, state, item, detailX, detailWidth);
     this.button(ctx, 'gear-autoequip', 'Auto-equip best', { x: x + 16, y: 364, width: 176, height: 28 }, () => this.onAction({ type: 'autoEquip' }));
+    if (item && CONFIG.gear.salvage.lockMax > 0) {
+      const atCap = !item.locked && lockedCount(state) >= CONFIG.gear.salvage.lockMax;
+      this.button(ctx, 'gear-lock', item.locked ? 'Unlock' : 'Lock', { x: x + 200, y: 364, width: 104, height: 28 },
+        () => this.onAction({ type: 'lock', gearId: item.id, locked: !item.locked }),
+        { disabled: atCap, tooltip: item.locked ? 'Locked: never auto-salvaged' : atCap ? `Lock limit ${CONFIG.gear.salvage.lockMax} reached` : 'Lock' });
+    }
     const cost = item ? upgradeCost(item) : 0;
     this.button(ctx, 'gear-upgrade', item ? `Upgrade ${short(cost)} G` : 'Upgrade', { x: x + panel.width - 184, y: 364, width: 168, height: 28 }, () => { if (item) this.onAction({ type: 'upgrade', gearId: item.id }); }, { disabled: !item || item.level >= CONFIG.gear.upgrade.maxLevel || state.gold < cost, tooltip: item && state.gold < cost ? `Need ${cost - state.gold} more gold` : `${cost} gold; maximum +${CONFIG.gear.upgrade.maxLevel}` });
     this.button(ctx, 'gear-equip', 'Equip', { x: x + panel.width - 288, y: 364, width: 96, height: 28 }, () => { const heroId = state.partyIds[this.targetSlot]; if (item && heroId) this.onAction({ type: 'equip', heroId, gearId: item.id }); }, { disabled: !item, tooltip: `Equip to slot ${this.targetSlot + 1}: ${heroConfig(state.partyIds[this.targetSlot] ?? '').name}` });
@@ -730,6 +740,7 @@ export class PixelUI {
     this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', x + 16, 128, 3);
     this.text(ctx, `LEVEL +${item.level}`, x + 80, 134, palette.text, BODY);
     this.text(ctx, `DROP ${CONFIG.stages[item.dropStage - 1]?.id}`, x + 80, 158, palette.muted, BODY);
+    if (item.locked) this.text(ctx, 'Locked', x + 80, 176, palette.gold, BODY, false, width - 96);
     let row = 0;
     for (const [key, value] of Object.entries(item.stats)) if (value) { const total = value * (1 + CONFIG.gear.upgrade.mainPerLevel * item.level); this.text(ctx, `+ ${key.toUpperCase()} ${key.endsWith('Pct') ? `${(total * 100).toFixed(1)}%` : total.toFixed(1)}`, x + 16, 200 + row++ * 22, palette.green, BODY); }
     const target = state.roster.find(hero => hero.id === state.partyIds[this.targetSlot]);

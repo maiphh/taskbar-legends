@@ -606,6 +606,7 @@
       "updateStepMs": 40,
       "chestFirstMs": 1160,
       "chestStaggerMs": 120,
+      "chestStaggerMsOver16": 60,
       "chestPopMs": 80,
       "doneMs": 1640,
       "collectSnapHoldMs": 240
