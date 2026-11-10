@@ -4,8 +4,9 @@
 
 `expeditionChests` (CR-14-04) and `offlineTickets` (CR-14-05) join the v14 rule list: `--v14 all` (sim), `?v14=all` (URL),
 `__game.setV14Rules([...])`, `--rules all` (`scripts/v14-targets.ts`, now the default). With them off `CONFIG.v14.offline`
-is `{ expeditionChestsPerHour 0, expeditionBestOf 1, expeditionChestMax 0, ticketRateVsOnline 0 }` and 1.3.0 is unchanged
-(golden hash and the 25-seed × 9-day aggregate are identical to main, excluding config sha/snapshot, wall time and the rule list).
+is `{ expeditionChestsPerHour 0, expeditionBestOf 1, expeditionChestMax 0, ticketRateVsOnline 0 }`. Offline reward math
+is unchanged with the rules off; the 1.4.1 first-clear ticket table (option A) still makes the rules-off golden and
+25-seed aggregate differ from 1.3.0.
 
 ## Expedition Chests (design.md §14.3, keys `v14.offline`, `v14.gearPity.rollUnits.expeditionChest`)
 

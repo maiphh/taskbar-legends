@@ -1,17 +1,18 @@
 # v1.4 chests: CR-14-08, CR-14-09, zero tickets
 
 Source: Game Designer v1.4 spec, `design/docs/design.md` §14–§18. Config: `design/config.json`, SHA-256
-`33798e4108cb9a53c703e22ad8a97cbe04086e7154bf6232630ea9987924989b`, copied byte-for-byte to `src/design-config.json`.
+`e8e8ac728829fd24fb6d6bb3936fecfc126324e00c2ffb64b6dcad406ef5605b` (config 1.4.1), copied byte-for-byte to `src/design-config.json`.
 
 ## What ships
 | CR | Keys (config.json → `v14`) | Default (rule off) | Rule on |
 |---|---|---|---|
 | CR-14-08 chest pick-1-of-2 | `chestChoice.options`, `fromStage` | options 1: one item per chest (1.3.0) | 2 items per chest at dropStage ≥ fromStage go to `state.pendingChoice`. Keep one (`{type:'chooseChest', keep:0\|1}`); the other is salvaged for `salvageBase × rarityMult` gold. Queue ≤ 3; a 4th auto-resolves the oldest by gearScore (ties keep option 0). Event `chestChoice {options:[id,id], kept}`; the kept item also emits `gear`. |
-| CR-14-09 farm chest pity | `farmChest.baseChance`, `guaranteeEvery`, `fromStage` | null: `rewards.farmChestChance` everywhere | Repeat farm clears at stage ≥ 10 roll 0.03, plus a guaranteed chest on the 9th dry clear (`state.farmChestDry`). Below stage 10 the 1.3.0 0.075 roll applies and the counter is untouched. |
-| CR-14-11 (part) zero tickets | — | — | A stage with `firstClearTickets` 0 grants nothing and logs no `tickets` event (already on main since caa5e5c; now tested with v14 rules on). Saves accept `balance` "1.4.0". |
+| CR-14-09 farm chest pity | `farmChest.baseChance`, `guaranteeEvery`, `fromStage` | null: `rewards.farmChestChance` everywhere | Repeat farm clears at stage ≥ 10 roll 0.03, plus a guaranteed chest on the 7th dry clear (`state.farmChestDry`; `guaranteeEvery` 7). Below stage 10 the 1.3.0 0.075 roll applies and the counter is untouched. |
+| CR-14-11 (part) zero tickets | — | — | A stage with `firstClearTickets` 0 grants nothing and logs no `tickets` event (already on main since caa5e5c; now tested with v14 rules on). Saves accept `balance` "1.3.0" and "1.4.0" (and the current version). |
 
-The `v14` block is the designer's *target* values. No rule is on by default, so the live game, sims and saves are 1.3.0
-(byte-identical: golden snapshot hash from main in `tests/v14.test.ts`; 25-seed × 9-day aggregate identical to main).
+The `v14` block is the designer's *target* values. No rule is on by default. Under config 1.4.1 option A the first-clear
+ticket cuts are live at top level, so a rules-off replay is no longer byte-identical to 1.3.0 (new golden in
+`tests/v14.test.ts`; T4b is late until the rules are default-on). `chestChoice.fromStage` is 10 and `farmChest.guaranteeEvery` is 7.
 Rules are switched on per process, not saved:
 
 - sim: `npx tsx scripts/sim.ts --v14 chestChoice,farmChest …` (or `--v14 all`)
