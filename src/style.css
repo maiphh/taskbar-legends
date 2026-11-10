@@ -47,6 +47,9 @@ body.native-window #app { position: relative; bottom: auto; }
 .px-btn[aria-pressed="true"]::after, .px-btn.px-primary:not(:disabled)::after { content: ""; position: absolute; left: -4px; right: -4px; bottom: -5px; height: 2px; background: #e9bd68; pointer-events: none; }
 .px-btn[aria-pressed="true"] .px-btn-label, .px-btn.px-primary:not(:disabled) .px-btn-label { color: #e9bd68; }
 .px-btn .px-btn-label { overflow: hidden; text-overflow: clip; }
+/* Menu is selected (gold label + 2 px gold rule) while the sheet is open (compact-menu.md §8). */
+#compact-menu-button[aria-expanded="true"] { color: #e9bd68; position: relative; }
+#compact-menu-button[aria-expanded="true"]::after { content: ""; position: absolute; left: calc(-4px * var(--z, 1)); right: calc(-4px * var(--z, 1)); bottom: calc(-5px * var(--z, 1)); height: calc(2px * var(--z, 1)); background: #e9bd68; }
 .px-pip { position: absolute; width: 6px; height: 6px; right: -4px; top: -6px; box-shadow: 0 0 0 1px #0d121b; }
 .px-btn { position: relative; }
 .px-pip[data-pip="gold"] { background: #e9bd68; } .px-pip[data-pip="blue"] { background: #8dbfe3; } .px-pip[data-pip="red"] { background: #de7c80; }
@@ -99,6 +102,7 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .reveal-stage { position: absolute; left: calc((var(--px-panel-w) - 720px) / 2); top: 0; width: 720px; height: 400px; pointer-events: none; }
 .px-menu[data-variant="native"] .reveal-stage { left: 20px; top: 80px; }
 .reveal-stage[hidden] { display: none; }
+.reveal-stage[data-compact="true"] { left: 0; }
 .reveal-stage canvas { position: absolute; inset: 0; width: 720px; height: 400px; }
 .reveal-controls { position: absolute; inset: 0; }
 .reveal-controls .pixel-hit { pointer-events: auto; }
@@ -132,14 +136,14 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .px-toggle[aria-checked="true"] .px-knob { left: 18px; }
 
 /* Slider (§4): 4 px track (blue fill, ink empty, edge rim), 8×12 gold thumb with ink rim and 2×2 highlight. */
-.px-slider-row { display: flex; align-items: center; gap: 8px; height: 24px; }
-.px-slider-label { width: 64px; flex: none; }
+.px-slider-row { display: flex; align-items: center; gap: 0; height: 28px; flex: none; }
+.px-slider-label { width: 80px; padding-right: 8px; flex: none; }
 .px-slider { position: relative; height: 16px; flex: none; cursor: pointer; touch-action: none; }
 .px-track { position: absolute; left: 0; right: 0; top: 6px; height: 4px; background: #0d121b; box-shadow: 0 0 0 1px #536276; }
 .px-fill { position: absolute; left: 0; top: 0; height: 4px; background: #8dbfe3; }
 .px-thumb { position: absolute; top: 2px; width: 8px; height: 12px; background: #e9bd68; box-shadow: inset 0 0 0 1px #0d121b; }
 .px-thumb::after { content: ""; position: absolute; left: 2px; top: 2px; width: 2px; height: 2px; background: #f2e9cf; }
-.px-pct { width: 40px; color: #b0bcc8; }
+.px-pct { width: 32px; margin-left: 12px; color: #b0bcc8; }
 .px-pair { display: inline-flex; gap: 0; }
 .px-zoom { width: 40px; }
 
@@ -154,10 +158,10 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .px-formation.px-sel, .px-urow.px-sel { box-shadow: inset 2px 0 0 #e9bd68, inset 0 0 0 1px #536276; }
 .px-index { position: absolute; left: 4px; top: 2px; color: #e9bd68; }
 .px-lock { position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; background: #e9bd68; box-shadow: 0 0 0 1px #0d121b; }
-.px-name { display: block; width: 100%; height: 16px; padding: 0 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: clip; line-height: 16px; }
+.px-name { display: block; max-width: 80px; margin: 0 auto; height: 16px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 16px; }
 .px-roster { position: absolute; left: 16px; top: 178px; width: calc(96px * var(--px-roster-cols)); height: calc(var(--px-body-h) - 184px); display: grid; grid-template-columns: repeat(var(--px-roster-cols), 88px); grid-auto-rows: 80px; column-gap: 8px; row-gap: 4px; align-content: start; }
 .px-card { width: 88px; height: 80px; display: flex; flex-direction: column; background: #293948; }
-.px-card.px-sel { box-shadow: inset 0 0 0 1px #e9bd68; }
+.px-card.px-sel { background: #354a59; box-shadow: inset 2px 0 0 #e9bd68, inset 0 0 0 1px #536276; }
 .px-card .px-shape { position: absolute; left: 3px; top: 3px; }
 .px-card-lv { position: absolute; right: 3px; top: 1px; font: 10px/12px Galmuri9, monospace; color: #b0bcc8; }
 .px-card .px-name { height: 14px; line-height: 14px; }
@@ -165,13 +169,24 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .px-inspector { position: absolute; left: calc(var(--px-panel-w) - 232px); top: 70px; width: var(--px-insp-w); height: var(--px-insp-h); display: flex; flex-direction: column; background: #17212d; box-shadow: inset 0 0 0 1px #536276; }
 .px-menu[data-variant="native"] .px-inspector { left: 464px; }
 .px-insp-scroll { flex: 1; min-height: 0; padding: 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
-.px-insp-top { display: flex; gap: 8px; align-items: flex-start; }
-.px-insp-top h3 { font-size: 12px; }
-.px-menu[data-variant="native"] .px-insp-top h3 { font-size: 24px; line-height: 24px; }
-.px-insp-top p { display: flex; gap: 4px; align-items: center; }
 .px-insp-foot { flex: none; display: flex; gap: 8px; padding: 0 8px 6px; }
 .px-insp-foot .px-btn { flex: 1 1 auto; }
 .px-insp-empty { align-items: center; justify-content: center; }
+.px-insp-party { display: block; }
+.px-insp-portrait { position: absolute; left: 12px; top: 4px; }
+.px-insp-side { position: absolute; left: 116px; top: 6px; width: 100px; display: flex; flex-direction: column; gap: 0; line-height: 14px; }
+.px-menu[data-variant="native"] .px-insp-side { width: 152px; }
+.px-insp-side p { display: flex; gap: 4px; align-items: center; white-space: nowrap; overflow: hidden; }
+.px-insp-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.px-menu[data-variant="native"] .px-insp-name { font-size: 24px; line-height: 26px; }
+.px-insp-hp { position: absolute; left: 12px; right: 12px; top: 112px; margin: 0; }
+.px-insp-stats { position: absolute; left: 12px; right: 12px; top: 124px; bottom: 36px; line-height: 14px; overflow: hidden; }
+.px-insp-stats > p { white-space: nowrap; }
+.px-insp-flavour { margin-top: 2px; height: calc(100% - 30px); overflow-y: auto; }
+.px-insp-flavour p { white-space: normal; }
+.px-insp-party .px-insp-foot { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; align-items: flex-start; }
+.px-deltas p { white-space: nowrap; line-height: 14px; }
+.px-dl { display: inline-block; width: 40px; }
 .px-equip { display: flex; gap: 2px; }
 .px-eq { width: 18px; height: 18px; display: inline-grid; place-items: center; box-shadow: inset 0 -2px 0 var(--px-eq, #536276); }
 .px-eq[data-rarity="common"] { --px-eq: var(--px-rarity-common); } .px-eq[data-rarity="rare"] { --px-eq: var(--px-rarity-rare); } .px-eq[data-rarity="epic"] { --px-eq: var(--px-rarity-epic); } .px-eq[data-rarity="legendary"] { --px-eq: var(--px-rarity-legendary); }
@@ -234,9 +249,12 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .px-urow-portrait .px-portrait { flex: none; }
 
 /* Settings (§7.5): one column from y=88, 8 px gaps. */
-.px-settings { position: absolute; left: 16px; top: 0; width: calc(var(--px-panel-w) - 32px); height: var(--px-body-h); display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
-.px-srow { display: flex; align-items: center; gap: 8px; min-height: 28px; }
-.px-zoomrow .px-dd { margin-left: 32px; }
+.px-settings { position: absolute; left: 16px; top: 0; width: calc(var(--px-panel-w) - 32px); height: var(--px-body-h); display: flex; flex-direction: column; gap: 0; overflow-y: auto; }
+.px-srow { flex: none; }
+.px-srow { display: flex; align-items: center; gap: 8px; height: 28px; }
+.px-zoomrow { margin-top: 4px; }
+.px-zoomrow .px-slider-label { width: 72px; padding: 0; }
+.px-zoomrow .px-dd { margin-left: 4px; }
 .px-notes { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
 .px-boss .px-btn-label { color: #de7c80; }
 

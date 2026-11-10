@@ -2,7 +2,7 @@ import { CONFIG, heroConfig, raritySchema } from '../config';
 import audioManifest from '../audio-manifest.json';
 import { AtlasLibrary } from '../atlas';
 import { FONT_FILES } from '../font';
-import { PixelUI, REVEAL_STAGE, type RevealPull } from '../pixel-ui';
+import { PixelUI, REVEAL_STAGE, shortHeroName, type RevealPull } from '../pixel-ui';
 import { partyBasicDpsForStats, realizedBasicCycleTicks, upgradeCost } from '../core/economy';
 import { getPartyHeroDefinition } from '../core/party-definitions';
 import type { Action, GameState } from '../core/model';
@@ -31,7 +31,7 @@ const heroName = (id: string): string => heroConfig(id).name
   .replace(/\s*\([^)]*\)/g, '')
   .replace(/\s*(?:\||[-–])\s*(?:asset|pack|sprite|sheet)\b.*$/ig, '').trim();
 /** Card / slot label (mockups): drop the asset-pack prefixes so names fit 88 px cards (Warrior 2, Martial 1, King 2). */
-const shortName = (id: string): string => heroName(id).replace(/^Medieval /, '').replace(/^Martial Hero\b/, 'Martial');
+const shortName = (id: string): string => shortHeroName(id);
 const pct = (value: number): string => `${Math.round(value * 100)}%`;
 function activeDescription(id: string) {
   const definition = getPartyHeroDefinition(id), ability = definition.active, seconds = (ticks: number | undefined) => `${(ticks ?? 0) / CONFIG.sim.ticksPerSecond}s`;
@@ -88,6 +88,7 @@ function toggle(id: string, action: string, on: boolean, label: string, aria: st
   return `<button type="button" class="px-toggle" role="switch" aria-checked="${on}" aria-label="${esc(aria)}" ${control(id)} data-action="${action}"><span class="px-well"><span class="px-knob"></span></span><span>${esc(label)}</span></button>`;
 }
 /** Slider (§4): 4 px track, blue fill, 8×12 gold thumb, 0..1 in 0.05 steps, % readout. */
+/** compactMenu.settingsSliders: 28 px row, 72 px label at x=16, track at x=96, % readout at the track's right edge + 12. */
 function slider(name: string, label: string, value: number, width: number): string {
   const pct = Math.round(value * 100), thumb = Math.round(value * (width - SLIDER.thumb[0]!));
   return `<div class="px-slider-row"><span class="px-slider-label">${esc(label)}</span><div class="px-slider" role="slider" tabindex="0" data-slider="${name}" ${control(`slider-${name}`)} aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-valuetext="${pct}%" style="width:${width}px"><span class="px-track"><span class="px-fill" style="width:${thumb + 4}px"></span></span><span class="px-thumb" style="left:${thumb}px"></span></div><span class="px-pct">${pct}%</span></div>`;
@@ -315,10 +316,13 @@ export class ManagementView {
   private drawReveal(): void {
     const ui = this.revealUi, ctx = this.revealCanvas.getContext('2d'); if (!ui || !ctx || this.revealHost.hidden) return;
     ctx.imageSmoothingEnabled = false;
-    ui.drawRevealStage(ctx, this.snapshotValue?.tickets ?? 0, 1);
+    const width = this.stageWidth(); this.revealHost.dataset.compact = String(width < REVEAL_STAGE.width);
+    ui.drawRevealStage(ctx, this.snapshotValue?.tickets ?? 0, 1, width);
     window.cancelAnimationFrame(this.revealFrame);
     if (ui.revealState()) this.revealFrame = window.requestAnimationFrame(() => this.drawReveal());
   }
+  /** 624-wide docked panel → compactMenu.tenPullCompact; 720 panels and the native window keep the 720 gacha layout. */
+  private stageWidth(): number { return this.variant === 'browser' && this.root.getBoundingClientRect().width < REVEAL_STAGE.width ? MENU.tenPullCompact.panelW : REVEAL_STAGE.width; }
   private stopReveal(): void {
     window.cancelAnimationFrame(this.revealFrame); this.revealFrame = 0;
     this.revealUi?.clearReveal();
@@ -500,10 +504,18 @@ export class ManagementView {
         + `${shape(rarity)}<span class="px-card-lv">Lv${hero.level}</span>${this.portrait(hero.id)}<span class="px-name">${esc(shortName(hero.id))}</span><span class="px-stars">${'★'.repeat(hero.stars)}</span></button>`; }).join('');
     const equipped = selected ? (['weapon', 'armor', 'charm'] as const).map(part => { const item = state.inventory.find(value => value.id === selected.equipment[part]); return item ? `<span class="px-eq" data-rarity="${item.rarity}" title="${esc(`${item.rarity} ${part} Lv ${item.level}`)}">${icon(SLOT_ICON[part] ?? 'chest')}</span>` : `<span class="px-eq px-eq-empty" title="No ${part}">${icon(SLOT_ICON[part] ?? 'chest')}</span>`; }).join('') : '';
     const hpWidth = Math.min(1, (stats?.maxHp ?? 0) / Math.max(1, ...Object.values(state.heroStats).map(value => value.maxHp)));
-    const inspector = selected ? `<section class="px-inspector" aria-label="Hero details"><div class="px-insp-scroll" data-scroll="party-inspector"><div class="px-insp-top"><span class="px-pview">${this.portrait(selected.id, 2)}</span><div><h3>${esc(shortName(selected.id))}</h3>`
-      + `<p>${shape(heroConfig(selected.id).rarity)}${rarityText(heroConfig(selected.id).rarity)}</p><p>${esc(selectedDef?.role.toUpperCase() ?? '')} · Lv ${selected.level} · ${selected.xp} XP</p><p class="px-gold">${'★'.repeat(selected.stars)}</p><p class="px-equip">${equipped}</p></div></div>`
-      + `<div class="px-hp"><i style="width:${Math.round(hpWidth * 100)}%"></i></div><p class="px-stats"><span class="px-green">HP ${fmt(stats?.maxHp ?? 0)}</span> · ATK ${fmt(stats?.atk ?? 0)} · DEF ${fmt(stats?.def ?? 0)}</p><p class="px-blue">basic ${basicDps.toFixed(1)} DPS · realized cycle ${cycleTicks} ticks</p>`
-      + `<p class="px-muted">Strength: ${esc(selectedDef?.strength ?? '')}. Weakness: ${esc(selectedDef?.weakness ?? '')}.</p><p>Active: ${esc(selectedDef ? activeDescription(selectedDef.id) : '')}.</p><p>Passive: ${esc(selectedDef ? passiveDescription(selectedDef.id) : '')}.</p></div>`
+    // compactMenu.partyInspector: portrait well + side column (name, rarity, ROLE, Lv · XP, stars + gear), HP bar,
+    // "HP · ATK · DEF", muted "DPS · Cycle"; native adds Strength / Weakness / Active / Passive on their own lines.
+    const insp = MENU.partyInspector, flavour = selectedDef ? [`Strength: ${selectedDef.strength}.`, `Weakness: ${selectedDef.weakness}.`, `Active: ${activeDescription(selectedDef.id)}.`, `Passive: ${passiveDescription(selectedDef.id)}.`] : [];
+    const inspector = selected ? `<section class="px-inspector px-insp-party" aria-label="Hero details"><span class="px-pview px-insp-portrait">${this.portrait(selected.id, 2)}</span>`
+      + `<div class="px-insp-side"><h3 class="px-insp-name">${esc(shortName(selected.id))}</h3><p>${shape(heroConfig(selected.id).rarity)}${rarityText(heroConfig(selected.id).rarity)}</p>`
+      + `<p>${esc(insp.roleLine.replace('{ROLE}', selectedDef?.role.toUpperCase() ?? ''))}</p><p>${esc(insp.levelLine.replace('{n}', String(selected.level)).replace('{xp}', String(selected.xp)))}</p>`
+      + `<p class="px-equip"><span class="px-gold">${'★'.repeat(selected.stars)}</span>${equipped}</p></div>`
+      + `<div class="px-hp px-insp-hp"><i style="width:${Math.round(hpWidth * 100)}%"></i></div>`
+      + `<div class="px-insp-stats"><p>${esc(insp.hpAtkDef.replace('{hp}', fmt(stats?.maxHp ?? 0)).replace('{atk}', fmt(stats?.atk ?? 0)).replace('{def}', fmt(stats?.def ?? 0)))}</p>`
+      + `<p class="px-muted" aria-hidden="true">${esc(insp.dpsCycle.replace('{basic}', basicDps.toFixed(1)).replace('{ticks}', String(cycleTicks)))}</p><span class="px-sr">basic ${basicDps.toFixed(1)} DPS · realized cycle ${cycleTicks} ticks</span>`
+      // Browser omits the flavour visually (216×190 inspector); it stays readable to assistive tech.
+      + `<div class="${this.variant === 'native' ? 'px-insp-flavour' : 'px-sr'}" data-scroll="party-flavour">${flavour.map(line => `<p>${esc(line)}</p>`).join('')}</div></div>`
       + `<div class="px-insp-foot">${button(`assign-${selected.id}`, `Assign slot ${slot}`, `data-assign="${esc(selected.id)}"`, { primary: true, aria: `Assign ${heroName(selected.id)} to slot ${slot}` })}${button(`lock-${selected.id}`, selected.partyLocked ? 'Unlock' : 'Lock', `data-lock-hero="${esc(selected.id)}" data-locked="${selected.partyLocked === true}"`, { selected: selected.partyLocked === true, aria: selected.partyLocked ? 'Unlock preset slot' : 'Lock preset slot' })}</div></section>` : '';
     return [`<h2 class="px-sr">Party</h2><p class="px-hint" style="top:0">Choose 3 owned heroes. Presets keep locked slots.</p>`
       + `<div class="px-at" style="left:16px;top:20px">${this.dropdown('party-preset', 'Preset', PRESETS, preset, 160, 'data-setting="party-preset"')}</div>`
@@ -522,8 +534,11 @@ export class ManagementView {
     const stats = [['HP', item.stats.hp * mult], ['ATK', item.stats.atk * mult], ['DEF', item.stats.def * mult]].filter(([, value]) => Number(value) > 0).map(([label, value]) => `${label} ${fmt(Number(value))}`)
       .concat([['HP%', item.stats.hpPct], ['ATK%', item.stats.atkPct], ['speed', item.stats.speedPct]].filter(([, value]) => Number(value) > 0).map(([label, value]) => `${label} ${fmt(Number(value) * mult * 100)}${label === 'speed' ? '%' : ''}`));
     const compare = withCompare ? `<div class="px-compare"><span class="px-label">Compare / equip to</span>${this.dropdown('hero', 'Compare or equip to', state.roster.map(hero => ({ value: hero.id, label: heroName(hero.id) })), this.selectedHero, 184, 'data-select="hero"')}</div>`
-      + (comparison ? `<p>Hero before → after: HP ${comparison.before.maxHp} → ${comparison.after.maxHp} ${signed(comparison.delta.maxHp)}; ATK ${comparison.before.atk} → ${comparison.after.atk} ${signed(comparison.delta.atk)}; DEF ${comparison.before.def} → ${comparison.after.def} ${signed(comparison.delta.def)}; interval ${comparison.before.attackTicks} → ${comparison.after.attackTicks} ticks; basic DPS ${signed(comparison.delta.basicDps, comparison.delta.basicDps.toFixed(2))}.</p>`
-        + `<p class="${comparison.partyUtilityGain > 0 ? 'px-green' : 'px-muted'}">Party utility gain ${comparison.partyUtilityGain >= 0 ? '+' : ''}${comparison.partyUtilityGain.toFixed(3)}${comparison.partyUtilityGain > 0 ? ' · recommended' : ' · not a party-wide gain'}.</p>` : '<p role="status" class="px-muted">Calculating comparison…</p>') : '';
+      + (comparison ? `<div class="px-deltas" aria-label="Hero before and after">${[
+        ['HP', comparison.before.maxHp, comparison.after.maxHp, comparison.delta.maxHp], ['ATK', comparison.before.atk, comparison.after.atk, comparison.delta.atk], ['DEF', comparison.before.def, comparison.after.def, comparison.delta.def],
+      ].map(([label, before, after, delta]) => `<p><span class="px-dl">${label}</span>${before} → ${after} ${signed(Number(delta))}</p>`).join('')}`
+        + `<p><span class="px-dl">Cycle</span>${comparison.before.attackTicks} → ${comparison.after.attackTicks}</p><p><span class="px-dl">DPS</span>${signed(comparison.delta.basicDps, comparison.delta.basicDps.toFixed(2))}</p></div>`
+        + `<p class="${comparison.partyUtilityGain > 0 ? 'px-green' : 'px-muted'}">Party utility gain ${comparison.partyUtilityGain >= 0 ? '+' : ''}${comparison.partyUtilityGain.toFixed(3)}${comparison.partyUtilityGain > 0 ? ' · recommended' : ''}</p>` : '<p role="status" class="px-muted">Calculating comparison…</p>') : '';
     const maxed = item.level >= CONFIG.gear.upgrade.maxLevel;
     return `<section class="px-inspector" aria-label="Gear details"><div class="px-insp-scroll" data-scroll="gear-inspector"><h3>${shape(item.rarity)}${rarityText(item.rarity, `${item.rarity} ${item.slot}`.toUpperCase())}</h3>`
       + `<p>${icon(SLOT_ICON[item.slot] ?? 'chest')} Lv ${item.level} · ${owner ? esc(heroName(owner.id)) : 'stash'}${item.acquiredAt.source === 'starter' ? ' · starter kit' : ''}</p><p class="px-stats">${stats.join(' · ') || 'No stats'}</p>`
@@ -554,7 +569,10 @@ export class ManagementView {
   private recruit(state: ManagementSnapshot): [string, string] {
     const meters = CONFIG.ui.pityMeters.recruit, epic = state.recruit.epicPlusRemaining, legend = state.recruit.legendaryRemaining, fresh = state.recruit.newHeroRemaining;
     const dot = `<span style="color:${meters.colors.middot}"> · </span>`;
-    const pity = `<span style="color:${meters.colors.epicSegment}">Epic+ in ${epic}</span>${legend === null ? '' : `${dot}<span style="color:${meters.colors.legendSegment}">Legend in ${legend}</span>`}`;
+    // All three meters always show (compact-menu.md §7.3). With the v1.4 recruit pity rule off there is no Legend / New hero
+    // guarantee to count down, so the meter reads "–" (muted) instead of an invented number.
+    const off = (text: string) => `<span class="px-muted" title="Not active in this ruleset">${text} –</span>`;
+    const pity = `<span style="color:${meters.colors.epicSegment}">Epic+ in ${epic}</span>${dot}${legend === null ? off('Legend in') : `<span style="color:${meters.colors.legendSegment}">Legend in ${legend}</span>`}`;
     const owned = new Set(state.roster.map(hero => hero.id)), heroesByRarity = (rarity: string) => CONFIG.heroes.filter(hero => hero.rarity === rarity).map(hero => hero.id);
     const featured = heroesByRarity('legendary').find(id => !owned.has(id)) ?? heroesByRarity('legendary')[0] ?? CONFIG.heroes[0]!.id;
     const pityHero = heroesByRarity('epic').find(id => !owned.has(id)) ?? heroesByRarity('epic')[0] ?? featured;
@@ -564,7 +582,7 @@ export class ManagementView {
     const cost = state.recruit.cost;
     return [`<h2 class="px-sr">Recruit</h2><div class="px-banners"><section class="px-banner" aria-label="All heroes banner"><h3>ALL HEROES</h3><span class="px-pview">${this.portrait(featured, 2)}</span><p class="px-gold px-b">${cost} TICKET${cost === 1 ? '' : 'S'}</p><p class="px-muted">${state.tickets} tickets · ${state.roster.length}/${CONFIG.heroes.length} owned</p></section>`
       + `<section class="px-banner" aria-label="Epic plus pity banner"><h3>EPIC+ PITY</h3><span class="px-pview">${this.portrait(pityHero, 2)}</span><div class="px-hp px-pity"><i style="width:${Math.round(pityFill * 100)}%"></i></div><p class="px-b" style="color:${meters.colors.epicSegment}">${pityTotal - epic} / ${pityTotal}</p><p class="px-muted">Same hero pool</p></section>`
-      + `<section class="px-odds" aria-label="Recruit odds"><h3>ACTUAL ODDS</h3><ul>${odds}</ul><p class="px-b">${pity}</p>${fresh === null ? '' : `<p style="color:${meters.colors.newSegment}">New hero in ${fresh}</p>`}<p class="px-muted">Duplicates: +1 star (max ${CONFIG.growth.starMax}), then gold.</p><p class="px-muted">Earned tickets only.</p></section></div>`
+      + `<section class="px-odds" aria-label="Recruit odds"><h3>ACTUAL ODDS</h3><ul>${odds}</ul><p class="px-b">${pity}</p><p class="px-b">${fresh === null ? off('New hero in') : `<span style="color:${meters.colors.newSegment}">New hero in ${fresh}</span>`}</p><p class="px-muted">Duplicates: +1 star (max ${CONFIG.growth.starMax}), then gold.</p><p class="px-muted">Earned tickets only.</p></section></div>`
       + `<section class="px-history"><div class="px-heading px-heading-left"><h3>HISTORY</h3><span class="px-muted">${state.stats.pulls} PULLS</span></div><ol class="px-list" data-scroll="history">${history}</ol></section>`,
       `<span></span><div class="px-row">${button('pull-one', 'Recruit x1', 'data-action="pull-one" style="width:132px"', { disabled: state.tickets < cost, primary: true })}${button('pull-ten', 'Recruit x10', 'data-action="pull-ten" style="width:140px"', { disabled: state.tickets < cost * 10 })}</div>`];
   }

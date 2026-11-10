@@ -34,6 +34,9 @@
     "shots/enh-ui/after-menu-recruit-640.png",
     "shots/enh-ui/after-menu-upgrades-640.png",
     "shots/enh-ui/after-menu-settings-640.png",
+    "shots/enh-ui/after-reveal-x10-640.png",
+    "shots/enh-ui/after-reveal-x1-640.png",
+    "shots/enh-ui/after-menu-recruit-v14-640.png",
     "shots/enh-ui/after-native-party.png",
     "shots/enh-ui/after-native-stash.png",
     "shots/enh-ui/after-native-recruit.png",
@@ -41,6 +44,7 @@
     "shots/enh-ui/after-native-settings.png",
     "shots/enh-ui/compare-lane.png",
     "shots/enh-ui/compare-browser.png",
+    "shots/enh-ui/compare-recruit-x10.png",
     "shots/enh-ui/compare-native.png",
     "shots/enh-ui/compare-party.png",
     "shots/enh-ui/compare-stash.png",
@@ -54,6 +58,17 @@
       "regions": {
         "controls": 18,
         "outside": []
+      },
+      "menuSelected": "true",
+      "revealX10": 10,
+      "revealX10Regions": {
+        "controls": 12,
+        "outside": []
+      },
+      "revealX10Fits": true,
+      "revealX1Regions": {
+        "controls": 12,
+        "outside": []
       }
     },
     "960": {
@@ -65,8 +80,8 @@
           "right": 640
         },
         "sheet": {
-          "top": 160,
-          "bottom": 560,
+          "top": 168,
+          "bottom": 568,
           "left": 8,
           "right": 728
         },
@@ -244,8 +259,8 @@
           "right": 640
         },
         "sheet": {
-          "top": 160,
-          "bottom": 560,
+          "top": 168,
+          "bottom": 568,
           "left": 8,
           "right": 728
         },
@@ -413,6 +428,9 @@
       },
       "editOutside": [],
       "editHidesEdit": true
+    },
+    "v14": {
+      "odds": "ACTUAL ODDS\nCOMMON\n50%\nRARE\n33%\nEPIC\n13%\nLEGENDARY\n4%\n\nEpic+ in 30 · Legend in 60\n\nNew hero in 20\n\nDuplicates: +1 star (max 6), then gold.\n\nEarned tickets only."
     },
     "native": {
       "regions": {

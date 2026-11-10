@@ -73,7 +73,7 @@ export class Renderer {
     }
   }
   private field() {
-    // Compact lane (compact-menu.md §2.1): the field is the token rect (216, 280) at W=640 and grows with W. Narrower source
+    // Compact lane (compact-menu.md §2.1): the field is the token rect (216, 208 wide) at W=640 and grows with W. Narrower source
     // widths (480..639) keep the full-width field so units stay readable; the islands then overlap its ends.
     if (this.compact) { const lane = CONFIG.ui.compactMenu.lane, [fx = 216, , fw = 280] = lane.field; return this.width >= lane.width ? { x: fx, width: fw + this.width - lane.width } : { x: 8, width: Math.max(0, this.width - 16) }; }
     const compact = this.width < 1000; return { x: compact ? 216 : 304, width: Math.max(0, this.width - (compact ? 432 : 608)) };

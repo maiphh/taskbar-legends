@@ -17,7 +17,7 @@ const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH ?? ['/usr/bin/google
 const browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), headless: true, args: ['--no-sandbox'] });
 const errors: string[] = [], checks: Record<string, unknown> = {}, shots: string[] = [];
 const HEIGHT = 560, TABS = ['party', 'stash', 'recruit', 'upgrades', 'settings'] as const;
-const shot = async (page: Page, name: string): Promise<void> => { await page.mouse.move(1, 1); const path = `${dir}/${label}-${name}.png`; await page.screenshot({ path }); shots.push(path); };
+const shot = async (page: Page, name: string): Promise<void> => { await page.mouse.move(1, 1); const path = `${dir}/${label}-${name}.png`; await page.screenshot({ path, fullPage: after }); shots.push(path); };
 /** Every visible control in the lane bar and the menu sits wholly inside a getHitRegions() rect. */
 async function regionCheck(page: Page): Promise<{ controls: number; outside: string[] }> {
   return page.evaluate(() => {
@@ -139,8 +139,33 @@ try {
     await shot(page, 'lane-640');
     await page.click('#compact-menu-button'); await page.waitForTimeout(300);
     for (const tab of TABS) { await page.click(`[data-tab="${tab}"]`); await page.waitForTimeout(250); await shot(page, `menu-${tab}-640`); }
-    checks[640] = { dock: await page.evaluate(() => document.getElementById('management')!.dataset.dock), regions: await regionCheck(page) };
+    const c640: Record<string, unknown> = { dock: await page.evaluate(() => document.getElementById('management')!.dataset.dock), regions: await regionCheck(page),
+      menuSelected: await page.locator('#compact-menu-button').getAttribute('aria-expanded') };
+    // Compact 10-pull (compactMenu.tenPullCompact) in the 624 panel, then the x1 reveal centred in it.
+    await page.evaluate(() => { const state = window.__game.getState(); state.tickets = 30; window.__game.load(state); window.__game.pause(); window.__game.freezeClock(3_000_000); });
+    await page.click('[data-tab="recruit"]'); await page.waitForTimeout(300);
+    await page.click('[data-action="pull-ten"]'); await page.waitForFunction(() => !!document.querySelector('#management .reveal-stage:not([hidden])'));
+    await page.evaluate(() => { window.__game.freezeClock(3_000_000 + 8000); }); await page.waitForTimeout(250);
+    await shot(page, 'reveal-x10-640');
+    c640.revealX10 = await page.evaluate(() => window.__game.getManagementReveal?.()?.count ?? null); c640.revealX10Regions = await regionCheck(page);
+    c640.revealX10Fits = await page.evaluate(() => { const panel = document.getElementById('management')!.getBoundingClientRect();
+      return [...document.querySelectorAll<HTMLElement>('#management .reveal-controls .pixel-hit')].every(node => { const box = node.getBoundingClientRect(); return box.width === 0 || box.left >= panel.left - 0.5 && box.right <= panel.right + 0.5; }); });
+    await page.click('[data-control="reveal-ok"]', { force: true }); await page.waitForTimeout(200);
+    await page.evaluate(() => { window.__game.freezeClock(4_000_000); });
+    await page.click('[data-action="pull-one"]'); await page.waitForFunction(() => !!document.querySelector('#management .reveal-stage:not([hidden])'));
+    await page.evaluate(() => { window.__game.freezeClock(4_000_000 + 5000); }); await page.waitForTimeout(250);
+    await shot(page, 'reveal-x1-640'); c640.revealX1Regions = await regionCheck(page);
+    checks[640] = c640;
     await page.close();
+    // v1.4 recruit pity on: the Recruit odds show live Legend in / New hero in counters.
+    const v14 = await browser.newPage({ viewport: { width: 640, height: 568 }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
+    v14.on('pageerror', error => errors.push(`640 v14: ${String(error)}`));
+    await v14.goto(`${base}?shot&combat=party-v2&compact=1&v14=all`, { waitUntil: 'networkidle' });
+    await v14.evaluate(async () => { localStorage.clear(); await window.__game.whenReady(); window.__game.setSeed(1); window.__game.freezeClock?.(1_000_000); });
+    await v14.click('#compact-menu-button'); await v14.click('[data-tab="recruit"]'); await v14.waitForTimeout(300);
+    await shot(v14, 'menu-recruit-v14-640');
+    checks.v14 = { odds: await v14.locator('.px-odds').innerText() };
+    await v14.close();
     // Native-window variant (760×560) rendered in the page, for the tab mockups (mockup-compact-menu-{tab}.png).
     const native = await browser.newPage({ viewport: { width: 760, height: 560 }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
     native.on('pageerror', error => errors.push(`native: ${String(error)}`));
@@ -154,7 +179,7 @@ try {
   if (after) {
     // Mockup-vs-shot sheets (ui/compact-menu-*.png from the Graphic Designer's spec), side by side at 1×.
     const mockups = process.env.COMPACT_MENU_MOCKUPS ?? '/workspace/game-assets/idle-battler/ui';
-    const pairs: [string, string, string][] = [['lane', `${mockups}/mockup-compact-menu-lane.png`, `${dir}/after-lane-edit-960.png`], ['browser', `${mockups}/mockup-compact-menu-browser.png`, `${dir}/after-menu-party-640.png`],
+    const pairs: [string, string, string][] = [['lane', `${mockups}/mockup-compact-menu-lane.png`, `${dir}/after-lane-edit-960.png`], ['browser', `${mockups}/mockup-compact-menu-browser.png`, `${dir}/after-menu-party-640.png`], ['recruit-x10', `${mockups}/mockup-compact-menu-recruit-x10.png`, `${dir}/after-reveal-x10-640.png`],
       ['native', `${mockups}/mockup-compact-menu-native.png`, `${dir}/after-native-party.png`], ...TABS.map(tab => [tab, `${mockups}/mockup-compact-menu-${tab}.png`, `${dir}/after-native-${tab}.png`] as [string, string, string])];
     const { readFile } = await import('node:fs/promises');
     const page = await browser.newPage({ viewport: { width: 1600, height: 700 }, deviceScaleFactor: 1 });
@@ -168,7 +193,7 @@ try {
   }
 } finally { await browser.close(); await new Promise<void>(resolve => server.httpServer.close(() => resolve())); }
 const failures: string[] = [];
-if (after) for (const [width, value] of Object.entries(checks).filter(([key]) => key !== '640' && key !== 'native') as [string, Record<string, unknown>][]) {
+if (after) for (const [width, value] of Object.entries(checks).filter(([key]) => key !== '640' && key !== 'native' && key !== 'v14') as [string, Record<string, unknown>][]) {
   const layout = value.layout as { laneCovered: boolean };
   if (layout.laneCovered) failures.push(`${width}: menu covers the lane`);
   for (const [key, entry] of Object.entries(value)) if (key.endsWith('Regions') && (entry as { outside: string[] }).outside.length) failures.push(`${width}: ${key} outside hit regions: ${(entry as { outside: string[] }).outside.join(', ')}`);
@@ -182,6 +207,15 @@ if (after) for (const [width, value] of Object.entries(checks).filter(([key]) =>
   if ((value.revealX10 as { count?: number } | null)?.count !== 10) failures.push(`${width}: x10 reveal did not start`);
   if (value.revealClosedAfterOk !== null) failures.push(`${width}: OK did not close the reveal`);
   if (value.revealClearedByTab !== null) failures.push(`${width}: tab change did not clear the reveal`);
+}
+if (after) {
+  const c = checks[640] as Record<string, unknown>;
+  if (c.dock !== 'above') failures.push('640×568: panel did not dock above');
+  if (c.menuSelected !== 'true') failures.push('640: Menu is not selected while the sheet is open');
+  if (c.revealX10 !== 10 || !c.revealX10Fits) failures.push('640: compact x10 reveal missing or its controls overflow the 624 panel');
+  for (const key of ['regions', 'revealX10Regions', 'revealX1Regions']) if ((c[key] as { outside: string[] }).outside.length) failures.push(`640: ${key} outside hit regions`);
+  if (!/Legend in \d+/.test(String((checks.v14 as { odds: string }).odds)) || !/New hero in \d+/.test(String((checks.v14 as { odds: string }).odds))) failures.push('v14: Recruit odds miss Legend in / New hero in');
+  for (const width of ['1280', '960']) { const layout = (checks[width] as { layout: { lane: { bottom: number }; sheet: { top: number } } }).layout; if (Math.round(layout.sheet.top - layout.lane.bottom) !== 8) failures.push(`${width}: docked-below gap is not 8 px`); }
 }
 const report = { label, ok: !errors.length && !failures.length, errors, failures, shots, checks };
 await writeFile(`${dir}/${label}-checks.json`, `${JSON.stringify(report, null, 2)}\n`);

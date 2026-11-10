@@ -51,3 +51,15 @@ describe('compactMenu tokens', () => {
     expect(uiTokens.pityMeters.recruit.full).toContain('{epicPlus}');
   });
 });
+
+describe('designer review tokens', () => {
+  it('match ui/runtime/ui-tokens.json for the field and the compact 10-pull', async () => {
+    const menu = (uiTokens as unknown as { compactMenu: { lane: { field: number[] }; tenPullCompact: { cardRects: number[][] } } }).compactMenu;
+    expect(menu.lane.field).toEqual([216, 80, 208, 80]);
+    const cards = menu.tenPullCompact.cardRects as number[][];
+    expect(cards).toHaveLength(10);
+    for (const rect of cards) expect(rect.slice(2)).toEqual([104, 96]);
+    const { shortHeroName } = await import('../src/pixel-ui');
+    expect(shortHeroName('mw2')).toBe('Warrior 2');
+  });
+});

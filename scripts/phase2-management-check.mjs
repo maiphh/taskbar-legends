@@ -136,7 +136,7 @@ try {
   await page.locator(`[data-gear="${gearId}"]`).click();
   assert.match(await page.locator('#management main').innerText(), /HP% 5 · ATK% 10 · speed 15%/, 'fractional gear percentages display as percent points');
   await pick(page, 'hero', 'mw2');
-  await page.locator('main').getByText(/Hero before → after/).waitFor();
+  await page.locator('main .px-deltas p', { hasText: /^ATK\s*\d+ → \d+/ }).waitFor();
   await page.locator('main').getByText(/Party utility gain/).waitFor();
   const compareDps = await page.evaluate(async id => {
     const value = window.__management.compare('mw2', id);

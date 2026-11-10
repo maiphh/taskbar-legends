@@ -92,7 +92,8 @@ function dockManagement(): void {
   document.body.classList.toggle('compact-dock-above', above);
   // W is the page viewport (the browser stand-in for the compact window): 624 at 640, 720 from 736 up.
   const lane = app.getBoundingClientRect(), width = window.innerWidth >= 736 ? 720 : Math.max(MENU_TOKENS.panelSize[0] ?? 624, window.innerWidth - 16);
-  const top = above ? lane.top - gap - panelHeight : lane.bottom + Math.max(0, Math.min(gap, window.innerHeight - lane.bottom - panelHeight));
+  // Below keeps the 8 px gap (window 640×568); a shorter viewport scrolls rather than collapsing it (compact-menu.md §5).
+  const top = above ? lane.top - gap - panelHeight : lane.bottom + gap;
   managementRoot.style.setProperty('--px-panel-w', `${width}px`);
   // Document coordinates (the panel lives on <body>): a viewport too short for lane + panel scrolls instead of overlapping.
   managementRoot.style.left = `${Math.round(window.scrollX + Math.max(0, Math.min(lane.left + 8, window.innerWidth - width - 8)))}px`; managementRoot.style.top = `${Math.round(window.scrollY + top)}px`;
