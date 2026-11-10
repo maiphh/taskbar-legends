@@ -9,9 +9,10 @@ import { applyOffline } from '../src/core/save';
 import { farmCycleDistribution } from '../src/sim/aggregate';
 import * as legacy from './fixtures/legacy-game';
 
-const original = { scale: CONFIG.combat.nonBossFarmTimeScale, floor: CONFIG.combat.nonBossFarmMinCycleSec, retry: CONFIG.progression.powerGainRetryMinSec };
-afterEach(() => { CONFIG.combat.nonBossFarmTimeScale = original.scale; CONFIG.combat.nonBossFarmMinCycleSec = original.floor; CONFIG.progression.powerGainRetryMinSec = original.retry; });
-function tempo(scale: number, floor: number): void { CONFIG.combat.nonBossFarmTimeScale = scale; CONFIG.combat.nonBossFarmMinCycleSec = floor; }
+// Clock arithmetic below is written for a 6 s stage gap (1.4.2); 1.4.3 ships sim.stageGapSec 8, so tempo() pins 6 and afterEach restores it.
+const original = { scale: CONFIG.combat.nonBossFarmTimeScale, floor: CONFIG.combat.nonBossFarmMinCycleSec, retry: CONFIG.progression.powerGainRetryMinSec, gap: CONFIG.sim.stageGapSec };
+afterEach(() => { CONFIG.combat.nonBossFarmTimeScale = original.scale; CONFIG.combat.nonBossFarmMinCycleSec = original.floor; CONFIG.progression.powerGainRetryMinSec = original.retry; CONFIG.sim.stageGapSec = original.gap; });
+function tempo(scale: number, floor: number): void { CONFIG.combat.nonBossFarmTimeScale = scale; CONFIG.combat.nonBossFarmMinCycleSec = floor; CONFIG.sim.stageGapSec = 6; }
 function repeat(): GameState {
   const state = createState(7); state.highestCleared = 1;
   state.progress = { kind: 'FARMING', stage: 1, failedStage: 2, retryAtTick: 1e9, failTick: 0, failedPower: 1e9, failures: 1 };

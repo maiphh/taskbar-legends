@@ -1,5 +1,5 @@
 {
-  "version": "1.4.2",
+  "version": "1.4.3",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -13,7 +13,7 @@
     "enemySpawnX": 400,
     "enemySpawnSpacingPx": 50,
     "waveGapSec": 2,
-    "stageGapSec": 6,
+    "stageGapSec": 8,
     "partySize": 3
   },
   "rarity": {
@@ -289,7 +289,7 @@
     "hpCarriesBetweenWaves": true,
     "fullHealBetweenStages": true,
     "nonBossFarmTimeScale": 3,
-    "nonBossFarmMinCycleSec": 20
+    "nonBossFarmMinCycleSec": 21
   },
   "enemies": {
     "scalingPerStage": 1.06,
@@ -1237,14 +1237,14 @@
     },
     "chestChoice": {
       "options": 2,
-      "fromStage": 10,
+      "fromStage": 9,
       "loserSalvage": "salvageBase * rarityMult gold"
     },
     "farmChest": {
       "baseChance": 0.03,
       "guaranteeEvery": 7,
-      "fromStage": 10,
-      "note": "replaces rewards.farmChestChance from stage 10; below stage 10 farmChestChance applies"
+      "fromStage": 9,
+      "note": "replaces rewards.farmChestChance from stage 9; below stage 9 farmChestChance applies"
     },
     "offline": {
       "expeditionChestsPerHour": 3.5,

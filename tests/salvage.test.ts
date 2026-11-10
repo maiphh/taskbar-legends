@@ -15,6 +15,9 @@ afterEach(() => { setV14Rules([]); setSalvageRules('default'); });
 
 const V142_RULES_OFF_GOLDEN = '6b332874faa6e156d0ace6a428480fd98c7e730ebaf8030777060d7fa51bf8c1';
 const V142_AGGREGATE_2x1 = '5c547248e4c2f5354af2e658be2ca4495cb3555531bc31dd7519c2e3d002f032';
+// 1.4.3 (sim.stageGapSec 8 and nonBossFarmMinCycleSec 21 are top-level, so both protection-off references move with the config).
+const V143_RULES_OFF_GOLDEN = '7e9ee45a8fdaf5e1400b561423d47774ed4609dc5aa77d9f9cd974180b3828ba';
+const V143_AGGREGATE_2x1 = '85eee5f553929a1afb2d5e7467c621eed9ac92337abdf850fc92c9f24f613544';
 const sha = (value: string): string => createHash('sha256').update(value).digest('hex');
 const goldenRun = (): string => {
   setV14Rules([]); setSalvageRules('default');
@@ -150,11 +153,12 @@ describe('§19.6 overflow protection', () => {
     expect(JSON.parse(snapshot(from141)).inventory.every((item: { locked?: unknown }) => !('locked' in item))).toBe(true);
   });
 
-  it('7. with both flags off, the rules-off golden and a 2-seed 1-day aggregate equal 1.4.2', { timeout: 60_000 }, () => {
-    expect(goldenRun()).toBe(V142_RULES_OFF_GOLDEN);
+  it('7. with both flags off, the rules-off golden and a 2-seed 1-day aggregate equal the protection-off 1.4.3 references', { timeout: 60_000 }, () => {
+    const golden = goldenRun(); expect(golden).not.toBe(V142_RULES_OFF_GOLDEN); expect(golden).toBe(V143_RULES_OFF_GOLDEN);
     setV14Rules([]); setSalvageRules('default');
     const report = runReferenceAggregate({ firstSeed: 1, seeds: 2, days: 1, gachaSeeds: 32 });
-    expect(sha(JSON.stringify({ targets: report.targets, seedCount: report.seedCount, days: report.days }))).toBe(V142_AGGREGATE_2x1);
+    const aggregate = sha(JSON.stringify({ targets: report.targets, seedCount: report.seedCount, days: report.days }));
+    expect(aggregate).not.toBe(V142_AGGREGATE_2x1); expect(aggregate).toBe(V143_AGGREGATE_2x1);
   });
 
   it('8. 8 h offline into a full bag (28 Expedition Chests) never removes an equipped item', () => {
