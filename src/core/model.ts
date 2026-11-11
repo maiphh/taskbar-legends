@@ -84,7 +84,7 @@ const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSche
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
   // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
-  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2')]).transform(() => CONFIG.version), tick: natural,
+  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2'), z.literal('1.4.3')]).transform(() => CONFIG.version), tick: natural,
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
   highestCleared: natural.max(CONFIG.stages.length), progress: progressSchema,
@@ -155,7 +155,8 @@ export const stateSchema = z.object({
   if (progress.kind === 'COMPLETE' && state.highestCleared !== CONFIG.stages.length) invalid('Campaign incomplete');
   if (progress.kind === 'FARMING' && progress.failTick !== undefined && progress.failTick > state.tick) invalid('Failure tick cannot be in the future');
   if (state.phase.kind === 'farmPad' && !state.farmClock) invalid('Padding needs a native encounter clock');
-  if (state.farmClock && (!(progress.kind === 'FARMING' || progress.kind === 'BOSS_READY' || progress.kind === 'COMPLETE') || progress.stage > state.highestCleared || stageConfig(progress.stage).isBoss)) invalid('Tempo clock is only valid for cleared non-boss repeats');
+  if (state.farmClock && (!(progress.kind === 'FARMING' || progress.kind === 'BOSS_READY' || progress.kind === 'COMPLETE') || progress.stage > state.highestCleared
+    || (stageConfig(progress.stage).isBoss && !(progress.kind === 'COMPLETE' && state.farmClock.scale === 1)))) invalid('Tempo clock is only valid for cleared non-boss repeats (or a scale-1 COMPLETE boss repeat, §20)');
   for (const hero of state.roster) heroConfig(hero.id);
 });
 export type GameState = z.infer<typeof stateSchema>;

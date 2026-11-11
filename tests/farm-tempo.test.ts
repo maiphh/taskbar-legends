@@ -9,9 +9,9 @@ import { applyOffline } from '../src/core/save';
 import { farmCycleDistribution } from '../src/sim/aggregate';
 import * as legacy from './fixtures/legacy-game';
 
-// Clock arithmetic below is written for a 6 s stage gap (1.4.2); 1.4.3 ships sim.stageGapSec 8, so tempo() pins 6 and afterEach restores it.
-const original = { scale: CONFIG.combat.nonBossFarmTimeScale, floor: CONFIG.combat.nonBossFarmMinCycleSec, retry: CONFIG.progression.powerGainRetryMinSec, gap: CONFIG.sim.stageGapSec };
-afterEach(() => { CONFIG.combat.nonBossFarmTimeScale = original.scale; CONFIG.combat.nonBossFarmMinCycleSec = original.floor; CONFIG.progression.powerGainRetryMinSec = original.retry; CONFIG.sim.stageGapSec = original.gap; });
+// Clock arithmetic below is written for a 6 s stage gap (1.4.2 and 1.4.4; 1.4.3 shipped 8), so tempo() pins 6 and afterEach restores it.
+const original = { scale: CONFIG.combat.nonBossFarmTimeScale, floor: CONFIG.combat.nonBossFarmMinCycleSec, retry: CONFIG.progression.powerGainRetryMinSec, gap: CONFIG.sim.stageGapSec, bossRepeat: CONFIG.combat.bossRepeatMinCycle };
+afterEach(() => { CONFIG.combat.bossRepeatMinCycle = original.bossRepeat; CONFIG.combat.nonBossFarmTimeScale = original.scale; CONFIG.combat.nonBossFarmMinCycleSec = original.floor; CONFIG.progression.powerGainRetryMinSec = original.retry; CONFIG.sim.stageGapSec = original.gap; });
 function tempo(scale: number, floor: number): void { CONFIG.combat.nonBossFarmTimeScale = scale; CONFIG.combat.nonBossFarmMinCycleSec = floor; CONFIG.sim.stageGapSec = 6; }
 function repeat(): GameState {
   const state = createState(7); state.highestCleared = 1;
@@ -83,9 +83,9 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
     expect(scaled.metrics.nativeFarmClearSeconds?.[0]).toBe(native.metrics.farmClearSeconds[0]);
     expect(scaled.events.every((event, index, events) => event.tick <= scaled.tick && (!index || event.seq > (events[index - 1]?.seq ?? 0)))).toBe(true);
   });
-  it('never allocates or uses a tempo clock for pushes or boss fights/repeats', () => {
+  it('never allocates or uses a tempo clock for pushes or boss fights/repeats (bossRepeatMinCycle absent, 1.4.3)', () => {
     const run = (scale: number, floor: number, boss: boolean, repeatBoss = false): GameState => {
-      tempo(scale, floor); const state = createState(2);
+      tempo(scale, floor); delete (CONFIG.combat as { bossRepeatMinCycle?: boolean }).bossRepeatMinCycle; const state = createState(2);
       if (boss) {
         state.highestCleared = repeatBoss ? 20 : 9;
         state.progress = repeatBoss ? { kind: 'COMPLETE', stage: 20 } : { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 };
@@ -97,6 +97,19 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
       const a = run(1, 0, boss ?? false, repeatBoss), b = run(3, 20, boss ?? false, repeatBoss);
       expect(a).toEqual(b); expect(b.farmClock).toBeUndefined();
     }
+  });
+  it('§20: with bossRepeatMinCycle a COMPLETE boss repeat gets a scale-1 clock; boss fights and pushes still get none', () => {
+    const run = (progress: GameState['progress'], highest: number): GameState => {
+      tempo(3, 20); CONFIG.combat.bossRepeatMinCycle = true; const state = createState(2);
+      state.highestCleared = highest; state.progress = progress; beginEncounter(state); return state;
+    };
+    expect(run({ kind: 'COMPLETE', stage: 20 }, 20).farmClock).toEqual({ scale: 1, minCycleTicks: 400, elapsedTicks: 0, remainder: 0 });
+    expect(run({ kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 }, 9).farmClock).toBeUndefined();
+    expect(run({ kind: 'BOSS_FIGHT', stage: 20, failedPower: 0, bossLosses: 0 }, 19).farmClock).toBeUndefined();
+    expect(run({ kind: 'PUSHING', stage: 3 }, 2).farmClock).toBeUndefined();
+    // Non-boss repeats keep the configured acceleration.
+    expect(run({ kind: 'COMPLETE', stage: 20 }, 20).farmClock?.scale).toBe(1);
+    expect(run({ kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 }, 9).farmClock?.scale).toBe(3);
   });
   it('aborts unsettled padding on exact timer or manual retry without a farm clear/sample', () => {
     tempo(3, 20);

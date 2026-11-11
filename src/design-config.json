@@ -1,5 +1,5 @@
 {
-  "version": "1.4.3",
+  "version": "1.4.4",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -13,7 +13,7 @@
     "enemySpawnX": 400,
     "enemySpawnSpacingPx": 50,
     "waveGapSec": 2,
-    "stageGapSec": 8,
+    "stageGapSec": 6,
     "partySize": 3
   },
   "rarity": {
@@ -289,7 +289,8 @@
     "hpCarriesBetweenWaves": true,
     "fullHealBetweenStages": true,
     "nonBossFarmTimeScale": 3,
-    "nonBossFarmMinCycleSec": 21
+    "nonBossFarmMinCycleSec": 21,
+    "bossRepeatMinCycle": true
   },
   "enemies": {
     "scalingPerStage": 1.06,

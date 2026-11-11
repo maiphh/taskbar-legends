@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { CONFIG, V14_DESIGN, activeV14Rules, parseV14Flag, setV14Rules, v14RuleSchema } from '../src/config';
+import { beginEncounter } from '../src/core/combat';
 import { bestChoice, chest, chooseChest, farmChestRoll, gearScore } from '../src/core/economy';
 import { createState, input, load, snapshot, step } from '../src/core/game';
 import { parseState } from '../src/core/model';
@@ -20,13 +21,16 @@ const V141_RULES_OFF_GOLDEN = 'd4fcedadd85052e1288ed92df69250ca4801ef38112b1becf
 const V142_RULES_OFF_GOLDEN = '6b332874faa6e156d0ace6a428480fd98c7e730ebaf8030777060d7fa51bf8c1';
 // 1.4.3 rules-off: sim.stageGapSec 6 → 8 and combat.nonBossFarmMinCycleSec 20 → 21 are top-level, so they are read with the rules off (and balance is '1.4.3').
 const V143_RULES_OFF_GOLDEN = '7e9ee45a8fdaf5e1400b561423d47774ed4609dc5aa77d9f9cd974180b3828ba';
+// 1.4.4 rules-off: sim.stageGapSec 8 → 6 is top-level (read with the rules off) and balance is '1.4.4'. combat.bossRepeatMinCycle
+// does not move it: the 1-day reference run never reaches COMPLETE.
+const V144_RULES_OFF_GOLDEN = 'b70e3c561f785d36bf489bcbf7da085f24c12d167c2954ce878a424dfd07a07d';
 const goldenRun = (): string => { setV14Rules([]); const run = runReference(3, 1); applyOffline(run.state, 9 * 3600 * 1000); return sha(snapshot(run.state)); };
 
 describe('v14 config block', () => {
   it('ships the designer block inert: no rule on by default, §18 defaults, designer values parsed', () => {
     expect(activeV14Rules()).toEqual([]);
     expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
-    expect(design.version).toBe('1.4.3'); expect(design.v14.targetVersion).toBe('1.4.0');
+    expect(design.version).toBe('1.4.4'); expect(design.v14.targetVersion).toBe('1.4.0');
     expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 9 });
     expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 7, fromStage: 9 });
     setV14Rules(['chestChoice', 'farmChest']); expect(activeV14Rules()).toEqual(['chestChoice', 'farmChest']);
@@ -40,12 +44,13 @@ describe('v14 config block', () => {
 });
 
 describe('CR-14-08 chest pick-1-of-2', () => {
-  it('options = 1 is deterministic under 1.4.3 rules-off (farmTicketChance, stageGapSec and the farm floor are live at top level)', { timeout: 60_000 }, () => {
+  it('options = 1 is deterministic under 1.4.4 rules-off (farmTicketChance, stageGapSec and the farm floor are live at top level)', { timeout: 60_000 }, () => {
     const hash = goldenRun();
     expect(hash).not.toBe(V13_GOLDEN);
     expect(hash).not.toBe(V141_RULES_OFF_GOLDEN);
     expect(hash).not.toBe(V142_RULES_OFF_GOLDEN);
-    expect(hash).toBe(V143_RULES_OFF_GOLDEN);
+    expect(hash).not.toBe(V143_RULES_OFF_GOLDEN);
+    expect(hash).toBe(V144_RULES_OFF_GOLDEN);
   });
   it('options = 2: a chest queues two rolled items; the reference policy keeps the higher score', { timeout: 60_000 }, () => {
     setV14Rules(['chestChoice']);
@@ -149,6 +154,19 @@ describe('saves (CR-14-11)', () => {
     expect(load({ ...raw, balance: '1.4.0' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.1' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.2' }).balance).toBe(CONFIG.version);
+    expect(load({ ...raw, balance: '1.4.3' }).balance).toBe(CONFIG.version);
+  });
+  it('a 1.4.3 save loads under 1.4.4 and continues tick-for-tick; a 1.4.3 COMPLETE boss repeat picks up the §20 pad on its next encounter', () => {
+    expect(CONFIG.version).toBe('1.4.4');
+    const state = createState(3); step(state, 2_000);
+    const raw = { ...(JSON.parse(snapshot(state)) as Record<string, unknown>), balance: '1.4.3' };
+    const restored = load(raw); expect(restored.balance).toBe('1.4.4'); expect(snapshot(restored)).toBe(snapshot(state));
+    step(state, 4_000); step(restored, 4_000); expect(snapshot(restored)).toBe(snapshot(state));
+    // 1.4.3 had no boss-stage clock, so a mid-fight COMPLETE save carries none; the next boss repeat gets the scale-1 pad clock.
+    const done = createState(4); done.highestCleared = CONFIG.stages.length; done.progress = { kind: 'COMPLETE', stage: CONFIG.stages.length };
+    const old = { ...(JSON.parse(snapshot(done)) as Record<string, unknown>), balance: '1.4.3' };
+    const resumed = load(old); expect(resumed.farmClock).toBeUndefined();
+    expect(CONFIG.combat.bossRepeatMinCycle).toBe(true); beginEncounter(resumed); expect(resumed.farmClock?.scale).toBe(1);
   });
   it('rejects a pending choice that reuses an inventory id or a future id', () => {
     const state = withChoice(); chooseChest(state, 0);
