@@ -18,6 +18,9 @@ const V142_AGGREGATE_2x1 = '5c547248e4c2f5354af2e658be2ca4495cb3555531bc31dd7519
 // 1.4.3 (sim.stageGapSec 8 and nonBossFarmMinCycleSec 21 are top-level, so both protection-off references move with the config).
 const V143_RULES_OFF_GOLDEN = '7e9ee45a8fdaf5e1400b561423d47774ed4609dc5aa77d9f9cd974180b3828ba';
 const V143_AGGREGATE_2x1 = '85eee5f553929a1afb2d5e7467c621eed9ac92337abdf850fc92c9f24f613544';
+// 1.4.4 (sim.stageGapSec 8 → 6 is top-level and balance is '1.4.4', so both protection-off references move again).
+const V144_RULES_OFF_GOLDEN = 'b70e3c561f785d36bf489bcbf7da085f24c12d167c2954ce878a424dfd07a07d';
+const V144_AGGREGATE_2x1 = '04de8e49182b187b751570a13f9704d07cbb412f893cb89d0698261bef5bdf05';
 const sha = (value: string): string => createHash('sha256').update(value).digest('hex');
 const goldenRun = (): string => {
   setV14Rules([]); setSalvageRules('default');
@@ -153,12 +156,12 @@ describe('§19.6 overflow protection', () => {
     expect(JSON.parse(snapshot(from141)).inventory.every((item: { locked?: unknown }) => !('locked' in item))).toBe(true);
   });
 
-  it('7. with both flags off, the rules-off golden and a 2-seed 1-day aggregate equal the protection-off 1.4.3 references', { timeout: 60_000 }, () => {
-    const golden = goldenRun(); expect(golden).not.toBe(V142_RULES_OFF_GOLDEN); expect(golden).toBe(V143_RULES_OFF_GOLDEN);
+  it('7. with both flags off, the rules-off golden and a 2-seed 1-day aggregate equal the protection-off 1.4.4 references', { timeout: 60_000 }, () => {
+    const golden = goldenRun(); expect(golden).not.toBe(V142_RULES_OFF_GOLDEN); expect(golden).not.toBe(V143_RULES_OFF_GOLDEN); expect(golden).toBe(V144_RULES_OFF_GOLDEN);
     setV14Rules([]); setSalvageRules('default');
     const report = runReferenceAggregate({ firstSeed: 1, seeds: 2, days: 1, gachaSeeds: 32 });
     const aggregate = sha(JSON.stringify({ targets: report.targets, seedCount: report.seedCount, days: report.days }));
-    expect(aggregate).not.toBe(V142_AGGREGATE_2x1); expect(aggregate).toBe(V143_AGGREGATE_2x1);
+    expect(aggregate).not.toBe(V142_AGGREGATE_2x1); expect(aggregate).not.toBe(V143_AGGREGATE_2x1); expect(aggregate).toBe(V144_AGGREGATE_2x1);
   });
 
   it('8. 8 h offline into a full bag (28 Expedition Chests) never removes an equipped item', () => {

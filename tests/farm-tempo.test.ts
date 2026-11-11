@@ -9,7 +9,7 @@ import { applyOffline } from '../src/core/save';
 import { farmCycleDistribution } from '../src/sim/aggregate';
 import * as legacy from './fixtures/legacy-game';
 
-// Clock arithmetic below is written for a 6 s stage gap (1.4.2); 1.4.3 ships sim.stageGapSec 8, so tempo() pins 6 and afterEach restores it.
+// Clock arithmetic below is written for a 6 s stage gap (1.4.2 and 1.4.4; 1.4.3 shipped 8), so tempo() pins 6 and afterEach restores it.
 const original = { scale: CONFIG.combat.nonBossFarmTimeScale, floor: CONFIG.combat.nonBossFarmMinCycleSec, retry: CONFIG.progression.powerGainRetryMinSec, gap: CONFIG.sim.stageGapSec, bossRepeat: CONFIG.combat.bossRepeatMinCycle };
 afterEach(() => { CONFIG.combat.bossRepeatMinCycle = original.bossRepeat; CONFIG.combat.nonBossFarmTimeScale = original.scale; CONFIG.combat.nonBossFarmMinCycleSec = original.floor; CONFIG.progression.powerGainRetryMinSec = original.retry; CONFIG.sim.stageGapSec = original.gap; });
 function tempo(scale: number, floor: number): void { CONFIG.combat.nonBossFarmTimeScale = scale; CONFIG.combat.nonBossFarmMinCycleSec = floor; CONFIG.sim.stageGapSec = 6; }

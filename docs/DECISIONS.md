@@ -92,6 +92,13 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 
 - New key `combat.bossRepeatMinCycle` (boolean, optional). When the campaign is COMPLETE and the farm stage is the boss2 stage, `captureFarmClock` gives the repeat a clock of `{ scale: 1, minCycleTicks: ceil(nonBossFarmMinCycleSec × 20) }`. The fight runs at native speed (§4: boss repeats are never accelerated; padding is not acceleration) and the clear settles at `max(win + stageGap, start + minCycle)`, like other farm clears. `nativeFarmClearSeconds` keeps the unpadded fight + gap, so offline pay is unchanged.
 - Key absent = 1.4.3 behaviour: no clock on boss stages. The rules-off golden (`7e9ee45a…`) and the protection-off 2-seed aggregate (`85eee5f5…`) are unchanged with the key on too, because the 1-day reference runs never reach COMPLETE.
-- `config.json` ships the key as `true` (§20: "set it to true when the code ships"). This is the only config change, so the file's SHA moves from `9f6820e4…` to `a388be5a…` while `version` stays `1.4.3`; Designer's copy needs the same line.
+- `config.json` ships the key as `true` (§20: "set it to true when the code ships"); Game Lead accepted it, and the boss countdown is hidden during the pad.
 - Save validation accepts a farm clock on a boss stage only for a COMPLETE repeat at scale 1. The boss countdown is hidden during the pad, as it is during the stage rest.
-- BOSS_READY, BOSS_FIGHT, first clears and boss1 retries are unchanged. `sim.stageGapSec` stays 8; whether to return it to 6 is a separate follow-up.
+- BOSS_READY, BOSS_FIGHT, first clears and boss1 retries are unchanged.
+
+## Config 1.4.4 (Game Lead, folded into the §20 PR, 2026-11-11)
+
+- `sim.stageGapSec` 8 → 6 and `version` 1.4.4; `combat.bossRepeatMinCycle` true. Nothing else changes from 1.4.3. The §20 pad now holds T6 by construction, so the 8 s gap (a config-only T6 workaround in 1.4.3) is no longer needed.
+- Both config copies are byte-identical (`design/config.json` and `src/design-config.json`), SHA-256 `608614798cc81b4c4a44aa238b94cedf2a88b8d1b26fdd54a5f30dc5efd56c41`; the CI v14 smoke checks it.
+- The `balance` union accepts `'1.4.3'`, so 1.4.3 saves load under 1.4.4.
+- Goldens move because the gap is top-level and the snapshot carries `balance: '1.4.4'`: rules-off `7e9ee45a…` → `b70e3c56…`; protection-off 2-seed aggregate `85eee5f5…` → `04de8e49…`. The 1.4.3 hashes are kept and asserted as not-equal.
