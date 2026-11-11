@@ -1,5 +1,5 @@
 // v1.4 target report (design.md §15.1 / §17) for the reference player with v14 rules switched on.
-//   npx tsx scripts/v14-targets.ts [--rules all|none|a,b,…] [--seeds 25] [--days 9] [--out shots/v14-targets.json]
+//   npx tsx scripts/v14-targets.ts [--rules all|none|a,b,…] [--seeds 25] [--days 9] [--salvage on|off] [--slot-relative file|on|off] [--legendary-floor file|on|off] [--out shots/v14-targets.json]
 // Each seed runs in a worker process. The instrumented policy mirrors referencePolicy action-for-action; every seed's final
 // state is checked against runReference() with the same rules, so the decision log describes the real reference run.
 import { spawn } from 'node:child_process';
@@ -17,11 +17,16 @@ import { applyOffline } from '../src/core/save';
 import { distribution } from '../src/core/statistics';
 
 const { values } = parseArgs({ options: { rules: { type: 'string', default: 'all' }, seeds: { type: 'string', default: '25' }, days: { type: 'string', default: '9' },
-  worker: { type: 'string' }, out: { type: 'string', default: 'shots/v14-targets.json' }, 'gacha-seeds': { type: 'string', default: '10000' }, salvage: { type: 'string', default: 'on' } } });
+  worker: { type: 'string' }, out: { type: 'string', default: 'shots/v14-targets.json' }, 'gacha-seeds': { type: 'string', default: '10000' }, salvage: { type: 'string', default: 'on' }, 'slot-relative': { type: 'string', default: 'file' }, 'legendary-floor': { type: 'string', default: 'file' } } });
 const rules = (values.rules === 'none' ? [] : values.rules === 'all' ? [...v14RuleSchema.options] : (values.rules ?? '').split(',').filter(Boolean)).map(rule => v14RuleSchema.parse(rule)) satisfies V14Rule[];
 const days = Number(values.days), SESSION = CONFIG.referencePlayer.openHoursPerDay * 3600, HOUR_TICKS = 3600 * CONFIG.sim.ticksPerSecond;
 setV14Rules(rules);
 setSalvageRules(values.salvage === 'off' ? 'default' : 'design');
+// 1.4.5 ships gear.salvage.slotRelative and §21 legendaryFloor on; 'file' keeps the file's value, on/off override it on top of the salvage block.
+for (const [flag, key] of [['slot-relative', 'slotRelative'], ['legendary-floor', 'legendaryFloor']] as const) {
+  const value = values[flag];
+  if (value === 'on' || value === 'off') setSalvageRules({ ...activeSalvageRules(), [key]: value === 'on' });
+}
 
 type Decision = [day: number, seconds: number, types: string[]];
 const equipped = (state: GameState): Set<string> => new Set(state.partyIds.flatMap(id => Object.values(getOwned(state, id).equipment)).filter((id): id is NonNullable<typeof id> => id !== null));
@@ -68,13 +73,24 @@ function runSeed(seed: number) {
   };
   // T8 observers. One gear roll per chest: a pick-1-of-2 chest counts once (Fortune units), Legendary if either option was.
   const pullsRarity: string[] = [], pullsDupe: boolean[] = [], gearRarity: string[] = [], gearIndex = new Map<string, number>();
+  // Overflow salvage by slot × rarity (salvage events exist only with protection on). Age = online ticks since the item's gear event;
+  // offline time does not advance ticks, so an item that arrived offline and left in the same return has age 0.
+  const arrivedTick = new Map<string, number>(), salvaged: Record<string, Record<string, { total: number; incoming: number; within10Min: number }>> = {};
+  let lostEvents = 0; const choiceLoser: Record<string, number> = {};
   let seen = state.eventSeq, rosterDay: number | null = null, onlineChests = 0, offlineChests = 0, onlineOpenSeconds = 0, offlineSeconds = 0;
   let dry = 0, maxDry = 0, farmChestsHigh = 0, farmClearsHigh = 0;
   const scan = (): void => {
     for (const event of state.events) {
-      if (event.seq <= seen) continue; seen = event.seq; const data = event.data;
+      if (event.seq <= seen) continue; if (event.seq > seen + 1) lostEvents += event.seq - seen - 1; seen = event.seq; const data = event.data;
+      if (data.type === 'gear') arrivedTick.set(data.gearId, event.tick);
+      if (data.type === 'salvage') {
+        const age = event.tick - (arrivedTick.get(data.gearId) ?? event.tick), cell = ((salvaged[data.slot] ??= {})[data.rarity] ??= { total: 0, incoming: 0, within10Min: 0 });
+        cell.total += 1; if (data.reason === 'incoming') cell.incoming += 1; if (age <= 600 * CONFIG.sim.ticksPerSecond) cell.within10Min += 1;
+        arrivedTick.delete(data.gearId);
+      }
       if (data.type === 'pull' && state.metrics.fullRosterTick === null) { pullsRarity.push(data.rarity); pullsDupe.push(data.duplicate); }
       if (data.type === 'gear') { gearIndex.set(data.gearId, gearRarity.length); gearRarity.push(data.rarity); }
+      if (data.type === 'chestChoice' && data.rarities) { const lost = data.rarities[data.options[0] === data.kept ? 1 : 0]; choiceLoser[lost] = (choiceLoser[lost] ?? 0) + 1; }
       if (data.type === 'chestChoice' && data.rarities) { const index = gearIndex.get(data.kept); if (index !== undefined) gearRarity[index] = data.rarities.includes('legendary') ? 'legendary' : data.rarities[0]; }
     }
   };
@@ -122,6 +138,9 @@ function runSeed(seed: number) {
       onlineChestsPerHour: onlineChests / (onlineOpenSeconds / 3600), offlineRollUnitsPerHour: offlineSeconds ? offlineChests / (offlineSeconds / 3600) : 0 },
     farmChest: { clearsAtStage10Plus: farmClearsHigh, chests: farmChestsHigh, maxDryRun: maxDry, meanInterval: farmChestsHigh ? farmClearsHigh / farmChestsHigh : null },
     salvageEquippedRemoved: state.metrics.salvageEquippedRemoved ?? 0,
+    salvageBySlot: salvaged, salvageLostEvents: lostEvents, choiceLoserByRarity: choiceLoser,
+    bagLegendary: state.inventory.filter(item => item.rarity === 'legendary').length, equippedCount: state.roster.reduce((n, hero) => n + Object.values(hero.equipment).filter(id => id !== null).length, 0),
+    bagBySlot: Object.fromEntries(['weapon', 'armor', 'charm'].map(slot => [slot, state.inventory.filter(item => item.slot === slot).length])),
     partyRoles: state.partyIds.map(id => heroConfig(id).role) };
 }
 type SeedResult = ReturnType<typeof runSeed>;
@@ -129,7 +148,7 @@ if (values.worker !== undefined) { process.stdout.write(JSON.stringify(runSeed(N
 
 const seeds = Array.from({ length: Number(values.seeds) }, (_, index) => index + 1);
 const worker = (seed: number): Promise<SeedResult> => new Promise((resolve, reject) => {
-  const child = spawn(process.execPath, [...process.execArgv, process.argv[1] ?? '', '--worker', String(seed), '--rules', values.rules ?? 'none', '--days', String(days), '--salvage', values.salvage ?? 'on'], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const child = spawn(process.execPath, [...process.execArgv, process.argv[1] ?? '', '--worker', String(seed), '--rules', values.rules ?? 'none', '--days', String(days), '--salvage', values.salvage ?? 'on', '--slot-relative', values['slot-relative'] ?? 'file', '--legendary-floor', values['legendary-floor'] ?? 'file'], { stdio: ['ignore', 'pipe', 'inherit'] });
   let out = ''; child.stdout.on('data', (chunk: Buffer) => { out += chunk.toString(); });
   child.on('exit', code => { if (code === 0) resolve(JSON.parse(out) as SeedResult); else reject(new Error(`seed ${seed} exited ${code}`)); });
 });
@@ -211,7 +230,16 @@ const report = {
   salvageEquipped: { removedEquipped: results.reduce((sum, r) => sum + r.salvageEquippedRemoved, 0),
     violatingSeeds: results.filter(r => r.salvageEquippedRemoved > 0).map(r => ({ seed: r.seed, removed: r.salvageEquippedRemoved })),
     pass: results.every(r => r.salvageEquippedRemoved === 0) },
-  perSeed: results.map(({ decisions, forks, ...rest }) => ({ ...rest, decisions: decisions.length, forks: forks.length })),
+  // Overflow salvage summed over seeds: per slot × rarity, total / incoming (salvaged on arrival) / within 10 online minutes of arrival.
+  salvageBySlot: (() => {
+    const sum: Record<string, Record<string, { total: number; incoming: number; within10Min: number }>> = {};
+    for (const r of results) for (const [slot, byRarity] of Object.entries(r.salvageBySlot)) for (const [rarity, cell] of Object.entries(byRarity)) {
+      const into = ((sum[slot] ??= {})[rarity] ??= { total: 0, incoming: 0, within10Min: 0 }); into.total += cell.total; into.incoming += cell.incoming; into.within10Min += cell.within10Min;
+    }
+    return { bySlotRarity: sum, lostEvents: results.reduce((total, r) => total + r.salvageLostEvents, 0),
+      finalBagBySlot: Object.fromEntries(['weapon', 'armor', 'charm'].map(slot => [slot, dist(results.map(r => r.bagBySlot[slot] ?? 0), 1)])) };
+  })(),
+  perSeed: results.map(({ decisions, forks, ...rest }) => { const { salvageBySlot, ...seed } = rest; void salvageBySlot; return { ...seed, decisions: decisions.length, forks: forks.length }; }),
 };
 await writeFile(values.out ?? 'shots/v14-targets.json', JSON.stringify(report, null, 2) + '\n');
 process.stdout.write(JSON.stringify({ rules: report.rules, targets: report.targets, farmChest: report.farmChest }, null, 2) + '\n');

@@ -9,8 +9,8 @@ import type { GameState } from '../src/core/model';
 import { runReference } from '../src/core/policy';
 import { applyOffline } from '../src/core/save';
 
-// Config 1.4.4 rules-off golden (same constant as tests/v14.test.ts); with the key absent the run must still hash to it.
-const V144_RULES_OFF_GOLDEN = 'b70e3c561f785d36bf489bcbf7da085f24c12d167c2954ce878a424dfd07a07d';
+// Config 1.4.5 rules-off golden (same constant as tests/v14.test.ts); with the key absent the run must still hash to it.
+const V145_RULES_OFF_GOLDEN = '2512106f91a82c87211c0eeecc20aadb03287f5e17efa1e701a6306798516c0e';
 const original = CONFIG.combat.bossRepeatMinCycle;
 afterEach(() => { CONFIG.combat.bossRepeatMinCycle = original; setV14Rules([]); setSalvageRules('default'); });
 const key = (on: boolean): void => { if (on) CONFIG.combat.bossRepeatMinCycle = true; else delete (CONFIG.combat as { bossRepeatMinCycle?: boolean }).bossRepeatMinCycle; };
@@ -46,14 +46,14 @@ describe('§20 boss repeat min-cycle pad', () => {
     // The next repeat gets a fresh scale-1 clock.
     expect(state.farmClock).toMatchObject({ scale: 1, elapsedTicks: 0 });
   });
-  it('2. with the key absent the boss repeat is unpadded (fight + stageGapSec) and the rules-off golden is unchanged (1.4.4 config)', { timeout: 60_000 }, () => {
+  it('2. with the key absent the boss repeat is unpadded (fight + stageGapSec) and the rules-off golden is unchanged (1.4.5 config)', { timeout: 60_000 }, () => {
     key(false); const state = bossRepeat(); expect(state.farmClock).toBeUndefined();
     untilClear(state);
     expect(last(state.metrics.farmClearSeconds)).toBeLessThan(CONFIG.combat.nonBossFarmMinCycleSec);
     expect(state.metrics.nativeFarmClearSeconds).toBeUndefined();
     setV14Rules([]); setSalvageRules('default');
     const run = runReference(3, 1); applyOffline(run.state, 9 * 3600 * 1000);
-    expect(createHash('sha256').update(snapshot(run.state)).digest('hex')).toBe(V144_RULES_OFF_GOLDEN);
+    expect(createHash('sha256').update(snapshot(run.state)).digest('hex')).toBe(V145_RULES_OFF_GOLDEN);
   });
   it('key on and key absent play the boss fight identically (padding is not acceleration, §4)', () => {
     const fight = (on: boolean) => { key(on); const state = bossRepeat(); for (let i = 0; i < 400 && state.phase.kind === 'battle'; i += 1) step(state); return state; };

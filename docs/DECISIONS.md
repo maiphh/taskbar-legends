@@ -102,3 +102,27 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Both config copies are byte-identical (`design/config.json` and `src/design-config.json`), SHA-256 `608614798cc81b4c4a44aa238b94cedf2a88b8d1b26fdd54a5f30dc5efd56c41`; the CI v14 smoke checks it.
 - The `balance` union accepts `'1.4.3'`, so 1.4.3 saves load under 1.4.4.
 - Goldens move because the gap is top-level and the snapshot carries `balance: '1.4.4'`: rules-off `7e9ee45a…` → `b70e3c56…`; protection-off 2-seed aggregate `85eee5f5…` → `04de8e49…`. The 1.4.3 hashes are kept and asserted as not-equal.
+
+## Slot-relative overflow score (design.md §19.7 follow-up, after 1.4.4)
+
+- Problem: §19 overflow ranks candidates by raw `gearScore`, which is cross-slot. A charm's percentage stats score roughly 9–18 against weapons in the hundreds, and armor sits in between. With protection on, the bag fills with weapons, and incoming charms and armor (Legendaries included) are salvaged on arrival.
+- New optional key `gear.salvage.slotRelative` (boolean). §19.7 suggested "score ÷ best score in the same slot, or score rank within the slot"; this implements the ratio. When the key is true, each overflow candidate is ranked by `gearScore ÷ max gearScore of any bag item in the same slot`. The max includes equipped, locked and incoming items, so each slot's best item scores 1. Ties go to lower raw `gearScore`, then lower item id.
+- Unchanged: the candidates (equipped and locked items are never picked with `protectEquipped` / `protectLocked`; the incoming item is always a candidate), the gold, the event, `lockMax` 30, and the all-protected case (the incoming item is salvaged).
+- Why the ratio and not top-N per slot: the ratio has no new tuning number and keeps one total cap (50). It still removes the weakest item within each slot first, and a slot's best item can only leave if every candidate scores 1.
+- Key absent or false = 1.4.4: same code path, same goldens. Config 1.4.5 turns it on (see below).
+- `v14-targets` now reports `salvageBySlot`: overflow salvages by slot × rarity (total, incoming = salvaged on arrival, within 10 online minutes of arrival), plus the final bag by slot.
+
+## Config 1.4.5: Legendary-safe overflow (design.md §21, Game Lead approved)
+
+- Phu's rule: automatic salvage should almost never destroy a Legendary. 1.4.4 lost about 3,900 Legendaries per 100 seeds × 9 days on two paths: overflow (1,769, 1,650 on arrival) and the pick-1-of-2 auto-pick (2,146, keeping the higher raw cross-slot score).
+- `gear.salvage` gains `legendaryFloor` (optional boolean; absent = 1.4.4). 1.4.5 ships `slotRelative` true and `legendaryFloor` true. `version` is 1.4.5, and the `gear.overflow` note text changes. Config SHA-256 is `5efd30f8dacd1aa73c48820cf0a9bd07414f6ba7564b30be809edeb57443b888`, byte-identical to `design/config.json`.
+- Overflow order (§21.2):
+  1. Candidates as in §19.
+  2. With the floor, drop Legendaries while any non-Legendary candidate remains.
+  3. If every candidate is Legendary, keep only spare ones. A Legendary is spare when another same-slot Legendary in the bag scores at least as high; ties keep the lower id.
+  4. Rank by slot-relative score, then raw score, then id.
+  5. Salvage with unchanged gold. The event reason is `spareLegendary` for a step-3 pick.
+- Auto-pick (§21.3): with the floor, when exactly one option is Legendary, `bestChoice` keeps it. This covers the queue auto-resolve, the reference player and the chest card's suggested option. The player can still pick the other by hand.
+- Saves: `balance` accepts `'1.4.4'`, and the event enum gains `spareLegendary`. No new save fields.
+- Dropped after measurement (§21.6): `minPerSlot` (never binds), `legendaryStash` and a bigger bag (cap 70 fails T2), and dust/auto-sell currencies.
+- Follow-up, not in this change: a `Legendary` tag and count in the Gear panel (§21.5).

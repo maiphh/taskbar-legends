@@ -187,23 +187,61 @@ export function isEquipped(state: GameState, id: ItemId): boolean {
 export function lockedCount(state: GameState): number {
   return state.inventory.filter(item => item.locked).length;
 }
-/** Adds an item to the inventory; over the cap the lowest-score candidate is salvaged. */
+/**
+ * Overflow rank key. Global (1.4.4): gearScore. slotRelative: gearScore ÷ the best gearScore of any bag item in the same slot
+ * (protected and incoming items included, so each slot's best scores 1). Ties fall back to raw gearScore, then item id.
+ */
+export function overflowScores(inventory: readonly Gear[], slotRelative: boolean): Map<ItemId, number> {
+  const best = new Map<Gear['slot'], number>();
+  if (slotRelative) for (const item of inventory) best.set(item.slot, Math.max(best.get(item.slot) ?? 0, gearScore(item)));
+  return new Map(inventory.map(item => {
+    const score = gearScore(item), top = best.get(item.slot) ?? 0;
+    return [item.id, slotRelative ? (top > 0 ? score / top : 1) : score];
+  }));
+}
+/**
+ * §19 / §21 overflow candidates, in order: (1) the incoming item plus every item that is not equipped (protectEquipped) and not locked
+ * (protectLocked); (2) legendaryFloor: drop Legendaries if any non-Legendary remains, else keep only "spare" Legendaries (another
+ * Legendary of the same slot in the bag scores at least as high) if any. The ranking (global or slotRelative) then picks the lowest.
+ */
+/** A Legendary is spare when another bag Legendary of the same slot scores at least as high (ties: the lower id is the keeper). */
+export function isSpareLegendary(state: GameState, entry: Gear): boolean {
+  return entry.rarity === 'legendary' && state.inventory.some(other => other.id !== entry.id && other.slot === entry.slot && other.rarity === 'legendary'
+    && (gearScore(other) > gearScore(entry) || (gearScore(other) === gearScore(entry) && compareItemIds(other.id, entry.id) < 0)));
+}
+export function overflowCandidates(state: GameState, item: Gear, rules: typeof CONFIG.gear.salvage): Gear[] {
+  let candidates = state.inventory.filter(entry => entry.id === item.id
+    || !((rules.protectEquipped && isEquipped(state, entry.id)) || (rules.protectLocked && entry.locked)));
+  if (rules.legendaryFloor) {
+    const plain = candidates.filter(entry => entry.rarity !== 'legendary');
+    if (plain.length) candidates = plain;
+    else {
+      const spare = candidates.filter(entry => isSpareLegendary(state, entry));
+      if (spare.length) candidates = spare;
+    }
+  }
+  return candidates;
+}
+/** Adds an item to the inventory; over the cap the lowest-score candidate is salvaged (§19; slot-relative with gear.salvage.slotRelative). */
 export function addGear(state: GameState, item: Gear): void {
   state.inventory.push(item); state.economyRevision += 1;
   emit(state, { type: 'gear', gearId: item.id, slot: item.slot, rarity: item.rarity });
   if (state.inventory.length <= CONFIG.gear.inventoryCap) return;
   const rules = CONFIG.gear.salvage;
-  const candidates = state.inventory.filter(entry => entry.id === item.id
-    || !((rules.protectEquipped && isEquipped(state, entry.id)) || (rules.protectLocked && entry.locked)));
-  const lowest = [...candidates].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
+  const candidates = overflowCandidates(state, item, rules);
+  const lowest = rules.slotRelative
+    ? (() => { const rank = overflowScores(state.inventory, true);
+      return [...candidates].sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0) || gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0]; })()
+    : [...candidates].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
   if (!lowest) return;
-  const equipped = isEquipped(state, lowest.id);
+  const equipped = isEquipped(state, lowest.id), spare = !!rules.legendaryFloor && isSpareLegendary(state, lowest);
   const gold = Math.round(lowest.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[lowest.rarity]);
   state.inventory = state.inventory.filter(entry => entry.id !== lowest.id);
   for (const hero of state.roster) for (const slot of slotSchema.options) if (hero.equipment[slot] === lowest.id) hero.equipment[slot] = null;
   goldChange(state, gold, 'salvage');
   if (rules.protectEquipped || rules.protectLocked) {
-    emit(state, { type: 'salvage', gearId: lowest.id, rarity: lowest.rarity, slot: lowest.slot, gold, reason: lowest.id === item.id ? 'incoming' : 'overflow' });
+    emit(state, { type: 'salvage', gearId: lowest.id, rarity: lowest.rarity, slot: lowest.slot, gold,
+      reason: spare ? 'spareLegendary' : lowest.id === item.id ? 'incoming' : 'overflow' });
     if (equipped) state.metrics.salvageEquippedRemoved = (state.metrics.salvageEquippedRemoved ?? 0) + 1;
   }
 }
@@ -237,6 +275,8 @@ export function chest(state: GameState, dropStage: number, kind: 'chest' | 'expe
 }
 /** Index the score rule keeps: the higher gearScore, ties keep the first option. */
 export function bestChoice(options: readonly [Gear, Gear] | undefined): 0 | 1 {
+  // §21 legendaryFloor: when exactly one option is Legendary, the auto-pick (and the UI's suggested pick) keeps it.
+  if (options && CONFIG.gear.salvage.legendaryFloor && (options[0].rarity === 'legendary') !== (options[1].rarity === 'legendary')) return options[1].rarity === 'legendary' ? 1 : 0;
   return options && gearScore(options[1]) > gearScore(options[0]) ? 1 : 0;
 }
 /** Resolves the oldest pending choice: keep one, salvage the other for salvageBase × rarityMult gold. */

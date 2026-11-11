@@ -69,7 +69,7 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('pull'), heroId: z.string(), rarity: raritySchema, duplicate: z.boolean(), pity: z.union([z.boolean(), z.enum(['legend', 'epic', 'newHero']), z.null()]) }),
   z.object({ type: z.literal('gear'), gearId: itemIdSchema, slot: slotSchema, rarity: raritySchema }),
   // §19: only emitted when protectEquipped or protectLocked is on, so a flags-off golden stays unchanged.
-  z.object({ type: z.literal('salvage'), gearId: itemIdSchema, rarity: raritySchema, slot: slotSchema, gold: natural, reason: z.enum(['overflow', 'incoming']) }),
+  z.object({ type: z.literal('salvage'), gearId: itemIdSchema, rarity: raritySchema, slot: slotSchema, gold: natural, reason: z.enum(['overflow', 'incoming', 'spareLegendary']) }),
   // CR-14-08: emitted when a pick-1-of-2 chest resolves (by the player, or auto-picked by score when the queue overflows).
   z.object({ type: z.literal('chestChoice'), options: z.tuple([itemIdSchema, itemIdSchema]), kept: itemIdSchema, rarities: z.tuple([raritySchema, raritySchema]).optional() }),
   z.object({ type: z.literal('upgrade'), gearId: itemIdSchema, level: positive, cost: positive }),
@@ -84,7 +84,7 @@ const eventSchema = z.object({ seq: positive, tick: natural, data: eventDataSche
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
   // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
-  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2'), z.literal('1.4.3')]).transform(() => CONFIG.version), tick: natural,
+  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2'), z.literal('1.4.3'), z.literal('1.4.4')]).transform(() => CONFIG.version), tick: natural,
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
   highestCleared: natural.max(CONFIG.stages.length), progress: progressSchema,

@@ -1,5 +1,5 @@
 {
-  "version": "1.4.4",
+  "version": "1.4.5",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -1148,9 +1148,11 @@
     "salvage": {
       "protectEquipped": true,
       "protectLocked": true,
-      "lockMax": 30
+      "lockMax": 30,
+      "slotRelative": true,
+      "legendaryFloor": true
     },
-    "overflow": "auto-salvage lowest score for 10% of its total upgrade cost spent + 5*rarityMult gold"
+    "overflow": "auto-salvage one candidate for 10% of its total upgrade cost spent + 5*rarityMult gold; never equipped or locked (§19); Legendaries only when every candidate is Legendary, spare ones first (§21); lowest slot-relative score"
   },
   "gacha": {
     "costTickets": 1,

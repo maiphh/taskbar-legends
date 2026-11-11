@@ -24,13 +24,15 @@ const V143_RULES_OFF_GOLDEN = '7e9ee45a8fdaf5e1400b561423d47774ed4609dc5aa77d9f9
 // 1.4.4 rules-off: sim.stageGapSec 8 → 6 is top-level (read with the rules off) and balance is '1.4.4'. combat.bossRepeatMinCycle
 // does not move it: the 1-day reference run never reaches COMPLETE.
 const V144_RULES_OFF_GOLDEN = 'b70e3c561f785d36bf489bcbf7da085f24c12d167c2954ce878a424dfd07a07d';
+// 1.4.5 rules-off: only balance '1.4.5' in the snapshot moves it; §21 legendaryFloor and slotRelative live in gear.salvage, which the rules-off run does not apply.
+const V145_RULES_OFF_GOLDEN = '2512106f91a82c87211c0eeecc20aadb03287f5e17efa1e701a6306798516c0e';
 const goldenRun = (): string => { setV14Rules([]); const run = runReference(3, 1); applyOffline(run.state, 9 * 3600 * 1000); return sha(snapshot(run.state)); };
 
 describe('v14 config block', () => {
   it('ships the designer block inert: no rule on by default, §18 defaults, designer values parsed', () => {
     expect(activeV14Rules()).toEqual([]);
     expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
-    expect(design.version).toBe('1.4.4'); expect(design.v14.targetVersion).toBe('1.4.0');
+    expect(design.version).toBe('1.4.5'); expect(design.v14.targetVersion).toBe('1.4.0');
     expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 9 });
     expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 7, fromStage: 9 });
     setV14Rules(['chestChoice', 'farmChest']); expect(activeV14Rules()).toEqual(['chestChoice', 'farmChest']);
@@ -44,13 +46,14 @@ describe('v14 config block', () => {
 });
 
 describe('CR-14-08 chest pick-1-of-2', () => {
-  it('options = 1 is deterministic under 1.4.4 rules-off (farmTicketChance, stageGapSec and the farm floor are live at top level)', { timeout: 60_000 }, () => {
+  it('options = 1 is deterministic under 1.4.5 rules-off (farmTicketChance, stageGapSec and the farm floor are live at top level)', { timeout: 60_000 }, () => {
     const hash = goldenRun();
     expect(hash).not.toBe(V13_GOLDEN);
     expect(hash).not.toBe(V141_RULES_OFF_GOLDEN);
     expect(hash).not.toBe(V142_RULES_OFF_GOLDEN);
     expect(hash).not.toBe(V143_RULES_OFF_GOLDEN);
-    expect(hash).toBe(V144_RULES_OFF_GOLDEN);
+    expect(hash).not.toBe(V144_RULES_OFF_GOLDEN);
+    expect(hash).toBe(V145_RULES_OFF_GOLDEN);
   });
   it('options = 2: a chest queues two rolled items; the reference policy keeps the higher score', { timeout: 60_000 }, () => {
     setV14Rules(['chestChoice']);
@@ -155,12 +158,13 @@ describe('saves (CR-14-11)', () => {
     expect(load({ ...raw, balance: '1.4.1' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.2' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.3' }).balance).toBe(CONFIG.version);
+    expect(load({ ...raw, balance: '1.4.4' }).balance).toBe(CONFIG.version);
   });
-  it('a 1.4.3 save loads under 1.4.4 and continues tick-for-tick; a 1.4.3 COMPLETE boss repeat picks up the §20 pad on its next encounter', () => {
-    expect(CONFIG.version).toBe('1.4.4');
+  it('a 1.4.3 save loads under the current balance (1.4.5) and continues tick-for-tick; a 1.4.3 COMPLETE boss repeat picks up the §20 pad on its next encounter', () => {
+    expect(CONFIG.version).toBe('1.4.5');
     const state = createState(3); step(state, 2_000);
     const raw = { ...(JSON.parse(snapshot(state)) as Record<string, unknown>), balance: '1.4.3' };
-    const restored = load(raw); expect(restored.balance).toBe('1.4.4'); expect(snapshot(restored)).toBe(snapshot(state));
+    const restored = load(raw); expect(restored.balance).toBe('1.4.5'); expect(snapshot(restored)).toBe(snapshot(state));
     step(state, 4_000); step(restored, 4_000); expect(snapshot(restored)).toBe(snapshot(state));
     // 1.4.3 had no boss-stage clock, so a mid-fight COMPLETE save carries none; the next boss repeat gets the scale-1 pad clock.
     const done = createState(4); done.highestCleared = CONFIG.stages.length; done.progress = { kind: 'COMPLETE', stage: CONFIG.stages.length };
