@@ -187,7 +187,19 @@ export function isEquipped(state: GameState, id: ItemId): boolean {
 export function lockedCount(state: GameState): number {
   return state.inventory.filter(item => item.locked).length;
 }
-/** Adds an item to the inventory; over the cap the lowest-score candidate is salvaged. */
+/**
+ * Overflow rank key. Global (1.4.4): gearScore. slotRelative: gearScore ÷ the best gearScore of any bag item in the same slot
+ * (protected and incoming items included, so each slot's best scores 1). Ties fall back to raw gearScore, then item id.
+ */
+export function overflowScores(inventory: readonly Gear[], slotRelative: boolean): Map<ItemId, number> {
+  const best = new Map<Gear['slot'], number>();
+  if (slotRelative) for (const item of inventory) best.set(item.slot, Math.max(best.get(item.slot) ?? 0, gearScore(item)));
+  return new Map(inventory.map(item => {
+    const score = gearScore(item), top = best.get(item.slot) ?? 0;
+    return [item.id, slotRelative ? (top > 0 ? score / top : 1) : score];
+  }));
+}
+/** Adds an item to the inventory; over the cap the lowest-score candidate is salvaged (§19; slot-relative with gear.salvage.slotRelative). */
 export function addGear(state: GameState, item: Gear): void {
   state.inventory.push(item); state.economyRevision += 1;
   emit(state, { type: 'gear', gearId: item.id, slot: item.slot, rarity: item.rarity });
@@ -195,7 +207,10 @@ export function addGear(state: GameState, item: Gear): void {
   const rules = CONFIG.gear.salvage;
   const candidates = state.inventory.filter(entry => entry.id === item.id
     || !((rules.protectEquipped && isEquipped(state, entry.id)) || (rules.protectLocked && entry.locked)));
-  const lowest = [...candidates].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
+  const lowest = rules.slotRelative
+    ? (() => { const rank = overflowScores(state.inventory, true);
+      return [...candidates].sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0) || gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0]; })()
+    : [...candidates].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
   if (!lowest) return;
   const equipped = isEquipped(state, lowest.id);
   const gold = Math.round(lowest.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[lowest.rarity]);
