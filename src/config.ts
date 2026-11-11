@@ -62,7 +62,11 @@ const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 },
 // slotRelative (optional; absent = false = 1.4.4): overflow ranks candidates by gearScore ÷ the best gearScore in the same slot,
 // so a slot's best item scores 1 and charms/armor no longer lose to weapons on raw score (design.md §19.7 follow-up).
 export const salvageSchema = z.object({ protectEquipped: z.boolean(), protectLocked: z.boolean(), lockMax: z.number().int().nonnegative(),
-  slotRelative: z.boolean().optional() }).strict();
+  slotRelative: z.boolean().optional(),
+  // §21 legendaryFloor (optional; absent = false = 1.4.4): overflow never picks a Legendary while any non-Legendary candidate exists;
+  // if every candidate is Legendary it picks a spare one (a same-slot Legendary scores at least as high) when there is one.
+  // The pick-1-of-2 auto-pick keeps the Legendary option when exactly one option is Legendary.
+  legendaryFloor: z.boolean().optional() }).strict();
 export type SalvageRules = z.infer<typeof salvageSchema>;
 /** Code defaults when `gear.salvage` is absent: 1.4.2 behaviour (overflow may salvage equipped items; locking disabled). */
 export const SALVAGE_DEFAULTS: SalvageRules = { protectEquipped: false, protectLocked: false, lockMax: 0 };

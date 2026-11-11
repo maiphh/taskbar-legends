@@ -21,6 +21,8 @@ const V143_AGGREGATE_2x1 = '85eee5f553929a1afb2d5e7467c621eed9ac92337abdf850fc92
 // 1.4.4 (sim.stageGapSec 8 → 6 is top-level and balance is '1.4.4', so both protection-off references move again).
 const V144_RULES_OFF_GOLDEN = 'b70e3c561f785d36bf489bcbf7da085f24c12d167c2954ce878a424dfd07a07d';
 const V144_AGGREGATE_2x1 = '04de8e49182b187b751570a13f9704d07cbb412f893cb89d0698261bef5bdf05';
+// 1.4.5: balance '1.4.5' moves the rules-off golden; the 2-seed aggregate carries no balance string and stays at the 1.4.4 value.
+const V145_RULES_OFF_GOLDEN = '2512106f91a82c87211c0eeecc20aadb03287f5e17efa1e701a6306798516c0e';
 const sha = (value: string): string => createHash('sha256').update(value).digest('hex');
 const goldenRun = (): string => {
   setV14Rules([]); setSalvageRules('default');
@@ -59,10 +61,10 @@ function fillProtectedBag(state: GameState): void {
 }
 
 describe('gear.salvage keys', () => {
-  it('defaults to false/false/0 when the block is not applied, and the file carries true/true/30', () => {
+  it('defaults to false/false/0 when the block is not applied, and the file carries true/true/30 plus slotRelative and §21 legendaryFloor', () => {
     expect(CONFIG.gear.salvage).toEqual(SALVAGE_DEFAULTS);
-    expect(SALVAGE_DESIGN).toEqual({ protectEquipped: true, protectLocked: true, lockMax: 30 });
-    expect(setSalvageRules('design')).toEqual({ protectEquipped: true, protectLocked: true, lockMax: 30 });
+    expect(SALVAGE_DESIGN).toEqual({ protectEquipped: true, protectLocked: true, lockMax: 30, slotRelative: true, legendaryFloor: true });
+    expect(setSalvageRules('design')).toEqual({ protectEquipped: true, protectLocked: true, lockMax: 30, slotRelative: true, legendaryFloor: true });
   });
 });
 
@@ -156,8 +158,8 @@ describe('§19.6 overflow protection', () => {
     expect(JSON.parse(snapshot(from141)).inventory.every((item: { locked?: unknown }) => !('locked' in item))).toBe(true);
   });
 
-  it('7. with both flags off, the rules-off golden and a 2-seed 1-day aggregate equal the protection-off 1.4.4 references', { timeout: 60_000 }, () => {
-    const golden = goldenRun(); expect(golden).not.toBe(V142_RULES_OFF_GOLDEN); expect(golden).not.toBe(V143_RULES_OFF_GOLDEN); expect(golden).toBe(V144_RULES_OFF_GOLDEN);
+  it('7. with both flags off, the rules-off golden and a 2-seed 1-day aggregate equal the protection-off 1.4.5 references', { timeout: 60_000 }, () => {
+    const golden = goldenRun(); expect(golden).not.toBe(V142_RULES_OFF_GOLDEN); expect(golden).not.toBe(V143_RULES_OFF_GOLDEN); expect(golden).not.toBe(V144_RULES_OFF_GOLDEN); expect(golden).toBe(V145_RULES_OFF_GOLDEN);
     setV14Rules([]); setSalvageRules('default');
     const report = runReferenceAggregate({ firstSeed: 1, seeds: 2, days: 1, gachaSeeds: 32 });
     const aggregate = sha(JSON.stringify({ targets: report.targets, seedCount: report.seedCount, days: report.days }));

@@ -1,7 +1,7 @@
 // gear.salvage.slotRelative: overflow ranks candidates by gearScore ÷ the best gearScore in the same slot (design.md §19.7 follow-up).
 import { createHash } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
-import { CONFIG, SALVAGE_DESIGN, salvageSchema, setSalvageRules, setV14Rules } from '../src/config';
+import { CONFIG, SALVAGE_DEFAULTS, SALVAGE_DESIGN, salvageSchema, setSalvageRules, setV14Rules } from '../src/config';
 import type { SalvageRules } from '../src/config';
 import { addGear, blankEquipment, gearScore, overflowScores, setLocked } from '../src/core/economy';
 import { createState, load, snapshot } from '../src/core/game';
@@ -14,6 +14,8 @@ import { runReferenceAggregate } from '../src/sim/aggregate';
 afterEach(() => { setV14Rules([]); setSalvageRules('default'); });
 const V144_RULES_OFF_GOLDEN = 'b70e3c561f785d36bf489bcbf7da085f24c12d167c2954ce878a424dfd07a07d';
 const V144_AGGREGATE_2x1 = '04de8e49182b187b751570a13f9704d07cbb412f893cb89d0698261bef5bdf05';
+// 1.4.5: balance '1.4.5' moves the rules-off golden (the aggregate has no balance string and keeps its 1.4.4 value); the §21 keys are not applied with the rules off.
+const V145_RULES_OFF_GOLDEN = '2512106f91a82c87211c0eeecc20aadb03287f5e17efa1e701a6306798516c0e';
 const sha = (value: string): string => createHash('sha256').update(value).digest('hex');
 const ON: SalvageRules = { protectEquipped: true, protectLocked: true, lockMax: 30, slotRelative: true };
 const OFF: SalvageRules = { protectEquipped: true, protectLocked: true, lockMax: 30 };
@@ -34,15 +36,16 @@ const has = (state: GameState, gear: Gear): boolean => state.inventory.some(entr
 const count = (state: GameState, slot: Gear['slot']): number => state.inventory.filter(entry => entry.slot === slot).length;
 
 describe('gear.salvage.slotRelative', () => {
-  it('is optional and ships absent: the file block and the 1.4.4 defaults carry no slotRelative', () => {
-    expect(SALVAGE_DESIGN).toEqual({ protectEquipped: true, protectLocked: true, lockMax: 30 });
+  it('is optional: the 1.4.4 defaults carry no slotRelative; 1.4.5 ships it on (with §21 legendaryFloor)', () => {
+    expect(SALVAGE_DEFAULTS.slotRelative).toBeUndefined();
+    expect(SALVAGE_DESIGN).toEqual({ protectEquipped: true, protectLocked: true, lockMax: 30, slotRelative: true, legendaryFloor: true });
     expect(salvageSchema.parse(ON)).toEqual(ON); expect(() => salvageSchema.parse({ ...ON, slotRelative: 1 })).toThrow();
-    expect(setSalvageRules('design').slotRelative).toBeUndefined();
+    expect(setSalvageRules('design').slotRelative).toBe(true);
   });
-  it('keys absent: rules-off golden and the 2-seed aggregate are the 1.4.4 references; slotRelative false equals absent', { timeout: 120_000 }, () => {
+  it('keys absent: rules-off golden and the 2-seed aggregate are the 1.4.5 protection-off references; slotRelative false equals absent', { timeout: 120_000 }, () => {
     setV14Rules([]); setSalvageRules('default');
     const run = runReference(3, 1); applyOffline(run.state, 9 * 3600 * 1000);
-    expect(sha(snapshot(run.state))).toBe(V144_RULES_OFF_GOLDEN);
+    expect(sha(snapshot(run.state))).toBe(V145_RULES_OFF_GOLDEN); expect(sha(snapshot(run.state))).not.toBe(V144_RULES_OFF_GOLDEN);
     setV14Rules([]); setSalvageRules('default');
     const report = runReferenceAggregate({ firstSeed: 1, seeds: 2, days: 1, gachaSeeds: 32 });
     expect(sha(JSON.stringify({ targets: report.targets, seedCount: report.seedCount, days: report.days }))).toBe(V144_AGGREGATE_2x1);
