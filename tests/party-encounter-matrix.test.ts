@@ -65,7 +65,9 @@ function buildFixture(stage: number, band: Band, team: typeof teams[number], ene
   state.enemies = [enemy]; state.phase = { kind: 'battle' }; state.tick = 0; state.farmClock = undefined;
   return state;
 }
-function run(state: GameState, limit = 1200): { ticks: number; heroHp: number; enemyHp: number; hits: number; damage: number; marks: number } {
+/** Readable-beat hold roughly doubles action spacing vs the old windup/recovery, so the stress window is 120s of sim time. */
+const STRESS_TICKS = 2400;
+function run(state: GameState, limit = STRESS_TICKS): { ticks: number; heroHp: number; enemyHp: number; hits: number; damage: number; marks: number } {
   let ticks = 0;
   for (; ticks < limit && state.party.some(unit => unit.hp > 0) && state.enemies.some(unit => unit.hp > 0); ticks += 1) {
     state.tick += 1; combatTick(state);
@@ -90,10 +92,10 @@ describe('party-v2 deterministic encounter matrix', () => {
         const first = run(fixture);
         const repeat = run(buildFixture(stage, band, team, enemy, seed - 1));
         expect(repeat).toEqual(first);
-        expect(first.ticks).toBeLessThanOrEqual(1200);
+        expect(first.ticks).toBeLessThanOrEqual(STRESS_TICKS);
         expect(first.heroHp).toBeGreaterThanOrEqual(0); expect(first.enemyHp).toBeGreaterThanOrEqual(0);
         results.push({ band: band.name, stage, team, teamIds: input.teamIds, enemy, input,
-          result: first, outcome: first.enemyHp === 0 ? 'win' : first.heroHp === 0 ? 'loss' : 'censored-60s-stress' });
+          result: first, outcome: first.enemyHp === 0 ? 'win' : first.heroHp === 0 ? 'loss' : 'censored-120s-stress' });
       }
     }
     expect(results).toHaveLength(105);
@@ -101,13 +103,13 @@ describe('party-v2 deterministic encounter matrix', () => {
     const deathCount = (team: string) => results.filter(entry => entry.team === team && entry.result.heroHp === 0).length;
     expect(deathCount('balanced')).toBe(0);
     expect(deathCount('tripleDps')).toBeGreaterThan(deathCount('defensive'));
-    expect(results.some(entry => entry.team === 'supportStack' && entry.result.ticks === 1200 && entry.result.enemyHp > 0)).toBe(true);
+    expect(results.some(entry => entry.team === 'supportStack' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
     expect(results.filter(entry => entry.enemy === 'grunt').every(entry => entry.result.enemyHp === 0)).toBe(true);
-    expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.ticks === 1200 && entry.result.enemyHp > 0)).toBe(true);
+    expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
     console.log(JSON.stringify({ trials: results.length,
       clears: results.filter(entry => entry.result.enemyHp === 0).length,
       heroLosses: results.filter(entry => entry.result.heroHp === 0).length,
-      boundedEndings: results.filter(entry => entry.result.ticks === 1200).length,
+      boundedEndings: results.filter(entry => entry.result.ticks === STRESS_TICKS).length,
       byEnemy: enemies.map(enemy => ({ enemy, cleared: results.filter(entry => entry.enemy === enemy && entry.result.enemyHp === 0).length,
         deaths: results.filter(entry => entry.enemy === enemy && entry.result.heroHp === 0).length })),
       byTeam: teams.map(team => ({ team, cleared: results.filter(entry => entry.team === team && entry.result.enemyHp === 0).length,
@@ -121,8 +123,8 @@ describe('party-v2 deterministic encounter matrix', () => {
     // The defensive trio is intentionally low damage; it stays bounded against a high-HP boss rather than entering an unbounded sim loop.
     const sustainState = buildFixture(19, bands[2]!, 'defensive', 'boss_ch1', 9199);
     sustainState.enemies[0]!.hp *= 10; sustainState.enemies[0]!.maxHp *= 10;
-    const sustain = run(sustainState, 1200);
-    expect(sustain.ticks).toBe(1200);
+    const sustain = run(sustainState, STRESS_TICKS);
+    expect(sustain.ticks).toBe(STRESS_TICKS);
     expect(sustain.enemyHp).toBeGreaterThan(0);
     // These two full-engine cases reach the configured stage deadline. They are true timeouts, unlike the capped stress rows above.
     const timeoutCases = (['supportStack', 'defensive'] as const).map(team => {
@@ -141,23 +143,26 @@ describe('party-v2 deterministic encounter matrix', () => {
       state.enemies = [300, 325, 350].map((x, index) => ({ ...template, id: `cluster-grunt-${index}`, x }));
       const startHp = state.enemies.reduce((sum, enemy) => sum + enemy.hp, 0), enemiesAtStart = state.enemies.map(enemy => ({ id: enemy.id, hp: enemy.maxHp, atk: enemy.atk, moveSpeed: enemy.speed ?? 0, x: enemy.x })), result = run(state);
       return { team, teamIds: [...state.partyIds], enemies: enemiesAtStart, startHp, result,
-        outcome: result.enemyHp === 0 ? 'win' : result.heroHp === 0 ? 'loss' : 'censored-60s-stress' };
+        outcome: result.enemyHp === 0 ? 'win' : result.heroHp === 0 ? 'loss' : 'censored-120s-stress' };
     });
     const debuffCases = (['debufferBruiser', 'healingBruiser'] as const).map(team => {
       const state = buildFixture(11, bands[1]!, team, 'boss_ch1', team === 'debufferBruiser' ? 9400 : 9401), boss = state.enemies[0]!;
       boss.hp = 1_000_000; boss.maxHp = boss.hp; boss.def = 250; boss.atk = 1;
-      const initialHp = boss.hp, bossInput = { hp: initialHp, atk: boss.atk, def: 250, attackTicks: boss.attackTicks, moveSpeed: boss.speed ?? 0, x: boss.x }, result = run(state, 400);
-      return { team, teamIds: [...state.partyIds], bossInput,
-        result, hpDamage: initialHp - result.enemyHp };
+      const initialHp = boss.hp, bossInput = { hp: initialHp, atk: boss.atk, def: 250, attackTicks: boss.attackTicks, moveSpeed: boss.speed ?? 0, x: boss.x }, result = run(state, 1200);
+      const bossHits = state.events.filter(event => event.data.type === 'hit' && event.data.targetId === boss.id).length;
+      const hpDamage = initialHp - result.enemyHp;
+      // Readable-beat spacing cuts total hits; compare per-hit damage so defense break still shows.
+      return { team, teamIds: [...state.partyIds], bossInput, result, hpDamage, bossHits, damagePerBossHit: hpDamage / Math.max(1, bossHits) };
     });
     expect(clusterCases.find(value => value.team === 'fastFarm')!.result.ticks).toBeLessThan(clusterCases.find(value => value.team === 'balanced')!.result.ticks);
-    expect(debuffCases.find(value => value.team === 'debufferBruiser')!.hpDamage).toBeGreaterThan(debuffCases.find(value => value.team === 'healingBruiser')!.hpDamage);
+    expect(debuffCases.find(value => value.team === 'debufferBruiser')!.damagePerBossHit)
+      .toBeGreaterThan(debuffCases.find(value => value.team === 'healingBruiser')!.damagePerBossHit);
     await writeFile(new URL('../docs/COMPACT-PARTY-PHASE-3-MATRIX.json', import.meta.url), JSON.stringify({
       generatedBy: 'tests/party-encounter-matrix.test.ts', enemyPressure: '2x stage-scaled HP and ATK; base DEF retained',
       budget: 'same level, stars and three common gear slots per deployed hero; native hero rarity/modifiers remain inherent, so this is equal investment budget, not equal power',
       bands, trialCount: results.length, aggregate: { clearCount, heroLosses: results.filter(entry => entry.result.heroHp === 0).length,
-        censored60sStress: results.filter(entry => entry.outcome === 'censored-60s-stress').length }, cases: results,
-      censoredStressCase: { teamIds: sustainState.partyIds, inputLimitTicks: 1200, result: sustain, interpretation: 'A helper-capped stress run only; not an engine timeout.' },
+        censored120sStress: results.filter(entry => entry.outcome === 'censored-120s-stress').length }, cases: results,
+      censoredStressCase: { teamIds: sustainState.partyIds, inputLimitTicks: STRESS_TICKS, result: sustain, interpretation: 'A helper-capped stress run only; not an engine timeout.' },
       engineTimeoutCases: timeoutCases, clusteredFrontlineComparison: clusterCases, debufferBruiserComparison: debuffCases,
     }, null, 2), 'utf8');
   });

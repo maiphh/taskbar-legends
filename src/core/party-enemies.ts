@@ -46,14 +46,36 @@ export function getPartyEnemyDefinition(id: string): PartyEnemyDefinition {
     visualKind: parsed, rewardKind: parsed, ...(bossPattern ? { special: bossPattern } : {}) };
 }
 
+/** Cap a wave to squad size 3 or 5 after special-id replacement. */
+function capPartyWaveKinds(kinds: string[]): string[] {
+  const bossIndex = kinds.findIndex(id => id.startsWith('boss'));
+  if (bossIndex >= 0) {
+    const boss = kinds[bossIndex]!;
+    const adds = kinds.filter((_, index) => index !== bossIndex);
+    if (adds.length >= 3) return [boss, ...adds.slice(-4)];
+    const pad = adds.at(-1) ?? 'grunt';
+    while (adds.length < 2) adds.push(pad);
+    return [boss, ...adds];
+  }
+  if (kinds.length >= 5) return kinds.slice(-5);
+  if (kinds.length === 4) return kinds.slice(-3);
+  if (kinds.length === 3) return kinds;
+  if (kinds.length === 0) return ['grunt', 'grunt', 'grunt'];
+  const pad = kinds.at(-1)!;
+  while (kinds.length < 3) kinds.push(pad);
+  return kinds;
+}
+
 export function partyWaveKinds(stage: number, wave: number, original: readonly EnemyKind[], isBossStage: boolean): string[] {
   const kinds: string[] = [...original];
-  if (isBossStage || stage < 11 || stage > 19) return kinds;
-  const specialId = wave === 1 ? 'assassin' : wave === 2 && stage >= 12 ? 'bomber' : wave === 3 && stage >= 13 ? 'bomber' : undefined;
-  if (!specialId) return kinds;
-  for (let index = kinds.length - 1; index >= 0; index -= 1) {
-    const kind = kinds[index];
-    if (kind && !kind.startsWith('boss')) { kinds[index] = specialId; break; }
+  if (!(isBossStage || stage < 11 || stage > 19)) {
+    const specialId = wave === 1 ? 'assassin' : wave === 2 && stage >= 12 ? 'bomber' : wave === 3 && stage >= 13 ? 'bomber' : undefined;
+    if (specialId) {
+      for (let index = kinds.length - 1; index >= 0; index -= 1) {
+        const kind = kinds[index];
+        if (kind && !kind.startsWith('boss')) { kinds[index] = specialId; break; }
+      }
+    }
   }
-  return kinds;
+  return capPartyWaveKinds(kinds);
 }

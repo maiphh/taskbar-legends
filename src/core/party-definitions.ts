@@ -15,7 +15,7 @@ const family = {
 } as const;
 
 const abilitySchema = z.object({
-  id: z.string().min(1), kind: z.enum(['shield', 'selfHeal', 'cleave', 'projectile', 'burstHeal', 'weaken', 'buff', 'fireball', 'singleBurst', 'selfSustain', 'intercept']),
+  id: z.string().min(1), kind: z.enum(['shield', 'selfHeal', 'cleave', 'projectile', 'burstHeal', 'weaken', 'buff', 'fireball', 'singleBurst', 'selfSustain', 'intercept']), manaCost: z.number().int().positive().max(100).optional(),
   cooldownTicks: z.number().int().nonnegative(), durationTicks: z.number().int().nonnegative().optional(),
   coefficient: z.number().nonnegative().optional(), secondaryCoefficient: z.number().nonnegative().optional(), radius: z.number().nonnegative().optional(), range: z.number().nonnegative().optional(),
   hpThreshold: z.number().min(0).max(1).optional(), healCoefficient: z.number().nonnegative().optional(), shieldFraction: z.number().nonnegative().optional(), atkReduction: z.number().nonnegative().optional(), defReduction: z.number().nonnegative().optional(),
@@ -45,14 +45,14 @@ const weakenBase = { id: 'weaken', kind: 'weaken' as const, cooldownTicks: sec(7
 const definitions: PartyHeroDefinition[] = [
   { id: 'mw2', family: 'guardian', role: 'tank', tags: ['guardian', 'melee'], basic: { id: 'guardian-strike', style: 'melee', coefficient: 1, range: 12 },
     active: { id: 'guardian-shield', kind: 'shield', cooldownTicks: sec(6), durationTicks: sec(5), shieldFraction: 0.15, hpThreshold: 0.9, emergency: true },
-    passive: intercept(260, 8), strength: 'Protects an ally from a committed hit', weakness: 'Slow, low sustained damage' },
+    passive: intercept(260, 8), strength: 'Raises a self-shield when threatened or hurt', weakness: 'Slow, low sustained damage' },
   { id: 'hk1', family: 'bruiser', role: 'tank', tags: ['bruiser', 'melee'], basic: { id: 'bruiser-strike', style: 'melee', coefficient: 1, range: 12 },
     active: { id: 'bruiser-heal', kind: 'selfHeal', cooldownTicks: sec(8), healCoefficient: 0.15, hpThreshold: 0.65, emergency: true },
     passive: { id: 'bruiser-fourth-heal', kind: 'fourthSelfHeal', coefficient: 0.3, group: 'bruiser-fourth-heal' }, strength: 'Self-sustaining frontline', weakness: 'Less ally protection' },
   { id: 'mw1', family: 'meleeDps', role: 'dps', tags: ['melee', 'cleave'], basic: { id: 'melee-cleave-strike', style: 'melee', coefficient: 1, range: 12 }, active: { ...cleaveBase },
     passive: { id: 'same-target-ramp', kind: 'sameTargetRamp', coefficient: 0.05, cap: 0.15, group: 'same-target-ramp' }, strength: 'Reliable cleave and sustained focus', weakness: 'Must reach the frontline' },
   { id: 'hu1', family: 'rangedDps', role: 'dps', tags: ['ranged', 'single-target'], basic: { id: 'ranger-shot', style: 'projectile', coefficient: 1, range: ranged }, active: { ...rangedBase },
-    passive: { id: 'ranger-fourth-shot', kind: 'fourthBonus', coefficient: 0.2, group: 'ranger-fourth-shot' }, strength: 'Safe single-target damage', weakness: 'Projectile travel delays hits' },
+    passive: { id: 'ranger-fourth-shot', kind: 'fourthBonus', coefficient: 0.2, group: 'ranger-fourth-shot' }, strength: 'Strong single-target burst', weakness: 'Limited area damage' },
   { id: 'priest', family: 'healer', role: 'support', tags: ['healer', 'ranged'], basic: { id: 'priest-heal-or-bolt', style: 'heal', coefficient: 1.2, fallbackCoefficient: 0.7, range: ranged },
     active: { id: 'priest-burst-heal', kind: 'burstHeal', cooldownTicks: sec(5), durationTicks: 0, healCoefficient: 1.8, hpThreshold: 0.8, emergency: true },
     passive: { id: 'priest-heal-guard', kind: 'healGuard', durationTicks: sec(2), coefficient: 0.1, group: 'healing-guard' }, strength: 'Repeatable healing plus emergency burst', weakness: 'Low damage when the party is healthy' },
@@ -60,7 +60,7 @@ const definitions: PartyHeroDefinition[] = [
     passive: { id: 'first-weaken-shield', kind: 'firstWeakenShield', durationTicks: sec(3), shieldFraction: 0.06, group: 'first-weaken-shield' }, strength: 'Reduces enemy attack and defense', weakness: 'Needs time to establish debuffs' },
   { id: 'mk1', family: 'bufferDebuffer', role: 'support', tags: ['buffer', 'ranged'], basic: { id: 'banner-bolt', style: 'magic', coefficient: 0.7, range: ranged },
     active: { id: 'banner-buff', kind: 'buff', cooldownTicks: sec(7), durationTicks: sec(4), atkBonus: 0.15, allyTarget: true },
-    passive: { id: 'living-banner', kind: 'livingAura', durationTicks: 0, atkReduction: 0.05, group: 'party-guard-aura' }, strength: 'Reliable party-wide damage reduction', weakness: 'Limited damage contribution' },
+    passive: { id: 'living-banner', kind: 'livingAura', durationTicks: 0, atkReduction: 0.05, group: 'party-guard-aura' }, strength: 'Boosts the strongest ally’s attack', weakness: 'Limited damage contribution' },
   { id: 'wiz', family: 'aoeDps', role: 'dps', tags: ['ranged', 'aoe'], basic: { id: 'arcane-bolt', style: 'magic', coefficient: 1, range: ranged },
     active: { id: 'fireball', kind: 'fireball', cooldownTicks: sec(6), coefficient: 1.4, secondaryCoefficient: 0.6, radius: 48 },
     passive: { id: 'third-shot-splash', kind: 'thirdSplash', coefficient: 0.35, radius: 32, group: 'third-shot-splash' }, strength: 'Cluster clearing', weakness: 'Lower single-target rate and low defense' },
@@ -74,10 +74,10 @@ const definitions: PartyHeroDefinition[] = [
     passive: { id: 'same-target-ramp', kind: 'sameTargetRamp', coefficient: 0.05, cap: 0.1, group: 'same-target-ramp' }, strength: 'Frequent short bursts', weakness: 'Lower peak and long-ramp damage' },
   { id: 'hu2', family: 'rangedDps', role: 'dps', tags: ['ranged', 'single-target'], basic: { id: 'long-range-shot', style: 'projectile', coefficient: 0.85, range: 320 },
     active: { id: 'long-range-burst', kind: 'projectile', cooldownTicks: sec(7), coefficient: 1.7 },
-    passive: { id: 'ranger-fourth-shot', kind: 'fourthBonus', coefficient: 0.2, group: 'ranger-fourth-shot' }, strength: 'Safer long-range opening', weakness: 'Lower throughput and longer flight' },
+    passive: { id: 'ranger-fourth-shot', kind: 'fourthBonus', coefficient: 0.2, group: 'ranger-fourth-shot' }, strength: 'Long basic-attack range with a strong shot', weakness: 'Limited area damage and lower throughput' },
   { id: 'hk2', family: 'guardian', role: 'tank', tags: ['guardian', 'melee'], basic: { id: 'guardian-strike', style: 'melee', coefficient: 1, range: 12 },
     active: { id: 'wide-guardian-shield', kind: 'shield', cooldownTicks: sec(8), durationTicks: sec(5), shieldFraction: 0.2, hpThreshold: 0.9, emergency: true },
-    passive: intercept(320, 10), strength: 'Wide formation protection', weakness: 'Long protection downtime' },
+    passive: intercept(320, 10), strength: 'Self-shields when threatened or hurt', weakness: 'Longer skill charge than basic fighters' },
   { id: 'fw', family: 'bruiser', role: 'dps', tags: ['bruiser', 'melee', 'self-sustain'], basic: { id: 'bruiser-strike', style: 'melee', coefficient: 1, range: 12 },
     active: { id: 'bruiser-burst-heal', kind: 'selfSustain', cooldownTicks: sec(8), coefficient: 1.2, healCoefficient: 0.08 },
     passive: { id: 'fourth-basic-guard', kind: 'fourthGuard', durationTicks: sec(2), atkReduction: 0.1, group: 'bruiser-guard' }, strength: 'Self-sustaining frontline DPS', weakness: 'Lower damage and ally protection' },
@@ -86,7 +86,7 @@ const definitions: PartyHeroDefinition[] = [
     passive: { id: 'third-shot-splash', kind: 'thirdSplash', coefficient: 0.35, radius: 32, group: 'third-shot-splash' }, strength: 'Large clustered waves', weakness: 'Weak isolated-target burst' },
   { id: 'mk2', family: 'guardian', role: 'tank', tags: ['guardian', 'melee'], basic: { id: 'guardian-strike', style: 'melee', coefficient: 1, range: 12 },
     active: { id: 'heavy-guardian-shield', kind: 'shield', cooldownTicks: sec(10), durationTicks: sec(5), shieldFraction: 0.25, hpThreshold: 0.9, emergency: true },
-    passive: intercept(260, 6), strength: 'Frequent single-ally interception', weakness: 'Slow self-shield refresh' },
+    passive: intercept(260, 6), strength: 'Large self-shield', weakness: 'Slow attack and limited damage' },
   { id: 'mh3', family: 'meleeDps', role: 'dps', tags: ['melee', 'single-target'], basic: { id: 'duelist-strike', style: 'melee', coefficient: 1, range: 12 },
     active: { id: 'heavy-single-burst', kind: 'singleBurst', cooldownTicks: sec(8), coefficient: 2.2 },
     passive: { id: 'same-target-ramp', kind: 'sameTargetRamp', coefficient: 0.05, cap: 0.2, group: 'same-target-ramp' }, strength: 'Large single-target burst', weakness: 'Long active downtime, no cleave' },
@@ -96,10 +96,11 @@ const definitions: PartyHeroDefinition[] = [
 ];
 
 const abilityIds = new Set<string>();
+const manaCosts: Record<string, number> = { mh2: 40, wiz: 80, mw3: 80, ew2: 80, mk2: 80, mh3: 80 };
 const validated = definitions.map(value => {
   const result = definitionSchema.parse(value);
-  abilityIds.add(result.active.id); abilityIds.add(result.basic.id); abilityIds.add(result.passive.id);
-  return Object.freeze({ ...result, familyStats: family[result.family] });
+  abilityIds.add(result.active.id); abilityIds.add(result.basic.id);
+  return Object.freeze({ ...result, active: Object.freeze({ ...result.active, manaCost: manaCosts[result.id] ?? 60 }), familyStats: family[result.family] });
 });
 const byId = new Map(validated.map(value => [value.id, value]));
 if (byId.size !== CONFIG.heroes.length || CONFIG.heroes.some(hero => !byId.has(hero.id))) throw new Error('Party hero definitions must cover every configured hero exactly once');

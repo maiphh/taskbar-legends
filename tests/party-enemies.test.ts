@@ -13,26 +13,30 @@ describe('party-v2 enemy registry and wave overrides', () => {
     expect(getPartyEnemyDefinition('bomber')).toMatchObject({ hp: 90, atk: 45, def: 5, attackTicks: 30, range: 200, speed: 50, visualKind: 'brute', rewardKind: 'grunt' });
   });
 
-  it('replaces one ordinary slot for the documented stages without changing wave sizes or bosses', () => {
+  it('caps every party wave to 3 or 5, keeps assassin on stage 11 wave 1, and keeps bosses', () => {
     const waveAt = (stage: number, wave: number): string[] => {
       const definition = stageConfig(stage).waves[wave - 1]!;
       const kinds = 'enemies' in definition ? definition.enemies : [definition.boss, ...definition.adds];
       return partyWaveKinds(stage, wave, kinds, stageConfig(stage).isBoss);
     };
-    expect(waveAt(11, 1).at(-1)).toBe('assassin');
-    expect(waveAt(12, 1).at(-1)).toBe('assassin'); expect(waveAt(12, 2).at(-1)).toBe('bomber');
+    expect(waveAt(11, 1)).toContain('assassin');
+    expect(waveAt(12, 1)).toContain('assassin'); expect(waveAt(12, 2)).toContain('bomber');
     for (let stage = 13; stage <= 19; stage += 1) {
       expect(waveAt(stage, 1)).toContain('assassin'); expect(waveAt(stage, 2)).toContain('bomber'); expect(waveAt(stage, 3)).toContain('bomber');
     }
-    for (const stage of [11, 12, 13, 19]) for (let wave = 1; wave <= stageConfig(stage).waves.length; wave += 1) {
-      const source = stageConfig(stage).waves[wave - 1]!;
-      const original = 'enemies' in source ? source.enemies : [source.boss, ...source.adds];
-      expect(waveAt(stage, wave)).toHaveLength(original.length);
+    for (const stage of CONFIG.stages) for (let wave = 1; wave <= stage.waves.length; wave += 1) {
+      const result = waveAt(stage.index, wave);
+      expect([3, 5]).toContain(result.length);
     }
     for (const stage of CONFIG.stages.filter(value => value.isBoss)) {
-      const wave = stageConfig(stage.index).waves[0]!;
-      const original = 'enemies' in wave ? wave.enemies : [wave.boss, ...wave.adds];
-      expect(partyWaveKinds(stage.index, 1, original, true)).toEqual(original);
+      const bossWave = stage.waves.find(wave => 'boss' in wave || ('enemies' in wave && wave.enemies.some(kind => kind.startsWith('boss'))));
+      expect(bossWave).toBeDefined();
+      if (!bossWave) continue;
+      const waveIndex = stage.waves.indexOf(bossWave) + 1;
+      const original = 'enemies' in bossWave ? bossWave.enemies : [bossWave.boss, ...bossWave.adds];
+      const result = partyWaveKinds(stage.index, waveIndex, original, true);
+      expect(result.some(id => id.startsWith('boss'))).toBe(true);
+      expect([3, 5]).toContain(result.length);
     }
   });
 
@@ -45,20 +49,19 @@ describe('party-v2 enemy registry and wave overrides', () => {
     expect(load(snapshot(state)).enemies).toEqual(state.enemies);
   });
 
-  it('keeps a healthy equal-progression starter support alive through the first real assassin response window', () => {
+  it('lets the assassin reach the rear support after the retired intercept passive is removed', () => {
     const state = createPartyState(252); state.highestCleared = 10; state.progress = { kind: 'PUSHING', stage: 11 }; state.wave = 1; spawnWave(state);
     const assassin = state.enemies.find(enemy => enemy.sourceId === 'assassin')!, priest = state.party.find(unit => unit.sourceId === 'priest')!;
     expect(assassin.hp).toBe(Math.round(65 * CONFIG.enemies.scalingPerStage ** 10));
     const unguardedRaw = Math.max(1, Math.round(assassin.atk * 100 / (100 + priest.def)));
     expect(unguardedRaw).toBeLessThan(priest.hp);
-    let response: 'intercepted' | 'defeated' | null = null;
+    let response: 'hit' | 'defeated' | null = null;
     for (let tick = 0; tick < 1200 && state.phase.kind === 'battle' && !response; tick += 1) {
       step(state);
-      if (state.events.some(event => event.data.type === 'guard' && event.data.fromTargetId === priest.id)) response = 'intercepted';
+      if (priest.hp < priest.maxHp) response = 'hit';
       else if (assassin.hp <= 0) response = 'defeated';
-      expect(priest.hp).toBeGreaterThan(0);
     }
-    expect(priest.hp).toBeGreaterThan(0);
-    expect(response).not.toBeNull();
+    expect(response).toBe('hit');
+    expect(state.events.some(event => event.data.type === 'guard' && event.data.fromTargetId === priest.id)).toBe(false);
   });
 });

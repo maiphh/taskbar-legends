@@ -5,14 +5,39 @@ import { emit, goldChange } from './events';
 import { activePartyEffects, applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveDefense, effectActive, prunePartyEffects } from './party-effects';
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
+import { fillGauges, nextActor, spendTurn, type GaugeUnit } from './turn/action-bar';
+import { canAct, onTurnStart, type RunningStatus } from './turn/statuses';
 import type { GameEvent, GameState, PartyProjectile, Unit } from './model';
 
 export const PARTY_V2 = Object.freeze({
   version: 'party-v2', radius: { normal: 10, tank: 12 }, reach: { melee: 12, ranged: 260, heal: 260 },
-  timing: { windupTicks: 4, minimumRecoveryTicks: 2, animationRecoveryTicks: 8, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
+  timing: { windupTicks: 10, contactTicks: 4, returnTicks: 14, settleTicks: 4, minimumRecoveryTicks: 22, animationRecoveryTicks: 22, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
   animation: { attackImpactFraction: 0.5, healImpactFraction: 0.5 },
   speed: { tank: 65, melee: 90, support: 65, ranged: 80, enemyMelee: 70, enemyRanged: 55 },
 });
+
+/** World px per tick while a fresh wave marches from entry x to its formation slot. */
+export const ENEMY_ENTRY_PX = 12;
+
+/** Fixed enemy home x for a formation slot. Heroes stay on CONFIG.sim.heroSlotX. */
+export function enemyFormationX(slot: number): number {
+  return 158 + slot * 18;
+}
+
+export type SkillDelivery = 'leap' | 'cast';
+
+/** Turn gauge speed from role and basic style. Not pixel movement speed. */
+export function turnSpd(unit: Unit): number {
+  if (unit.side === 'enemy') {
+    if (unit.sourceId === 'assassin') return 110;
+    const style = getPartyEnemyDefinition(unit.sourceId).basicStyle;
+    return style === 'projectile' ? 100 : 95;
+  }
+  const hero = getPartyHeroDefinition(unit.sourceId);
+  if (hero.role === 'tank') return 90;
+  if (hero.role === 'support') return 115;
+  return hero.basic.style === 'melee' ? 100 : 105;
+}
 
 export interface Body { x: number; radius: number }
 export function edgeDistance(a: Body, b: Body): number { return Math.max(0, Math.abs(a.x - b.x) - a.radius - b.radius); }
@@ -27,7 +52,7 @@ export function combatEventAge(state: GameState, event: GameEvent): number | nul
   if (event.combatEncounter !== state.encounter) return null;
   return presentationCombatTime(state) - (event.combatTick ?? event.tick);
 }
-export function partyUnitFields(unit: Unit): Pick<Unit, 'radius' | 'speed' | 'range' | 'facing' | 'targetId' | 'moving' | 'action'> {
+export function partyUnitFields(unit: Unit): Pick<Unit, 'radius' | 'speed' | 'range' | 'facing' | 'targetId' | 'moving' | 'action' | 'mana'> {
   const role = unit.side === 'hero' ? getPartyHeroDefinition(unit.sourceId).role : null;
   const radius = unit.side === 'hero' && role === 'tank' ? PARTY_V2.radius.tank : PARTY_V2.radius.normal;
   const enemyDefinition = unit.side === 'enemy' ? getPartyEnemyDefinition(unit.sourceId) : undefined;
@@ -35,7 +60,7 @@ export function partyUnitFields(unit: Unit): Pick<Unit, 'radius' | 'speed' | 'ra
     ? enemyDefinition!.speed
     : role === 'tank' ? PARTY_V2.speed.tank : role === 'dps' && getPartyHeroDefinition(unit.sourceId).tags.includes('melee') ? PARTY_V2.speed.melee : role === 'support' ? PARTY_V2.speed.support : PARTY_V2.speed.ranged;
   const range = unit.side === 'enemy' ? enemyDefinition!.range : getPartyHeroDefinition(unit.sourceId).basic.range;
-  return { radius, speed, range, facing: unit.side === 'hero' ? 1 : -1, targetId: null, moving: false, action: { state: 'idle' } };
+  return { radius, speed, range, facing: unit.side === 'hero' ? 1 : -1, targetId: null, moving: false, mana: 0, action: { state: 'idle' } };
 }
 
 type ActionKind = 'attack' | 'heal';
@@ -50,8 +75,44 @@ function living(units: readonly Unit[]): Unit[] { return units.filter(unit => un
 function radius(unit: Unit): number { return unit.radius ?? PARTY_V2.radius.normal; }
 function partyDef(unit: Unit) { return unit.side === 'hero' ? getPartyHeroDefinition(unit.sourceId) : undefined; }
 function unitRole(unit: Unit) { return partyDef(unit)?.role ?? null; }
+function skillDelivery(source: Unit, abilityId?: string): SkillDelivery {
+  if (source.side === 'enemy') {
+    return getPartyEnemyDefinition(source.sourceId).basicStyle === 'melee' ? 'leap' : 'cast';
+  }
+  const def = partyDef(source);
+  if (!def) return 'cast';
+  if (abilityId && abilityId !== def.basic.id) {
+    const kind = def.active.kind;
+    if (kind === 'cleave' || kind === 'singleBurst') return 'leap';
+    return 'cast';
+  }
+  return def.basic.style === 'melee' ? 'leap' : 'cast';
+}
+function unitStatuses(unit: Unit): RunningStatus[] {
+  return (unit.statuses ??= []) as RunningStatus[];
+}
+function toGaugeUnit(unit: Unit): GaugeUnit & { ref: Unit } {
+  if (unit.gauge === undefined) unit.gauge = 0;
+  return {
+    id: unit.id,
+    side: unit.side === 'hero' ? 'party' : 'enemy',
+    slot: unit.slot,
+    gauge: unit.gauge,
+    spd: turnSpd(unit),
+    hp: unit.hp,
+    statuses: unitStatuses(unit),
+    ref: unit,
+  };
+}
+function syncGauge(wrapper: GaugeUnit & { ref: Unit }): void {
+  wrapper.ref.gauge = wrapper.gauge;
+}
+function presentationBusy(unit: Unit): boolean {
+  const action = unit.action;
+  if (action?.state === 'windup' || action?.state === 'recovery') return true;
+  return !!unit.specialAction;
+}
 function isTank(unit: Unit): boolean { return unit.side === 'hero' && unitRole(unit) === 'tank'; }
-function reachFor(source: Unit): number { return source.range; }
 function distance(a: Unit, b: Unit): number { return edgeDistance({ x: a.x, radius: radius(a) }, { x: b.x, radius: radius(b) }); }
 function targetPool(state: GameState, source: Unit, kind: ActionKind): Unit[] { return kind === 'heal' ? (source.side === 'hero' ? state.party : state.enemies) : (source.side === 'hero' ? state.enemies : state.party); }
 function nearest(source: Unit, candidates: Unit[]): Unit | undefined { return candidates.sort((a, b) => distance(source, a) - distance(source, b) || compareId(a, b))[0]; }
@@ -71,8 +132,8 @@ function threatened(state: GameState, unit: Unit): boolean {
 function supportTarget(state: GameState): Unit | undefined {
   return living(state.party).sort((a, b) => effectiveAttack(state, b) / b.attackTicks - effectiveAttack(state, a) / a.attackTicks || compareId(a, b))[0];
 }
-function chooseActive(state: GameState, source: Unit, target: Unit | undefined, now: number): PickedTarget | undefined {
-  const def = partyDef(source); if (!def || !cooldownReady(source, def.active.id, now)) return undefined;
+function chooseActive(state: GameState, source: Unit, target: Unit | undefined): PickedTarget | undefined {
+  const def = partyDef(source); if (!def || (source.mana ?? 0) < manaCost(def)) return undefined;
   const active = def.active;
   const enemy = target;
   let picked: PickedTarget | undefined;
@@ -88,10 +149,13 @@ function chooseActive(state: GameState, source: Unit, target: Unit | undefined, 
   }
   return picked;
 }
-function chooseTarget(state: GameState, source: Unit, now: number): PickedTarget | undefined {
+function manaCost(def: NonNullable<ReturnType<typeof partyDef>>): number {
+  return def.active.manaCost ?? 60;
+}
+function chooseTarget(state: GameState, source: Unit): PickedTarget | undefined {
   if (source.side === 'hero') {
     const def = getPartyHeroDefinition(source.sourceId), target = attackTarget(state, source);
-    const active = chooseActive(state, source, target, now);
+    const active = chooseActive(state, source, target);
     if (active) return active;
     if (def.basic.style === 'heal') {
       const hurt = hurtAlly(state, 0.9);
@@ -125,11 +189,11 @@ function startEnemySpecial(state: GameState, source: Unit, now: number): boolean
   }
   const target = nearest(source, living(state.party)); if (!target) return false;
   if (special.kind === 'localArea') {
-    if (!cooldownReady(source, special.abilityId, now) || !inEdgeReach({ x: source.x, radius: radius(source) }, { x: target.x, radius: radius(target) }, source.range)) return false;
+    if (!cooldownReady(source, special.abilityId, now)) return false;
     setCooldown(source, special.abilityId, now + special.cooldownTicks);
   } else {
     const successful = source.procCounters?.basicSuccess ?? 0, used = source.procCounters?.bossPattern ?? 0;
-    if (successful < (used + 1) * special.every || !inEdgeReach({ x: source.x, radius: radius(source) }, { x: target.x, radius: radius(target) }, source.range)) return false;
+    if (successful < (used + 1) * special.every) return false;
     source.procCounters ??= {}; source.procCounters.bossPattern = used + 1;
   }
   source.specialAction = { state: 'areaMark', targetId: target.id, centerX: target.x, radius: special.kind === 'bossGlobal' ? 0 : special.radius,
@@ -152,41 +216,54 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       delete source.specialAction;
       continue;
     }
+    if (action.state === 'assassinDash') {
+      // Legacy dash: convert to a leap windup without moving x.
+      const target = state.party.find(unit => unit.id === action.targetId && unit.hp > 0);
+      delete source.specialAction;
+      source.moving = false;
+      if (!target) continue;
+      source.facing = aimDirection(source, target);
+      source.targetId = target.id;
+      const impactTick = now + PARTY_V2.timing.windupTicks;
+      source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, startTick: now, impactTick, delivery: 'leap' };
+      emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick }, now);
+      continue;
+    }
     const target = state.party.find(unit => unit.id === action.targetId && unit.hp > 0);
     if (!target) { delete source.specialAction; source.moving = false; continue; }
     if (action.state === 'assassinMark') {
       if (action.impactTick > now) continue;
       const enemy = getPartyEnemyDefinition(source.sourceId), special = enemy.special;
       if (!special || special.kind !== 'assassin') { delete source.specialAction; continue; }
-      const direction = aimDirection(source, target);
-      const targetX = target.x - direction * (radius(source) + radius(target) + source.range);
-      const ticks = Math.ceil(Math.abs(targetX - source.x) / Math.max(1, special.dashSpeed / CONFIG.sim.ticksPerSecond));
-      source.specialAction = { state: 'assassinDash', targetId: target.id, targetX, startX: source.x, startTick: now, impactTick: now + ticks };
+      delete source.specialAction;
+      source.moving = false;
+      source.facing = aimDirection(source, target);
+      source.targetId = target.id;
+      const impactTick = now + PARTY_V2.timing.windupTicks;
+      source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, startTick: now, impactTick, delivery: 'leap' };
+      emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick }, now);
     }
-    const dash = source.specialAction;
-    if (!dash || dash.state !== 'assassinDash') continue;
-    const enemy = getPartyEnemyDefinition(source.sourceId), special = enemy.special;
-    if (!special || special.kind !== 'assassin') { delete source.specialAction; continue; }
-    const direction = aimDirection(source, target);
-    const landing = target.x - direction * (radius(source) + radius(target) + source.range);
-    const delta = landing - source.x, movement = special.dashSpeed / CONFIG.sim.ticksPerSecond;
-    if (Math.abs(delta) > movement) { source.x += Math.sign(delta) * movement; source.moving = true; dash.targetX = landing; continue; }
-    source.x = landing; source.moving = false; source.facing = Math.sign(target.x - source.x) as -1 | 1;
-    source.targetId = target.id; source.action = { state: 'windup', kind: 'attack', targetId: target.id, startTick: now, impactTick: now + PARTY_V2.timing.windupTicks };
-    delete source.specialAction;
-    emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick: now + PARTY_V2.timing.windupTicks }, now);
   }
   return { busy, damage };
 }
-function recover(source: Unit, startTick: number, impactTick: number, kind: ActionKind, targetId: string, fullCadence: boolean, abilityId?: string): void {
-  const readyTick = fullCadence ? Math.max(startTick + source.attackTicks, impactTick + PARTY_V2.timing.minimumRecoveryTicks) : impactTick + PARTY_V2.timing.minimumRecoveryTicks;
-  source.action = { state: 'recovery', kind, targetId, startTick, impactTick, readyTick, ...(abilityId ? { abilityId } : {}) }; source.moving = false;
+function recover(source: Unit, startTick: number, impactTick: number, kind: ActionKind, targetId: string, _fullCadence: boolean, abilityId?: string, delivery?: SkillDelivery, anchor?: Pick<Unit, 'side' | 'slot'>, targetCount = 1): void {
+  const readyTick = impactTick + PARTY_V2.timing.minimumRecoveryTicks;
+  source.action = {
+    state: 'recovery', kind, targetId, startTick, impactTick, readyTick,
+    ...(abilityId ? { abilityId } : {}),
+    ...(delivery ? { delivery } : {}),
+    ...(anchor ? { targetSide: anchor.side, targetSlot: anchor.slot, targetCount } : {}),
+  };
+  source.moving = false;
 }
 function miss(state: GameState, impact: Impact, reason: Impact['reason']): void {
   if (!reason) return;
   emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: impact.kind, reason }, combatTime(state));
   const action = impact.source.action;
-  if (action?.state === 'windup') recover(impact.source, action.startTick, action.impactTick, action.kind, action.targetId, !(impact.kind === 'heal' && reason === 'unneeded'), action.abilityId);
+  if (action?.state === 'windup') {
+    const delivery = action.delivery ?? skillDelivery(impact.source, action.abilityId);
+    recover(impact.source, action.startTick, action.impactTick, action.kind, action.targetId, !(impact.kind === 'heal' && reason === 'unneeded'), action.abilityId, delivery, { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot }, action.targetCount ?? 1);
+  }
 }
 function rewardDeath(state: GameState, target: Unit): void {
   if (target.side !== 'enemy') return;
@@ -228,7 +305,7 @@ function commitAbility(state: GameState, impact: Impact, now: number): boolean {
     case 'buff': applyEffect(state, source, target, { group: 'party-atk-buff', kind: 'atkBonus', magnitude: ability.atkBonus ?? 0, durationTicks: ability.durationTicks ?? 0 }, now); break;
     case 'weaken': applyEffect(state, source, target, { group: 'enemy-atk-weaken', kind: 'atkReduction', magnitude: ability.atkReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
       applyEffect(state, source, target, { group: 'enemy-def-weaken', kind: 'defReduction', magnitude: ability.defReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
-      if (def.passive.kind === 'firstWeakenShield' && !(target.procCounters?.firstWeakenShield ?? 0)) {
+      if (state.combatRules !== 'party-v2' && def.passive.kind === 'firstWeakenShield' && !(target.procCounters?.firstWeakenShield ?? 0)) {
         target.procCounters ??= {}; target.procCounters.firstWeakenShield = 1;
         const ally = hurtAlly(state, 1) ?? living(state.party)[0]; if (ally) applyPartyShield(state, source, ally, ally.maxHp * (def.passive.shieldFraction ?? 0), def.passive.durationTicks ?? 0, now);
       }
@@ -237,7 +314,7 @@ function commitAbility(state: GameState, impact: Impact, now: number): boolean {
     case 'cleave': case 'projectile': case 'fireball': case 'singleBurst': return false;
     case 'intercept': return false;
   }
-  setCooldown(source, ability.id, now + ability.cooldownTicks); emit(state, { type: 'skill', unitId: source.id, skill: ability.id }, now); return true;
+  source.mana = 0; emit(state, { type: 'skill', unitId: source.id, skill: ability.id }, now); return true;
 }
 function damageAmount(state: GameState, source: Unit, target: Unit, coefficient: number, snapAtk?: number): number {
   const atk = snapAtk ?? effectiveAttack(state, source), def = effectiveDefense(state, target), dr = effectiveDamageReduction(state, target);
@@ -253,7 +330,7 @@ function applyDamageBatch(state: GameState, intents: DamageIntent[], now: number
     if (target.hp <= 0 && !hpLeft.has(target.id)) continue;
     if (!shieldLeft.has(target.id)) { shieldLeft.set(target.id, target.shieldUntilTick > now ? target.shield : 0); hpLeft.set(target.id, target.hp); initialHp.set(target.id, target.hp); }
     const counter = procCount.get(intent.source.id) ?? (intent.source.procCounters?.basicSuccess ?? 0);
-    const passive = partyDef(intent.source)?.passive;
+    const passive = state.combatRules === 'party-v2' ? undefined : partyDef(intent.source)?.passive;
     const coefficient = intent.basic && passive?.kind === 'fourthBonus' && (counter + 1) % 4 === 0 ? intent.coefficient * (1 + (passive.coefficient ?? 0.2)) : intent.coefficient;
     const amount = damageAmount(state, intent.source, target, coefficient, intent.snapAtk);
     const absorbed = Math.min(shieldLeft.get(target.id) ?? 0, amount); shieldLeft.set(target.id, (shieldLeft.get(target.id) ?? 0) - absorbed);
@@ -280,6 +357,7 @@ function applyDamageBatch(state: GameState, intents: DamageIntent[], now: number
   return results;
 }
 function effectAura(state: GameState, now: number): void {
+  if (state.combatRules === 'party-v2') return;
   const source = living(state.party).find(unit => partyDef(unit)?.passive.kind === 'livingAura');
   if (!source) return;
   const magnitude = partyDef(source)!.passive.atkReduction ?? 0.05;
@@ -290,6 +368,7 @@ function effectAura(state: GameState, now: number): void {
   }
 }
 function reserveGuards(state: GameState, impacts: DamageIntent[], now: number, reserved: Set<string>): void {
+  if (state.combatRules === 'party-v2') return;
   const guardians = living(state.party).filter(hero => ['intercept'].includes(partyDef(hero)!.passive.kind)).sort(compareId);
   for (const impact of impacts.filter(value => value.interceptable && value.source.side === 'enemy' && value.target.side === 'hero').sort((a, b) => a.source.id.localeCompare(b.source.id) || (a.projectileId ?? '').localeCompare(b.projectileId ?? ''))) {
     const target = impact.target;
@@ -300,19 +379,12 @@ function reserveGuards(state: GameState, impacts: DamageIntent[], now: number, r
     emit(state, { type: 'guard', guardianId: guardian.id, fromTargetId: target.id, toTargetId: guardian.id }, now);
   }
 }
-function launchProjectile(state: GameState, source: Unit, target: Unit, abilityId: string, coefficient: number, now: number, options: { splashCoefficient?: number; radius?: number; ground?: boolean; basic?: boolean } = {}): void {
-  const serial = (state.nextProjectileId ?? 0) + 1; state.nextProjectileId = serial;
-  const projectile: PartyProjectile = { id: `projectile-${state.encounter}-${serial}`, sourceId: source.id, sourceSide: source.side, targetId: target.id, targetSide: target.side, abilityId, delivery: options.ground ? 'ground' : 'homing', ...(options.basic === undefined ? {} : { basic: options.basic }),
-    x: source.x, speed: PARTY_V2.timing.projectileSpeed, atk: effectiveAttack(state, source), coefficient,
-    ...(options.splashCoefficient === undefined ? {} : { splashCoefficient: options.splashCoefficient }), ...(options.radius === undefined ? {} : { radius: options.radius }),
-    ...(options.ground ? { centerX: target.x } : {}), releasedAtTick: now, impactNotBeforeTick: now + 1, expiresAtTick: now + PARTY_V2.timing.projectileExpiryTicks };
-  (state.projectiles ??= []).push(projectile);
-  emit(state, { type: 'projectile', projectileId: projectile.id, sourceId: source.id, action: 'release' }, now);
-}
 function successfulBasic(state: GameState, result: DamageResult, now: number, heals: PendingHeal[], procDamage: DamageIntent[]): void {
   const { intent } = result, source = intent.source, target = intent.target;
   source.procCounters ??= {}; source.procCounters.basicSuccess = (source.procCounters.basicSuccess ?? 0) + 1;
   const def = partyDef(source); if (!def) return;
+  source.mana = Math.min(manaCost(def), (source.mana ?? 0) + 20);
+  if (state.combatRules === 'party-v2') return;
   const passive = def.passive, count = source.procCounters.basicSuccess;
   if (passive.kind === 'fourthSelfHeal' && count % 4 === 0) heals.push({ source, target: source, amount: result.hpDamage * (passive.coefficient ?? 0) });
   if (passive.kind === 'fourthGuard' && count % 4 === 0) applyEffect(state, source, source, { group: passive.group ?? 'bruiser-guard', kind: 'damageReduction', magnitude: passive.atkReduction ?? 0.1, durationTicks: passive.durationTicks ?? 0 }, now);
@@ -331,6 +403,7 @@ function successfulBasic(state: GameState, result: DamageResult, now: number, he
 }
 function basicCoefficient(source: Unit, target: Unit): number {
   const def = partyDef(source); if (!def) return 1;
+  if (source.action && source.side === 'hero') return def.basic.coefficient;
   const passive = def.passive;
   let coefficient = def.basic.coefficient;
   if (passive.kind === 'sameTargetRamp' && source.lastBasicTargetId === target.id) coefficient *= 1 + (source.lastBasicRamp ?? 0);
@@ -342,22 +415,22 @@ function prepareAttack(state: GameState, impact: Impact, now: number, damage: Da
   if (ability && ['shield', 'buff', 'weaken'].includes(ability.kind)) { commitAbility(state, impact, now); return; }
   const baseCoefficient = basic ? (def?.basic.style === 'heal' ? def?.basic.fallbackCoefficient ?? 0.7 : basicCoefficient(source, target)) : ability?.coefficient ?? 1;
   if (ability?.kind === 'selfSustain') heals.push({ source, target: source, amount: source.maxHp * (ability.healCoefficient ?? 0), requiresHit: { sourceId: source.id, targetId: target.id } });
-  const projectile = ability?.kind === 'projectile' || ability?.kind === 'fireball'
-    || (source.side === 'hero' && basic && def?.basic.style === 'projectile')
-    || (source.side === 'enemy' && getPartyEnemyDefinition(source.sourceId).basicStyle === 'projectile');
-  if (projectile) {
-    launchProjectile(state, source, target, id, baseCoefficient, now, ability?.kind === 'fireball' ? { splashCoefficient: ability.secondaryCoefficient, radius: ability.radius, ground: true } : { basic });
-    if (ability) setCooldown(source, ability.id, now + ability.cooldownTicks);
-    return;
-  }
-  const add = (victim: Unit, coefficient: number, primary: boolean): void => { damage.push({ source, target: victim, coefficient, abilityId: id, basic, interceptable: true, primary }); };
+  const add = (victim: Unit, coefficient: number, primary: boolean, interceptable = true): void => {
+    damage.push({ source, target: victim, coefficient, abilityId: id, basic, interceptable, primary });
+  };
   add(target, baseCoefficient, true);
   if (ability?.kind === 'cleave') {
     const secondaryTargets = living(targetPool(state, source, 'attack')).filter(unit => unit.id !== target.id && Math.abs(unit.x - target.x) <= (ability.radius ?? 0) + radius(unit))
       .sort((a, b) => Math.abs(a.x - target.x) - Math.abs(b.x - target.x) || compareId(a, b)).slice(0, ability.maxSecondaryTargets ?? 1);
     for (const secondary of secondaryTargets) add(secondary, ability.secondaryCoefficient ?? 0, false);
   }
-  if (ability) setCooldown(source, ability.id, now + ability.cooldownTicks);
+  if (ability?.kind === 'fireball') {
+    const centerX = target.x;
+    for (const secondary of living(targetPool(state, source, 'attack')).filter(unit => unit.id !== target.id && Math.abs(unit.x - centerX) <= (ability.radius ?? 0) + radius(unit)).sort(compareId)) {
+      add(secondary, ability.secondaryCoefficient ?? 0, false, false);
+    }
+  }
+  if (ability) { source.mana = 0; emit(state, { type: 'skill', unitId: source.id, skill: ability.id }, now); }
 }
 function advanceProjectiles(state: GameState, now: number): { damage: DamageIntent[]; consumed: Set<string> } {
   const damage: DamageIntent[] = [], consumed = new Set<string>(), keep: PartyProjectile[] = [];
@@ -396,52 +469,68 @@ export function expireFriendlyDeadTargetProjectiles(state: GameState): void {
 }
 export function cancelPartyEncounterEffects(state: GameState): void { state.partyEffects = []; state.projectiles = []; }
 
-/** One deterministic simulation tick for the opt-in party-v2 rules. */
-export function partyCombatTick(state: GameState): void {
-  const now = combatTime(state), startUnits = [...state.party, ...state.enemies].sort(compareId);
-  state.partyEffects ??= []; state.projectiles ??= []; state.nextProjectileId ??= 0;
-  if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); return; }
-  prunePartyEffects(state); effectAura(state, now);
-  for (const unit of startUnits) if (unit.shieldUntilTick <= now) { unit.shield = 0; delete unit.shieldProviderId; }
-  for (const unit of living(startUnits)) if (unit.action?.state === 'recovery' && unit.action.readyTick <= now) unit.action = { state: 'idle' };
-  const specials = advanceEnemySpecials(state, now);
-
-  const choices = new Map<string, PickedTarget>(), moves = new Map<string, number>();
-  for (const unit of living(startUnits)) {
-    if (!specials.busy.has(unit.id)) unit.moving = false;
-    if (specials.busy.has(unit.id) || unit.specialAction || unit.action?.state !== 'idle') continue;
-    if (startEnemySpecial(state, unit, now)) { specials.busy.add(unit.id); continue; }
-    const choice = chooseTarget(state, unit, now); if (!choice) { unit.targetId = null; continue; }
-    choices.set(unit.id, choice); unit.targetId = choice.target.id;
-    const gap = distance(unit, choice.target) - reachFor(unit), sign = Math.sign(choice.target.x - unit.x), perTick = unit.speed! / CONFIG.sim.ticksPerSecond;
-    if (gap > 0 && sign !== 0) moves.set(unit.id, unit.x + sign * Math.min(gap, perTick));
+function beginActorTurn(state: GameState, unit: Unit, now: number): void {
+  const wrapper = toGaugeUnit(unit);
+  spendTurn(wrapper);
+  syncGauge(wrapper);
+  const statuses = unitStatuses(unit);
+  if (!canAct(statuses)) {
+    const turned = onTurnStart({ id: unit.id, hp: unit.hp, maxHp: unit.maxHp, statuses });
+    unit.hp = turned.unit.hp;
+    unit.statuses = turned.unit.statuses;
+    unit.action = { state: 'idle' };
+    unit.moving = false;
+    return;
   }
-  for (const unit of living(startUnits)) { const next = moves.get(unit.id); if (next !== undefined) { unit.moving = next !== unit.x; unit.x = next; } }
-  for (const unit of living(startUnits)) {
-    const choice = choices.get(unit.id); if (!choice || unit.action?.state !== 'idle') continue;
-    const target = targetPool(state, unit, choice.kind).find(item => item.id === choice.target.id && item.hp > 0);
-    if (!target || !inEdgeReach({ x: unit.x, radius: radius(unit) }, { x: target.x, radius: radius(target) }, reachFor(unit))) continue;
-    const direction = Math.sign(target.x - unit.x); if (direction !== 0) unit.facing = direction as -1 | 1;
-    const impactTick = now + PARTY_V2.timing.windupTicks;
-    unit.action = { state: 'windup', kind: choice.kind, targetId: target.id, startTick: now, impactTick, ...(choice.abilityId ? { abilityId: choice.abilityId } : {}) };
-    unit.moving = false; emit(state, { type: 'actionStart', unitId: unit.id, targetId: target.id, kind: choice.kind, startTick: now, impactTick }, now);
+  if (startEnemySpecial(state, unit, now)) {
+    unit.moving = false;
+    return;
   }
+  const choice = chooseTarget(state, unit);
+  if (!choice) {
+    unit.targetId = null;
+    unit.action = { state: 'idle' };
+    return;
+  }
+  const target = targetPool(state, unit, choice.kind).find(item => item.id === choice.target.id && item.hp > 0);
+  if (!target) {
+    unit.targetId = null;
+    unit.action = { state: 'idle' };
+    return;
+  }
+  const direction = Math.sign(target.x - unit.x);
+  if (direction !== 0) unit.facing = direction as -1 | 1;
+  unit.targetId = target.id;
+  const delivery = skillDelivery(unit, choice.abilityId);
+  const impactTick = now + PARTY_V2.timing.windupTicks;
+  const targetCount = state.enemies.length;
+  unit.action = {
+    state: 'windup', kind: choice.kind, targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount, startTick: now, impactTick, delivery,
+    ...(choice.abilityId ? { abilityId: choice.abilityId } : {}),
+  };
+  unit.moving = false;
+  emit(state, { type: 'actionStart', unitId: unit.id, targetId: target.id, kind: choice.kind, startTick: now, impactTick }, now);
+}
 
+function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, specialDamage: DamageIntent[]): void {
   const due: Impact[] = [];
   for (const source of living(startUnits)) {
     const action = source.action; if (action?.state !== 'windup' || action.impactTick > now) continue;
     const target = targetPool(state, source, action.kind).find(unit => unit.id === action.targetId);
-    if (!target || target.hp <= 0) { due.push({ source, target: target ?? source, targetId: action.targetId, kind: action.kind, abilityId: action.abilityId, reason: 'target' }); continue; }
-    if (!inEdgeReach({ x: source.x, radius: radius(source) }, { x: target.x, radius: radius(target) }, reachFor(source))) { due.push({ source, target, targetId: target.id, kind: action.kind, abilityId: action.abilityId, reason: 'range' }); continue; }
-    const direction = Math.sign(target.x - source.x);
-    if (action.kind === 'attack' && source.range <= PARTY_V2.reach.melee && direction !== 0 && source.facing !== direction) { due.push({ source, target, targetId: target.id, kind: action.kind, abilityId: action.abilityId, reason: 'facing' }); continue; }
+    if (!target || target.hp <= 0) {
+      due.push({ source, target: target ?? source, targetId: action.targetId, kind: action.kind, abilityId: action.abilityId, reason: 'target' });
+      continue;
+    }
+    const def = partyDef(source);
+    if (def && action.abilityId === def.active.id && (source.mana ?? 0) < manaCost(def)) {
+      due.push({ source, target, targetId: action.targetId, kind: action.kind, abilityId: action.abilityId, reason: 'unneeded' });
+      continue;
+    }
     due.push({ source, target, targetId: target.id, kind: action.kind, abilityId: action.abilityId });
   }
   for (const impact of due) if (impact.reason) miss(state, impact, impact.reason);
   const valid = due.filter(impact => !impact.reason).sort((a, b) => compareId(a.source, b.source) || compareId(a.target, b.target));
-  const damage: DamageIntent[] = [...specials.damage], heals: PendingHeal[] = [];
-  // Protection and status effects commit before this tick's damage batch, regardless
-  // of whether the ability uses an attack or heal animation.
+  const damage: DamageIntent[] = [...specialDamage], heals: PendingHeal[] = [];
   const statusCommitted = new Set<Impact>();
   for (const impact of valid) {
     const definition = partyDef(impact.source), ability = definition?.active;
@@ -460,7 +549,7 @@ export function partyCombatTick(state: GameState): void {
       if (basic) {
         const coefficient = def?.basic.coefficient ?? 1.2, passive = def?.passive;
         heals.push({ source: impact.source, target: impact.target, amount: effectiveAttack(state, impact.source) * coefficient, impact, basic: true,
-          ...(passive?.kind === 'healGuard' ? { effect: { group: passive.group ?? 'healing-guard', kind: 'damageReduction' as const, magnitude: passive.coefficient ?? 0.1, durationTicks: passive.durationTicks ?? 0 } } : {}) });
+          ...(state.combatRules !== 'party-v2' && passive?.kind === 'healGuard' ? { effect: { group: passive.group ?? 'healing-guard', kind: 'damageReduction' as const, magnitude: passive.coefficient ?? 0.1, durationTicks: passive.durationTicks ?? 0 } } : {}) });
       } else if (ability?.kind === 'selfHeal') {
         heals.push({ source: impact.source, target: impact.source, amount: impact.source.maxHp * (ability.healCoefficient ?? 0), impact, cooldownId: ability.id, cooldownTicks: ability.cooldownTicks });
       } else if (ability?.kind === 'burstHeal') {
@@ -471,12 +560,14 @@ export function partyCombatTick(state: GameState): void {
   }
   const projectileImpacts = advanceProjectiles(state, now); damage.push(...projectileImpacts.damage);
   const reservedGuards = new Set<string>(); reserveGuards(state, damage, now, reservedGuards);
-  const results = applyDamageBatch(state, damage, now), procDamage: DamageIntent[] = [], successfulHits = new Set<string>();
+  const results = applyDamageBatch(state, damage, now), procDamage: DamageIntent[] = [], successfulHits = new Set<string>(), tankDamage = new Set<string>();
   for (const result of results) {
     if (result.total > 0) successfulHits.add(`${result.intent.source.id}/${result.intent.target.id}`);
+    const victim = result.intent.target;
+    if (state.combatRules === 'party-v2' && result.hpDamage > 0 && victim.side === 'hero' && isTank(victim) && result.intent.source.side === 'enemy') tankDamage.add(victim.id);
     if (result.intent.basic && result.intent.primary && result.total > 0) successfulBasic(state, result, now, heals, procDamage);
   }
-  // Proc-generated splash is one non-recursive secondary batch.
+  for (const id of tankDamage) { const tank = state.party.find(unit => unit.id === id); if (tank) tank.mana = Math.min(manaCost(partyDef(tank)!), (tank.mana ?? 0) + 5); }
   if (procDamage.length) applyDamageBatch(state, procDamage, now);
   for (const impact of valid) {
     if (impact.abilityId) {
@@ -491,14 +582,63 @@ export function partyCombatTick(state: GameState): void {
     const actual = heal(state, entry.source, entry.target, entry.amount, now);
     if (actual > 0) {
       if (entry.effect) applyEffect(state, entry.source, entry.target, entry.effect, now);
-      if (entry.cooldownId) setCooldown(entry.source, entry.cooldownId, now + (entry.cooldownTicks ?? 0));
-      if (entry.basic) entry.source.attacks += 1;
+      if (entry.cooldownId) {
+        if (state.combatRules === 'party-v2') entry.source.mana = 0;
+        else setCooldown(entry.source, entry.cooldownId, now + (entry.cooldownTicks ?? 0));
+      }
+      if (entry.basic) { entry.source.attacks += 1; if (state.combatRules === 'party-v2') entry.source.mana = Math.min(manaCost(partyDef(entry.source)!), (entry.source.mana ?? 0) + 20); }
     } else if (entry.impact) missedHeals.add(entry.impact);
   }
   for (const impact of missedHeals) emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: 'heal', reason: 'unneeded' }, now);
   for (const impact of valid) {
     const action = impact.source.action;
-    if (action?.state === 'windup') recover(impact.source, action.startTick, action.impactTick, action.kind, action.targetId, !(action.kind === 'heal' && missedHeals.has(impact)), action.abilityId);
+    if (action?.state === 'windup') {
+      const delivery = action.delivery ?? skillDelivery(impact.source, action.abilityId);
+      const anchor = { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot };
+      recover(impact.source, action.startTick, action.impactTick, action.kind, action.targetId, !(action.kind === 'heal' && missedHeals.has(impact)), action.abilityId, delivery, anchor, action.targetCount ?? Math.max(1, state.enemies.length));
+      const turned = onTurnStart({ id: impact.source.id, hp: impact.source.hp, maxHp: impact.source.maxHp, statuses: unitStatuses(impact.source) });
+      impact.source.hp = turned.unit.hp;
+      impact.source.statuses = turned.unit.statuses;
+    }
   }
+}
+
+/** One deterministic simulation tick for the opt-in party-v2 rules. */
+export function partyCombatTick(state: GameState): void {
+  const now = combatTime(state), startUnits = [...state.party, ...state.enemies].sort(compareId);
+  state.partyEffects ??= []; state.projectiles ??= []; state.nextProjectileId ??= 0;
+  if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); return; }
+  for (const enemy of living(state.enemies)) {
+    if (!enemy.moving) continue;
+    const home = enemyFormationX(enemy.slot);
+    const delta = home - enemy.x;
+    if (Math.abs(delta) <= ENEMY_ENTRY_PX) {
+      enemy.x = home;
+      enemy.moving = false;
+    } else {
+      enemy.x += Math.sign(delta) * ENEMY_ENTRY_PX;
+    }
+  }
+  if (living(state.enemies).some(enemy => enemy.moving)) return;
+  prunePartyEffects(state); effectAura(state, now);
+  for (const unit of startUnits) if (unit.shieldUntilTick <= now) { unit.shield = 0; delete unit.shieldProviderId; }
+  for (const unit of living(startUnits)) {
+    if (unit.action?.state === 'recovery' && unit.action.readyTick <= now) unit.action = { state: 'idle' };
+    unit.moving = false;
+  }
+  const specials = advanceEnemySpecials(state, now);
+  resolveDueImpacts(state, startUnits, now, specials.damage);
+
+  if (living([...state.party, ...state.enemies]).some(presentationBusy)) {
+    if (state.party.every(hero => hero.hp <= 0)) cancelPartyEncounterEffects(state);
+    return;
+  }
+
+  const wrappers = living([...state.party, ...state.enemies]).map(toGaugeUnit);
+  fillGauges(wrappers);
+  for (const wrapper of wrappers) syncGauge(wrapper);
+  const actor = nextActor(wrappers);
+  if (actor) beginActorTurn(state, actor.ref, now);
+
   if (state.party.every(hero => hero.hp <= 0)) cancelPartyEncounterEffects(state);
 }

@@ -28,6 +28,12 @@ const unitSchema = z.object({
   shield: natural, shieldUntilTick: natural, shieldProviderId: z.string().optional(), bornTick: natural, nativeBornTick: natural.optional(),
   radius: finite.nonnegative().optional(), speed: finite.nonnegative().optional(), facing: z.union([z.literal(-1), z.literal(1)]).optional(),
   targetId: z.string().nullable().optional(), moving: z.boolean().optional(),
+  gauge: natural.optional(),
+  mana: natural.max(100).optional(),
+  statuses: z.array(z.object({
+    id: z.string().min(1), sourceId: z.string().min(1), targetId: z.string().min(1),
+    stacks: positive, magnitude: finite, turnsLeft: natural,
+  }).strict()).optional(),
   partyCooldowns: z.record(z.string(), natural).optional(), procCounters: z.record(z.string(), finite.nonnegative()).optional(),
   guardReadyTick: natural.optional(), lastBasicTargetId: z.string().nullable().optional(), lastBasicRamp: finite.nonnegative().optional(),
   specialAction: z.discriminatedUnion('state', [
@@ -37,8 +43,8 @@ const unitSchema = z.object({
   ]).optional(),
   action: z.discriminatedUnion('state', [
     z.object({ state: z.literal('idle') }).strict(),
-    z.object({ state: z.literal('windup'), kind: z.enum(['attack', 'heal']), targetId: z.string(), startTick: natural, impactTick: natural, abilityId: z.string().optional(), centerX: finite.optional(), radius: finite.nonnegative().optional(), interceptable: z.boolean().optional() }).strict(),
-    z.object({ state: z.literal('recovery'), kind: z.enum(['attack', 'heal']), targetId: z.string(), startTick: natural, impactTick: natural, readyTick: natural, abilityId: z.string().optional() }).strict(),
+    z.object({ state: z.literal('windup'), kind: z.enum(['attack', 'heal']), targetId: z.string(), targetSide: z.enum(['hero', 'enemy']).optional(), targetSlot: natural.optional(), targetCount: natural.optional(), startTick: natural, impactTick: natural, abilityId: z.string().optional(), centerX: finite.optional(), radius: finite.nonnegative().optional(), interceptable: z.boolean().optional(), delivery: z.enum(['leap', 'cast']).optional() }).strict(),
+    z.object({ state: z.literal('recovery'), kind: z.enum(['attack', 'heal']), targetId: z.string(), targetSide: z.enum(['hero', 'enemy']).optional(), targetSlot: natural.optional(), targetCount: natural.optional(), startTick: natural, impactTick: natural, readyTick: natural, abilityId: z.string().optional(), delivery: z.enum(['leap', 'cast']).optional() }).strict(),
   ]).optional(),
 }).strict().refine(unit => unit.hp <= unit.maxHp, 'HP exceeds maximum');
 export type Unit = z.infer<typeof unitSchema>;

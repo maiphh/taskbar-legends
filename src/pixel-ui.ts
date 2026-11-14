@@ -1,4 +1,4 @@
-import { CONFIG, TICK_MS, heroConfig, raritySchema, slotSchema, stageConfig } from './config';
+import { CONFIG, TICK_MS, heroConfig, raritySchema, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
 import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
@@ -9,6 +9,8 @@ import { bestChoice, cheapestEquippedUpgrade, fortuneMeter, gearScore, heroStats
 import { bossSecondsRemaining, statusText } from './core/game';
 import { affordability } from './core/selectors';
 import type { Action, GameState, Gear, ItemId } from './core/model';
+import { compactLaneLayout } from './compact-lane-layout';
+import { getPartyHeroDefinition } from './core/party-definitions';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 const AVAILABLE: Record<PanelTab, string> = { heroes: ': gear upgrade affordable', gear: ': upgrade, better gear or a chest choice available', recruit: ': ticket ready to pull' };
@@ -42,6 +44,7 @@ export class PixelUI {
   panel: PanelTab | null = null;
   private coreY = 0;
   selectedHero = CONFIG.heroes[0]?.id ?? '';
+  heroDetailTab: 'ability' | 'stats' | 'items' = 'ability';
   selectedGear: ItemId | null = null;
   targetSlot = 0;
   private heroRow = 0;
@@ -240,27 +243,14 @@ export class PixelUI {
   private togglePanel(tab: PanelTab): void { this.setPanel(this.panel === tab ? null : tab); }
   /** Compact lane edit mode (compact-menu.md §2.2): the stage heading shifts right of the Move handle. */
   compactEditing = false;
-  /** Compact lane HUD (compact-menu.md §2.1, ui-tokens compactMenu.lane): opaque progress and actions islands; Menu/Edit are DOM buttons on top. */
-  private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, paused: boolean): void {
-    const lane = CONFIG.ui.compactMenu.lane, width = this.width, coreY = this.sourceHeight - CONFIG.ui.closed.coreHeight, dy = coreY - CONFIG.ui.closed.coreY, right = width - lane.width;
-    const at = (rect: readonly number[], shiftRight = false): Rect => ({ x: (rect[0] ?? 0) + (shiftRight ? right : 0), y: (rect[1] ?? 0) + dy, width: rect[2] ?? 0, height: rect[3] ?? 0 });
-    const progressRect = at(lane.progressIsland), actionsRect = at(lane.actionsIsland, true);
-    this.frame(ctx, progressRect); this.frame(ctx, actionsRect);
-    const progress = state.progress, stage = CONFIG.stages[progress.stage - 1], waves = stage?.waves.length ?? 3;
-    const heading = progress.kind === 'BOSS_READY' ? `BOSS ${stageConfig(progress.bossStage).id} READY` : progress.kind === 'BOSS_FIGHT' ? `BOSS ${stage?.id ?? ''}` : `${progress.kind === 'FARMING' ? 'FARM' : 'STAGE'} ${stage?.id ?? ''}`;
-    const sub = progress.kind === 'BOSS_READY' ? 'Start it from Menu' : `WAVE ${state.wave}/${waves}`;
-    const [hx = 20, hy = 92] = lane.stageText, [wx = 20, wy = 115] = lane.waveText, headX = this.compactEditing ? CONFIG.ui.compactMenu.editMode.headingShiftX : hx;
-    this.text(ctx, heading, headX, hy + dy, progress.kind === 'BOSS_READY' || progress.kind === 'BOSS_FIGHT' ? palette.red : palette.gold, BODY, true, progressRect.x + progressRect.width - 8 - headX, { exactY: true });
-    this.text(ctx, sub, wx, wy + dy, palette.muted, BODY, false, progressRect.width - 24, { exactY: true });
-    const track = { x: wx, y: progressRect.y + 51, width: progressRect.width - 24, height: 4 };
-    ctx.fillStyle = palette.ink; ctx.fillRect(track.x, track.y, track.width, track.height);
-    ctx.fillStyle = palette.blue; ctx.fillRect(track.x, track.y, Math.round(track.width * Math.min(1, Math.max(0, (state.wave - 1) / waves))), track.height);
-    const [px = 432, py = 98, pw = 6, ph = 6] = lane.statusPip, [sx = 442, sy = 92] = lane.statusText;
-    ctx.fillStyle = palette.ink; ctx.fillRect(px + right - 1, py + dy - 1, pw + 2, ph + 2);
-    ctx.fillStyle = paused ? palette.gold : palette.green; ctx.fillRect(px + right, py + dy, pw, ph);
-    this.text(ctx, paused ? 'PAUSED' : 'RUNNING', sx + right, sy + dy, paused ? palette.gold : palette.green, BODY, false, 60, { exactY: true });
-    const [gix = 432, giy = 119] = lane.goldIcon, [gtx = 452, gty = 121] = lane.goldText;
-    this.icon(ctx, 'gold', gix + right, giy + dy); this.text(ctx, short(state.gold), gtx + right, gty + dy, palette.gold, BODY, true, 56, { exactY: true });
+  /** Compact lane HUD: full-bleed field with a short stage id; Menu is the only DOM control. */
+  private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, _paused: boolean): void {
+    void _paused;
+    const width = this.width, coreY = this.sourceHeight - CONFIG.ui.closed.coreHeight;
+    const progress = state.progress;
+    const stageId = progress.kind === 'BOSS_READY' ? stageConfig(progress.bossStage).id : (CONFIG.stages[progress.stage - 1]?.id ?? '');
+    const color = progress.kind === 'BOSS_READY' || progress.kind === 'BOSS_FIGHT' ? palette.red : palette.gold;
+    this.text(ctx, stageId, 8, coreY + 8, color, BODY, true, undefined, { exactY: true });
     if (this.compactEditing) {
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameInk; ctx.fillRect(0, coreY, width, 1); ctx.fillRect(0, coreY + 79, width, 1); ctx.fillRect(0, coreY, 1, 80); ctx.fillRect(width - 1, coreY, 1, 80);
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameColor; ctx.fillRect(1, coreY + 1, width - 2, 1); ctx.fillRect(1, coreY + 78, width - 2, 1); ctx.fillRect(1, coreY + 1, 1, 78); ctx.fillRect(width - 2, coreY + 1, 1, 78);
@@ -277,9 +267,11 @@ export class PixelUI {
   sourceRegions(): SourceHitRegion[] {
     if (this.standalone) return [{ kind: 'panel', id: 'reveal-stage', x: 0, y: REVEAL_STAGE.top, width: this.revealStageWidth, height: REVEAL_STAGE.height - REVEAL_STAGE.top }];
     if (this.compactMode) {
-      const lane = CONFIG.ui.compactMenu.lane, dy = this.height() - CONFIG.ui.closed.coreHeight - CONFIG.ui.closed.coreY, right = this.width - lane.width;
-      const [px = 8, py = 88, pw = 200, ph = 64] = lane.progressIsland, [ax = 424, ay = 88, aw = 208, ah = 64] = lane.actionsIsland;
-      return [{ kind: 'hud', id: 'progress', x: px, y: py + dy, width: pw, height: ph }, { kind: 'hud', id: 'actions', x: ax + right, y: ay + dy, width: aw, height: ah }];
+      const dy = this.height() - CONFIG.ui.closed.coreHeight - CONFIG.ui.closed.coreY, layout = compactLaneLayout(this.width);
+      return [
+        { kind: 'hud', id: 'progress', x: layout.progress.x, y: layout.progress.y + dy, width: layout.progress.width, height: layout.progress.height },
+        { kind: 'hud', id: 'actions', x: layout.actions.x, y: layout.actions.y + dy, width: layout.actions.width, height: layout.actions.height },
+      ];
     }
     const coreY = this.height() - CONFIG.ui.closed.coreHeight;
     const compact = this.width < 1000;
@@ -759,20 +751,40 @@ export class PixelUI {
       this.text(ctx, `HP ${combat?.hp ?? stats.maxHp} / ${combat?.maxHp ?? stats.maxHp}`, detailX + 16, 223, palette.text, BODY);
       ctx.fillStyle = palette.ink; ctx.fillRect(detailX + 16, 244, detailWidth - 32, 6); ctx.fillStyle = palette.green; ctx.fillRect(detailX + 17, 245, Math.round((detailWidth - 34) * ((combat?.hp ?? stats.maxHp) / (combat?.maxHp ?? stats.maxHp))), 4);
       this.text(ctx, `ATK ${combat?.atk ?? stats.atk}    DEF ${combat?.def ?? stats.def}`, detailX + 16, 262, palette.text, BODY, false, detailWidth - 28);
-      this.text(ctx, 'EQUIPPED', detailX + 16, 288, palette.muted, BODY);
-      for (const [index, slot] of slotSchema.options.entries()) {
-        this.frame(ctx, { x: detailX + 16 + index * 40, y: 304, width: 32, height: 32 }, 'button-9slice.png');
-        this.icon(ctx, slot === 'weapon' ? 'sword' : slot === 'armor' ? 'armor' : 'potion', detailX + 24 + index * 40, 312);
+      const tabWidth = Math.floor((detailWidth - 38) / 3);
+      (['ability', 'stats', 'items'] as const).forEach((tab, index) => this.button(ctx, `hero-detail-${tab}`, tab.toUpperCase(), { x: detailX + 10 + index * (tabWidth + 4), y: 280, width: tabWidth, height: 24 }, () => { this.heroDetailTab = tab; this.onRedraw(); }, { selected: this.heroDetailTab === tab }));
+      const heroDef = getPartyHeroDefinition(hero.id);
+      if (this.heroDetailTab === 'ability') {
+        const names: Record<string, string> = { mw2: 'Guardian Shield', hk1: 'Second Wind', mw1: 'Cleave', hu1: 'Piercing Shot', priest: 'Restoration', ew1: 'Withering Hex', mk1: 'Rally', wiz: 'Fireball', mw3: 'Wide Cleave', mh1: 'Focused Burst', mh2: 'Quick Burst', hu2: 'Long Shot', hk2: 'Bulwark', fw: 'Blood Strike', ew2: 'Inferno', mk2: 'Iron Wall', mh3: 'Execution', ew3: 'Armor Break' };
+        const active = heroDef.active, skill = active.kind;
+        const target = ['shield', 'selfHeal', 'selfSustain'].includes(skill) ? 'Self' : skill === 'burstHeal' ? 'Lowest-HP ally' : skill === 'buff' ? 'Strongest ally' : 'One enemy';
+        const seconds = (active.durationTicks ?? 0) / CONFIG.sim.ticksPerSecond;
+        const effect = skill === 'shield' ? `Shield ${Math.round((active.shieldFraction ?? 0) * 100)}% HP for ${seconds}s` : skill === 'selfHeal' ? `Heal ${Math.round((active.healCoefficient ?? 0) * 100)}% max HP` : skill === 'burstHeal' ? `Heal ${Math.round((active.healCoefficient ?? 0) * 100)}% ATK` : skill === 'buff' ? `+${Math.round((active.atkBonus ?? 0) * 100)}% ATK for ${seconds}s` : skill === 'weaken' ? `-${Math.round((active.atkReduction ?? 0) * 100)}% ATK / -${Math.round((active.defReduction ?? 0) * 100)}% DEF for ${seconds}s` : skill === 'selfSustain' ? `${active.coefficient}x ATK + heal ${Math.round((active.healCoefficient ?? 0) * 100)}% max HP` : `${active.coefficient ?? 1}x ATK${active.secondaryCoefficient ? ` + ${active.secondaryCoefficient}x nearby` : ''}`;
+        this.text(ctx, `${names[hero.id] ?? 'Signature'} · ${active.manaCost ?? 60} mana`, detailX + 12, 307, palette.gold, BODY, true, detailWidth - 24);
+        this.text(ctx, `${effect} · ${target}`, detailX + 12, 321, palette.text, BODY, false, detailWidth - 24);
+        this.text(ctx, 'Auto-casts next turn when ready', detailX + 12, 335, palette.blue, BODY, false, detailWidth - 24);
+        this.text(ctx, 'Basic +20 mana; tank +5 on HP hit', detailX + 12, 349, palette.muted, BODY, false, detailWidth - 24);
+      } else if (this.heroDetailTab === 'stats') {
+        this.text(ctx, `Turn SPD ${heroDef.role === 'support' ? 115 : heroDef.role === 'tank' ? 90 : heroDef.basic.style === 'melee' ? 100 : 105}`, detailX + 12, 312, palette.text, BODY);
+        this.text(ctx, heroDef.strength, detailX + 12, 332, palette.muted, BODY, false, detailWidth - 24);
+        this.text(ctx, `Weakness: ${heroDef.weakness}`, detailX + 12, 348, palette.muted, BODY, false, detailWidth - 24);
+      } else {
+        for (const [index, slot] of (['weapon', 'armor', 'charm'] as const).entries()) {
+          const item = state.inventory.find(value => value.id === hero.equipment[slot]);
+          const line = item ? `${slot.toUpperCase()}: ${item.rarity} Lv${item.level} ${Object.entries(item.stats).filter(([, value]) => value > 0).map(([key, value]) => `${key.endsWith('Pct') ? `${key.slice(0, -3).toUpperCase()} ${(Number(value) * (1 + CONFIG.gear.upgrade.mainPerLevel * item.level) * 100).toFixed(0)}%` : `${key.toUpperCase()} ${Math.round(Number(value) * (1 + CONFIG.gear.upgrade.mainPerLevel * item.level))}`}`).join(' ')}` : `${slot.toUpperCase()}: Empty`;
+          this.text(ctx, line, detailX + 12, 307 + index * 14, item ? palette.text : palette.muted, BODY, false, detailWidth - 24);
+        }
+        this.text(ctx, 'Open Gear tab to Inspect / Change', detailX + 12, 349, palette.blue, BODY, false, detailWidth - 24);
       }
-      if (!state.partyIds.includes(hero.id)) for (let slot = 0; slot < CONFIG.sim.partySize; slot += 1) this.button(ctx, `replace-${slot}`, `Slot ${slot + 1}`, { x: detailX + 8 + slot * Math.floor((detailWidth - 16) / 3), y: 328, width: Math.floor((detailWidth - 22) / 3), height: 24 }, () => {
-        const ids = [...state.partyIds]; ids[slot] = hero.id; this.onAction({ type: 'party', heroIds: ids });
-      }, { tooltip: `Replace slot ${slot + 1}: ${heroConfig(state.partyIds[slot] ?? '').name}` });
     } else this.text(ctx, 'Recruit to unlock', detailX + 16, 241, palette.muted, BODY);
-    this.text(ctx, `FORMATION ${state.partyIds.length}/3`, x + 16, 368, palette.muted, BODY, true);
+    for (let slot = 0; slot < CONFIG.sim.partySize; slot += 1) this.button(ctx, `replace-${slot}`, `${['Front', 'Middle', 'Rear'][slot]}`, { x: x + 16 + slot * 90, y: 364, width: 84, height: 28 }, () => {
+      const selected = state.roster.find(value => value.id === this.selectedHero); if (!selected) return;
+      const ids = [...state.partyIds], current = ids.indexOf(selected.id); if (current >= 0 && current !== slot) [ids[current], ids[slot]] = [ids[slot]!, ids[current]!]; else ids[slot] = selected.id;
+      if (new Set(ids).size === CONFIG.sim.partySize) this.onAction({ type: 'party', heroIds: ids });
+    }, { selected: state.partyIds[slot] === this.selectedHero, tooltip: `Assign ${heroConfig(this.selectedHero).name} to ${['Front', 'Middle', 'Rear'][slot]}; swaps deployed starters` });
     const item = cheapestEquippedUpgrade(state), cost = item ? upgradeCost(item) : null;
     this.button(ctx, 'hero-upgrade', cost === null ? 'No gear yet' : `Upgrade ${short(cost)} G`, { x: x + panel.width - 184, y: 364, width: 168, height: 28 }, () => { if (item) this.onAction({ type: 'upgrade', gearId: item.id }); }, { disabled: !item || state.gold < (cost ?? 0), tooltip: cost === null ? 'Defeat waves to earn gear' : state.gold < cost ? `Need ${cost - state.gold} more gold` : `Upgrade equipped gear #${item?.id}: ${cost} gold` });
-    if (panel.width >= 720) this.text(ctx, 'Stats refresh next stage', x + 320, 370, palette.muted, BODY, false, 208);
-    this.button(ctx, 'auto-equip-heroes', 'Auto-equip', { x: x + 192, y: 364, width: 120, height: 28 }, () => this.onAction({ type: 'autoEquip' }));
+    if (panel.width >= 720) this.button(ctx, 'auto-equip-heroes', 'Auto-equip', { x: x + 288, y: 364, width: 120, height: 28 }, () => this.onAction({ type: 'autoEquip' }));
   }
   private drawGear(ctx: CanvasRenderingContext2D, state: GameState, panel: Rect): void {
     const x = panel.x, cols = this.gearColumns(), detailX = x + (panel.width >= 720 ? 424 : panel.width - 232), detailWidth = panel.width >= 720 ? 280 : 216;

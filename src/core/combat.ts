@@ -33,6 +33,7 @@ export function spawnWave(state: GameState): void {
         attackTicks: definition.attackTicks, range: definition.range, x: CONFIG.sim.enemySpawnX + slot * CONFIG.sim.enemySpawnSpacingPx,
         slot, cooldown: CONFIG.combat.firstAttackDelayTicks, boss: kind.startsWith('boss'), attacks: 0, shield: 0, shieldUntilTick: 0, bornTick: state.tick };
       Object.assign(unit, partyUnitFields(unit));
+      unit.moving = true;
       if (state.farmClock) unit.nativeBornTick = combatTime(state);
       emit(state, { type: 'spawn', unitId: unit.id, side: 'enemy', stage: stage.index, wave: state.wave });
       return unit;

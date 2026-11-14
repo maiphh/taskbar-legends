@@ -3,7 +3,7 @@ import audioManifest from '../audio-manifest.json';
 import { AtlasLibrary } from '../atlas';
 import { FONT_FILES } from '../font';
 import { PixelUI, REVEAL_STAGE, shortHeroName, type RevealPull } from '../pixel-ui';
-import { partyBasicDpsForStats, realizedBasicCycleTicks, upgradeCost } from '../core/economy';
+import { upgradeCost } from '../core/economy';
 import { getPartyHeroDefinition } from '../core/party-definitions';
 import type { Action, GameState } from '../core/model';
 import type { HeroGearComparison, ManagementReply, ManagementSnapshot } from './authority';
@@ -32,6 +32,10 @@ const heroName = (id: string): string => heroConfig(id).name
   .replace(/\s*(?:\||[-–])\s*(?:asset|pack|sprite|sheet)\b.*$/ig, '').trim();
 /** Card / slot label (mockups): drop the asset-pack prefixes so names fit 88 px cards (Warrior 2, Martial 1, King 2). */
 const shortName = (id: string): string => shortHeroName(id);
+function activeSkillName(id: string): string {
+  const names: Record<string, string> = { mw2: 'Guardian Shield', hk1: 'Second Wind', mw1: 'Cleave', hu1: 'Piercing Shot', priest: 'Restoration', ew1: 'Withering Hex', mk1: 'Rally', wiz: 'Fireball', mw3: 'Wide Cleave', mh1: 'Focused Burst', mh2: 'Quick Burst', hu2: 'Long Shot', hk2: 'Bulwark', fw: 'Blood Strike', ew2: 'Inferno', mk2: 'Iron Wall', mh3: 'Execution', ew3: 'Armor Break' };
+  return names[id] ?? 'Signature Skill';
+}
 const pct = (value: number): string => `${Math.round(value * 100)}%`;
 function activeDescription(id: string) {
   const definition = getPartyHeroDefinition(id), ability = definition.active, seconds = (ticks: number | undefined) => `${(ticks ?? 0) / CONFIG.sim.ticksPerSecond}s`;
@@ -47,20 +51,6 @@ function activeDescription(id: string) {
     case 'singleBurst': return `${pct(ability.coefficient ?? 0)} damage to one foe within ${definition.basic.range} range; ${seconds(ability.cooldownTicks)} cooldown`;
     case 'selfSustain': return `${pct(ability.coefficient ?? 0)} melee damage and heal ${pct(ability.healCoefficient ?? 0)} max HP on a valid hit; ${seconds(ability.cooldownTicks)} cooldown`;
     case 'intercept': return `Intercept a committed hit within ${ability.range ?? 0} range`;
-  }
-}
-function passiveDescription(id: string) {
-  const passive = getPartyHeroDefinition(id).passive, seconds = (ticks: number | undefined) => `${(ticks ?? 0) / CONFIG.sim.ticksPerSecond}s`;
-  switch (passive.kind) {
-    case 'intercept': return `Intercept one committed hit within ${passive.range ?? 0} range; ${seconds(passive.cooldownTicks)} cooldown`;
-    case 'fourthSelfHeal': return `Every fourth successful basic heals ${pct(passive.coefficient ?? 0)} of actual HP damage dealt`;
-    case 'sameTargetRamp': return `Each consecutive hit on the same foe adds ${pct(passive.coefficient ?? 0)} damage, capped at ${pct(passive.cap ?? 0)}; resets on target change`;
-    case 'fourthBonus': return `Every fourth successful basic deals ${pct(passive.coefficient ?? 0)} bonus damage; missed or expired hits do not count`;
-    case 'healGuard': return `A successful heal gives the recipient ${pct(passive.coefficient ?? 0)} damage reduction for ${seconds(passive.durationTicks)}`;
-    case 'firstWeakenShield': return `The first weaken on each foe shields the lowest-HP ally for ${pct(passive.shieldFraction ?? 0)} max HP for ${seconds(passive.durationTicks)}`;
-    case 'livingAura': return `While alive, allies take ${pct(passive.atkReduction ?? 0)} less damage`;
-    case 'thirdSplash': return `Every third successful basic deals ${pct(passive.coefficient ?? 0)} splash within ${passive.radius ?? 0} range; splash cannot trigger another proc`;
-    case 'fourthGuard': return `Every fourth successful basic grants ${pct(passive.atkReduction ?? 0)} damage reduction for ${seconds(passive.durationTicks)}`;
   }
 }
 
@@ -139,6 +129,8 @@ export class ManagementView {
   private selectedHero = '';
   private selectedGear = '';
   private selectedPartySlot: 0 | 1 | 2 = 0;
+  private partyWorkspace: 'heroes' | 'formation' = 'heroes';
+  private heroDetailTab: 'ability' | 'stats' | 'items' = 'ability';
   private slotFilter = 'all';
   private rarityFilter = 'all';
   private ownerFilter = 'all';
@@ -354,6 +346,11 @@ export class ManagementView {
       options[index < 0 && event.key === 'ArrowUp' ? options.length - 1 : next]?.focus(); return;
     }
     if (target?.dataset.ddToggle !== undefined && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) { event.preventDefault(); this.toggleDropdown(target.dataset.ddToggle, true); return; }
+    if (target?.dataset.heroDetail !== undefined && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault(); const tabs = ['ability', 'stats', 'items'] as const, index = tabs.indexOf(target.dataset.heroDetail as typeof tabs[number]);
+      this.heroDetailTab = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[2] : tabs[Math.max(0, Math.min(2, index + (event.key === 'ArrowRight' ? 1 : -1)))]!;
+      this.contentKey = ''; this.renderContent(); this.root.querySelector<HTMLElement>(`[data-hero-detail="${this.heroDetailTab}"]`)?.focus(); return;
+    }
     const sliderNode = target?.closest<HTMLElement>('[data-slider]');
     if (sliderNode?.dataset.slider) {
       const name = sliderNode.dataset.slider, current = this.sliderValue(name);
@@ -406,8 +403,10 @@ export class ManagementView {
     if (button.dataset.ddToggle) { this.toggleDropdown(button.dataset.ddToggle, (event as MouseEvent).detail === 0); return; }
     if (button.dataset.ddOption) { const name = button.dataset.ddOption; this.openDropdown = null; this.choose(name, button.dataset.value ?? ''); this.root.querySelector<HTMLElement>(`[data-dd-toggle="${CSS.escape(name)}"]`)?.focus(); return; }
     if (button.dataset.hero) { this.selectedHero = button.dataset.hero; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.partyWorkspace === 'heroes' || button.dataset.partyWorkspace === 'formation') { this.partyWorkspace = button.dataset.partyWorkspace; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.heroDetail === 'ability' || button.dataset.heroDetail === 'stats' || button.dataset.heroDetail === 'items') { this.heroDetailTab = button.dataset.heroDetail; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.partySlot !== undefined) { const index = Number(button.dataset.partySlot); this.selectedPartySlot = index === 1 || index === 2 ? index : 0; this.contentKey = ''; this.renderContent(); return; }
-    if (button.dataset.assign) { const ids = [...state.partyIds]; ids[this.selectedPartySlot] = button.dataset.assign; if (ids.every(Boolean) && new Set(ids).size === 3) void this.command({ type: 'party', heroIds: ids }); else { this.message = 'Each formation slot needs a different owned hero.'; this.renderStatus(); } return; }
+    if (button.dataset.assign) { const ids = [...state.partyIds], current = ids.indexOf(button.dataset.assign); if (current >= 0 && current !== this.selectedPartySlot) [ids[current], ids[this.selectedPartySlot]] = [ids[this.selectedPartySlot]!, ids[current]!]; else ids[this.selectedPartySlot] = button.dataset.assign; if (ids.every(Boolean) && new Set(ids).size === 3 && state.roster.some(hero => hero.id === button.dataset.assign)) void this.command({ type: 'party', heroIds: ids }); else { this.message = 'Each formation slot needs a different owned hero.'; this.renderStatus(); } return; }
     if (button.dataset.lockHero) { void this.command({ type: 'lockHero', heroId: button.dataset.lockHero, locked: button.dataset.locked !== 'true' }); return; }
     if (button.dataset.gear) { this.selectedGear = button.dataset.gear; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.zoom && this.compactPrefs) { this.compactPrefs = { ...this.compactPrefs, zoom: button.dataset.zoom === '2' ? 2 : 1 }; void this.settingRequest(this.client.setCompactPrefs(this.compactPrefs)); this.contentKey = ''; this.renderContent(); return; }
@@ -415,6 +414,7 @@ export class ManagementView {
     else if (action === 'pull-ten') void this.recruitPull(10);
     else if (action === 'auto-party') void this.command({ type: 'autoParty', preset: state.partyPreset ?? 'balanced' });
     else if (action === 'auto-equip') void this.command({ type: 'autoEquip' });
+    else if (action === 'inspect-items') { this.tab = 'stash'; const hero = state.roster.find(value => value.id === this.selectedHero); this.selectedGear = (hero?.equipment.weapon ?? hero?.equipment.armor ?? hero?.equipment.charm ?? state.inventory[0]?.id ?? '') as string; this.contentKey = ''; this.renderContent(); }
     else if (action === 'choose-0' || action === 'choose-1') void this.command({ type: 'chooseChest', keep: action === 'choose-0' ? 0 : 1 });
     else if (action === 'retry') void this.command({ type: 'retry' });
     else if (action === 'upgrade' && this.selectedGear) void this.command({ type: 'upgrade', gearId: this.selectedGear as GameState['inventory'][number]['id'] });
@@ -447,7 +447,7 @@ export class ManagementView {
   }
   private renderContent(): void {
     const state = this.snapshotValue; if (!state || this.closed) return;
-    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
+    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
     if (signature === this.contentKey) return;
     const active = document.activeElement, focusId = active instanceof HTMLElement && (this.main.contains(active) || this.footer.contains(active)) ? active.dataset.control : undefined;
     const scroll = [...this.main.querySelectorAll<HTMLElement>('[data-scroll]')].map(node => [node.dataset.scroll, node.scrollTop] as const);
@@ -493,34 +493,45 @@ export class ManagementView {
       : [!definitions.some(value => value.role === 'tank') && 'tank', !definitions.some(value => value.role === 'dps') && 'damage', !definitions.some(value => value.role === 'support') && 'support'];
     const coverage = missing.filter((value): value is string => !!value);
     const selectedDef = selected ? getPartyHeroDefinition(selected.id) : undefined;
-    const cycleTicks = stats ? realizedBasicCycleTicks(stats) : 6;
-    const basicDps = stats && selected ? partyBasicDpsForStats(selected.id, stats) : 0;
     const slot = this.selectedPartySlot + 1;
+    const workspace = `<div class="px-at px-party-workspaces" style="left:422px;top:20px" role="group" aria-label="Party workspace">${button('workspace-heroes', 'Heroes', 'data-party-workspace="heroes"', { selected: this.partyWorkspace === 'heroes' })}${button('workspace-formation', 'Formation', 'data-party-workspace="formation"', { selected: this.partyWorkspace === 'formation' })}</div>`;
     const slots = state.partyIds.map((id, index) => { const hero = state.roster.find(value => value.id === id);
       return `<button type="button" class="px-formation${this.selectedPartySlot === index ? ' px-sel' : ''}" ${control(`party-slot-${index}`)} data-party-slot="${index}" aria-pressed="${this.selectedPartySlot === index}" aria-label="Slot ${index + 1}: ${esc(heroName(id))}${hero?.partyLocked ? ' (locked)' : ''}" style="left:${16 + 104 * index}px">`
         + `<span class="px-index">${index + 1}</span>${hero?.partyLocked ? '<i class="px-lock" title="Locked"></i>' : ''}${this.portrait(id)}<span class="px-name">${esc(shortName(id))}</span></button>`; }).join('');
     const roster = state.roster.map(hero => { const rarity = heroConfig(hero.id).rarity;
       return `<button type="button" class="px-card${hero.id === selected?.id ? ' px-sel' : ''}" data-rarity="${rarity}" ${control(`hero-${hero.id}`)} data-hero="${esc(hero.id)}" aria-pressed="${hero.id === selected?.id}" aria-label="${esc(heroName(hero.id))}, ${rarity}, level ${hero.level}, ${hero.stars} stars">`
         + `${shape(rarity)}<span class="px-card-lv">Lv${hero.level}</span>${this.portrait(hero.id)}<span class="px-name">${esc(shortName(hero.id))}</span><span class="px-stars">${'★'.repeat(hero.stars)}</span></button>`; }).join('');
+    if (this.partyWorkspace === 'formation') {
+      const owned = state.roster.map(hero => `<button type="button" class="px-card${hero.id === selected?.id ? ' px-sel' : ''}" ${control(`hero-${hero.id}`)} data-hero="${esc(hero.id)}" aria-pressed="${hero.id === selected?.id}">${this.portrait(hero.id)}<span class="px-name">${esc(shortName(hero.id))}</span><span class="px-card-lv">Lv${hero.level}</span></button>`).join('');
+      const formationSlots = state.partyIds.map((id, index) => `<button type="button" class="px-formation px-wide-formation${this.selectedPartySlot === index ? ' px-sel' : ''}" ${control(`party-slot-${index}`)} data-party-slot="${index}" aria-pressed="${this.selectedPartySlot === index}"><span class="px-index">${['FRONT', 'MIDDLE', 'REAR'][index]}</span>${this.portrait(id)}<span>${esc(heroName(id))}</span>${state.roster.find(hero => hero.id === id)?.partyLocked ? '<i class="px-lock" title="Protected from presets"></i>' : ''}</button>`).join('');
+      return [`<h2 class="px-sr">Formation</h2>${workspace}<p class="px-hint" style="top:0">Enemy direction → · Front is closest. Select a slot and hero, then assign.</p><div class="px-at" style="left:16px;top:20px">${this.dropdown('party-preset', 'Preset', PRESETS, preset, 150, 'data-setting="party-preset"')}</div><div class="px-at" style="left:176px;top:20px">${button('auto-party', 'Apply preset', 'data-action="auto-party"', { primary: true })}</div><div class="px-at" style="left:286px;top:20px">${button('auto-equip', 'Auto-equip', 'data-action="auto-equip"')}</div><div class="px-formations px-formations-large">${formationSlots}</div><div class="px-formation-roster" data-scroll="formation-roster">${owned}</div><div class="px-formation-assign">${button(`assign-${selected?.id ?? ''}`, `Assign ${selected ? shortName(selected.id) : 'hero'} to ${['Front', 'Middle', 'Rear'][this.selectedPartySlot]}`, `data-assign="${esc(selected?.id ?? '')}"`, { primary: true, disabled: !selected })}${selected ? button(`formation-lock-${selected.id}`, selected.partyLocked ? 'Unlock preset slot' : 'Lock preset slot', `data-lock-hero="${esc(selected.id)}" data-locked="${selected.partyLocked === true}"`, { selected: selected.partyLocked === true }) : ''}<p class="px-muted">${coverage.length ? `Missing: ${coverage.join(', ')}.` : 'Coverage complete.'}</p><p class="px-muted">Manual assignment overrides preset locks.</p></div>`, '<p class="px-muted">Changes apply at the next stage or encounter rebuild.</p>'];
+    }
+    const deployedSlot = selected ? state.partyIds.indexOf(selected.id) : -1;
     const equipped = selected ? (['weapon', 'armor', 'charm'] as const).map(part => { const item = state.inventory.find(value => value.id === selected.equipment[part]); return item ? `<span class="px-eq" data-rarity="${item.rarity}" title="${esc(`${item.rarity} ${part} Lv ${item.level}`)}">${icon(SLOT_ICON[part] ?? 'chest')}</span>` : `<span class="px-eq px-eq-empty" title="No ${part}">${icon(SLOT_ICON[part] ?? 'chest')}</span>`; }).join('') : '';
     const hpWidth = Math.min(1, (stats?.maxHp ?? 0) / Math.max(1, ...Object.values(state.heroStats).map(value => value.maxHp)));
-    // compactMenu.partyInspector: portrait well + side column (name, rarity, ROLE, Lv · XP, stars + gear), HP bar,
-    // "HP · ATK · DEF", muted "DPS · Cycle"; native adds Strength / Weakness / Active / Passive on their own lines.
-    const insp = MENU.partyInspector, flavour = selectedDef ? [`Strength: ${selectedDef.strength}.`, `Weakness: ${selectedDef.weakness}.`, `Active: ${activeDescription(selectedDef.id)}.`, `Passive: ${passiveDescription(selectedDef.id)}.`] : [];
+    const insp = MENU.partyInspector;
+    const gearLine = (part: 'weapon' | 'armor' | 'charm'): string => {
+      const item = selected ? state.inventory.find(value => value.id === selected.equipment[part]) : undefined;
+      if (!item) return 'Empty';
+      const mult = 1 + CONFIG.gear.upgrade.mainPerLevel * item.level;
+      return `${item.rarity} Lv ${item.level} - ${Object.entries(item.stats).filter(([, value]) => value > 0).map(([key, value]) => key.endsWith('Pct') ? `${key.replace('Pct', '').toUpperCase()} +${fmt(Number(value) * mult * 100)}%` : `${key.toUpperCase()} +${fmt(Number(value) * mult)}`).join(' - ')}`;
+    };
+    const detailBody = selected && selectedDef && stats ? this.heroDetailTab === 'ability'
+      ? `<h4>${esc(activeSkillName(selected.id))} Â· Signature</h4><p>${esc(activeDescription(selected.id).replace(/; [^;]*cooldown/, ''))}</p><p>Mana cost ${selected.id === 'mh2' ? 40 : ['wiz', 'mw3', 'ew2', 'mk2', 'mh3'].includes(selected.id) ? 80 : 60}. Basic actions grant 20 mana; tanks gain 5 when direct hostile damage reaches HP.</p><p>Auto-casts on its next turn when ready.</p><p class="px-muted">Basic: ${selectedDef.basic.style === 'heal' ? 'heals an ally, attacks when no healing is needed' : `${pct(selectedDef.basic.coefficient)} ATK ${selectedDef.basic.style === 'melee' ? 'melee hit' : 'damage'}`}.</p>`
+      : this.heroDetailTab === 'stats' ? `<p>HP <b>${fmt(stats.maxHp)}</b></p><p>ATK <b>${fmt(stats.atk)}</b></p><p>DEF <b>${fmt(stats.def)}</b></p><p>Turn SPD <b>${Math.round(selectedDef.role === 'support' ? 115 : selectedDef.role === 'tank' ? 90 : selectedDef.basic.style === 'melee' ? 100 : 105)}</b></p><p class="px-muted">Includes equipment.</p><p>${esc(selectedDef.strength)}</p><p>Weakness: ${esc(selectedDef.weakness)}</p>`
+      : `${(['weapon', 'armor', 'charm'] as const).map(part => `<div class="px-item-slot"><b>${part.toUpperCase()}</b><span>${esc(gearLine(part))}</span></div>`).join('')}<button type="button" class="px-btn px-primary" ${control('inspect-change-items')} data-action="inspect-items">Inspect / Change in Stash</button>` : '';
+    const detailTabs = `<div class="px-hero-tabs" role="tablist" aria-label="Hero details">${(['ability', 'stats', 'items'] as const).map(tab => `<button type="button" role="tab" id="hero-tab-${tab}" aria-selected="${this.heroDetailTab === tab}" aria-controls="hero-panel" tabindex="${this.heroDetailTab === tab ? 0 : -1}" data-hero-detail="${tab}">${tab[0]!.toUpperCase()}${tab.slice(1)}</button>`).join('')}</div>`;
     const inspector = selected ? `<section class="px-inspector px-insp-party" aria-label="Hero details"><span class="px-pview px-insp-portrait">${this.portrait(selected.id, 2)}</span>`
-      + `<div class="px-insp-side"><h3 class="px-insp-name">${esc(shortName(selected.id))}</h3><p>${shape(heroConfig(selected.id).rarity)}${rarityText(heroConfig(selected.id).rarity)}</p>`
-      + `<p>${esc(insp.roleLine.replace('{ROLE}', selectedDef?.role.toUpperCase() ?? ''))}</p><p>${esc(insp.levelLine.replace('{n}', String(selected.level)).replace('{xp}', String(selected.xp)))}</p>`
+      + `<div class="px-insp-side"><h3 class="px-insp-name">${esc(heroName(selected.id))}</h3><p>${shape(heroConfig(selected.id).rarity)}${rarityText(heroConfig(selected.id).rarity)} · ${esc(selectedDef?.role.toUpperCase() ?? '')}</p>`
+      + `<p>Lv ${selected.level} · ${selected.stars} stars · ${deployedSlot < 0 ? 'Benched' : `Deployed ${['Front', 'Middle', 'Rear'][deployedSlot]}`}</p>`
       + `<p class="px-equip"><span class="px-gold">${'★'.repeat(selected.stars)}</span>${equipped}</p></div>`
       + `<div class="px-hp px-insp-hp"><i style="width:${Math.round(hpWidth * 100)}%"></i></div>`
-      + `<div class="px-insp-stats"><p>${esc(insp.hpAtkDef.replace('{hp}', fmt(stats?.maxHp ?? 0)).replace('{atk}', fmt(stats?.atk ?? 0)).replace('{def}', fmt(stats?.def ?? 0)))}</p>`
-      + `<p class="px-muted" aria-hidden="true">${esc(insp.dpsCycle.replace('{basic}', basicDps.toFixed(1)).replace('{ticks}', String(cycleTicks)))}</p><span class="px-sr">basic ${basicDps.toFixed(1)} DPS · realized cycle ${cycleTicks} ticks</span>`
-      // Browser omits the flavour visually (216×190 inspector); it stays readable to assistive tech.
-      + `<div class="${this.variant === 'native' ? 'px-insp-flavour' : 'px-sr'}" data-scroll="party-flavour">${flavour.map(line => `<p>${esc(line)}</p>`).join('')}</div></div>`
+      + `<div class="px-insp-stats"><p>${esc(insp.hpAtkDef.replace('{hp}', fmt(stats?.maxHp ?? 0)).replace('{atk}', fmt(stats?.atk ?? 0)).replace('{def}', fmt(stats?.def ?? 0)))}</p></div>${detailTabs}<div class="px-hero-panel" id="hero-panel" role="tabpanel" aria-labelledby="hero-tab-${this.heroDetailTab}" data-scroll="hero-detail">${detailBody}</div>`
       + `<div class="px-insp-foot">${button(`assign-${selected.id}`, `Assign slot ${slot}`, `data-assign="${esc(selected.id)}"`, { primary: true, aria: `Assign ${heroName(selected.id)} to slot ${slot}` })}${button(`lock-${selected.id}`, selected.partyLocked ? 'Unlock' : 'Lock', `data-lock-hero="${esc(selected.id)}" data-locked="${selected.partyLocked === true}"`, { selected: selected.partyLocked === true, aria: selected.partyLocked ? 'Unlock preset slot' : 'Lock preset slot' })}</div></section>` : '';
     return [`<h2 class="px-sr">Party</h2><p class="px-hint" style="top:0">Choose 3 owned heroes. Presets keep locked slots.</p>`
       + `<div class="px-at" style="left:16px;top:20px">${this.dropdown('party-preset', 'Preset', PRESETS, preset, 160, 'data-setting="party-preset"')}</div>`
       + `<div class="px-at" style="left:184px;top:20px">${button('auto-party', 'Apply preset', 'data-action="auto-party" style="width:112px"', { primary: true })}</div>`
-      + `<div class="px-at" style="left:304px;top:20px">${button('auto-equip', 'Auto-equip', 'data-action="auto-equip" style="width:104px"')}</div>`
+      + `<div class="px-at" style="left:304px;top:20px">${button('auto-equip', 'Auto-equip', 'data-action="auto-equip" style="width:104px"')}</div>${workspace}`
       + `<p class="px-at px-coverage ${coverage.length ? 'px-red' : 'px-green'}" style="left:16px;top:52px">${coverage.length ? `Missing: ${coverage.map(esc).join(', ')}.` : 'Role coverage is complete.'}</p>`
       + `<div class="px-formations">${slots}</div>`
       + `<div class="px-heading px-at" style="left:16px;top:162px"><h3>ROSTER</h3><span class="px-muted">${state.roster.length}/${CONFIG.heroes.length} OWNED</span></div>`

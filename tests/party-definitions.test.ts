@@ -13,7 +13,8 @@ describe('versioned party hero definitions', () => {
     for (const definition of definitions) {
       expect(isPartyAbilityId(definition.basic.id)).toBe(true);
       expect(isPartyAbilityId(definition.active.id)).toBe(true);
-      expect(isPartyAbilityId(definition.passive.id)).toBe(true);
+      expect(definition.active.manaCost).toBeGreaterThan(0);
+      expect(isPartyAbilityId(definition.passive.id)).toBe(false);
       expect(definition.strength.length).toBeGreaterThan(0);
       expect(definition.weakness.length).toBeGreaterThan(0);
       if (['shield', 'weaken', 'buff'].includes(definition.active.kind)) expect(definition.active.durationTicks).toBeGreaterThan(0);

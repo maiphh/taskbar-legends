@@ -6,9 +6,14 @@ import { BODY } from './font';
 import { bannerFrame, popupFrame } from './motion';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { stageCue, upgradePopups } from './core/selectors';
-import { combatEventAge, PARTY_V2, presentationCombatTime } from './core/party-combat';
+import { combatEventAge, enemyFormationX, PARTY_V2, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
+import { formationScreenX, slashScreenX } from './core/turn/formation-view';
+import { easeReturn } from './core/turn/presentation';
+import { gaugeRatio } from './core/turn/action-bar';
+import { stepCombatCamera, type CombatCameraInput } from './party-camera';
+import { compactLaneLayout } from './compact-lane-layout';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -17,6 +22,9 @@ export class Renderer {
   private compact = false;
   private zoom = 1;
   private resizes = 0;
+  private cameraTranslation = 0;
+  private frameCamera: number | null = null;
+  private rendering = false;
   readonly atlases = new AtlasLibrary();
   readonly ui: PixelUI;
   constructor(private readonly canvas: HTMLCanvasElement, controls: HTMLElement) {
@@ -34,6 +42,7 @@ export class Renderer {
       cssHeight: height * this.zoom / this.dpr, dpr: this.dpr, zoom: this.zoom, compact: this.compact, resizeCount: this.resizes, sourceHitRegions: this.ui.sourceRegions(), ui: this.ui.stateForDebug() };
   }
   getCombatProjection(state: GameState) {
+    if (!this.rendering) this.frameCamera = null;
     const field = this.field(), cameraLeft = this.cameraLeft(state, field);
     const sx = (worldX: number) => Math.round(field.x + worldX - cameraLeft), baselineY = this.ui.height() - CONFIG.ui.closed.coreHeight + CONFIG.ui.closed.baselineCoreLocalY;
     const allUnits = [...state.party, ...state.enemies];
@@ -73,18 +82,15 @@ export class Renderer {
     }
   }
   private field() {
-    // Compact lane (compact-menu.md §2.1): the field is the token rect (216, 208 wide) at W=640 and grows with W. Narrower source
-    // widths (480..639) keep the full-width field so units stay readable; the islands then overlap its ends.
-    if (this.compact) { const lane = CONFIG.ui.compactMenu.lane, [fx = 216, , fw = 280] = lane.field; return this.width >= lane.width ? { x: fx, width: fw + this.width - lane.width } : { x: 8, width: Math.max(0, this.width - 16) }; }
+    if (this.compact) return compactLaneLayout(this.width).field;
     const compact = this.width < 1000; return { x: compact ? 216 : 304, width: Math.max(0, this.width - (compact ? 432 : 608)) };
   }
-  private cameraLeft(state: GameState, field: { x: number; width: number }): number {
-    if (state.combatRules !== 'party-v2' || field.width >= CONFIG.sim.laneWidthPx) return 0;
+  private cameraInput(state: GameState, field: { x: number; width: number }): CombatCameraInput | null {
+    if (state.combatRules !== 'party-v2' || field.width >= CONFIG.sim.laneWidthPx) return null;
     const party = state.party.filter(unit => unit.hp > 0).map(unit => unit.x);
-    if (!party.length) return 0;
-    let min = Math.min(...party), max = Math.max(...party);
+    if (!party.length) return null;
     const partyById = new Map(state.party.filter(unit => unit.hp > 0).map(unit => [unit.id, unit]));
-    const threats: { deadline: number; focusX: number; xs: number[] }[] = [];
+    const threats: CombatCameraInput['threats'] = [];
     for (const enemy of state.enemies.filter(unit => unit.hp > 0)) {
       const action = enemy.action, special = enemy.specialAction;
       if (action?.state === 'windup') {
@@ -103,17 +109,21 @@ export class Renderer {
       const target = partyById.get(projectile.targetId);
       threats.push({ deadline: projectile.impactNotBeforeTick, focusX: target?.x ?? projectile.x, xs: [projectile.x, ...(target ? [target.x] : [])] });
     }
-    const all = [...party, ...threats.flatMap(threat => threat.xs)];
-    min = Math.min(...all); max = Math.max(...all);
-    const usable = Math.max(1, field.width - 48);
-    if (max - min <= usable) return Math.max(0, Math.min(CONFIG.sim.laneWidthPx - field.width, (min + max - field.width) / 2));
-    const nearest = threats.sort((a, b) => a.deadline - b.deadline || Math.abs(a.focusX - (min + max) / 2) - Math.abs(b.focusX - (min + max) / 2))[0];
-    if (nearest) {
-      const focusMin = Math.min(...party, nearest.focusX), focusMax = Math.max(...party, nearest.focusX);
-      if (focusMax - focusMin <= usable) return Math.max(0, Math.min(CONFIG.sim.laneWidthPx - field.width, (focusMin + focusMax - field.width) / 2));
-      return Math.max(0, Math.min(CONFIG.sim.laneWidthPx - field.width, nearest.focusX - field.width / 2));
+    const formationXs = state.enemies.filter(unit => unit.hp > 0).map(unit => enemyFormationX(unit.slot));
+    return { fieldWidth: field.width, laneWidth: CONFIG.sim.laneWidthPx, partyXs: party, threats, formationXs };
+  }
+  private cameraLeft(state: GameState, field: { x: number; width: number }): number {
+    if (this.frameCamera !== null) return this.frameCamera;
+    if (state.combatRules !== 'party-v2') {
+      this.cameraTranslation = 0;
+      this.frameCamera = 0;
+      return 0;
     }
-    return Math.max(0, Math.min(CONFIG.sim.laneWidthPx - field.width, (Math.min(...party) + Math.max(...party) - field.width) / 2));
+    const input = this.cameraInput(state, field) ?? { fieldWidth: field.width, laneWidth: CONFIG.sim.laneWidthPx, partyXs: [], threats: [] };
+    const next = stepCombatCamera(this.cameraTranslation, input);
+    this.cameraTranslation = next;
+    this.frameCamera = next;
+    return next;
   }
   private edgeMarkers(state: GameState, field: { x: number; width: number }): { threatId: string; worldX: number; screenX: number; edge: 'left' | 'right'; label: string }[] {
     if (state.combatRules !== 'party-v2') return [];
@@ -135,7 +145,39 @@ export class Renderer {
   }
   private position(unit: Unit, state: GameState): number {
     const field = this.field();
-    if (state.combatRules === 'party-v2') return Math.round(field.x + unit.x - this.cameraLeft(state, field));
+    if (state.combatRules === 'party-v2') {
+      const enemyCount = state.enemies.length;
+      const side = unit.side === 'hero' ? 'hero' as const : 'enemy' as const;
+      let screenX = formationScreenX(side, unit.slot, enemyCount, field.width);
+      const action = unit.action;
+      const now = presentationCombatTime(state);
+      if (action && (action.state === 'windup' || action.state === 'recovery') && action.delivery === 'leap') {
+        const target = [...state.party, ...state.enemies].find(other => other.id === action.targetId);
+        const targetSide = target?.side ?? action.targetSide;
+        const targetSlot = target?.slot ?? action.targetSlot;
+        if (targetSide && targetSlot !== undefined) {
+          const targetScreen = formationScreenX(targetSide, targetSlot, action.targetCount ?? enemyCount, field.width);
+          if (action.state === 'windup') {
+            const span = Math.max(1, action.impactTick - action.startTick);
+            const t = Math.min(1, Math.max(0, (now - action.startTick) / span));
+            screenX = slashScreenX(screenX, targetScreen, 'out', t);
+          } else {
+            const elapsed = now - action.impactTick;
+            if (elapsed < PARTY_V2.timing.contactTicks) screenX = targetScreen;
+            else if (elapsed < PARTY_V2.timing.contactTicks + PARTY_V2.timing.returnTicks) {
+              const t = (elapsed - PARTY_V2.timing.contactTicks) / PARTY_V2.timing.returnTicks;
+              screenX = targetScreen + (screenX - targetScreen) * easeReturn(t);
+            } else screenX = formationScreenX(side, unit.slot, enemyCount, field.width);
+          }
+        }
+      } else if (unit.side === 'enemy' && unit.moving) {
+        const spawnX = CONFIG.sim.enemySpawnX + unit.slot * CONFIG.sim.enemySpawnSpacingPx;
+        const home = enemyFormationX(unit.slot);
+        const t = spawnX === home ? 0 : Math.max(0, Math.min(1, (unit.x - home) / (spawnX - home)));
+        screenX = screenX + t * (field.width + 16 - screenX);
+      }
+      return Math.round(field.x + screenX);
+    }
     const compact = field.width < 300;
     if (unit.side === 'hero') return Math.round(field.x + field.width * (compact ? [0.60, 0.38, 0.16][unit.slot] ?? 0.16 : [0.46, 0.39, 0.32][unit.slot] ?? 0.32));
     const front = state.party.find(hero => hero.hp > 0);
@@ -182,6 +224,8 @@ export class Renderer {
     return { name: moving ? 'run' : 'idle', ageMs: (state.tick - unit.bornTick) * 1000 / CONFIG.sim.ticksPerSecond };
   }
   render(state: GameState, paused = false): void {
+    this.rendering = true;
+    this.frameCamera = null;
     const ctx = this.ctx, view = CONFIG.view, palette = CONFIG.ui.palette, height = this.ui.height();
     const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -217,6 +261,18 @@ export class Renderer {
       ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
       ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, hpWidth - 2, CONFIG.ui.unitHpBars.height - 2);
       ctx.fillStyle = unit.side === 'hero' ? palette.green : palette.red; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, Math.round((hpWidth - 2) * unit.hp / unit.maxHp), CONFIG.ui.unitHpBars.height - 2);
+      if (state.combatRules === 'party-v2') {
+        ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY - 3, hpWidth, 2);
+        ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, hpWidth - 2, 2);
+        ctx.fillStyle = palette.gold; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, Math.round((hpWidth - 2) * gaugeRatio(unit.gauge)), 2);
+        if (unit.side === 'hero') {
+          const manaCap = unit.sourceId === 'mh2' ? 40 : ['wiz', 'mw3', 'ew2', 'mk2', 'mh3'].includes(unit.sourceId) ? 80 : 60;
+          const mana = Math.min(manaCap, unit.mana ?? 0);
+          ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY + CONFIG.ui.unitHpBars.height, hpWidth, 2);
+          ctx.fillStyle = '#182a38'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + CONFIG.ui.unitHpBars.height + 1, hpWidth - 2, 1);
+          ctx.fillStyle = mana >= manaCap ? '#63d6ff' : '#438bb4'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + CONFIG.ui.unitHpBars.height + 1, Math.round((hpWidth - 2) * mana / manaCap), 1);
+        }
+      }
       if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
     }
     if (state.combatRules === 'party-v2') {
@@ -320,6 +376,7 @@ export class Renderer {
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
     this.drawFeedback(ctx, state, units, field, coreY);
+    this.rendering = false;
   }
   /**
    * Upgrade popups and stage/boss banners (ui.md §10, ui-tokens coreLoopFeedback). Everything is derived from the event log and

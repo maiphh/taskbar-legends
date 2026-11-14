@@ -57,6 +57,7 @@ body.native-window #app { position: relative; bottom: auto; }
 #compact-menu-bar { --z: var(--px-z, 1); position: absolute; z-index: 12; right: calc(16px * var(--z)); bottom: calc(34px * var(--z)); display: flex; gap: calc(4px * var(--z)); }
 #compact-menu-bar button, #edit-overlay button { height: calc(28px * var(--z)); width: calc(56px * var(--z)); font-size: calc(12px * var(--z)); line-height: calc(12px * var(--z)); border-width: calc(8px * var(--z)); border-image-width: calc(8px * var(--z)); }
 #compact-menu-bar button[hidden] { display: inline-flex; visibility: hidden; }
+#compact-menu-bar button#compact-edit-button { display: none; }
 body:not(.compact-preview) #compact-menu-bar { position: fixed; top: 4px; right: 6px; bottom: auto; }
 #edit-overlay { --z: var(--px-z, 1); position: fixed; z-index: 14; left: 0; right: 0; bottom: 0; height: calc(80px * var(--z)); pointer-events: none; }
 body.compact-preview #edit-overlay { position: absolute; }
@@ -76,7 +77,7 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 #open-management { left: 4px; } #toggle-edit { left: 64px; }
 
 /* ── PARTY CAMP panel (compact-menu.md §5–§7; browser 624/720×400 docked, native 760×560) ─────────────────────────── */
-.px-menu { --px-panel-w: 624px; --px-body-h: 264px; --px-insp-w: 216px; --px-insp-h: 190px; --px-roster-cols: 3; --px-grid-cols: 6;
+.px-menu { --px-panel-w: 624px; --px-body-h: 264px; --px-insp-w: 216px; --px-insp-h: 198px; --px-roster-cols: 3; --px-grid-cols: 6;
   position: fixed; z-index: 30; left: 8px; top: 8px; width: var(--px-panel-w); height: 400px; box-sizing: border-box; overflow: hidden;
   color: #f2e9cf; font: 12px/14px Galmuri11, monospace; image-rendering: pixelated; -webkit-font-smoothing: none; text-rendering: optimizeSpeed; isolation: isolate; }
 .px-menu::before { content: ""; position: absolute; inset: 0; z-index: -1; border: 8px solid transparent; border-image: var(--px-panel-9slice) 8 fill / 8px / 0 stretch; pointer-events: none; }
@@ -188,6 +189,46 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 /* Browser inspector (190 tall): buttons sit 4 px lower (ih-32) so stat line B (ends y150) clears them by 8 px; 14 px leading kept per §6. */
 .px-menu[data-variant="browser"] .px-insp-party .px-insp-foot { height: 32px; padding-bottom: 2px; }
 .px-menu[data-variant="browser"] .px-insp-stats { bottom: 32px; }
+.px-party-workspaces { display: flex; gap: 3px; width: 186px; }
+.px-party-workspaces .px-btn { flex: 1; min-width: 78px; }
+.px-insp-portrait { width: 72px; height: 78px; left: 8px; top: 3px; }
+.px-insp-portrait .px-portrait { max-width: 72px; height: auto; }
+.px-insp-side { left: 88px; top: 3px; width: 116px; }
+.px-insp-hp { top: 84px; }
+.px-hero-tabs { position: absolute; left: 8px; right: 8px; top: 144px; display: flex; gap: 3px; z-index: 2; }
+.px-hero-tabs [role="tab"] { min-width: 54px; min-height: 28px; flex: 1; color: #b7c6d3; background: #263645; box-shadow: inset 0 0 0 1px #536276; }
+.px-hero-tabs [role="tab"][aria-selected="true"] { color: #f2ce83; background: #354a59; box-shadow: inset 0 -2px #e9bd68, inset 0 0 0 1px #a48a5c; }
+.px-hero-tabs [role="tab"]:focus-visible { outline: 2px solid #73caff; outline-offset: 1px; }
+.px-hero-panel { position: absolute; left: 10px; right: 10px; top: 174px; bottom: 34px; overflow: auto; color: #d5e1e9; line-height: 14px; }
+.px-hero-panel p { margin: 3px 0; white-space: normal; }
+.px-hero-panel h4 { color: #f2ce83; margin: 0 0 4px; }
+.px-insp-stats { display: none; }
+.px-menu[data-variant="browser"] .px-insp-portrait { width: 48px; height: 48px; left: 6px; top: 3px; }
+.px-menu[data-variant="browser"] .px-insp-portrait .px-portrait { max-width: 48px; height: auto; }
+.px-menu[data-variant="browser"] .px-insp-side { left: 58px; top: 2px; width: 148px; line-height: 14px; }
+.px-menu[data-variant="browser"] .px-insp-side p { overflow: visible; }
+.px-menu[data-variant="browser"] .px-equip, .px-menu[data-variant="browser"] .px-insp-hp, .px-menu[data-variant="browser"] .px-insp-stats { display: none; }
+.px-menu[data-variant="browser"] .px-hero-tabs { top: 50px; }
+.px-menu[data-variant="browser"] .px-hero-panel { top: 80px; }
+.px-formation-roster { position: absolute; left: 16px; top: 178px; width: calc(var(--px-panel-w) - 250px); height: calc(var(--px-body-h) - 188px); overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, 88px); grid-auto-rows: 72px; gap: 4px; }
+.px-formations-large { position: absolute; left: 16px; right: 16px; top: 76px; display: flex; gap: 8px; }
+.px-formations-large .px-wide-formation { position: relative; top: 0; left: auto !important; width: 33.333%; height: 92px; justify-content: center; gap: 2px; }
+.px-formations-large .px-wide-formation .px-index { top: 6px; left: 8px; }
+.px-formation-assign { position: absolute; right: 16px; top: 178px; width: 210px; }
+.px-formation-assign p { white-space: normal; }
+.px-formation-assign { width: 190px; }
+.px-formation-roster { width: calc(100% - 224px); }
+.px-item-slot { display: flex; flex-direction: column; padding: 3px 0; border-bottom: 1px solid #536276; gap: 2px; }
+.px-item-slot span { white-space: normal; color: #b7c6d3; }
+@media (max-width: 540px) {
+  .px-menu { --px-panel-w: 464px; --px-roster-cols: 2; }
+  .px-party-workspaces { left: calc(100% - 202px) !important; top: 42px !important; }
+  .px-formation-assign { top: 162px; }
+  .px-formation-assign .px-muted { font-size: 10px; line-height: 12px; }
+  .px-formations-large .px-wide-formation { height: 86px; }
+  .px-formation-roster { width: calc(100% - 224px); }
+  .px-formation-assign { width: 176px; }
+}
 .px-deltas p { white-space: nowrap; line-height: 14px; }
 .px-dl { display: inline-block; width: 40px; }
 .px-equip { display: flex; gap: 2px; }

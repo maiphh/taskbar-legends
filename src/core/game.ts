@@ -201,7 +201,10 @@ function tick(state: GameState): void {
     if (state.phase.remainingTicks <= 0) beginEncounter(state);
     return;
   }
-  const scale = state.farmClock?.scale ?? 1;
+  const farmScale = state.farmClock?.scale ?? 1;
+  const readableBeat = state.combatRules === 'party-v2'
+    && (state.phase.kind === 'battle' || (state.phase.kind === 'rest' && state.phase.next === 'wave'));
+  const scale = readableBeat ? 1 : farmScale;
   for (let substep = 0; substep < scale; substep += 1) {
     if (state.farmClock) { state.farmClock.remainder = scale - substep - 1; state.farmClock.elapsedTicks += 1; }
     encounterSubstep(state);

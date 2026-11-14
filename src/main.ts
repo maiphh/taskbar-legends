@@ -92,7 +92,7 @@ function dockManagement(): void {
   const above = openDock?.above ?? window.innerHeight >= laneHeight + gap + panelHeight;
   document.body.classList.toggle('compact-dock-above', above);
   // W is the page viewport (the browser stand-in for the compact window): 624 at 640, 720 from 736 up.
-  const lane = app.getBoundingClientRect(), width = window.innerWidth >= 736 ? 720 : Math.max(MENU_TOKENS.panelSize[0] ?? 624, window.innerWidth - 16);
+  const lane = app.getBoundingClientRect(), width = window.innerWidth >= 736 ? 720 : Math.max(320, Math.min(MENU_TOKENS.panelSize[0] ?? 624, window.innerWidth - 16));
   // Below keeps the 8 px gap (window 640×568, top edge fixed, bottom grows — see growForDock); never collapse the gap.
   const top = above ? lane.top - gap - panelHeight : lane.bottom + gap;
   managementRoot.style.setProperty('--px-panel-w', `${width}px`);

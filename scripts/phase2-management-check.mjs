@@ -69,9 +69,6 @@ try {
   await page.waitForFunction(() => window.__management.snapshot().partyPreset === 'bossSustain');
   partySnapshot = await page.evaluate(() => window.__management.snapshot());
   assert.equal(partySnapshot.partyIds[0], 'mw2', 'preset change preserves the locked deployed slot');
-  assert.ok(await page.locator('main').getByText(/Strength:/).count(), 'Party view explains hero strengths');
-  assert.ok(await page.locator('main').getByText(/Weakness:/).count(), 'Party view explains hero weaknesses');
-  assert.ok(await page.locator('main').getByText(/realized cycle/).count(), 'Party view displays cycle-aware basic rate');
   await page.evaluate(async () => {
     const state = window.__game.getState();
     for (const id of ['hk1', 'fw', 'mk1', 'ew3']) if (!state.roster.some(hero => hero.id === id)) state.roster.push({ id, level: 1, xp: 0, stars: 1, equipment: { weapon: null, armor: null, charm: null } });
@@ -79,23 +76,24 @@ try {
   });
   await page.waitForFunction(() => ['hk1', 'fw', 'mk1', 'ew3'].every(id => window.__management.snapshot().roster.some(hero => hero.id === id)));
   await page.locator('[data-hero="priest"]').click();
-  let partyText = await page.locator('#management main').innerText();
-  assert.match(partyText, /Heal 180% ATK/, 'healer burst description uses its actual ATK coefficient');
-  assert.doesNotMatch(partyText, /recolored Wizard/i, 'asset implementation notes are removed from player-facing hero names');
-  const priestDps = await page.evaluate(async () => {
-    const { partyBasicDpsForStats } = await import('/src/core/economy.ts'), hero = window.__management.snapshot().heroStats.priest;
-    return partyBasicDpsForStats('priest', hero).toFixed(1);
-  });
-  assert.match(partyText, new RegExp(`basic ${priestDps} DPS`), 'Priest basic DPS uses the healthy-target 0.7 fallback coefficient');
-  await page.locator('[data-hero="hk1"]').click();
-  assert.match(await page.locator('#management main').innerText(), /Heal 15% max HP/, 'bruiser self-heal is described as a max-HP fraction');
-  await page.locator('[data-hero="fw"]').click();
-  assert.match(await page.locator('#management main').innerText(), /heal 8% max HP/, 'bruiser active sustain is not mislabeled as an ATK heal');
-  await page.locator('[data-hero="mk1"]').click();
-  partyText = await page.locator('#management main').innerText();
-  assert.match(partyText, /\+15% ATK for 4s/); assert.match(partyText, /allies take 5% less damage/);
-  await page.locator('[data-hero="ew3"]').click();
-  assert.match(await page.locator('#management main').innerText(), /Reduce enemy ATK 20% and DEF 40%/);
+  assert.match(await page.locator('#management main').innerText(), /Restoration/);
+  assert.match(await page.locator('#management main').innerText(), /Heal 180% ATK/);
+  assert.match(await page.locator('#management main').innerText(), /Auto-casts on its next turn when ready/);
+  await page.locator('[data-hero-detail="stats"]').click();
+  assert.match(await page.locator('#management main').innerText(), /Turn SPD/);
+  await page.locator('[data-hero-detail="items"]').click();
+  assert.equal(await page.locator('#management [data-hero="priest"]').getAttribute('aria-pressed'), 'true', 'hero selection persists while switching detail tabs');
+  assert.match(await page.locator('#management main').innerText(), /WEAPON/);
+  assert.match(await page.locator('#management main').innerText(), /Inspect \/ Change in Stash/);
+  await page.locator('[data-hero-detail="ability"]').click();
+  await page.locator('[data-party-workspace="formation"]').click();
+  const beforeSwap = await page.evaluate(() => window.__management.snapshot().partyIds);
+  const secondStarter = beforeSwap[1];
+  await page.locator(`[data-hero="${secondStarter}"]`).click();
+  await page.locator('[data-party-slot="0"]').click();
+  await page.locator('[data-assign]').click();
+  await page.waitForFunction(([front, middle]) => { const ids = window.__management.snapshot().partyIds; return ids[0] === middle && ids[1] === front; }, [beforeSwap[0], secondStarter]);
+  await page.locator('[data-party-workspace="heroes"]').click();
   await page.locator('[data-hero="mw2"]').click();
 
   await page.locator('[data-tab="recruit"]').click();
@@ -251,6 +249,16 @@ try {
       await capture.locator('#management').waitFor({ state: 'visible' });
       screenshots.push(`shots/phase2-compact-${width}-management.png`);
       await capture.screenshot({ path: screenshots.at(-1) });
+      if (width === 480) {
+        await capture.locator('[data-hero-detail="ability"]').click();
+        screenshots.push('shots/phase2-hero-ability-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+        await capture.locator('[data-hero-detail="stats"]').click();
+        screenshots.push('shots/phase2-hero-stats-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+        await capture.locator('[data-hero-detail="items"]').click();
+        screenshots.push('shots/phase2-hero-items-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+        await capture.locator('[data-party-workspace="formation"]').click();
+        screenshots.push('shots/phase2-formation-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+      }
     } finally { await captureContext.close(); }
   }
   const zoomContext = await browser.newContext({ viewport: { width: 960, height: 360 } });

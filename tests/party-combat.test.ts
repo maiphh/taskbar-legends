@@ -57,7 +57,8 @@ describe('party-v2 positioning and actions', () => {
     expect(preview.combatRules).toBe('party-v2');
     expect(preview.partyIds).toEqual(['mw2', 'mw1', 'priest']);
     expect(preview.roster.map(hero => hero.id)).toEqual(expect.arrayContaining(['mw2', 'hu1', 'wiz', 'mw1', 'priest']));
-    for (const unit of [...preview.party, ...preview.enemies]) expect(unit).toMatchObject({ action: { state: 'idle' }, targetId: null, moving: false });
+    for (const unit of preview.party) expect(unit).toMatchObject({ action: { state: 'idle' }, targetId: null, moving: false });
+    for (const unit of preview.enemies) expect(unit).toMatchObject({ action: { state: 'idle' }, targetId: null, moving: true });
     const restored = load(snapshot(preview));
     expect(restored).toEqual(preview);
     const invalid = structuredClone(preview); delete invalid.party[0]!.action;
@@ -75,58 +76,72 @@ describe('party-v2 positioning and actions', () => {
 
   it('starts windup without damage, hits at the impact tick, and commits enemy attacks against the living tank', () => {
     const { state, tank, enemy } = contactState(), tankHp = tank.hp, enemyHp = enemy.hp;
+    tank.gauge = 10000; enemy.gauge = 0;
     step(state);
     expect(tank.action).toMatchObject({ state: 'windup', startTick: 1, impactTick: 1 + PARTY_V2.timing.windupTicks });
-    expect(enemy.action).toMatchObject({ state: 'windup', targetId: tank.id });
+    expect(enemy.action).toMatchObject({ state: 'idle' });
     expect([tank.hp, enemy.hp]).toEqual([tankHp, enemyHp]);
     step(state, PARTY_V2.timing.windupTicks - 1);
     expect([tank.hp, enemy.hp]).toEqual([tankHp, enemyHp]);
     step(state);
-    expect(tank.hp).toBeLessThan(tankHp);
     expect(enemy.hp).toBeLessThan(enemyHp);
-    expect(state.events.filter(event => event.data.type === 'hit' && event.data.attackerId === enemy.id && event.data.targetId === tank.id)).toHaveLength(1);
-    expect(tank.attacks).toBe(1); expect(enemy.attacks).toBe(1);
+    expect(tank.attacks).toBe(1);
+    // Enemy acts on a later formation turn against the living tank.
+    enemy.gauge = 10000; tank.action = { state: 'idle' };
+    for (let i = 0; i < 20 && !state.events.some(event => event.data.type === 'hit' && event.data.attackerId === enemy.id); i += 1) step(state);
+    expect(state.events.filter(event => event.data.type === 'hit' && event.data.attackerId === enemy.id && event.data.targetId === tank.id).length).toBeGreaterThanOrEqual(1);
+    expect(tank.hp).toBeLessThan(tankHp);
   });
 
-  it('cancels a windup when its target leaves reach, without a remote hit', () => {
+  it('cancels a windup when its target dies, without a remote hit', () => {
     const { state, tank, enemy } = contactState();
-    step(state); enemy.x = 400;
+    const spare = { ...enemy, id: 'spare-enemy', hp: 1, maxHp: 1 };
+    state.enemies = [enemy, spare];
+    tank.gauge = 10000; enemy.gauge = 0; spare.gauge = 0;
+    step(state);
+    expect(tank.action?.state).toBe('windup');
+    expect(tank.action).toMatchObject({ targetId: enemy.id });
+    enemy.hp = 0;
     step(state, PARTY_V2.timing.windupTicks);
     expect(state.events.some(event => event.data.type === 'hit' && event.data.attackerId === tank.id)).toBe(false);
-    expect(state.events.some(event => event.data.type === 'miss' && event.data.unitId === tank.id && event.data.reason === 'range')).toBe(true);
+    expect(state.events.some(event => event.data.type === 'miss' && event.data.unitId === tank.id && event.data.reason === 'target')).toBe(true);
     expect(tank.attacks).toBe(0);
   });
 
-  it('keeps full basic-attack cadence after a committed swing misses', () => {
+  it('returns to idle after a cancelled swing and can start another formation turn', () => {
     const { state, tank, enemy } = contactState();
-    tank.attackTicks = 24;
+    const spare = { ...enemy, id: 'spare-enemy', hp: 1, maxHp: 1 };
+    state.enemies = [enemy, spare];
+    tank.gauge = 10000; enemy.gauge = 0; spare.gauge = 0;
     step(state);
-    enemy.x = 400;
+    expect(tank.action).toMatchObject({ targetId: enemy.id });
+    enemy.hp = 0;
     step(state, PARTY_V2.timing.windupTicks);
-    expect(tank.action).toMatchObject({ state: 'recovery', startTick: 1, impactTick: 5, readyTick: 25 });
+    expect(tank.action).toMatchObject({ state: 'recovery' });
     expect(tank.attacks).toBe(0);
-
-    enemy.x = 124;
-    step(state, 19);
-    expect(state.events.filter(event => event.data.type === 'actionStart' && event.data.unitId === tank.id)).toHaveLength(1);
+    step(state, PARTY_V2.timing.minimumRecoveryTicks);
+    expect(tank.action).toMatchObject({ state: 'idle' });
+    spare.hp = spare.maxHp;
+    tank.gauge = 10000;
     step(state);
-    expect(state.events.filter(event => event.data.type === 'actionStart' && event.data.unitId === tank.id).at(-1)).toMatchObject({ combatTick: 25 });
+    expect(state.events.filter(event => event.data.type === 'actionStart' && event.data.unitId === tank.id).length).toBeGreaterThanOrEqual(2);
   });
 
-  it('moves melee DPS to an archer and lands a legal hit while the archer holds its position', () => {
+  it('lands a melee hit on a far archer from the formation slot without walking', () => {
     const state = partyState(), melee = state.party.find(unit => unit.sourceId === 'mw1')!, archer = state.enemies[0]!;
     state.enemies = [archer]; archer.sourceId = 'archer'; archer.x = 400; archer.range = PARTY_V2.reach.ranged; archer.atk = 5;
     archer.hp = 1000; archer.maxHp = 1000; archer.speed = PARTY_V2.speed.enemyRanged; idle(archer);
+    for (const hero of state.party) if (hero !== melee) hero.hp = 0;
     const initialMeleeX = melee.x, archerX = archer.x;
+    melee.gauge = 10000; archer.gauge = 0;
     let contact: { event: GameState['events'][number]; meleeX: number } | undefined;
     for (let tick = 0; tick < 120 && !contact; tick += 1) {
       step(state);
       const event = state.events.find(item => item.data.type === 'hit' && item.data.attackerId === melee.id && item.data.targetId === archer.id);
       if (event) contact = { event, meleeX: melee.x };
     }
-    expect(melee.x).toBeGreaterThan(initialMeleeX);
+    expect(melee.x).toBe(initialMeleeX);
     expect(contact).toBeDefined();
-    expect(edgeDistance({ x: melee.x, radius: melee.radius! }, { x: archer.x, radius: archer.radius! })).toBeLessThanOrEqual(melee.range);
     expect(archer.x).toBe(archerX);
     expect(archer.hp).toBeLessThan(1000);
   });
@@ -134,7 +149,8 @@ describe('party-v2 positioning and actions', () => {
   it('retargets an enemy from a dead tank to a living survivor', () => {
     const { state, tank, melee, healer, enemy } = contactState();
     tank.hp = 0; melee.hp = melee.maxHp; healer.hp = healer.maxHp; enemy.x = 120;
-    enemy.targetId = tank.id; idle(enemy);
+    enemy.targetId = tank.id; idle(enemy); enemy.gauge = 10000;
+    for (const hero of state.party) if (hero.hp > 0) hero.gauge = 0;
     step(state);
     expect(enemy.targetId).toBe(melee.id);
     expect(enemy.action).toMatchObject({ state: 'windup', targetId: melee.id });
@@ -144,8 +160,8 @@ describe('party-v2 positioning and actions', () => {
     const makeTie = (): GameState => {
       const { state, tank, enemy } = contactState();
       tank.hp = impactDamage(enemy, tank); enemy.hp = impactDamage(tank, enemy);
-      tank.targetId = enemy.id; tank.action = { state: 'windup', kind: 'attack', targetId: enemy.id, startTick: 0, impactTick: 1 };
-      enemy.targetId = tank.id; enemy.action = { state: 'windup', kind: 'attack', targetId: tank.id, startTick: 0, impactTick: 1 };
+      tank.targetId = enemy.id; tank.action = { state: 'windup', kind: 'attack', targetId: enemy.id, startTick: 0, impactTick: 1, delivery: 'leap' };
+      enemy.targetId = tank.id; enemy.action = { state: 'windup', kind: 'attack', targetId: tank.id, startTick: 0, impactTick: 1, delivery: 'leap' };
       return state;
     };
     const a = makeTie(), b = makeTie(); b.party.reverse(); b.enemies.reverse();
@@ -162,7 +178,9 @@ describe('party-v2 positioning and actions', () => {
     melee.hp = melee.maxHp; melee.x = 90; enemy.x = 120; enemy.hp = 10; enemy.maxHp = 10;
     enemy.shield = 8; enemy.shieldUntilTick = 100; enemy.atk = 1;
     idle(melee); idle(tank); idle(enemy);
-    step(state); step(state, PARTY_V2.timing.windupTicks);
+    tank.action = { state: 'windup', kind: 'attack', targetId: enemy.id, startTick: 0, impactTick: 1, delivery: 'leap', abilityId: 'guardian-strike' };
+    melee.action = { state: 'windup', kind: 'attack', targetId: enemy.id, startTick: 0, impactTick: 1, delivery: 'leap', abilityId: 'melee-cleave-strike' };
+    step(state);
     const hits = state.events.filter(event => event.data.type === 'hit' && event.data.targetId === enemy.id);
     expect(hits.reduce((sum, event) => sum + (event.data.type === 'hit' ? event.data.damage : 0), 0)).toBe(10);
     expect(state.events.filter(event => event.data.type === 'shieldAbsorb' && event.data.targetId === enemy.id).reduce((sum, event) => sum + (event.data.type === 'shieldAbsorb' ? event.data.amount : 0), 0)).toBe(8);
@@ -174,16 +192,20 @@ describe('party-v2 positioning and actions', () => {
   it('heals a hurt ally at impact, never revives, and skips an unnecessary heal without full cadence', () => {
     const state = partyState(), tank = state.party.find(unit => unit.sourceId === 'mw2')!, healer = state.party.find(unit => unit.sourceId === 'priest')!;
     const enemy = state.enemies[0]!; enemy.sourceId = 'archer'; enemy.x = 1000; enemy.speed = 0; enemy.range = PARTY_V2.reach.ranged;
+    state.enemies = [enemy];
     tank.x = 100; healer.x = 110; tank.hp = tank.maxHp - 50;
-    healer.speed = 0; idle(tank); idle(healer);
+    healer.speed = 0; idle(tank); idle(healer); idle(enemy);
+    for (const unit of state.party) unit.gauge = 0;
+    healer.gauge = 10000; enemy.gauge = 0;
     const before = tank.hp;
     step(state); expect(healer.action?.state).toBe('windup'); expect(tank.hp).toBe(before);
     step(state, PARTY_V2.timing.windupTicks); expect(tank.hp).toBeGreaterThan(before);
     const healEvent = state.events.find(event => event.data.type === 'heal' && event.data.targetId === tank.id);
     expect(healEvent).toBeDefined();
-    expect(effectiveDamageReduction(state, tank)).toBe(0.1);
+    expect(effectiveDamageReduction(state, tank)).toBe(0);
+    expect(healer.mana).toBe(20);
 
-    healer.action = { state: 'idle' }; healer.targetId = null; tank.hp = tank.maxHp - 50;
+    healer.action = { state: 'idle' }; healer.targetId = null; tank.hp = tank.maxHp - 50; healer.gauge = 10000;
     step(state); expect(healer.action?.state).toBe('windup');
     tank.hp = tank.maxHp;
     step(state, PARTY_V2.timing.windupTicks);
@@ -193,7 +215,7 @@ describe('party-v2 positioning and actions', () => {
     if (afterSkip?.state === 'recovery') expect(afterSkip.readyTick).toBe(afterSkip.impactTick + PARTY_V2.timing.minimumRecoveryTicks);
   });
 
-  it('does not heal a dead ally or apply a remote heal outside cast reach', () => {
+  it('does not heal a dead ally; formation heals still reach a far living ally', () => {
     const deadState = partyState(), deadTank = deadState.party.find(unit => unit.sourceId === 'mw2')!;
     deadTank.hp = 0; step(deadState);
     expect(deadTank.hp).toBe(0);
@@ -201,15 +223,19 @@ describe('party-v2 positioning and actions', () => {
 
     const farState = partyState(), farTank = farState.party.find(unit => unit.sourceId === 'mw2')!, farHealer = farState.party.find(unit => unit.sourceId === 'priest')!;
     farTank.x = 1000; farTank.hp = 1; farHealer.x = 50; farHealer.speed = 0;
+    for (const unit of farState.party) unit.gauge = 0;
+    farHealer.gauge = 10000; farState.enemies.forEach(enemy => { idle(enemy); enemy.gauge = 0; });
     step(farState);
     expect(farHealer.targetId).toBe(farTank.id);
-    expect(farHealer.action?.state).toBe('idle');
-    expect(farTank.hp).toBe(1);
-    expect(farState.events.some(event => event.data.type === 'heal' && event.data.targetId === farTank.id)).toBe(false);
+    expect(farHealer.action?.state).toBe('windup');
+    step(farState, PARTY_V2.timing.windupTicks);
+    expect(farState.events.some(event => event.data.type === 'heal' && event.data.targetId === farTank.id)).toBe(true);
+    expect(farTank.hp).toBeGreaterThan(1);
   });
 
   it('keeps windup state authoritative after its start event is evicted', () => {
     const { state, tank, enemy } = contactState(); enemy.hp = 1000; enemy.maxHp = 1000;
+    tank.gauge = 10000; enemy.gauge = 0;
     const before = enemy.hp; step(state);
     for (let i = 0; i < CONFIG.runtime.eventLogLimit + 10; i += 1) emit(state, { type: 'gold', amount: 0, total: state.gold, reason: 'eviction-test' });
     expect(state.events.some(event => event.data.type === 'actionStart' && event.data.unitId === tank.id)).toBe(false);
@@ -217,8 +243,8 @@ describe('party-v2 positioning and actions', () => {
     expect(enemy.hp).toBeLessThan(before);
   });
 
-  it('round-trips approach, windup, recovery, and accelerated native-clock continuation exactly', () => {
-    const prepareApproach = (): GameState => {
+  it('round-trips formation windup, recovery, and accelerated native-clock continuation exactly', () => {
+    const prepareFight = (): GameState => {
       const state = partyState(), archer = state.enemies[0]!;
       state.enemies = [archer]; archer.sourceId = 'archer'; archer.range = PARTY_V2.reach.ranged; archer.x = 400; archer.hp = 1000; archer.maxHp = 1000; idle(archer);
       return state;
@@ -228,13 +254,14 @@ describe('party-v2 positioning and actions', () => {
       step(uninterrupted, ticks); step(restored, ticks);
       expect(snapshot(restored)).toBe(snapshot(uninterrupted));
     };
-    const approach = prepareApproach(); step(approach);
-    expect(approach.party.some(unit => unit.moving)).toBe(true); assertContinuation(approach, 30);
-    const windup = prepareApproach();
-    for (let i = 0; i < 40 && !windup.party.some(unit => unit.action?.state === 'windup'); i += 1) step(windup);
+    const idleFight = prepareFight(); step(idleFight);
+    expect(idleFight.party.every(unit => unit.x === (prepareFight().party.find(hero => hero.id === unit.id)?.x))).toBe(true);
+    expect(idleFight.party.every(unit => !unit.moving)).toBe(true); assertContinuation(idleFight, 30);
+    const windup = prepareFight();
+    for (let i = 0; i < 80 && !windup.party.some(unit => unit.action?.state === 'windup'); i += 1) step(windup);
     expect(windup.party.some(unit => unit.action?.state === 'windup')).toBe(true); assertContinuation(windup, 20);
-    const recovery = prepareApproach();
-    for (let i = 0; i < 80 && !recovery.party.some(unit => unit.action?.state === 'recovery'); i += 1) step(recovery);
+    const recovery = prepareFight();
+    for (let i = 0; i < 120 && !recovery.party.some(unit => unit.action?.state === 'recovery'); i += 1) step(recovery);
     expect(recovery.party.some(unit => unit.action?.state === 'recovery')).toBe(true); assertContinuation(recovery, 30);
 
     const farmA = partyState(), farmB = partyState();
@@ -277,10 +304,10 @@ describe('party-v2 positioning and actions', () => {
     state.farmClock = { scale: 3, minCycleTicks: 300, elapsedTicks: 0, remainder: 0 };
     state.enemies = [enemy];
     for (const unit of state.party) { unit.hp = unit === tank ? unit.maxHp : 0; idle(unit); }
-    tank.x = 100; tank.atk = 10_000; tank.speed = 0; idle(tank);
-    enemy.x = 124; enemy.hp = 1; enemy.maxHp = 1; enemy.atk = 1; enemy.speed = 0; idle(enemy);
+    tank.x = 100; tank.atk = 10_000; tank.speed = 0; idle(tank); tank.gauge = 10000;
+    enemy.x = 124; enemy.hp = 1; enemy.maxHp = 1; enemy.atk = 1; enemy.speed = 0; idle(enemy); enemy.gauge = 0;
 
-    for (let i = 0; i < 20 && (state.phase as GameState['phase']).kind !== 'farmPad'; i += 1) step(state);
+    for (let i = 0; i < 40 && (state.phase as GameState['phase']).kind !== 'farmPad'; i += 1) step(state);
     const enteredPad = state.phase as GameState['phase'];
     expect(enteredPad.kind).toBe('farmPad');
     if (enteredPad.kind !== 'farmPad') return;
