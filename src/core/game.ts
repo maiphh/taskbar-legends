@@ -1,8 +1,9 @@
 import { CONFIG, stageConfig, ticksForSeconds } from '../config';
 import { beginEncounter, combatTick, spawnWave } from './combat';
-import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setLocked, setParty, upgrade } from './economy';
+import { cancelPartyEncounterEffects, expireFriendlyDeadTargetProjectiles, hasPendingHostileImpact } from './party-combat';
+import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setLocked, setParty, upgrade, togglePartyLock } from './economy';
 import { emit, goldChange } from './events';
-import { cloneState, parseState } from './model';
+import { cloneState, gearTemplateId, itemId, parseState } from './model';
 import type { Action, GameState } from './model';
 import { normalizeSeed, random } from './rng';
 
@@ -23,6 +24,40 @@ export function createState(seed = 1): GameState {
   };
   beginEncounter(state);
   return state;
+}
+/**
+ * Party-v2 fresh-account kit: one common weapon (melee DPS), armor (tank) and charm (healer), equipped, so Stash and Upgrades
+ * are not empty on a new seed. Deterministic: fixed stage-1 common stats (`gear.mainRoll` is [1, 1]; charm uses the low end of
+ * its range), ids from `nextGearId`, no RNG drawn. Only `createPartyState(seed, { starterGear: true })` (the browser/native
+ * party preview) calls it; legacy `createState` and its golden output are unchanged.
+ */
+export function addStarterGear(state: GameState): void {
+  const kit = [['mw1', 'weapon'], ['mw2', 'armor'], ['priest', 'charm']] as const, slots = CONFIG.gear.slots;
+  for (const [heroId, slot] of kit) {
+    const hero = state.roster.find(value => value.id === heroId); if (!hero || hero.equipment[slot]) continue;
+    const stats = { hp: 0, atk: 0, def: 0, hpPct: 0, atkPct: 0, speedPct: 0 };
+    if (slot === 'weapon') stats.atk = slots.weapon.main.atk;
+    if (slot === 'armor') { stats.hp = slots.armor.main.hp; stats.def = slots.armor.main.def; }
+    if (slot === 'charm') stats.atkPct = slots.charm.oneOf.atkPct[0] ?? 0;
+    const id = itemId(state.seed, state.nextGearId++);
+    state.inventory.push({ id, templateId: gearTemplateId(slot, 'common'), tradeable: false, acquiredAt: { tick: state.tick, source: 'starter' },
+      slot, rarity: 'common', dropStage: 1, level: 0, spent: 0, stats });
+    hero.equipment[slot] = id;
+  }
+}
+/** Isolated opt-in rules preview. Legacy createState and its serialized output remain unchanged. */
+export function createPartyState(seed = 1, options: { starterGear?: boolean } = {}): GameState {
+  const state = createState(seed);
+  state.combatRules = 'party-v2';
+  for (const id of ['mw1', 'priest']) if (!state.roster.some(hero => hero.id === id)) {
+    state.roster.push({ id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() });
+  }
+  state.partyIds = ['mw2', 'mw1', 'priest'];
+  if (options.starterGear) addStarterGear(state);
+  state.party = []; state.enemies = []; state.encounter = 0; state.wave = 1;
+  state.events = []; state.eventSeq = 0; state.eventCounts = {};
+  beginEncounter(state);
+  return parseState(state);
 }
 function rest(state: GameState, next: 'encounter' | 'wave'): void {
   state.phase = { kind: 'rest', remainingTicks: ticksForSeconds(next === 'wave' ? CONFIG.sim.waveGapSec : CONFIG.sim.stageGapSec), next };
@@ -99,7 +134,7 @@ function win(state: GameState): void {
   if (clock) {
     const gapTicks = ticksForSeconds(CONFIG.sim.stageGapSec);
     state.phase = { kind: 'farmPad', settleAtTick: Math.max(state.tick + gapTicks, state.stageStartedTick + clock.minCycleTicks),
-      nativeDurationTicks: clock.elapsedTicks + gapTicks };
+      nativeDurationTicks: clock.elapsedTicks + gapTicks, ...(state.combatRules === 'party-v2' ? { presentationStartedAtTick: state.tick } : {}) };
     return;
   }
   awardClear(state, (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond + CONFIG.sim.stageGapSec);
@@ -121,7 +156,8 @@ export function input(state: GameState, action: Action): void {
     case 'retry': retry(state, true); return;
     case 'pull': pull(state); powerRetry(state); return;
     case 'autoEquip': autoEquip(state); powerRetry(state); return;
-    case 'autoParty': autoParty(state); powerRetry(state); return;
+    case 'autoParty': autoParty(state, action.preset); powerRetry(state); return;
+    case 'lockHero': togglePartyLock(state, action.heroId, action.locked); return;
     case 'upgrade': upgrade(state, action.gearId); powerRetry(state); return;
     case 'equip': equip(state, action.heroId, action.gearId); powerRetry(state); return;
     case 'party': setParty(state, action.heroIds); powerRetry(state); return;
@@ -140,8 +176,11 @@ function encounterSubstep(state: GameState): void {
   const elapsed = state.farmClock?.elapsedTicks ?? state.tick - state.stageStartedTick;
   if (elapsed >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec)) { lose(state); return; }
   combatTick(state);
-  if (state.party.every(hero => hero.hp <= 0)) lose(state);
-  else if (state.enemies.every(enemy => enemy.hp <= 0)) win(state);
+  if (state.party.every(hero => hero.hp <= 0)) { if (state.combatRules === 'party-v2') cancelPartyEncounterEffects(state); lose(state); }
+  else if (state.enemies.every(enemy => enemy.hp <= 0)) {
+    if (state.combatRules === 'party-v2') expireFriendlyDeadTargetProjectiles(state);
+    if (state.combatRules !== 'party-v2' || !hasPendingHostileImpact(state)) win(state);
+  }
 }
 function tick(state: GameState): void {
   state.tick += 1;
@@ -163,7 +202,10 @@ function tick(state: GameState): void {
     if (state.phase.remainingTicks <= 0) beginEncounter(state);
     return;
   }
-  const scale = state.farmClock?.scale ?? 1;
+  const farmScale = state.farmClock?.scale ?? 1;
+  const readableBeat = state.combatRules === 'party-v2'
+    && (state.phase.kind === 'battle' || (state.phase.kind === 'rest' && state.phase.next === 'wave'));
+  const scale = readableBeat ? 1 : farmScale;
   for (let substep = 0; substep < scale; substep += 1) {
     if (state.farmClock) { state.farmClock.remainder = scale - substep - 1; state.farmClock.elapsedTicks += 1; }
     encounterSubstep(state);

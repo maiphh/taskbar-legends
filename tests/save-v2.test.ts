@@ -128,4 +128,60 @@ describe('SaveStore', () => {
     const store = new TextSaveStore({ getItem: () => '{"format":"nope"}', setItem: () => undefined, removeItem: () => undefined }, 'k');
     await expect(store.load()).rejects.toThrow();
   });
+  it('quarantines corrupt raw data across reloads, blocks autosave, and allows explicit discard then restore', async () => {
+    const map = new Map<string, string>([['k', '{"format":"broken-save","owned":"keep me"}']]);
+    const storage = { getItem: (key: string) => map.get(key) ?? null, setItem: (key: string, value: string) => { map.set(key, value); }, removeItem: (key: string) => { map.delete(key); } };
+    const first = new TextSaveStore(storage, 'k');
+    await expect(first.load()).rejects.toThrow();
+    const raw = '{"format":"broken-save","owned":"keep me"}';
+    expect(first.failedRaw()).toBe(raw);
+    expect(map.get('k')).toBe(raw);
+    await expect(first.save({ state: referenceRun(3, 0), savedAtMs: 1, remainderMs: 0 })).rejects.toThrow(/quarantined/);
+
+    const afterReload = new TextSaveStore(storage, 'k');
+    await expect(afterReload.load()).rejects.toThrow(/quarantined/);
+    expect(afterReload.failedRaw()).toBe(raw); // UI export source survives reload.
+    await expect(afterReload.save({ state: referenceRun(3, 0), savedAtMs: 2, remainderMs: 0 })).rejects.toThrow(/quarantined/);
+
+    await afterReload.discardFailed();
+    const state = referenceRun(7, 600);
+    await afterReload.save({ state, savedAtMs: 3, remainderMs: 0 });
+    expect(await afterReload.load()).toEqual({ state, savedAtMs: 3, remainderMs: 0 });
+  });
+  it('keeps the primary raw save and blocks writes when writing the quarantine copy fails', async () => {
+    const raw = '{not json'; let primary = raw;
+    const storage = { getItem: (key: string) => key === 'k' ? primary : null, setItem: () => { throw new Error('quota'); }, removeItem: () => { primary = ''; } };
+    const store = new TextSaveStore(storage, 'k');
+    await expect(store.load()).rejects.toThrow('quota');
+    expect(store.failedRaw()).toBe(raw);
+    await expect(store.save({ state: referenceRun(3, 0), savedAtMs: 1, remainderMs: 0 })).rejects.toThrow(/quarantined/);
+    expect(primary).toBe(raw);
+  });
+  it('exports preserved primary bytes after a transient storage read failure', async () => {
+    const raw = '{"format":"corrupt-but-preserved"}'; let failRead = true;
+    const storage = {
+      getItem: (key: string) => { if (key === 'k' && failRead) { failRead = false; throw new Error('temporary read failure'); } return key === 'k' ? raw : null; },
+      setItem: () => undefined, removeItem: () => undefined,
+    };
+    const store = new TextSaveStore(storage, 'k');
+    await expect(store.load()).rejects.toThrow('temporary read failure');
+    expect(store.failedRaw()).toBe(raw);
+    await expect(store.save({ state: referenceRun(3, 0), savedAtMs: 1, remainderMs: 0 })).rejects.toThrow(/quarantined/);
+  });
+  it('retries a valid primary after transient read failure and resumes normal writes only after successful decode', async () => {
+    const state = referenceRun(12, 600), raw = makeSave(state, Date.now()); let failRead = true;
+    const map = new Map<string, string>([['k', raw]]);
+    const storage = {
+      getItem: (key: string) => { if (key === 'k' && failRead) { failRead = false; throw new Error('temporary read failure'); } return map.get(key) ?? null; },
+      setItem: (key: string, value: string) => { map.set(key, value); }, removeItem: (key: string) => { map.delete(key); },
+    };
+    const store = new TextSaveStore(storage, 'k');
+    await expect(store.load()).rejects.toThrow('temporary read failure');
+    await expect(store.save({ state, savedAtMs: 10, remainderMs: 0 })).rejects.toThrow(/quarantined/);
+    const recovered = await store.load();
+    expect(recovered?.state.roster).toEqual(state.roster);
+    expect(recovered?.state.gold).toBe(state.gold);
+    await store.save({ state: recovered!.state, savedAtMs: 20, remainderMs: 0 });
+    expect(JSON.parse(map.get('k') ?? 'null').format).toBe('taskbar-legends-save-v2');
+  });
 });

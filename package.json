@@ -21,6 +21,7 @@
     "shot:desktop": "tsx scripts/desktop-shot.ts",
     "shot:v14": "tsx scripts/shot-v14.ts",
     "shot:m3": "tsx scripts/shot-m3.ts",
+    "shot:enh-ui": "tsx scripts/shot-enh-ui.ts",
     "measure:aac": "tsx scripts/measure-aac-offset.ts",
     "sim:v14": "tsx scripts/v14-targets.ts",
     "sim:v14:off": "tsx scripts/v14-targets.ts --rules none",

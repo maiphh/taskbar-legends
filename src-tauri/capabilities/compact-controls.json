@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "compact-controls",
+  "description": "Menu and edit requests from the compact native control surface.",
+  "windows": ["controls"],
+  "permissions": ["allow-open-management", "allow-request-compact-edit"]
+}

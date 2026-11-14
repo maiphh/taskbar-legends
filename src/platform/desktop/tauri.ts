@@ -9,17 +9,25 @@ import { DesktopController } from './controller';
 import { createExit } from './lifecycle';
 import { monitorSchema } from './math';
 import type { DesktopMonitor } from './math';
+import { startCompactDesktop } from './compact-runtime';
+import type { CompactRuntimeHooks } from './compact-runtime';
 
 const shellModeSchema = z.enum(['window', 'overlay']);
 type ShellMode = z.infer<typeof shellModeSchema>;
 export interface DesktopHooks { flushSave(): void; setQuit(handler: (() => void) | null): void }
+export interface DesktopOptions { compact?: boolean; setEditing(value: boolean): void }
 function describe(monitor: Monitor): DesktopMonitor {
   return monitorSchema.parse({ key: `${monitor.name ?? 'display'}:${monitor.position.x},${monitor.position.y}`, scaleFactor: monitor.scaleFactor,
     workArea: { x: monitor.workArea.position.x, y: monitor.workArea.position.y, width: monitor.workArea.size.width, height: monitor.workArea.size.height } });
 }
-export async function startDesktop(game: GameDebug, redraw: () => void, hooks: DesktopHooks): Promise<void> {
+export async function startDesktop(game: GameDebug, redraw: () => void, hooks: DesktopHooks, options: DesktopOptions = { setEditing: () => undefined }): Promise<void> {
   if (!isTauri()) return;
   document.body.classList.add('native-shell');
+  if (options.compact) {
+    document.body.classList.add('compact-native');
+    const compactHooks: CompactRuntimeHooks = { flushSave: hooks.flushSave, setQuit: hooks.setQuit, setEditing: options.setEditing };
+    const stop = await startCompactDesktop(compactHooks); window.addEventListener('pagehide', stop, { once: true }); return;
+  }
   const win = getCurrentWindow();
   const mode: ShellMode = shellModeSchema.parse(await invoke('shell_mode'));
   const exit = createExit(() => hooks.flushSave(), command => invoke(command));
@@ -76,7 +84,8 @@ export async function startDesktop(game: GameDebug, redraw: () => void, hooks: D
         if (await controller.dock(height)) { status.dockCount += 1; redraw(); }
         lastHeight = height; status.logicalHeight = height;
       }
-      status.ignoring = await controller.hitTest(game.getHitRegions()); status.hitTests += 1;
+      const regions = recoveryInputRegions(game.getHitRegions());
+      status.ignoring = await controller.hitTest(regions); status.hitTests += 1;
       timer = window.setTimeout(() => { void poll(); }, CONFIG.desktop.cursorPollMs);
     } catch (error) { await failSafe(error); }
   }
@@ -92,6 +101,12 @@ export async function startDesktop(game: GameDebug, redraw: () => void, hooks: D
     await poll();
     if (!stopped) { await win.show(); status.active = true; }
   } catch (error) { await failSafe(error); }
+}
+
+/** The recovery dialog is DOM UI above the canvas, so its modal surface needs native hit-test coverage too. */
+function recoveryInputRegions(regions: ReturnType<GameDebug['getHitRegions']>): ReturnType<GameDebug['getHitRegions']> {
+  const section = document.getElementById('save-recovery');
+  return section && !section.hidden ? [...regions, { kind: 'panel', id: 'save-recovery', x: 0, y: 0, width: window.innerWidth, height: window.innerHeight }] : regions;
 }
 declare global {
   interface Window {

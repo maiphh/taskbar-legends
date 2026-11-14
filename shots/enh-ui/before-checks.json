@@ -1,0 +1,240 @@
+{
+  "label": "before",
+  "ok": true,
+  "errors": [],
+  "failures": [],
+  "shots": [
+    "shots/enh-ui/before-lane-1280.png",
+    "shots/enh-ui/before-menu-party-1280.png",
+    "shots/enh-ui/before-menu-stash-1280.png",
+    "shots/enh-ui/before-menu-recruit-1280.png",
+    "shots/enh-ui/before-menu-upgrades-1280.png",
+    "shots/enh-ui/before-menu-settings-1280.png",
+    "shots/enh-ui/before-lane-960.png",
+    "shots/enh-ui/before-menu-party-960.png",
+    "shots/enh-ui/before-menu-stash-960.png",
+    "shots/enh-ui/before-menu-recruit-960.png",
+    "shots/enh-ui/before-menu-upgrades-960.png",
+    "shots/enh-ui/before-menu-settings-960.png"
+  ],
+  "checks": {
+    "960": {
+      "layout": {
+        "lane": {
+          "top": 0,
+          "bottom": 160,
+          "left": 0,
+          "right": 640
+        },
+        "sheet": {
+          "top": 0,
+          "bottom": 560,
+          "left": 0,
+          "right": 960
+        },
+        "laneCovered": true
+      },
+      "partyRegions": {
+        "controls": 28,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "stashRegions": {
+        "controls": 8,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "recruitRegions": {
+        "controls": 10,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "upgradesRegions": {
+        "controls": 8,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "settingsRegions": {
+        "controls": 13,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "1280": {
+      "layout": {
+        "lane": {
+          "top": 0,
+          "bottom": 160,
+          "left": 0,
+          "right": 640
+        },
+        "sheet": {
+          "top": 0,
+          "bottom": 560,
+          "left": 0,
+          "right": 1280
+        },
+        "laneCovered": true
+      },
+      "partyRegions": {
+        "controls": 28,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "stashRegions": {
+        "controls": 8,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "recruitRegions": {
+        "controls": 10,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "upgradesRegions": {
+        "controls": 8,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "settingsRegions": {
+        "controls": 13,
+        "outside": [
+          "compact-menu-button",
+          "compact-edit-button",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      }
+    }
+  }
+}

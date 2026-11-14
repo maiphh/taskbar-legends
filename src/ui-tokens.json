@@ -1262,5 +1262,674 @@
       "collect": "icon removed without rising"
     },
     "hitRegions": "none; all drop visuals are click-through and drawn only inside the field columns"
+  },
+  "pityMeters": {
+    "source": "ui.md §12; design.md §16; PR #11 shots 25-28",
+    "font": "Galmuri11 Bold 12px",
+    "drawYNote": "window draw y already includes Galmuri placement; do not add slotOffsetY",
+    "wide": {
+      "islandWidth": 280,
+      "actionsIsland": [
+        "W-288",
+        88,
+        280,
+        64
+      ],
+      "progressIsland": [
+        8,
+        88,
+        280,
+        64
+      ],
+      "recruitOrigin": [
+        "W-276",
+        92
+      ],
+      "recruitHotspotPad": {
+        "x": -2,
+        "y": -2,
+        "w": 4,
+        "h": 18
+      },
+      "recruitRoomPx": 224,
+      "statusPip": [
+        "W-60",
+        98,
+        6,
+        6
+      ],
+      "pause": [
+        "W-48",
+        92,
+        28,
+        24
+      ],
+      "goldIcon": [
+        160,
+        113
+      ],
+      "goldText": [
+        182,
+        115
+      ],
+      "goldIconBossReady": [
+        148,
+        113
+      ],
+      "goldTextBossReady": [
+        166,
+        115
+      ],
+      "fortuneGapAfterGoldPx": 8,
+      "fortuneMinRoomPx": 56,
+      "fortuneCrown": {
+        "offsetX": 2,
+        "centerY": 120,
+        "widthPx": 5,
+        "gapBeforeTextPx": 2,
+        "note": "crown sits at the left of the Fortune cluster; never left of fortuneX; plate pad is inside the plate"
+      }
+    },
+    "compact": {
+      "breakpoint": 1000,
+      "islandWidth": 200,
+      "recruitOrigin": [
+        "W-196",
+        92
+      ],
+      "recruitRoomPx": 144,
+      "statusPip": [
+        "W-60",
+        98,
+        6,
+        6
+      ],
+      "goldIcon": [
+        108,
+        113
+      ],
+      "goldText": [
+        128,
+        115
+      ],
+      "fortuneMinRoomPx": 16,
+      "fortuneGapAfterGoldPx": 4
+    },
+    "recruit": {
+      "full": "Epic+ in {epicPlus} · Legend in {legendary}",
+      "shortWithNew": "E+{epicPlus} L{legendary} N{newHero}",
+      "short": "E+{epicPlus} L{legendary}",
+      "colors": {
+        "epicSegment": "#c19cd9",
+        "legendSegment": "#e9bd68",
+        "newSegment": "#90c99b",
+        "middot": "#b0bcc8"
+      },
+      "tooltip": "Epic+ in {epicPlus} · Legend in {legendary} · New hero in {newHero}",
+      "opens": "recruit",
+      "hideWhenRosterComplete": true
+    },
+    "fortune": {
+      "full": "Fortune {since}/{limit}",
+      "short": "F {since}/{limit}",
+      "beforeFirstFull": "Legend in {left}",
+      "beforeFirstShort": "L {left}",
+      "color": "#e9bd68",
+      "opens": "gear",
+      "compactNumber": "{since}/{limit}",
+      "beforeFirstCompactNumber": "{left}"
+    },
+    "statusPip": {
+      "running": "#90c99b",
+      "paused": "#e9bd68",
+      "rim": "#0d121b",
+      "when": "shown instead of RUNNING/PAUSED word whenever a recruit meter is visible"
+    },
+    "pityClose": {
+      "epicPlusAtOrBelow": 5,
+      "legendaryAtOrBelow": 10,
+      "fortuneLeftAtOrBelow": 10,
+      "fortuneSinceAtOrAboveLimitMinus": 10,
+      "plateFill": "#293948",
+      "padXPx": 3,
+      "padYPx": 2,
+      "rimPx": 1,
+      "rimEpic": "#c19cd9",
+      "rimLegend": "#e9bd68",
+      "epicTextClose": "#e0c4f0",
+      "legendTextClose": "#fff0ac",
+      "fortuneTextClose": "#fff0ac",
+      "flash": false,
+      "pulse": false,
+      "shake": false,
+      "reducedMotion": "identical static plate and colour step",
+      "plateClearsGoldPx": 4,
+      "fortuneLabelNote": "Fortune close uses F n/limit (or shorter Fortune fallbacks), not recruit Legend in N",
+      "compactPadXPx": 2,
+      "rimExpandsLeft": false
+    },
+    "hideOrder": [
+      "recruit.newSegment",
+      "fortune.fullToShort",
+      "fortune.shortToNumber",
+      "fortune.hide",
+      "recruit.fullToShort",
+      "recruit.hide"
+    ],
+    "fortunePlateMinClearancePx": 4
+  },
+  "chestPick": {
+    "source": "ui.md §13; design.md §16; PR #10 shots 22-24",
+    "strip": {
+      "full": "Chest: pick 1 of 2",
+      "compact": "Pick 1/2",
+      "queueSuffix": " · {n}",
+      "color": "#e9bd68",
+      "font": "Galmuri11 Bold 12px",
+      "drawY": 92,
+      "icon": {
+        "xFromIslandRight": 12,
+        "y": 90,
+        "sizePx": 16
+      },
+      "hotspot": [
+        16,
+        90,
+        "islandWidth-8",
+        20
+      ],
+      "opens": "gear",
+      "compactQueuePip": {
+        "sizePx": 6,
+        "fill": "#8dbfe3",
+        "gapAfterTextPx": 6
+      }
+    },
+    "gearPipWhileWaiting": {
+      "fill": "#8dbfe3",
+      "sizePx": 6,
+      "pulse": "coreLoopFeedback.badgePulse"
+    },
+    "panel": {
+      "title": "CHEST: PICK 1 OF 2",
+      "titleY": 80,
+      "waiting": "{n} WAITING",
+      "shapeCueAt": [
+        "cardX+10",
+        108
+      ],
+      "keepPrimaryOnHigherScore": true,
+      "tieKeepOption": 0,
+      "keys": {
+        "1": 0,
+        "2": 1,
+        "Esc": "closePanel"
+      }
+    },
+    "bossInteraction": "chest heading replaces status heading only; BOSS_READY Fight/Retry stays in row 2; running boss countdown keeps the countdown heading",
+    "reducedMotion": "cards appear in final state; no entrance motion"
+  },
+  "compactMenu": {
+    "source": "ui/compact-menu.md; feat/enhancement 235dd9e restyle",
+    "font": "Galmuri11 12/24 and Galmuri9 10; real draw y, do not add slotOffsetY",
+    "lane": {
+      "width": 640,
+      "height": 160,
+      "progressIsland": [
+        8,
+        88,
+        200,
+        64
+      ],
+      "field": [
+        216,
+        80,
+        208,
+        80
+      ],
+      "actionsIsland": [
+        424,
+        88,
+        208,
+        64
+      ],
+      "menu": [
+        508,
+        98,
+        56,
+        28
+      ],
+      "edit": [
+        568,
+        98,
+        56,
+        28
+      ],
+      "goldIcon": [
+        432,
+        119
+      ],
+      "goldText": [
+        452,
+        121
+      ],
+      "statusPip": [
+        432,
+        98,
+        6,
+        6
+      ],
+      "statusText": [
+        442,
+        92
+      ],
+      "stageText": [
+        20,
+        92
+      ],
+      "waveText": [
+        20,
+        115
+      ]
+    },
+    "editMode": {
+      "frameScope": "opaque HUD band y 80..159 only",
+      "frameColor": "#e9bd68",
+      "frameInk": "#0d121b",
+      "move": [
+        12,
+        90,
+        56,
+        20
+      ],
+      "resize": [
+        568,
+        136,
+        56,
+        20
+      ],
+      "doneUsesEditRect": true,
+      "reducedMotion": "static frame, no pulse",
+      "headingShiftX": 72
+    },
+    "controlWindow": {
+      "client": [
+        136,
+        36
+      ],
+      "menu": [
+        4,
+        4,
+        56,
+        28
+      ],
+      "edit": [
+        64,
+        4,
+        56,
+        28
+      ]
+    },
+    "browser": {
+      "panel": [
+        8,
+        0,
+        624,
+        400
+      ],
+      "panelSize": [
+        624,
+        400
+      ],
+      "gapPx": 8,
+      "laneHeight": 160,
+      "openWindow": [
+        640,
+        568
+      ],
+      "preferDock": "above",
+      "fallbackDock": "below if work area cannot grow upward; keep gapPx 8 and openWindow 640x568; do not collapse the gap to fit a 560-tall canvas",
+      "titleDraw": [
+        16,
+        8
+      ],
+      "close": [
+        588,
+        8,
+        28,
+        24
+      ],
+      "tabsY": 40,
+      "tabs": {
+        "party": [
+          16,
+          40,
+          64,
+          28
+        ],
+        "stash": [
+          84,
+          40,
+          64,
+          28
+        ],
+        "recruit": [
+          152,
+          40,
+          80,
+          28
+        ],
+        "upgrades": [
+          236,
+          40,
+          88,
+          28
+        ],
+        "settings": [
+          328,
+          40,
+          84,
+          28
+        ]
+      },
+      "status": [
+        16,
+        72,
+        592,
+        14
+      ],
+      "body": [
+        16,
+        88,
+        592,
+        264
+      ],
+      "footerY": 364
+    },
+    "native": {
+      "client": [
+        760,
+        560
+      ],
+      "titleDraw": [
+        16,
+        8
+      ],
+      "close": [
+        724,
+        8,
+        28,
+        24
+      ],
+      "tabsY": 40,
+      "status": [
+        16,
+        72,
+        728,
+        14
+      ],
+      "body": [
+        16,
+        88,
+        728,
+        424
+      ],
+      "dividerY": 516,
+      "footerButtonsY": 524,
+      "resizePolicy": "integer scale or letterbox plus internal scroll; minimum 760x560"
+    },
+    "portrait": {
+      "sheet": "outlined",
+      "animation": "idle",
+      "frameIndex": 0,
+      "crop": "opaque ink bbox, alpha >= 128, 1px pad if needed",
+      "rosterScale": 1,
+      "inspectorScale": 2,
+      "sampling": "nearest",
+      "cardSize": [
+        88,
+        80
+      ],
+      "cardStride": [
+        96,
+        84
+      ],
+      "formationSlot": [
+        96,
+        88
+      ],
+      "stashSlot": [
+        40,
+        40
+      ],
+      "stashGap": 8
+    },
+    "widgets": {
+      "buttonHeightPx": 28,
+      "focusRing": {
+        "color": "#f2e9cf",
+        "px": 1,
+        "inset": true
+      },
+      "dropdownRowPx": 20,
+      "dropdownMaxListPx": 120,
+      "slider": {
+        "trackH": 4,
+        "fill": "#8dbfe3",
+        "empty": "#0d121b",
+        "edge": "#536276",
+        "thumb": [
+          8,
+          12
+        ],
+        "thumbFill": "#e9bd68",
+        "thumbRim": "#0d121b",
+        "highlight": "#f2e9cf",
+        "volume": {
+          "min": 0,
+          "max": 1,
+          "step": 0.05
+        }
+      },
+      "toggle": {
+        "well": [
+          32,
+          16
+        ],
+        "knob": [
+          12,
+          12
+        ],
+        "on": "#90c99b",
+        "offFill": "#293948",
+        "knobFill": "#f2e9cf"
+      },
+      "reducedMotion": "no tween: dropdown, slider, toggle and edit frame snap"
+    },
+    "partyInspector": {
+      "browserSize": [
+        216,
+        190
+      ],
+      "nativeSize": [
+        280,
+        352
+      ],
+      "padX": 12,
+      "portraitWell": [
+        12,
+        4,
+        96,
+        104
+      ],
+      "nameFontPx": {
+        "browser": 12,
+        "native": 24
+      },
+      "bodyFontPx": 12,
+      "lineH": 14,
+      "hpBarYFromPortraitBottom": 4,
+      "statsGapBelowHpBarPx": 8,
+      "footerButtonsH": 36,
+      "clearanceAboveFooterPx": 8,
+      "hpAtkDef": "HP {hp} \u00b7 ATK {atk} \u00b7 DEF {def}",
+      "dpsCycle": "DPS {basic} \u00b7 Cycle {ticks}",
+      "doNotRender": "basic {n} DPS \u00b7 realized cycle {t} ticks",
+      "browserStatLines": [
+        "hpAtkDef",
+        "dpsCycle"
+      ],
+      "nativeAfterStats": [
+        "Strength",
+        "Weakness",
+        "Active",
+        "Passive"
+      ],
+      "roleLine": "{ROLE}",
+      "levelLine": "Lv {n} \u00b7 {xp} XP",
+      "sideColumnMaxBrowser": 100,
+      "maxTextWidthBrowser": 192,
+      "maxTextWidthNative": 256
+    },
+    "tenPullCompact": {
+      "note": "Use when the docked panel is 624 wide (W=640). Panels 720 wide and the native 760 window keep gacha.tenPull (128x120).",
+      "panelW": 624,
+      "card": [
+        104,
+        96
+      ],
+      "gap": 8,
+      "cols": 5,
+      "rows": 2,
+      "cardRects": [
+        [
+          36,
+          108,
+          104,
+          96
+        ],
+        [
+          148,
+          108,
+          104,
+          96
+        ],
+        [
+          260,
+          108,
+          104,
+          96
+        ],
+        [
+          372,
+          108,
+          104,
+          96
+        ],
+        [
+          484,
+          108,
+          104,
+          96
+        ],
+        [
+          36,
+          212,
+          104,
+          96
+        ],
+        [
+          148,
+          212,
+          104,
+          96
+        ],
+        [
+          260,
+          212,
+          104,
+          96
+        ],
+        [
+          372,
+          212,
+          104,
+          96
+        ],
+        [
+          484,
+          212,
+          104,
+          96
+        ]
+      ],
+      "artArea": [
+        0,
+        0,
+        104,
+        68
+      ],
+      "labelStrip": [
+        0,
+        68,
+        104,
+        28
+      ],
+      "nameYInCard": 70,
+      "rarityYInCard": 82,
+      "nameMaxPx": 96,
+      "useShortName": true,
+      "againRect": [
+        304,
+        364,
+        152,
+        28
+      ],
+      "okRect": [
+        464,
+        364,
+        144,
+        28
+      ],
+      "tickets": [
+        16,
+        372
+      ],
+      "header": [
+        16,
+        88
+      ],
+      "tallyMaxX": 608
+    },
+    "settingsSliders": {
+      "buses": [
+        "Volume",
+        "Music",
+        "SFX",
+        "UI"
+      ],
+      "data": [
+        "master",
+        "music",
+        "sfx",
+        "ui"
+      ],
+      "labelColPx": 72,
+      "labelX": 16,
+      "trackX": 96,
+      "trackWBrowser": 280,
+      "trackWNative": 400,
+      "rowH": 28,
+      "pctGapPx": 12,
+      "pctW": 32,
+      "labelOnLeft": true
+    },
+    "shortName": {
+      "okOnCards": true,
+      "rule": "heroName with leading 'Medieval ' stripped and 'Martial Hero' \u2192 'Martial'; ellipsis if still wider than maxPx",
+      "rosterMaxPx": 80,
+      "compactTenPullMaxPx": 96,
+      "fullNameOn": "gacha.tenPull 128x120 cards (max 124 px) and stash compare dropdowns"
+    }
   }
 }

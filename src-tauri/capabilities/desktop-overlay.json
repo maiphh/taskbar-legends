@@ -7,6 +7,7 @@
   ],
   "permissions": [
     "core:window:allow-current-monitor",
+    "core:window:allow-get-all-windows",
     "core:window:allow-primary-monitor",
     "core:window:allow-available-monitors",
     "core:window:allow-cursor-position",
@@ -19,7 +20,13 @@
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "core:window:allow-inner-size",
+    "core:window:allow-outer-position",
+    "core:window:allow-outer-size",
+    "core:window:allow-start-dragging",
+    "core:window:allow-start-resize-dragging",
     "allow-set-overlay-bounds",
+    "allow-set-control-bounds",
+    "allow-publish-management-reply",
     "allow-shell-mode",
     "allow-quit-app",
     "allow-relaunch-app"

@@ -14,17 +14,26 @@ const GROUPS = manifest.groups as Record<string, Group>;
 export const AUDIO_STORAGE_KEY = 'taskbar-legends:audio';
 const CUE_WINDOW_TICKS = 20;
 export const DEFAULT_VOLUMES = manifest.defaultVolumes;
-export interface AudioSettings { muted: boolean; volume: number }
+/** Per-bus levels (compact-menu sliders, Game Lead answer 2); absent = the manifest defaults (music 0.3, sfx 0.6, ui 0.5). */
+export interface BusLevels { music: number; sfx: number; ui: number }
+export interface AudioSettings { muted: boolean; volume: number; buses?: BusLevels }
+const unit = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+export function busLevel(settings: AudioSettings, bus: Bus): number { return settings.buses?.[bus] ?? DEFAULT_VOLUMES[bus]; }
 
 /** master × bus × clip; master is the persisted volume (default 0.5), 0 when muted. */
 export function clipGain(settings: AudioSettings, bus: Bus, clipVolume: number): number {
-  return (settings.muted ? 0 : settings.volume) * DEFAULT_VOLUMES[bus] * clipVolume;
+  return (settings.muted ? 0 : settings.volume) * busLevel(settings, bus) * clipVolume;
 }
 export function parseSettings(raw: string | null): AudioSettings {
   try {
     const value: unknown = raw ? JSON.parse(raw) : null;
     if (value && typeof value === 'object' && 'muted' in value && 'volume' in value && typeof value.muted === 'boolean' && typeof value.volume === 'number' && value.volume >= 0 && value.volume <= 1)
+    {
+      const buses = 'buses' in value ? value.buses : undefined;
+      if (buses && typeof buses === 'object' && 'music' in buses && 'sfx' in buses && 'ui' in buses && unit(buses.music) && unit(buses.sfx) && unit(buses.ui))
+        return { muted: value.muted, volume: value.volume, buses: { music: buses.music, sfx: buses.sfx, ui: buses.ui } };
       return { muted: value.muted, volume: value.volume };
+    }
   } catch { /* fall through to defaults */ }
   return { muted: false, volume: DEFAULT_VOLUMES.master };
 }
@@ -96,8 +105,13 @@ function detectEngine(): Engine {
   if (/AppleWebKit/.test(ua)) return 'webkit';
   return 'other';
 }
-export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null = typeof localStorage === 'undefined' ? null : localStorage): AudioAdapter {
-  let settings = parseSettings(storage?.getItem(AUDIO_STORAGE_KEY) ?? null);
+function safeBrowserStorage(): Pick<Storage, 'getItem' | 'setItem'> | null {
+  try { return typeof window === 'undefined' ? null : window.localStorage; } catch { return null; }
+}
+export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null = safeBrowserStorage()): AudioAdapter {
+  let stored: string | null = null;
+  try { stored = storage?.getItem(AUDIO_STORAGE_KEY) ?? null; } catch { /* storage may be denied; audio still uses defaults */ }
+  let settings = parseSettings(stored);
   const engine = detectEngine(), gate = new GroupGate(), played: string[] = [], buffers = new Map<string, AudioBuffer>();
   let context: AudioContext | null = null, master: GainNode | null = null, buses: Record<Bus, GainNode> | null = null, lastSeq = -1, disposed = false;
   let loop: { format: string; offsetSamples: number; loopStart: number; loopEnd: number } | null = null;
@@ -108,7 +122,7 @@ export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null
   const apply = (): void => {
     if (!master || !buses || !context) return;
     master.gain.setValueAtTime(settings.muted ? 0 : settings.volume, context.currentTime);
-    for (const bus of ['music', 'sfx', 'ui'] as const) buses[bus].gain.setValueAtTime(DEFAULT_VOLUMES[bus], context.currentTime);
+    for (const bus of ['music', 'sfx', 'ui'] as const) buses[bus].gain.setValueAtTime(busLevel(settings, bus), context.currentTime);
   };
   async function load(clip: Clip): Promise<void> {
     if (!context) return;
@@ -163,7 +177,7 @@ export function createAudio(storage: Pick<Storage, 'getItem' | 'setItem'> | null
     },
     play: cue,
     settings: () => ({ ...settings }),
-    set(next) { settings = { muted: next.muted, volume: Math.max(0, Math.min(1, next.volume)) }; storage?.setItem(AUDIO_STORAGE_KEY, JSON.stringify(settings)); apply(); },
+    set(next) { const clamp = (value: number) => Math.max(0, Math.min(1, value)), buses = next.buses ?? settings.buses; settings = { muted: next.muted, volume: clamp(next.volume), ...(buses ? { buses: { music: clamp(buses.music), sfx: clamp(buses.sfx), ui: clamp(buses.ui) } } : {}) }; try { storage?.setItem(AUDIO_STORAGE_KEY, JSON.stringify(settings)); } catch { /* persistence is optional for audio settings */ } apply(); },
     debug: () => ({ unlocked: context !== null, engine, loaded: [...buffers.keys()], played: [...played], loop, settings: { ...settings } }),
     dispose() { disposed = true; void context?.close(); context = null; },
   };
