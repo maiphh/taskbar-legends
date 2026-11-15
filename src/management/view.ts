@@ -131,6 +131,8 @@ export class ManagementView {
   private selectedPartySlot: 0 | 1 | 2 = 0;
   private partyWorkspace: 'heroes' | 'formation' = 'heroes';
   private heroDetailTab: 'ability' | 'stats' | 'items' = 'ability';
+  private detailsOpen = false;
+  private loadoutItemOpen = false;
   private slotFilter = 'all';
   private rarityFilter = 'all';
   private ownerFilter = 'all';
@@ -321,7 +323,7 @@ export class ManagementView {
     this.revealHost.hidden = true; this.root.classList.remove('reveal-active');
   }
   /** Idle frame 0 of the outlined sheet, cropped to its ink (§3), at an integer scale. */
-  private portrait(heroId: string, scale: 1 | 2 = 1): string {
+  private portrait(heroId: string, scale: 1 | 2 | 3 = 1): string {
     const key = Object.entries(CONFIG.view.heroAssets).find(([id]) => id === heroId)?.[1];
     if (!key || !this.atlas) return '<span class="px-portrait px-portrait-empty"></span>';
     let entry = this.portraits.get(key);
@@ -400,9 +402,20 @@ export class ManagementView {
     if (this.openDropdown && !target.closest('.px-dd')) { this.openDropdown = null; this.contentKey = ''; this.renderContent(); }
     if (!button || !this.snapshotValue || button.disabled) return;
     const action = button.dataset.action, state = this.snapshotValue;
+    if (button.dataset.detailsOpen !== undefined) { this.detailsOpen = true; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.detailsClose !== undefined) { this.detailsOpen = false; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.loadoutClose !== undefined) { this.loadoutItemOpen = false; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.loadoutSlot) {
+      const slot = button.dataset.loadoutSlot as 'weapon' | 'armor' | 'charm'; this.slotFilter = slot;
+      const hero = state.roster.find(value => value.id === this.selectedHero); this.selectedGear = hero?.equipment[slot] ?? '';
+      this.loadoutItemOpen = !!this.selectedGear; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return;
+    }
+    if (button.dataset.loadoutGear) {
+      this.selectedGear = button.dataset.loadoutGear; this.loadoutItemOpen = true; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return;
+    }
     if (button.dataset.ddToggle) { this.toggleDropdown(button.dataset.ddToggle, (event as MouseEvent).detail === 0); return; }
     if (button.dataset.ddOption) { const name = button.dataset.ddOption; this.openDropdown = null; this.choose(name, button.dataset.value ?? ''); this.root.querySelector<HTMLElement>(`[data-dd-toggle="${CSS.escape(name)}"]`)?.focus(); return; }
-    if (button.dataset.hero) { this.selectedHero = button.dataset.hero; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.hero) { this.selectedHero = button.dataset.hero; this.loadoutItemOpen = false; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.partyWorkspace === 'heroes' || button.dataset.partyWorkspace === 'formation') { this.partyWorkspace = button.dataset.partyWorkspace; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.heroDetail === 'ability' || button.dataset.heroDetail === 'stats' || button.dataset.heroDetail === 'items') { this.heroDetailTab = button.dataset.heroDetail; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.partySlot !== undefined) { const index = Number(button.dataset.partySlot); this.selectedPartySlot = index === 1 || index === 2 ? index : 0; this.contentKey = ''; this.renderContent(); return; }
@@ -448,18 +461,18 @@ export class ManagementView {
   }
   private renderContent(): void {
     const state = this.snapshotValue; if (!state || this.closed) return;
-    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
+    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.detailsOpen}:${this.loadoutItemOpen}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
     if (signature === this.contentKey) return;
     const active = document.activeElement, focusId = active instanceof HTMLElement && (this.main.contains(active) || this.footer.contains(active)) ? active.dataset.control : undefined;
-    const scroll = [...this.main.querySelectorAll<HTMLElement>('[data-scroll]')].map(node => [node.dataset.scroll, node.scrollTop] as const);
+    const scroll = [...this.main.querySelectorAll<HTMLElement>('[data-scroll]')].map(node => [node.dataset.scroll, node.scrollTop, node.scrollLeft] as const);
     this.contentKey = signature; this.main.dataset.view = this.tab; this.root.dataset.view = this.tab;
     const [body, foot] = this.tab === 'party' ? this.party(state) : this.tab === 'stash' ? this.stash(state) : this.tab === 'recruit' ? this.recruit(state) : this.tab === 'upgrades' ? this.upgrades(state) : this.settings(state);
     this.main.innerHTML = body; this.footer.innerHTML = foot;
-    for (const [key, top] of scroll) { const node = this.main.querySelector<HTMLElement>(`[data-scroll="${key}"]`); if (node) node.scrollTop = top; }
+    for (const [key, top, left] of scroll) { const node = this.main.querySelector<HTMLElement>(`[data-scroll="${key}"]`); if (node) { node.scrollTop = top; node.scrollLeft = left; } }
     this.renderStatus();
     if (focusId) this.root.querySelector<HTMLElement>(`[data-control="${CSS.escape(focusId)}"]`)?.focus({ preventScroll: true });
     if (this.revealUi && !this.revealHost.hidden) this.drawReveal();
-    if (this.tab === 'stash' && this.selectedGear && this.selectedHero) void this.loadComparison(state);
+    if ((this.tab === 'stash' || this.tab === 'party' && this.partyWorkspace === 'heroes' && this.loadoutItemOpen) && this.selectedGear && this.selectedHero) void this.loadComparison(state);
   }
   private async loadComparison(snapshot: ManagementSnapshot): Promise<void> {
     const generation = this.generation;
@@ -494,51 +507,59 @@ export class ManagementView {
       : [!definitions.some(value => value.role === 'tank') && 'tank', !definitions.some(value => value.role === 'dps') && 'damage', !definitions.some(value => value.role === 'support') && 'support'];
     const coverage = missing.filter((value): value is string => !!value);
     const selectedDef = selected ? getPartyHeroDefinition(selected.id) : undefined;
-    const slot = this.selectedPartySlot + 1;
     const workspace = `<div class="px-at px-party-workspaces" style="left:422px;top:20px" role="group" aria-label="Party workspace">${button('workspace-heroes', 'Heroes', 'data-party-workspace="heroes"', { selected: this.partyWorkspace === 'heroes' })}${button('workspace-formation', 'Formation', 'data-party-workspace="formation"', { selected: this.partyWorkspace === 'formation' })}</div>`;
-    const slots = state.partyIds.map((id, index) => { const hero = state.roster.find(value => value.id === id);
-      return `<button type="button" class="px-formation${this.selectedPartySlot === index ? ' px-sel' : ''}" ${control(`party-slot-${index}`)} data-party-slot="${index}" aria-pressed="${this.selectedPartySlot === index}" aria-label="Slot ${index + 1}: ${esc(heroName(id))}${hero?.partyLocked ? ' (locked)' : ''}" style="left:${16 + 104 * index}px">`
-        + `<span class="px-index">${index + 1}</span>${hero?.partyLocked ? '<i class="px-lock" title="Locked"></i>' : ''}${this.portrait(id)}<span class="px-name">${esc(shortName(id))}</span></button>`; }).join('');
-    const roster = state.roster.map(hero => { const rarity = heroConfig(hero.id).rarity;
-      return `<button type="button" class="px-card${hero.id === selected?.id ? ' px-sel' : ''}" data-rarity="${rarity}" ${control(`hero-${hero.id}`)} data-hero="${esc(hero.id)}" aria-pressed="${hero.id === selected?.id}" aria-label="${esc(heroName(hero.id))}, ${rarity}, level ${hero.level}, ${hero.stars} stars">`
-        + `${shape(rarity)}<span class="px-card-lv">Lv${hero.level}</span>${this.portrait(hero.id)}<span class="px-name">${esc(shortName(hero.id))}</span><span class="px-stars">${'★'.repeat(hero.stars)}</span></button>`; }).join('');
     if (this.partyWorkspace === 'formation') {
       const owned = state.roster.map(hero => `<button type="button" class="px-card${hero.id === selected?.id ? ' px-sel' : ''}" ${control(`hero-${hero.id}`)} data-hero="${esc(hero.id)}" aria-pressed="${hero.id === selected?.id}">${this.portrait(hero.id)}<span class="px-name">${esc(shortName(hero.id))}</span><span class="px-card-lv">Lv${hero.level}</span></button>`).join('');
       const formationSlots = state.partyIds.map((id, index) => `<button type="button" class="px-formation px-wide-formation${this.selectedPartySlot === index ? ' px-sel' : ''}" ${control(`party-slot-${index}`)} data-party-slot="${index}" aria-pressed="${this.selectedPartySlot === index}"><span class="px-index">${['FRONT', 'MIDDLE', 'REAR'][index]}</span>${this.portrait(id)}<span>${esc(heroName(id))}</span>${state.roster.find(hero => hero.id === id)?.partyLocked ? '<i class="px-lock" title="Protected from presets"></i>' : ''}</button>`).join('');
       return [`<h2 class="px-sr">Formation</h2>${workspace}<p class="px-hint" style="top:0">Enemy direction → · Front is closest. Select a slot and hero, then assign.</p><div class="px-at" style="left:16px;top:20px">${this.dropdown('party-preset', 'Preset', PRESETS, preset, 150, 'data-setting="party-preset"')}</div><div class="px-at" style="left:176px;top:20px">${button('auto-party', 'Apply preset', 'data-action="auto-party"', { primary: true })}</div><div class="px-at" style="left:286px;top:20px">${button('auto-equip', 'Auto-equip', 'data-action="auto-equip"')}</div><div class="px-formations px-formations-large">${formationSlots}</div><div class="px-formation-roster" data-scroll="formation-roster">${owned}</div><div class="px-formation-assign">${button(`assign-${selected?.id ?? ''}`, `Assign ${selected ? shortName(selected.id) : 'hero'} to ${['Front', 'Middle', 'Rear'][this.selectedPartySlot]}`, `data-assign="${esc(selected?.id ?? '')}"`, { primary: true, disabled: !selected })}${selected ? button(`formation-lock-${selected.id}`, selected.partyLocked ? 'Unlock preset slot' : 'Lock preset slot', `data-lock-hero="${esc(selected.id)}" data-locked="${selected.partyLocked === true}"`, { selected: selected.partyLocked === true }) : ''}<p class="px-muted">${coverage.length ? `Missing: ${coverage.join(', ')}.` : 'Coverage complete.'}</p><p class="px-muted">Manual assignment overrides preset locks.</p></div>`, '<p class="px-muted">Changes apply at the next stage or encounter rebuild.</p>'];
     }
-    const deployedSlot = selected ? state.partyIds.indexOf(selected.id) : -1;
-    const equipped = selected ? (['weapon', 'armor', 'charm'] as const).map(part => { const item = state.inventory.find(value => value.id === selected.equipment[part]); return item ? `<span class="px-eq" data-rarity="${item.rarity}" title="${esc(`${item.rarity} ${part} Lv ${item.level}`)}">${icon(SLOT_ICON[part] ?? 'chest')}</span>` : `<span class="px-eq px-eq-empty" title="No ${part}">${icon(SLOT_ICON[part] ?? 'chest')}</span>`; }).join('') : '';
-    const hpWidth = Math.min(1, (stats?.maxHp ?? 0) / Math.max(1, ...Object.values(state.heroStats).map(value => value.maxHp)));
-    const insp = MENU.partyInspector;
+    return this.heroLoadout(state, selected, selectedDef, stats);
+  }
+
+  private heroLoadout(state: ManagementSnapshot, selected: ManagementSnapshot['roster'][number] | undefined,
+    selectedDef: ReturnType<typeof getPartyHeroDefinition> | undefined, stats: ManagementSnapshot['heroStats'][string] | undefined): [string, string] {
+    const position = (id: string): string => { const slot = state.partyIds.indexOf(id); return slot < 0 ? 'BENCH' : ['FRONT', 'MIDDLE', 'REAR'][slot] ?? 'BENCH'; };
+    const heroTitle = selected ? `${heroName(selected.id)} · ${position(selected.id)} · Lv ${selected.level}` : 'No hero selected';
     const gearLine = (part: 'weapon' | 'armor' | 'charm'): string => {
       const item = selected ? state.inventory.find(value => value.id === selected.equipment[part]) : undefined;
-      if (!item) return 'Empty';
+      if (!item) return `Empty ${part}`;
       const mult = 1 + CONFIG.gear.upgrade.mainPerLevel * item.level;
-      return `${item.rarity} Lv ${item.level} - ${Object.entries(item.stats).filter(([, value]) => value > 0).map(([key, value]) => key.endsWith('Pct') ? `${key.replace('Pct', '').toUpperCase()} +${fmt(Number(value) * mult * 100)}%` : `${key.toUpperCase()} +${fmt(Number(value) * mult)}`).join(' - ')}`;
+      const itemStats = Object.entries(item.stats).filter(([, value]) => value > 0).map(([key, value]) => key.endsWith('Pct')
+        ? `${key.replace('Pct', '').toUpperCase()} +${fmt(Number(value) * mult * 100)}%` : `${key.toUpperCase()} +${fmt(Number(value) * mult)}`).join(', ');
+      return `${item.rarity} level ${item.level}${item.locked ? ', locked' : ''}${itemStats ? `, ${itemStats}` : ''}`;
     };
+    const gearSlots = selected ? (['weapon', 'armor', 'charm'] as const).map(part => {
+      const item = state.inventory.find(value => value.id === selected.equipment[part]), label = part[0]!.toUpperCase() + part.slice(1);
+      return `<button type="button" class="px-loadout-equip${item ? '' : ' is-empty'}" ${control(`loadout-slot-${part}`)} data-loadout-slot="${part}" data-rarity="${item?.rarity ?? 'common'}" aria-label="${label}: ${esc(gearLine(part))}. Choose to filter stash items." title="${esc(gearLine(part))}">`
+        + `${item ? shape(item.rarity) : ''}${icon(SLOT_ICON[part] ?? 'chest')}<span>${label}</span>${item ? `<small>Lv${item.level}${item.locked ? ' · LOCK' : ''}</small>` : '<small>Empty</small>'}</button>`;
+    }).join('') : '';
+    const owned = state.roster.map(hero => {
+      const rarity = heroConfig(hero.id).rarity, activeSlot = state.partyIds.indexOf(hero.id);
+      return `<button type="button" class="px-loadout-hero${hero.id === selected?.id ? ' px-sel' : ''}" ${control(`hero-${hero.id}`)} data-hero="${esc(hero.id)}" data-rarity="${rarity}" aria-pressed="${hero.id === selected?.id}" aria-label="${esc(heroName(hero.id))}, ${activeSlot < 0 ? 'benched' : `deployed ${['front', 'middle', 'rear'][activeSlot]}`}, level ${hero.level}, ${hero.stars} stars">`
+        + `${this.portrait(hero.id)}<span class="px-loadout-hero-name">${esc(shortName(hero.id))}</span><small>${activeSlot < 0 ? 'BENCH' : ['F', 'M', 'R'][activeSlot]}</small></button>`;
+    }).join('');
+    const items = state.inventory.filter(item => this.slotFilter === 'all' || item.slot === this.slotFilter).map(item => {
+      const owner = this.ownerOf(state, item.id);
+      return `<button type="button" class="px-loadout-item${this.selectedGear === item.id ? ' px-sel' : ''}" data-rarity="${item.rarity}" ${control(`loadout-item-${item.id}`)} data-loadout-gear="${item.id}" aria-pressed="${this.selectedGear === item.id}" aria-label="${esc(`${item.rarity} ${item.slot}, level ${item.level}${item.locked ? ', locked' : ''}${owner ? `, equipped by ${heroName(owner.id)}` : ', in stash'}`)}">`
+        + `${shape(item.rarity)}${icon(SLOT_ICON[item.slot] ?? 'chest')}${item.level ? `<small>+${item.level}</small>` : ''}${item.locked ? '<i class="px-lock" title="Locked"></i>' : ''}</button>`;
+    }).join('');
     const detailBody = selected && selectedDef && stats ? this.heroDetailTab === 'ability'
-      ? `<h4>${esc(activeSkillName(selected.id))} Â· Signature</h4><p>${esc(activeDescription(selected.id).replace(/; [^;]*cooldown/, ''))}</p><p>Mana cost ${selected.id === 'mh2' ? 40 : ['wiz', 'mw3', 'ew2', 'mk2', 'mh3'].includes(selected.id) ? 80 : 60}. Basic actions grant 20 mana; tanks gain 5 when direct hostile damage reaches HP.</p><p>Auto-casts on its next turn when ready.</p><p class="px-muted">Basic: ${selectedDef.basic.style === 'heal' ? 'heals an ally, attacks when no healing is needed' : `${pct(selectedDef.basic.coefficient)} ATK ${selectedDef.basic.style === 'melee' ? 'melee hit' : 'damage'}`}.</p>`
+      ? `<h4>${esc(activeSkillName(selected.id))} - Signature</h4><p>${esc(activeDescription(selected.id).replace(/; [^;]*cooldown/, ''))}</p><p>Mana cost ${selected.id === 'mh2' ? 40 : ['wiz', 'mw3', 'ew2', 'mk2', 'mh3'].includes(selected.id) ? 80 : 60}. Basic actions grant 20 mana; tanks gain 5 on direct hostile HP damage.</p><p>Auto-casts on its next turn when ready.</p>`
       : this.heroDetailTab === 'stats' ? `<p>HP <b>${fmt(stats.maxHp)}</b></p><p>ATK <b>${fmt(stats.atk)}</b></p><p>DEF <b>${fmt(stats.def)}</b></p><p>Turn SPD <b>${Math.round(selectedDef.role === 'support' ? 115 : selectedDef.role === 'tank' ? 90 : selectedDef.basic.style === 'melee' ? 100 : 105)}</b></p><p class="px-muted">Includes equipment.</p><p>${esc(selectedDef.strength)}</p><p>Weakness: ${esc(selectedDef.weakness)}</p>`
-      : `${(['weapon', 'armor', 'charm'] as const).map(part => `<div class="px-item-slot"><b>${part.toUpperCase()}</b><span>${esc(gearLine(part))}</span></div>`).join('')}<button type="button" class="px-btn px-primary" ${control('inspect-change-items')} data-action="inspect-items">Inspect / Change in Stash</button>` : '';
-    const detailTabs = `<div class="px-hero-tabs" role="tablist" aria-label="Hero details">${(['ability', 'stats', 'items'] as const).map(tab => `<button type="button" role="tab" id="hero-tab-${tab}" aria-selected="${this.heroDetailTab === tab}" aria-controls="hero-panel" tabindex="${this.heroDetailTab === tab ? 0 : -1}" data-hero-detail="${tab}">${tab[0]!.toUpperCase()}${tab.slice(1)}</button>`).join('')}</div>`;
-    const inspector = selected ? `<section class="px-inspector px-insp-party" aria-label="Hero details"><span class="px-pview px-insp-portrait">${this.portrait(selected.id, 2)}</span>`
-      + `<div class="px-insp-side"><h3 class="px-insp-name">${esc(heroName(selected.id))}</h3><p>${shape(heroConfig(selected.id).rarity)}${rarityText(heroConfig(selected.id).rarity)} · ${esc(selectedDef?.role.toUpperCase() ?? '')}</p>`
-      + `<p>Lv ${selected.level} · ${selected.stars} stars · ${deployedSlot < 0 ? 'Benched' : `Deployed ${['Front', 'Middle', 'Rear'][deployedSlot]}`}</p>`
-      + `<p class="px-equip"><span class="px-gold">${'★'.repeat(selected.stars)}</span>${equipped}</p></div>`
-      + `<div class="px-hp px-insp-hp"><i style="width:${Math.round(hpWidth * 100)}%"></i></div>`
-      + `<div class="px-insp-stats"><p>${esc(insp.hpAtkDef.replace('{hp}', fmt(stats?.maxHp ?? 0)).replace('{atk}', fmt(stats?.atk ?? 0)).replace('{def}', fmt(stats?.def ?? 0)))}</p></div>${detailTabs}<div class="px-hero-panel" id="hero-panel" role="tabpanel" aria-labelledby="hero-tab-${this.heroDetailTab}" data-scroll="hero-detail">${detailBody}</div>`
-      + `<div class="px-insp-foot">${button(`assign-${selected.id}`, `Assign slot ${slot}`, `data-assign="${esc(selected.id)}"`, { primary: true, aria: `Assign ${heroName(selected.id)} to slot ${slot}` })}${button(`lock-${selected.id}`, selected.partyLocked ? 'Unlock' : 'Lock', `data-lock-hero="${esc(selected.id)}" data-locked="${selected.partyLocked === true}"`, { selected: selected.partyLocked === true, aria: selected.partyLocked ? 'Unlock preset slot' : 'Lock preset slot' })}</div></section>` : '';
-    return [`<h2 class="px-sr">Party</h2><p class="px-hint" style="top:0">Choose 3 owned heroes. Presets keep locked slots.</p>`
-      + `<div class="px-at" style="left:16px;top:20px">${this.dropdown('party-preset', 'Preset', PRESETS, preset, 160, 'data-setting="party-preset"')}</div>`
-      + `<div class="px-at" style="left:184px;top:20px">${button('auto-party', 'Apply preset', 'data-action="auto-party" style="width:112px"', { primary: true })}</div>`
-      + `<div class="px-at" style="left:304px;top:20px">${button('auto-equip', 'Auto-equip', 'data-action="auto-equip" style="width:104px"')}</div>${workspace}`
-      + `<p class="px-at px-coverage ${coverage.length ? 'px-red' : 'px-green'}" style="left:16px;top:52px">${coverage.length ? `Missing: ${coverage.map(esc).join(', ')}.` : 'Role coverage is complete.'}</p>`
-      + `<div class="px-formations">${slots}</div>`
-      + `<div class="px-heading px-at" style="left:16px;top:162px"><h3>ROSTER</h3><span class="px-muted">${state.roster.length}/${CONFIG.heroes.length} OWNED</span></div>`
-      + `<div class="px-roster" data-scroll="roster">${roster}</div>${inspector}`,
-      '<p class="px-muted">Changes apply at the next encounter boundary.</p>'];
+      : `<p>Weapon, Armor, and Charm are shown around this hero. Use a slot to filter the stash, or choose an item below to inspect it.</p><button type="button" class="px-btn" ${control('details-close-items')} data-details-close>Back to loadout</button>` : '<p>Select an owned hero to see details.</p>';
+    const details = this.detailsOpen ? `<section class="px-loadout-details" aria-label="Hero details"><header><strong>${esc(heroTitle)}</strong><button type="button" class="px-btn" ${control('details-close')} data-details-close>Back</button></header><div class="px-hero-tabs" role="tablist" aria-label="Hero details">${(['ability', 'stats', 'items'] as const).map(tab => `<button type="button" role="tab" id="hero-tab-${tab}" aria-selected="${this.heroDetailTab === tab}" aria-controls="hero-panel" tabindex="${this.heroDetailTab === tab ? 0 : -1}" data-hero-detail="${tab}">${tab[0]!.toUpperCase()}${tab.slice(1)}</button>`).join('')}</div><div class="px-loadout-detail-body" id="hero-panel" role="tabpanel" aria-labelledby="hero-tab-${this.heroDetailTab}" data-scroll="hero-detail">${detailBody}</div></section>` : '';
+    const item = state.inventory.find(value => value.id === this.selectedGear);
+    const itemDrawer = this.loadoutItemOpen && item ? `<section class="px-loadout-item-overlay" aria-label="Item details"><header><strong>ITEM DETAILS</strong><button type="button" class="px-btn" ${control('loadout-close')} data-loadout-close>Back</button></header>${this.gearInspector(state, item, true)}</section>` : '';
+    const rosterCount = `${state.roster.length}/${CONFIG.heroes.length}`;
+    const body = `<h2 class="px-sr">Heroes</h2><section class="px-loadout" data-workspace="heroes">`
+      + `<div class="px-loadout-top"><strong>${esc(heroTitle)}</strong><div>${button('hero-details', 'Details', 'data-details-open', { className: 'px-loadout-action' })}${button('hero-formation', 'Formation', 'data-party-workspace="formation"', { className: 'px-loadout-action' })}</div></div>`
+      + `<div class="px-loadout-stage" aria-label="Selected hero and equipped items"><div class="px-loadout-hero-center">${selected ? this.portrait(selected.id, 3) : ''}<span>${esc(selected ? heroName(selected.id) : 'No owned heroes')}</span></div>${gearSlots}</div>`
+      + `<section class="px-loadout-strip-section"><div class="px-loadout-strip-title"><b>ITEM STASH</b><span>${state.inventory.length} / ${CONFIG.gear.inventoryCap}${this.slotFilter !== 'all' ? ` · ${this.slotFilter}` : ''}</span></div><div class="px-loadout-strip" data-scroll="loadout-stash" aria-label="Item stash">${items || '<span class="px-loadout-empty">Earn items from battles</span>'}</div></section>`
+      + `<section class="px-loadout-strip-section px-loadout-heroes-section"><div class="px-loadout-strip-title"><b>HEROES</b><span>${rosterCount} OWNED</span></div><div class="px-loadout-strip" data-scroll="loadout-roster" aria-label="Hero selection">${owned || '<span class="px-loadout-empty">Recruit heroes to begin</span>'}</div></section>`
+      + `${details}${itemDrawer}</section>`;
+    return [body, `<p class="px-muted">Select a hero, then choose gear to inspect or equip it.</p>`];
   }
+
   private gearInspector(state: ManagementSnapshot, item: ManagementSnapshot['inventory'][number] | undefined, withCompare: boolean): string {
     if (!item) return `<section class="px-inspector px-insp-empty"><p class="px-muted">Select gear to inspect it.</p></section>`;
     const owner = this.ownerOf(state, item.id), comparison = this.comparison, mult = 1 + CONFIG.gear.upgrade.mainPerLevel * item.level, cost = upgradeCost(item);

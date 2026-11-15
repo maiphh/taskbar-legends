@@ -4,6 +4,7 @@ import { createPartyState, createState, step } from '../src/core/game';
 import { spawnWave } from '../src/core/combat';
 import { enemyFormationX } from '../src/core/party-combat';
 import { formationScreenX } from '../src/core/turn/formation-view';
+import { easeReturn } from '../src/core/turn/presentation';
 import type { GameState, Unit } from '../src/core/model';
 import { stepCombatCamera, type CombatCameraInput } from '../src/party-camera';
 
@@ -339,17 +340,18 @@ describe('party-v2 compact combat camera', () => {
     state.enemies = [0, 1, 2].map(slot => ({ ...base, id: `anchor-${slot}`, slot, hp: slot === 1 ? 0 : base.maxHp, action: { state: 'idle' as const } }));
     const hero = state.party[0]!;
     hero.action = { state: 'recovery', kind: 'attack', targetId: 'anchor-1', targetSide: 'enemy', targetSlot: 1, targetCount: 3,
-      startTick: 0, impactTick: 10, readyTick: 32, delivery: 'leap' };
+      startTick: 0, impactTick: 14, contactTick: 10, attackEndTick: 18, returnEndTick: 32, readyTick: 36, delivery: 'leap' };
     const projected = (): Map<string, number> => new Map(renderer.getCombatProjection(state).units.map(unit => [unit.id, unit.screenX]));
     const targetX = renderer.getCombatProjection(state).fieldLeft + formationScreenX('enemy', 1, 3, renderer.getCombatProjection(state).fieldWidth);
     state.tick = 12;
-    expect(projected().get(hero.id)).toBe(targetX);
+    const contactX = targetX - 18;
+    expect(projected().get(hero.id)).toBe(contactX);
     state.enemies = state.enemies.filter(unit => unit.id !== 'anchor-1');
-    state.tick = 21;
+    state.tick = 25;
     const halfway = projected().get(hero.id)!;
     const homeX = renderer.getCombatProjection(state).fieldLeft + formationScreenX('hero', hero.slot, 3, renderer.getCombatProjection(state).fieldWidth);
-    expect(halfway).toBe(Math.round(targetX + (homeX - targetX) * 0.5));
-    state.tick = 28;
+    expect(halfway).toBe(Math.round(contactX + (homeX - contactX) * easeReturn(0.5)));
+    state.tick = 32;
     expect(projected().get(hero.id)).toBe(homeX);
   });
 });

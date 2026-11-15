@@ -7,11 +7,12 @@ import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
 import { fillGauges, nextActor, spendTurn, type GaugeUnit } from './turn/action-bar';
 import { canAct, onTurnStart, type RunningStatus } from './turn/statuses';
+import { actionBoundaries, createActionTimeline, hasUnfinishedPresentation } from './turn/animation-timing';
 import type { GameEvent, GameState, PartyProjectile, Unit } from './model';
 
 export const PARTY_V2 = Object.freeze({
   version: 'party-v2', radius: { normal: 10, tank: 12 }, reach: { melee: 12, ranged: 260, heal: 260 },
-  timing: { windupTicks: 10, contactTicks: 4, returnTicks: 14, settleTicks: 4, minimumRecoveryTicks: 22, animationRecoveryTicks: 22, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
+  timing: { windupTicks: 10, returnTicks: 14, settleTicks: 4, minimumRecoveryTicks: 22, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
   animation: { attackImpactFraction: 0.5, healImpactFraction: 0.5 },
   speed: { tank: 65, melee: 90, support: 65, ranged: 80, enemyMelee: 70, enemyRanged: 55 },
 });
@@ -112,6 +113,11 @@ function presentationBusy(unit: Unit): boolean {
   if (action?.state === 'windup' || action?.state === 'recovery') return true;
   return !!unit.specialAction;
 }
+export function hasPendingActionPresentation(state: GameState): boolean {
+  const now = combatTime(state);
+  return [...state.party, ...state.enemies].some(unit => unit.hp > 0 && (!!unit.specialAction || (unit.action && unit.action.state !== 'idle'
+    && hasUnfinishedPresentation(unit.sourceId, unit.action, now))));
+}
 function isTank(unit: Unit): boolean { return unit.side === 'hero' && unitRole(unit) === 'tank'; }
 function distance(a: Unit, b: Unit): number { return edgeDistance({ x: a.x, radius: radius(a) }, { x: b.x, radius: radius(b) }); }
 function targetPool(state: GameState, source: Unit, kind: ActionKind): Unit[] { return kind === 'heal' ? (source.side === 'hero' ? state.party : state.enemies) : (source.side === 'hero' ? state.enemies : state.party); }
@@ -209,6 +215,15 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
     busy.add(source.id);
     if (action.state === 'areaMark') {
       if (action.impactTick > now) continue;
+      const timeline = createActionTimeline(source.sourceId, 'cast', now);
+      const target = state.party.find(unit => unit.id === action.targetId);
+      source.action = { state: 'recovery', kind: 'attack', targetId: action.targetId, targetSide: 'hero', targetSlot: target?.slot ?? 0,
+        targetCount: state.enemies.length, ...timeline, abilityId: action.abilityId, delivery: 'cast' };
+      source.specialAction = { ...action, state: 'areaImpact', startTick: now, impactTick: timeline.impactTick };
+      continue;
+    }
+    if (action.state === 'areaImpact') {
+      if (action.impactTick > now) continue;
       const definition = getPartyEnemyDefinition(source.sourceId).special;
       const coefficient = definition?.kind === 'localArea' || definition?.kind === 'bossLocal' || definition?.kind === 'bossGlobal' ? definition.coefficient : 1;
       const targets = action.global ? living(state.party) : living(state.party).filter(target => Math.abs(target.x - action.centerX) <= action.radius + radius(target));
@@ -224,9 +239,9 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       if (!target) continue;
       source.facing = aimDirection(source, target);
       source.targetId = target.id;
-      const impactTick = now + PARTY_V2.timing.windupTicks;
-      source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, startTick: now, impactTick, delivery: 'leap' };
-      emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick }, now);
+      const timeline = createActionTimeline(source.sourceId, 'leap', now);
+      source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, ...timeline, delivery: 'leap' };
+      emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick: timeline.impactTick }, now);
       continue;
     }
     const target = state.party.find(unit => unit.id === action.targetId && unit.hp > 0);
@@ -239,19 +254,19 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       source.moving = false;
       source.facing = aimDirection(source, target);
       source.targetId = target.id;
-      const impactTick = now + PARTY_V2.timing.windupTicks;
-      source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, startTick: now, impactTick, delivery: 'leap' };
-      emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick }, now);
+      const timeline = createActionTimeline(source.sourceId, 'leap', now);
+      source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, ...timeline, delivery: 'leap' };
+      emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick: timeline.impactTick }, now);
     }
   }
   return { busy, damage };
 }
-function recover(source: Unit, startTick: number, impactTick: number, kind: ActionKind, targetId: string, _fullCadence: boolean, abilityId?: string, delivery?: SkillDelivery, anchor?: Pick<Unit, 'side' | 'slot'>, targetCount = 1): void {
-  const readyTick = impactTick + PARTY_V2.timing.minimumRecoveryTicks;
+function recover(source: Unit, action: Extract<NonNullable<Unit['action']>, { state: 'windup' }>, anchor?: Pick<Unit, 'side' | 'slot'>, targetCount = 1): void {
+  const delivery = action.delivery ?? skillDelivery(source, action.abilityId);
+  const timeline = actionBoundaries(source.sourceId, delivery, action);
   source.action = {
-    state: 'recovery', kind, targetId, startTick, impactTick, readyTick,
-    ...(abilityId ? { abilityId } : {}),
-    ...(delivery ? { delivery } : {}),
+    state: 'recovery', kind: action.kind, targetId: action.targetId, ...timeline,
+    ...(action.abilityId ? { abilityId: action.abilityId } : {}), delivery,
     ...(anchor ? { targetSide: anchor.side, targetSlot: anchor.slot, targetCount } : {}),
   };
   source.moving = false;
@@ -261,8 +276,7 @@ function miss(state: GameState, impact: Impact, reason: Impact['reason']): void 
   emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: impact.kind, reason }, combatTime(state));
   const action = impact.source.action;
   if (action?.state === 'windup') {
-    const delivery = action.delivery ?? skillDelivery(impact.source, action.abilityId);
-    recover(impact.source, action.startTick, action.impactTick, action.kind, action.targetId, !(impact.kind === 'heal' && reason === 'unneeded'), action.abilityId, delivery, { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot }, action.targetCount ?? 1);
+    recover(impact.source, action, { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot }, action.targetCount ?? 1);
   }
 }
 function rewardDeath(state: GameState, target: Unit): void {
@@ -502,14 +516,14 @@ function beginActorTurn(state: GameState, unit: Unit, now: number): void {
   if (direction !== 0) unit.facing = direction as -1 | 1;
   unit.targetId = target.id;
   const delivery = skillDelivery(unit, choice.abilityId);
-  const impactTick = now + PARTY_V2.timing.windupTicks;
+  const timeline = createActionTimeline(unit.sourceId, delivery, now);
   const targetCount = state.enemies.length;
   unit.action = {
-    state: 'windup', kind: choice.kind, targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount, startTick: now, impactTick, delivery,
+    state: 'windup', kind: choice.kind, targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount, ...timeline, delivery,
     ...(choice.abilityId ? { abilityId: choice.abilityId } : {}),
   };
   unit.moving = false;
-  emit(state, { type: 'actionStart', unitId: unit.id, targetId: target.id, kind: choice.kind, startTick: now, impactTick }, now);
+  emit(state, { type: 'actionStart', unitId: unit.id, targetId: target.id, kind: choice.kind, startTick: now, impactTick: timeline.impactTick }, now);
 }
 
 function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, specialDamage: DamageIntent[]): void {
@@ -593,9 +607,8 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
   for (const impact of valid) {
     const action = impact.source.action;
     if (action?.state === 'windup') {
-      const delivery = action.delivery ?? skillDelivery(impact.source, action.abilityId);
       const anchor = { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot };
-      recover(impact.source, action.startTick, action.impactTick, action.kind, action.targetId, !(action.kind === 'heal' && missedHeals.has(impact)), action.abilityId, delivery, anchor, action.targetCount ?? Math.max(1, state.enemies.length));
+      recover(impact.source, action, anchor, action.targetCount ?? Math.max(1, state.enemies.length));
       const turned = onTurnStart({ id: impact.source.id, hp: impact.source.hp, maxHp: impact.source.maxHp, statuses: unitStatuses(impact.source) });
       impact.source.hp = turned.unit.hp;
       impact.source.statuses = turned.unit.statuses;
@@ -604,7 +617,7 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
 }
 
 /** One deterministic simulation tick for the opt-in party-v2 rules. */
-export function partyCombatTick(state: GameState): void {
+export function partyCombatTick(state: GameState, allowNewActions = true): void {
   const now = combatTime(state), startUnits = [...state.party, ...state.enemies].sort(compareId);
   state.partyEffects ??= []; state.projectiles ??= []; state.nextProjectileId ??= 0;
   if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); return; }
@@ -633,6 +646,7 @@ export function partyCombatTick(state: GameState): void {
     if (state.party.every(hero => hero.hp <= 0)) cancelPartyEncounterEffects(state);
     return;
   }
+  if (!allowNewActions) return;
 
   const wrappers = living([...state.party, ...state.enemies]).map(toGaugeUnit);
   fillGauges(wrappers);

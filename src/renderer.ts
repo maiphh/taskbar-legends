@@ -6,10 +6,11 @@ import { BODY } from './font';
 import { bannerFrame, popupFrame } from './motion';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { stageCue, upgradePopups } from './core/selectors';
-import { combatEventAge, enemyFormationX, PARTY_V2, presentationCombatTime } from './core/party-combat';
+import { combatEventAge, enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
-import { formationScreenX, slashScreenX } from './core/turn/formation-view';
+import { formationScreenX } from './core/turn/formation-view';
+import { actionBoundaries, sampleActionPresentation } from './core/turn/animation-timing';
 import { easeReturn } from './core/turn/presentation';
 import { gaugeRatio } from './core/turn/action-bar';
 import { stepCombatCamera, type CombatCameraInput } from './party-camera';
@@ -156,19 +157,15 @@ export class Renderer {
         const targetSide = target?.side ?? action.targetSide;
         const targetSlot = target?.slot ?? action.targetSlot;
         if (targetSide && targetSlot !== undefined) {
+          const timeline = actionBoundaries(unit.sourceId, action.delivery, action);
+          const sample = sampleActionPresentation(action.delivery, timeline, now);
+          const home = formationScreenX(side, unit.slot, enemyCount, field.width);
           const targetScreen = formationScreenX(targetSide, targetSlot, action.targetCount ?? enemyCount, field.width);
-          if (action.state === 'windup') {
-            const span = Math.max(1, action.impactTick - action.startTick);
-            const t = Math.min(1, Math.max(0, (now - action.startTick) / span));
-            screenX = slashScreenX(screenX, targetScreen, 'out', t);
-          } else {
-            const elapsed = now - action.impactTick;
-            if (elapsed < PARTY_V2.timing.contactTicks) screenX = targetScreen;
-            else if (elapsed < PARTY_V2.timing.contactTicks + PARTY_V2.timing.returnTicks) {
-              const t = (elapsed - PARTY_V2.timing.contactTicks) / PARTY_V2.timing.returnTicks;
-              screenX = targetScreen + (screenX - targetScreen) * easeReturn(t);
-            } else screenX = formationScreenX(side, unit.slot, enemyCount, field.width);
-          }
+          const contact = targetScreen - Math.sign(targetScreen - home || 1) * 18;
+          if (sample.phase === 'approach') screenX = home + (contact - home) * sample.progress;
+          else if (sample.phase === 'attack') screenX = contact;
+          else if (sample.phase === 'return') screenX = contact + (home - contact) * easeReturn(sample.progress);
+          else screenX = home;
         }
       } else if (unit.side === 'enemy' && unit.moving) {
         const spawnX = CONFIG.sim.enemySpawnX + unit.slot * CONFIG.sim.enemySpawnSpacingPx;
@@ -189,7 +186,7 @@ export class Renderer {
     for (let i = state.events.length - 1; i >= 0; i -= 1) { const event = state.events[i]; if (event && predicate(event)) return event; }
     return undefined;
   }
-  private animation(state: GameState, unit: Unit, key: string | undefined): { name: AnimationName; ageMs: number } {
+  private animation(state: GameState, unit: Unit, key: string | undefined): { name: AnimationName; ageMs: number; returning?: boolean } {
     const now = state.combatRules === 'party-v2' ? presentationCombatTime(state) : state.tick;
     const age = (event: GameEvent | undefined): number => {
       if (!event) return Infinity;
@@ -200,16 +197,11 @@ export class Renderer {
     if (unit.hp <= 0) return { name: 'death', ageMs: Number.isFinite(age(dead)) ? age(dead) : 0 };
     if (state.combatRules === 'party-v2') {
       const action = unit.action;
-      if (action && action.state !== 'idle' && now < action.startTick + PARTY_V2.timing.windupTicks + PARTY_V2.timing.animationRecoveryTicks) {
-        const name: AnimationName = action.kind === 'heal' ? 'cast' : 'attack';
-        const duration = key ? this.atlases.durationMs(key, name) ?? CONFIG.view.attackFallbackMs : CONFIG.view.attackFallbackMs;
-        const fraction = action.kind === 'heal' ? PARTY_V2.animation.healImpactFraction : PARTY_V2.animation.attackImpactFraction;
-        const windupTicks = Math.max(1, action.impactTick - action.startTick);
-        const elapsed = now - action.startTick;
-        const ageMs = elapsed <= windupTicks
-          ? duration * fraction * Math.max(0, elapsed) / windupTicks
-          : duration * fraction + duration * (1 - fraction) * Math.min(1, (elapsed - windupTicks) / PARTY_V2.timing.animationRecoveryTicks);
-        return { name, ageMs };
+      if (action && (action.state === 'windup' || action.state === 'recovery')) {
+        const delivery = action.delivery ?? (action.kind === 'heal' ? 'cast' : 'leap');
+        const timeline = actionBoundaries(unit.sourceId, delivery, action);
+        const sample = sampleActionPresentation(delivery, timeline, now);
+        if (sample.phase !== 'done') return { name: sample.animation, ageMs: sample.ageMs, returning: sample.phase === 'return' };
       }
     }
     const hurt = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
@@ -252,7 +244,7 @@ export class Renderer {
       const lastHit = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
       const lastHitAge = lastHit ? combatEventAge(state, lastHit) : null;
       const flash = lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
-      const flip = state.combatRules === 'party-v2' ? unit.facing === -1 : unit.side === 'enemy';
+      const flip = state.combatRules === 'party-v2' ? (anim.returning ? unit.side === 'hero' : unit.facing === -1) : unit.side === 'enemy';
       if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, 1, flash)) {
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : color; ctx.fillRect(x - view.heroWidth / 2, unitBaseline - view.heroHeight, view.heroWidth, view.heroHeight);
       }

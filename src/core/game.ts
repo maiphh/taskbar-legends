@@ -1,6 +1,6 @@
 import { CONFIG, stageConfig, ticksForSeconds } from '../config';
 import { beginEncounter, combatTick, spawnWave } from './combat';
-import { cancelPartyEncounterEffects, expireFriendlyDeadTargetProjectiles, hasPendingHostileImpact } from './party-combat';
+import { cancelPartyEncounterEffects, expireFriendlyDeadTargetProjectiles, hasPendingActionPresentation, hasPendingHostileImpact } from './party-combat';
 import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setLocked, setParty, upgrade, togglePartyLock } from './economy';
 import { emit, goldChange } from './events';
 import { cloneState, gearTemplateId, itemId, parseState } from './model';
@@ -173,13 +173,21 @@ function encounterSubstep(state: GameState): void {
     return;
   }
   if (state.phase.kind !== 'battle') return;
+  if (state.combatRules === 'party-v2' && state.enemies.every(enemy => enemy.hp <= 0)) {
+    expireFriendlyDeadTargetProjectiles(state);
+    combatTick(state, false);
+    if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); lose(state); return; }
+    if (!hasPendingHostileImpact(state) && !hasPendingActionPresentation(state)) win(state);
+    return;
+  }
   const elapsed = state.farmClock?.elapsedTicks ?? state.tick - state.stageStartedTick;
-  if (elapsed >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec)) { lose(state); return; }
-  combatTick(state);
+  const timedOut = elapsed >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec);
+  if (timedOut && (state.combatRules !== 'party-v2' || !hasPendingActionPresentation(state))) { lose(state); return; }
+  combatTick(state, !timedOut);
   if (state.party.every(hero => hero.hp <= 0)) { if (state.combatRules === 'party-v2') cancelPartyEncounterEffects(state); lose(state); }
   else if (state.enemies.every(enemy => enemy.hp <= 0)) {
     if (state.combatRules === 'party-v2') expireFriendlyDeadTargetProjectiles(state);
-    if (state.combatRules !== 'party-v2' || !hasPendingHostileImpact(state)) win(state);
+    if (state.combatRules !== 'party-v2' || (!hasPendingHostileImpact(state) && !hasPendingActionPresentation(state))) win(state);
   }
 }
 function tick(state: GameState): void {

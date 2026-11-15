@@ -4,6 +4,7 @@ import { createPartyState, load, snapshot, step } from '../src/core/game';
 import { spawnWave } from '../src/core/combat';
 import { spawnParty } from '../src/core/combat';
 import { partyCombatTick } from '../src/core/party-combat';
+import { createActionTimeline } from '../src/core/turn/animation-timing';
 import { applyPartyShield, PARTY_V2 } from '../src/core/party-combat';
 import { activePartyEffects, applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveDefense, prunePartyEffects } from '../src/core/party-effects';
 import type { PartyProjectile, Unit } from '../src/core/model';
@@ -15,6 +16,7 @@ function hold(unit: Unit): void {
   unit.statuses = [{ id: 'petrification', sourceId: 'hold', targetId: unit.id, stacks: 1, magnitude: 1, turnsLeft: 9999 }];
   unit.cooldown = Number.MAX_SAFE_INTEGER;
 }
+function impactNow(state: ReturnType<typeof createPartyState>, unit: Unit): void { const action = unit.action; if (action?.state === 'windup') step(state, Math.max(0, action.impactTick - state.tick)); }
 function bullet(source: Unit, target: Unit, overrides: Partial<PartyProjectile> = {}): PartyProjectile {
   return { id: 'projectile-test-1', sourceId: source.id, sourceSide: source.side, targetId: target.id, targetSide: target.side, abilityId: 'test-arrow', delivery: 'homing',
     x: target.x - 25, speed: 500, atk: 50, coefficient: 1, releasedAtTick: 0, impactNotBeforeTick: 1, expiresAtTick: 80, ...overrides };
@@ -40,9 +42,10 @@ describe('party-v2 common impact resolution', () => {
     const damage = state.events.find(event => event.data.type === 'hit' && event.data.attackerId === target.id && event.data.targetId === enemy.id);
     expect(damage?.data.type === 'hit' ? damage.data.damage : 0).toBe(Math.round(target.atk * 1.15));
     banner.action = { state: 'idle' }; banner.statuses = []; banner.gauge = 10000; banner.partyCooldowns = { 'banner-buff': Number.MAX_SAFE_INTEGER };
-    for (let i = 0; i < 22 && state.party.find(unit => unit.id === banner.id)?.action?.state !== 'windup'; i += 1) { state.tick += 1; partyCombatTick(state); }
+    for (let i = 0; i < 60 && !state.events.some(event => event.data.type === 'hit' && event.data.attackerId === banner.id); i += 1) { state.tick += 1; partyCombatTick(state); }
     expect(state.events.filter(event => event.data.type === 'skill' && event.data.unitId === banner.id && event.data.skill === 'banner-buff')).toHaveLength(1);
-    expect(banner.action).toMatchObject({ state: 'windup', kind: 'attack', abilityId: 'banner-bolt' });
+    expect(state.events.some(event => event.data.type === 'hit' && event.data.attackerId === banner.id)).toBe(true);
+    expect(banner.attacks).toBeGreaterThan(0);
   });
   it('auto-casts one charged skill, spends mana at impact, and keeps committed recovery through save/load', () => {
     const state = createPartyState(25200);
@@ -53,7 +56,7 @@ describe('party-v2 common impact resolution', () => {
     melee.statuses = []; melee.gauge = 10000; melee.mana = 60; state.enemies[0]!.hp = state.enemies[2]!.hp = 100000; enemy.def = 0;
     step(state);
     expect(melee.action).toMatchObject({ state: 'windup', abilityId: 'cleave', targetCount: 3 });
-    step(state, PARTY_V2.timing.windupTicks);
+    impactNow(state, melee);
     expect(melee.mana).toBe(0);
     expect(state.events.filter(event => event.data.type === 'skill' && event.data.unitId === melee.id && event.data.skill === 'cleave')).toHaveLength(1);
     const recovered = load(snapshot(state));
@@ -66,7 +69,7 @@ describe('party-v2 common impact resolution', () => {
     step(state);
     expect(priest.action).toMatchObject({ state: 'windup', abilityId: 'priest-heal-or-bolt' });
     expect(priest.mana).toBe(60);
-    step(state, PARTY_V2.timing.windupTicks);
+    impactNow(state, priest);
     expect(priest.mana).toBe(60);
     expect(state.events.some(event => event.data.type === 'skill' && event.data.unitId === priest.id && event.data.skill === 'priest-burst-heal')).toBe(false);
   });
@@ -74,6 +77,26 @@ describe('party-v2 common impact resolution', () => {
     const state = createPartyState(25202);
     state.party[0]!.mana = 0; state.party[1]!.mana = 23; state.party[2]!.mana = 60;
     expect(load(snapshot(state)).party.map(unit => unit.mana)).toEqual([0, 23, 60]);
+  });
+  it('resumes a saved charged action before impact and never repeats its hit after impact', () => {
+    const state = createPartyState(25205), melee = state.party.find(unit => unit.sourceId === 'mw1')!, target = state.enemies[0]!;
+    state.party.filter(unit => unit !== melee).forEach(hold); state.enemies = [target]; hold(target);
+    melee.statuses = []; melee.mana = 60; melee.x = target.x; target.hp = target.maxHp = 100_000; target.def = 0;
+    const timeline = createActionTimeline(melee.sourceId, 'leap', state.tick);
+    melee.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: 'enemy', targetSlot: target.slot,
+      targetCount: state.enemies.length, ...timeline, abilityId: 'cleave', delivery: 'leap' };
+    const preImpact = load(snapshot(state));
+    const resumed = preImpact.party.find(unit => unit.id === melee.id)!;
+    step(preImpact, timeline.impactTick);
+    expect(resumed.mana).toBe(0);
+    const commits = preImpact.events.filter(event => event.data.type === 'hit' && event.data.attackerId === melee.id && event.data.targetId === target.id).length;
+    expect(commits).toBe(1);
+    expect(preImpact.events.filter(event => event.data.type === 'skill' && event.data.unitId === melee.id && event.data.skill === 'cleave')).toHaveLength(1);
+    const postImpact = load(snapshot(preImpact));
+    step(postImpact, Math.max(0, timeline.readyTick - postImpact.tick + 1));
+    expect(postImpact.events.filter(event => event.data.type === 'hit' && event.data.attackerId === melee.id && event.data.targetId === target.id)).toHaveLength(commits);
+    expect(postImpact.events.filter(event => event.data.type === 'skill' && event.data.unitId === melee.id && event.data.skill === 'cleave')).toHaveLength(1);
+    expect(postImpact.party.find(unit => unit.id === melee.id)?.mana).toBe(0);
   });
   it('caps basic mana gain at signature cost and keeps charge when its target dies before impact', () => {
     const state = createPartyState(25203), melee = state.party[0]!, target = state.enemies[0]!;
@@ -118,7 +141,8 @@ describe('party-v2 common impact resolution', () => {
     expect(basicContacts.length).toBeGreaterThanOrEqual(4);
     const mark = boss.specialAction;
     if (mark?.state !== 'areaMark') return;
-    step(state, mark.impactTick - state.tick);
+    // The telegraph ends before the boss's stationary cast clip begins; resolve its authored volley once at clip impact.
+    step(state, mark.impactTick - state.tick + 20);
     const impacts = state.events.filter(event => (event.data.type === 'hit' || event.data.type === 'shieldAbsorb') && (event.data.type === 'hit' ? event.data.attackerId : event.data.attackerId) === boss.id);
     expect(new Set(impacts.map(event => event.data.type === 'hit' || event.data.type === 'shieldAbsorb' ? event.data.targetId : '')).size).toBe(3);
     expect(state.events.some(event => event.data.type === 'guard' && event.data.guardianId === state.party[0]?.id && event.data.fromTargetId !== state.party[0]?.id)).toBe(false);
@@ -378,7 +402,7 @@ describe('party-v2 common impact resolution', () => {
     state.enemies = [target]; target.x = weakener.x; target.hp = 10000; target.maxHp = 10000; hold(target);
     const cast = (): void => {
       weakener.mana = 60; weakener.partyCooldowns = { weaken: 0 }; weakener.action = { state: 'idle' }; weakener.statuses = []; weakener.gauge = 10000;
-      step(state); step(state, PARTY_V2.timing.windupTicks + PARTY_V2.timing.minimumRecoveryTicks);
+      step(state); for (let i = 0; i < 100 && weakener.action?.state !== 'idle'; i += 1) step(state);
     };
     cast();
     expect(state.partyEffects?.some(effect => effect.targetId === target.id && effect.group === 'enemy-atk-weaken')).toBe(true);
@@ -422,7 +446,7 @@ describe('party-v2 common impact resolution', () => {
     expect(assassin.x).toBe(start);
     expect(assassin.facing).toBe(-1);
     expect(state.events.some(event => event.data.type === 'hit' && event.data.attackerId === assassin.id)).toBe(false);
-    step(state, PARTY_V2.timing.windupTicks);
+    impactNow(state, assassin);
     expect(state.events.some(event => event.data.type === 'guard' && event.data.fromTargetId === priest.id && event.data.toTargetId === tank.id)).toBe(false);
     expect(priest.hp).toBeLessThan(priest.maxHp);
     expect(assassin.x).toBe(start);

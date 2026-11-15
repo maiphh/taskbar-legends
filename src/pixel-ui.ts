@@ -46,6 +46,7 @@ export class PixelUI {
   selectedHero = CONFIG.heroes[0]?.id ?? '';
   heroDetailTab: 'ability' | 'stats' | 'items' = 'ability';
   selectedGear: ItemId | null = null;
+  private heroSlotFilter: Gear['slot'] | null = null;
   targetSlot = 0;
   private heroRow = 0;
   private gearRow = 0;
@@ -108,11 +109,15 @@ export class PixelUI {
       const bounds = overlay.getBoundingClientRect();
       const x = (event.clientX - bounds.left) / this.scaleToCss, y = (event.clientY - bounds.top) / this.scaleToCss;
       const panel = this.panelRect();
-      const viewport = { x: panel.x + 16, y: this.panel === 'heroes' ? 104 : 112, width: this.panel === 'heroes' ? this.rosterColumns() * 96 + 8 : 392, height: 248 };
+      const viewport = { x: panel.x + 16, y: this.panel === 'heroes' ? 104 : 112, width: this.panel === 'heroes' ? panel.width - 32 : 392, height: 248 };
       if (!hasPoint(viewport, x, y) || this.panel === 'recruit') return;
       event.preventDefault();
       const delta = event.deltaY > 0 ? 1 : -1;
-      if (this.panel === 'heroes') this.heroRow = Math.max(0, Math.min(Math.ceil(CONFIG.heroes.length / this.rosterColumns()) - 3, this.heroRow + delta));
+      if (this.panel === 'heroes' && y >= 216 && y < 274) {
+        const items = (this.current?.inventory ?? []).filter(item => !this.heroSlotFilter || item.slot === this.heroSlotFilter);
+        this.gearRow = Math.max(0, Math.min(Math.ceil(items.length / Math.max(1, Math.floor((panel.width - 32) / 44))) - 1, this.gearRow + delta));
+      }
+      else if (this.panel === 'heroes') this.heroRow = Math.max(0, Math.min(Math.ceil(CONFIG.heroes.length / 4) - 1, this.heroRow + delta));
       else this.gearRow = Math.max(0, Math.min(Math.ceil((this.current?.inventory.length ?? 0) / this.gearColumns()) - 5, this.gearRow + delta));
       this.onRedraw();
     }, { passive: false });
@@ -125,7 +130,7 @@ export class PixelUI {
       }
       if (event.code === 'Escape' && this.panel) { event.preventDefault(); this.setPanel(null); }
       if (this.panel !== 'heroes' || !(event.target instanceof HTMLButtonElement) || event.target.dataset.cardIndex === undefined) return;
-      const deltas: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -this.rosterColumns(), ArrowDown: this.rosterColumns() };
+      const deltas: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -4, ArrowDown: 4 };
       const delta = deltas[event.key];
       if (delta === undefined && event.key !== 'Home' && event.key !== 'End') return;
       event.preventDefault();
@@ -133,9 +138,8 @@ export class PixelUI {
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? CONFIG.heroes.length - 1 : Math.max(0, Math.min(CONFIG.heroes.length - 1, old + (delta ?? 0)));
       const hero = CONFIG.heroes[next]; if (!hero) return;
       this.selectedHero = hero.id;
-      const row = Math.floor(next / this.rosterColumns());
-      if (row < this.heroRow) this.heroRow = row;
-      if (row >= this.heroRow + 3) this.heroRow = row - 2;
+      const row = Math.floor(next / 4);
+      this.heroRow = row;
       this.onRedraw(); this.buttons.get(`hero-${hero.id}`)?.focus();
     });
   }
@@ -258,7 +262,6 @@ export class PixelUI {
   }
   setCompactMode(value: boolean): void { this.compactMode = value; if (value) this.setPanel(null); this.onLayoutChange(); }
   height(): number { return this.compactMode ? CONFIG.ui.closed.height : this.isOpen() ? CONFIG.ui.expanded.height : CONFIG.ui.closed.height; }
-  private rosterColumns(): number { return this.width >= 736 ? 4 : 3; }
   private gearColumns(): number { return this.width >= 736 ? 8 : 6; }
   panelRect(): Rect {
     const width = this.width >= 736 ? CONFIG.ui.expanded.panelWidth : Math.max(608, this.width - 16);
@@ -508,7 +511,7 @@ export class PixelUI {
     const vx = mx + (wide ? 76 : 56), step = 0.1, round = (value: number): number => Math.round(Math.max(0, Math.min(1, value)) * 10) / 10;
     this.button(ctx, 'volume-down', '-', { x: vx, y: 40, width: 24, height: 28 }, () => this.onAudio({ muted: false, volume: round(sound.volume - step) }), { disabled: sound.volume <= 0, tooltip: `Volume ${Math.round(sound.volume * 100)}%: lower` });
     this.button(ctx, 'volume-up', '+', { x: vx + 28, y: 40, width: 24, height: 28 }, () => this.onAudio({ muted: false, volume: round(sound.volume + step) }), { disabled: sound.volume >= 1, tooltip: `Volume ${Math.round(sound.volume * 100)}%: raise` });
-    ctx.fillStyle = palette.edge; ctx.fillRect(x + 16, 357, w - 32, 1);
+    if (this.panel !== 'heroes') { ctx.fillStyle = palette.edge; ctx.fillRect(x + 16, 357, w - 32, 1); }
     if (this.panel === 'heroes') this.drawHeroes(ctx, state, panel);
     if (this.panel === 'gear') this.drawGear(ctx, state, panel);
     if (this.panel === 'recruit') { if (this.reveal) this.drawReveal(ctx, state.tickets, panel, this.reveal); else this.drawRecruit(ctx, state, panel); }
@@ -718,72 +721,64 @@ export class PixelUI {
     void state;
   }
   private drawHeroes(ctx: CanvasRenderingContext2D, state: GameState, panel: Rect): void {
-    const x = panel.x, columns = this.rosterColumns(), detailX = x + (panel.width >= 720 ? 424 : panel.width - 232), detailWidth = panel.width >= 720 ? 280 : 216;
-    this.text(ctx, 'ROSTER', x + 16, 80, palette.text, BODY, true); this.text(ctx, `${state.roster.length}/${CONFIG.heroes.length} OWNED`, x + 208, 80, palette.muted);
-    ctx.save(); ctx.beginPath(); ctx.rect(x + 16, 104, columns * 96 - 8, 248); ctx.clip();
-    for (let visible = 0; visible < columns * 3; visible += 1) {
-      const index = this.heroRow * columns + visible, definition = CONFIG.heroes[index]; if (!definition) continue;
-      const card = { x: x + 16 + (visible % columns) * 96, y: 104 + Math.floor(visible / columns) * 84, width: 88, height: 80 };
-      const owned = state.roster.some(hero => hero.id === definition.id), active = state.partyIds.includes(definition.id);
-      this.button(ctx, `hero-${definition.id}`, '', card, () => { this.selectedHero = definition.id; this.onRedraw(); }, { selected: this.selectedHero === definition.id, tooltip: `${definition.name}${owned ? '' : ' — not owned'}`, cardIndex: index });
-      ctx.save(); ctx.beginPath(); ctx.rect(card.x + 3, card.y + 3, 82, 74); ctx.clip(); ctx.globalAlpha = owned ? 1 : 0.45;
-      this.sprite(ctx, definition.id, card.x + 43, card.y + 59, state.tick); ctx.restore();
-      if (active) { ctx.fillStyle = palette.green; ctx.fillRect(card.x + 74, card.y + 6, 6, 6); }
-      const name = definition.name.replace('Medieval ', '').replace('Martial ', '').replace('Fantasy ', '').replace(' (recolored Wizard)', '');
-      this.text(ctx, name, card.x + 4, card.y + 60, owned ? palette.gold : palette.muted, BODY, false, 80);
+    const x = panel.x, width = panel.width, center = x + Math.floor(width / 2), selected = state.roster.find(value => value.id === this.selectedHero);
+    const defs = CONFIG.heroes, page = Math.max(0, this.heroRow), slotNames = ['weapon', 'armor', 'charm'] as const;
+    this.text(ctx, 'HERO CENTER', x + 16, 80, palette.text, BODY, true);
+    this.text(ctx, `${selected ? heroConfig(selected.id).name : 'Select a hero'}${selected ? ` · Lv ${selected.level}` : ''}`, center - 84, 80, palette.gold, BODY, true, 168);
+    this.text(ctx, 'FORMATION', x + width - 104, 80, palette.muted, BODY, true);
+    ctx.fillStyle = '#18232f'; ctx.fillRect(x + 12, 92, width - 24, 116); ctx.fillStyle = palette.edge; ctx.fillRect(x + 12, 92, width - 24, 1);
+    if (selected) {
+      this.sprite(ctx, selected.id, center, 198, state.tick, 2);
+      this.text(ctx, selected.id.toUpperCase(), center - 35, 100, palette.muted, BODY, true, 70);
+      slotNames.forEach((slot, index) => {
+        const item = state.inventory.find(gear => gear.id === selected.equipment[slot]);
+        const rect = index === 0 ? { x: x + 20, y: 126, width: 72, height: 40 } : index === 1 ? { x: x + width - 92, y: 108, width: 72, height: 40 } : { x: x + width - 92, y: 158, width: 72, height: 40 };
+        this.button(ctx, `hero-slot-${slot}`, `${slot.toUpperCase()}${item ? ` +${item.level}` : ' empty'}`, rect, () => { this.heroSlotFilter = this.heroSlotFilter === slot ? null : slot; this.gearRow = 0; if (item) { this.selectedGear = item.id; this.heroDetailTab = 'items'; } this.onRedraw(); }, { selected: this.heroSlotFilter === slot || item?.id === this.selectedGear, tooltip: `${item ? `${item.rarity} ${slot} +${item.level}` : `No ${slot} equipped`}; filter stash by ${slot}` });
+        if (item) this.icon(ctx, slot === 'weapon' ? 'sword' : slot === 'armor' ? 'armor' : 'potion', rect.x + 3, rect.y + 12);
+      });
+    }
+    const stashItems = state.inventory.filter(item => !this.heroSlotFilter || item.slot === this.heroSlotFilter);
+    this.text(ctx, `ITEM STASH  ${stashItems.length}/${CONFIG.gear.inventoryCap}${this.heroSlotFilter ? ` ${this.heroSlotFilter.toUpperCase()}` : ''}`, x + 16, 216, palette.gold, BODY, true);
+    const gearPage = Math.max(0, this.gearRow), gearCount = Math.max(1, Math.floor((width - 32) / 44));
+    const gearPages = Math.max(1, Math.ceil(stashItems.length / gearCount));
+    this.button(ctx, 'hero-equip-item', 'Equip', { x: x + width - 124, y: 210, width: 48, height: 16 }, () => { const item = state.inventory.find(value => value.id === this.selectedGear); if (selected && item && selected.equipment[item.slot] !== item.id) this.onAction({ type: 'equip', heroId: selected.id, gearId: item.id }); }, { disabled: !selected || !state.inventory.some(value => value.id === this.selectedGear && selected.equipment[value.slot] !== value.id), tooltip: selected ? 'Equip selected stash item on this hero' : 'Select an owned hero' });
+    this.button(ctx, 'hero-stash-prev', '<', { x: x + width - 72, y: 210, width: 20, height: 16 }, () => { this.gearRow = Math.max(0, gearPage - 1); this.onRedraw(); }, { disabled: gearPage <= 0, tooltip: 'Previous stash items' });
+    this.button(ctx, 'hero-stash-next', '>', { x: x + width - 48, y: 210, width: 20, height: 16 }, () => { this.gearRow = Math.min(gearPages - 1, gearPage + 1); this.onRedraw(); }, { disabled: gearPage >= gearPages - 1, tooltip: 'Next stash items' });
+    ctx.save(); ctx.beginPath(); ctx.rect(x + 16, 224, width - 32, 48); ctx.clip();
+    for (let index = 0; index < gearCount; index += 1) {
+      const item = stashItems[gearPage * gearCount + index]; if (!item) break;
+      const rect = { x: x + 16 + index * 44, y: 226, width: 40, height: 40 };
+      this.button(ctx, `hero-stash-${item.id}`, '', rect, () => { this.selectedGear = item.id; this.heroDetailTab = 'items'; this.onRedraw(); }, { selected: item.id === this.selectedGear, tooltip: `${item.rarity} ${item.slot} +${item.level}${item.locked ? ', locked' : ''}` });
+      this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', rect.x + 11, rect.y + 8);
+      this.text(ctx, `+${item.level}`, rect.x + 7, rect.y + 25, palette.gold, BODY);
     }
     ctx.restore();
-    if (Math.ceil(CONFIG.heroes.length / columns) > 3) {
-      ctx.fillStyle = palette.edge; ctx.fillRect(x + columns * 96 + 18, 104, 4, 248);
-      ctx.fillStyle = palette.gold; ctx.fillRect(x + columns * 96 + 18, 104 + this.heroRow * 40, 4, 80);
+    this.text(ctx, `HEROES ${state.roster.length}/${defs.length}  PAGE ${page + 1}/${Math.ceil(defs.length / 4)}`, x + 16, 272, palette.text, BODY, true);
+    for (let visible = 0; visible < 4; visible += 1) {
+      const index = page * 4 + visible, definition = defs[index]; if (!definition) continue;
+      const owned = state.roster.some(hero => hero.id === definition.id), card = { x: x + 16 + visible * Math.floor((width - 32) / 4), y: 286, width: Math.floor((width - 40) / 4), height: 42 };
+      this.button(ctx, `hero-${definition.id}`, '', card, () => { if (owned) { this.selectedHero = definition.id; this.onRedraw(); } }, { selected: this.selectedHero === definition.id, disabled: !owned, tooltip: `${definition.name}${owned ? '' : ' — not owned'}`, cardIndex: index });
+      this.text(ctx, shortHeroName(definition.id), card.x + 4, 290, owned ? palette.gold : palette.muted, BODY, true, card.width - 8);
+      if (state.partyIds.includes(definition.id)) this.text(ctx, 'DEPLOYED', card.x + 4, 308, palette.green, BODY, false, card.width - 8);
     }
-    this.frame(ctx, { x: detailX, y: 80, width: detailWidth, height: 272 });
-    const definition = heroConfig(this.selectedHero), hero = state.roster.find(hero => hero.id === definition.id);
-    this.text(ctx, definition.name.replace('Medieval ', '').replace(' (recolored Wizard)', ''), detailX + 16, 90, palette.gold, panel.width >= 720 ? HEADING : BODY, true, detailWidth - 32);
-    ctx.save(); ctx.beginPath(); ctx.rect(detailX + 16, 112, 96, 104); ctx.clip(); this.sprite(ctx, definition.id, detailX + 63, 213, state.tick, 2); ctx.restore();
-    this.text(ctx, definition.role.toUpperCase(), detailX + 126, 120, palette.text, BODY, true, detailWidth - 132);
-    this.text(ctx, hero ? `Lv. ${hero.level}` : 'LOCKED', detailX + 126, 145, palette.muted, BODY, false, detailWidth - 132);
-    this.text(ctx, `${hero?.stars ?? 1} STAR`, detailX + 126, 169, palette.muted, BODY, false, detailWidth - 132);
-    this.text(ctx, definition.rarity.toUpperCase(), detailX + 16, 202, palette.blue, BODY);
-    if (hero) {
-      const stats = heroStats(state, hero), combat = state.party.find(unit => unit.sourceId === hero.id);
-      this.text(ctx, `HP ${combat?.hp ?? stats.maxHp} / ${combat?.maxHp ?? stats.maxHp}`, detailX + 16, 223, palette.text, BODY);
-      ctx.fillStyle = palette.ink; ctx.fillRect(detailX + 16, 244, detailWidth - 32, 6); ctx.fillStyle = palette.green; ctx.fillRect(detailX + 17, 245, Math.round((detailWidth - 34) * ((combat?.hp ?? stats.maxHp) / (combat?.maxHp ?? stats.maxHp))), 4);
-      this.text(ctx, `ATK ${combat?.atk ?? stats.atk}    DEF ${combat?.def ?? stats.def}`, detailX + 16, 262, palette.text, BODY, false, detailWidth - 28);
-      const tabWidth = Math.floor((detailWidth - 38) / 3);
-      (['ability', 'stats', 'items'] as const).forEach((tab, index) => this.button(ctx, `hero-detail-${tab}`, tab.toUpperCase(), { x: detailX + 10 + index * (tabWidth + 4), y: 280, width: tabWidth, height: 24 }, () => { this.heroDetailTab = tab; this.onRedraw(); }, { selected: this.heroDetailTab === tab }));
-      const heroDef = getPartyHeroDefinition(hero.id);
-      if (this.heroDetailTab === 'ability') {
-        const names: Record<string, string> = { mw2: 'Guardian Shield', hk1: 'Second Wind', mw1: 'Cleave', hu1: 'Piercing Shot', priest: 'Restoration', ew1: 'Withering Hex', mk1: 'Rally', wiz: 'Fireball', mw3: 'Wide Cleave', mh1: 'Focused Burst', mh2: 'Quick Burst', hu2: 'Long Shot', hk2: 'Bulwark', fw: 'Blood Strike', ew2: 'Inferno', mk2: 'Iron Wall', mh3: 'Execution', ew3: 'Armor Break' };
-        const active = heroDef.active, skill = active.kind;
-        const target = ['shield', 'selfHeal', 'selfSustain'].includes(skill) ? 'Self' : skill === 'burstHeal' ? 'Lowest-HP ally' : skill === 'buff' ? 'Strongest ally' : 'One enemy';
-        const seconds = (active.durationTicks ?? 0) / CONFIG.sim.ticksPerSecond;
-        const effect = skill === 'shield' ? `Shield ${Math.round((active.shieldFraction ?? 0) * 100)}% HP for ${seconds}s` : skill === 'selfHeal' ? `Heal ${Math.round((active.healCoefficient ?? 0) * 100)}% max HP` : skill === 'burstHeal' ? `Heal ${Math.round((active.healCoefficient ?? 0) * 100)}% ATK` : skill === 'buff' ? `+${Math.round((active.atkBonus ?? 0) * 100)}% ATK for ${seconds}s` : skill === 'weaken' ? `-${Math.round((active.atkReduction ?? 0) * 100)}% ATK / -${Math.round((active.defReduction ?? 0) * 100)}% DEF for ${seconds}s` : skill === 'selfSustain' ? `${active.coefficient}x ATK + heal ${Math.round((active.healCoefficient ?? 0) * 100)}% max HP` : `${active.coefficient ?? 1}x ATK${active.secondaryCoefficient ? ` + ${active.secondaryCoefficient}x nearby` : ''}`;
-        this.text(ctx, `${names[hero.id] ?? 'Signature'} · ${active.manaCost ?? 60} mana`, detailX + 12, 307, palette.gold, BODY, true, detailWidth - 24);
-        this.text(ctx, `${effect} · ${target}`, detailX + 12, 321, palette.text, BODY, false, detailWidth - 24);
-        this.text(ctx, 'Auto-casts next turn when ready', detailX + 12, 335, palette.blue, BODY, false, detailWidth - 24);
-        this.text(ctx, 'Basic +20 mana; tank +5 on HP hit', detailX + 12, 349, palette.muted, BODY, false, detailWidth - 24);
-      } else if (this.heroDetailTab === 'stats') {
-        this.text(ctx, `Turn SPD ${heroDef.role === 'support' ? 115 : heroDef.role === 'tank' ? 90 : heroDef.basic.style === 'melee' ? 100 : 105}`, detailX + 12, 312, palette.text, BODY);
-        this.text(ctx, heroDef.strength, detailX + 12, 332, palette.muted, BODY, false, detailWidth - 24);
-        this.text(ctx, `Weakness: ${heroDef.weakness}`, detailX + 12, 348, palette.muted, BODY, false, detailWidth - 24);
-      } else {
-        for (const [index, slot] of (['weapon', 'armor', 'charm'] as const).entries()) {
-          const item = state.inventory.find(value => value.id === hero.equipment[slot]);
-          const line = item ? `${slot.toUpperCase()}: ${item.rarity} Lv${item.level} ${Object.entries(item.stats).filter(([, value]) => value > 0).map(([key, value]) => `${key.endsWith('Pct') ? `${key.slice(0, -3).toUpperCase()} ${(Number(value) * (1 + CONFIG.gear.upgrade.mainPerLevel * item.level) * 100).toFixed(0)}%` : `${key.toUpperCase()} ${Math.round(Number(value) * (1 + CONFIG.gear.upgrade.mainPerLevel * item.level))}`}`).join(' ')}` : `${slot.toUpperCase()}: Empty`;
-          this.text(ctx, line, detailX + 12, 307 + index * 14, item ? palette.text : palette.muted, BODY, false, detailWidth - 24);
-        }
-        this.text(ctx, 'Open Gear tab to Inspect / Change', detailX + 12, 349, palette.blue, BODY, false, detailWidth - 24);
-      }
-    } else this.text(ctx, 'Recruit to unlock', detailX + 16, 241, palette.muted, BODY);
-    for (let slot = 0; slot < CONFIG.sim.partySize; slot += 1) this.button(ctx, `replace-${slot}`, `${['Front', 'Middle', 'Rear'][slot]}`, { x: x + 16 + slot * 90, y: 364, width: 84, height: 28 }, () => {
-      const selected = state.roster.find(value => value.id === this.selectedHero); if (!selected) return;
-      const ids = [...state.partyIds], current = ids.indexOf(selected.id); if (current >= 0 && current !== slot) [ids[current], ids[slot]] = [ids[slot]!, ids[current]!]; else ids[slot] = selected.id;
+    const heroDef = selected ? getPartyHeroDefinition(selected.id) : null;
+    const tabWidth = Math.floor((width - 40) / 3);
+    (['ability', 'stats', 'items'] as const).forEach((tab, index) => this.button(ctx, `hero-detail-${tab}`, tab.toUpperCase(), { x: x + 12 + index * (tabWidth + 4), y: 328, width: tabWidth, height: 24 }, () => { this.heroDetailTab = tab; this.onRedraw(); }, { selected: this.heroDetailTab === tab }));
+    if (this.heroDetailTab === 'ability' && heroDef) this.text(ctx, `${heroDef.active.id} · Auto at ${heroDef.active.manaCost ?? 60} mana`, x + 16, 352, palette.blue, BODY, false, width - 32);
+    else if (this.heroDetailTab === 'stats' && heroDef) { const stats = heroStats(state, selected!); this.text(ctx, `HP ${stats.maxHp}  ATK ${stats.atk}  DEF ${stats.def}`, x + 16, 352, palette.text, BODY, false, width - 32); }
+    else if (this.heroDetailTab === 'items') {
+      const item = state.inventory.find(value => value.id === this.selectedGear);
+      if (item) {
+        this.text(ctx, `${item.rarity.toUpperCase()} ${item.slot} +${item.level}${item.locked ? ' LOCKED' : ''}`, x + 16, 352, palette.text, BODY, false, width - 174);
+      } else this.text(ctx, 'Choose a stash item to inspect and equip.', x + 16, 352, palette.muted, BODY, false, width - 32);
+    }
+    for (let slot = 0; slot < CONFIG.sim.partySize; slot += 1) this.button(ctx, `replace-${slot}`, `${['Front', 'Middle', 'Rear'][slot]}`, { x: x + 16 + slot * 72, y: 364, width: 68, height: 28 }, () => {
+      const hero = state.roster.find(value => value.id === this.selectedHero); if (!hero) return;
+      const ids = [...state.partyIds], current = ids.indexOf(hero.id); if (current >= 0 && current !== slot) [ids[current], ids[slot]] = [ids[slot]!, ids[current]!]; else ids[slot] = hero.id;
       if (new Set(ids).size === CONFIG.sim.partySize) this.onAction({ type: 'party', heroIds: ids });
-    }, { selected: state.partyIds[slot] === this.selectedHero, tooltip: `Assign ${heroConfig(this.selectedHero).name} to ${['Front', 'Middle', 'Rear'][slot]}; swaps deployed starters` });
+    }, { selected: state.partyIds[slot] === this.selectedHero, tooltip: `Assign selected hero to ${['Front', 'Middle', 'Rear'][slot]}; swaps deployed heroes` });
     const item = cheapestEquippedUpgrade(state), cost = item ? upgradeCost(item) : null;
-    this.button(ctx, 'hero-upgrade', cost === null ? 'No gear yet' : `Upgrade ${short(cost)} G`, { x: x + panel.width - 184, y: 364, width: 168, height: 28 }, () => { if (item) this.onAction({ type: 'upgrade', gearId: item.id }); }, { disabled: !item || state.gold < (cost ?? 0), tooltip: cost === null ? 'Defeat waves to earn gear' : state.gold < cost ? `Need ${cost - state.gold} more gold` : `Upgrade equipped gear #${item?.id}: ${cost} gold` });
-    if (panel.width >= 720) this.button(ctx, 'auto-equip-heroes', 'Auto-equip', { x: x + 288, y: 364, width: 120, height: 28 }, () => this.onAction({ type: 'autoEquip' }));
+    this.button(ctx, 'hero-upgrade', cost === null ? 'No gear' : `Upgrade ${short(cost)} G`, { x: x + width - 144, y: 364, width: 128, height: 28 }, () => { if (item) this.onAction({ type: 'upgrade', gearId: item.id }); }, { disabled: !item || state.gold < (cost ?? 0), tooltip: cost === null ? 'Defeat waves to earn gear' : `Upgrade equipped gear for ${cost} gold` });
   }
   private drawGear(ctx: CanvasRenderingContext2D, state: GameState, panel: Rect): void {
     const x = panel.x, cols = this.gearColumns(), detailX = x + (panel.width >= 720 ? 424 : panel.width - 232), detailWidth = panel.width >= 720 ? 280 : 216;

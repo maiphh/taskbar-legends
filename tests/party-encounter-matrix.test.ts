@@ -133,7 +133,18 @@ describe('party-v2 deterministic encounter matrix', () => {
       state.wave = stageConfig(1).waves.length;
       const timeoutTicks = ticksForSeconds(stageConfig(1).timeoutSec);
       step(state, timeoutTicks);
+      expect(state.stats.losses).toBe(0); expect(state.stats.clears).toBe(0);
+      const pendingReadyTicks = [...state.party, ...state.enemies].flatMap(unit => {
+        const action = unit.action;
+        return action && (action.state === 'windup' || action.state === 'recovery') && action.readyTick !== undefined && action.readyTick > state.tick ? [action.readyTick] : [];
+      });
+      expect(pendingReadyTicks.length).toBeGreaterThan(0);
+      const finalPresentationTick = Math.max(...pendingReadyTicks);
+      const startsAtTimeout = state.events.filter(event => event.data.type === 'actionStart').length;
+      step(state, finalPresentationTick - state.tick + 1);
       expect(state.stats.losses).toBe(1); expect(state.stats.clears).toBe(0); expect(state.progress.kind).toBe('FARMING'); expect(state.phase.kind).toBe('rest');
+      expect(state.events.filter(event => event.data.type === 'actionStart')).toHaveLength(startsAtTimeout);
+      expect(state.tick).toBeLessThanOrEqual(finalPresentationTick + 1);
       expect(state.party.every(unit => unit.hp > 0)).toBe(true);
       return { team, teamIds: [...state.partyIds], stage: 1, timeoutTicks, elapsedTicks: state.tick, losses: state.stats.losses, clears: state.stats.clears,
         survivingHeroes: state.party.map(unit => ({ id: unit.sourceId, hp: unit.hp, maxHp: unit.maxHp })), enemyHp: boss.hp };

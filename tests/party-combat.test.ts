@@ -4,6 +4,7 @@ import { createPartyState, createState, load, snapshot, step } from '../src/core
 import { combatEventAge, edgeDistance, inEdgeReach, PARTY_V2, presentationCombatTime } from '../src/core/party-combat';
 import { getPartyHeroDefinition } from '../src/core/party-definitions';
 import { effectiveDamageReduction } from '../src/core/party-effects';
+import { createActionTimeline } from '../src/core/turn/animation-timing';
 import { emit } from '../src/core/events';
 import type { GameState, Unit } from '../src/core/model';
 
@@ -14,6 +15,7 @@ function partyState(): GameState {
 }
 function idle(unit: Unit): void { unit.action = { state: 'idle' }; unit.targetId = null; unit.moving = false; }
 function currentAction(unit: Unit): Unit['action'] { return unit.action; }
+function impactNow(state: GameState, unit: Unit): void { const action = unit.action; if (action?.state === 'windup') step(state, Math.max(0, action.impactTick - state.tick)); }
 function contactState(): { state: GameState; tank: Unit; melee: Unit; healer: Unit; enemy: Unit } {
   const state = partyState(), tank = state.party.find(unit => unit.sourceId === 'mw2')!, melee = state.party.find(unit => unit.sourceId === 'mw1')!;
   const healer = state.party.find(unit => unit.sourceId === 'priest')!, enemy = state.enemies[0]!;
@@ -25,6 +27,29 @@ function contactState(): { state: GameState; tank: Unit; melee: Unit; healer: Un
 function impactDamage(attacker: Unit, defender: Unit): number { return Math.max(1, Math.round(attacker.atk * 100 / (100 + defender.def))); }
 
 describe('party-v2 positioning and actions', () => {
+  it('finishes a pre-deadline lethal clip and return before clearing instead of timing out', () => {
+    const state = createPartyState(917), attacker = state.party.find(unit => unit.sourceId === 'mw1')!, enemy = state.enemies[0]!;
+    state.wave = CONFIG.stages[0]!.waves.length;
+    state.party.filter(unit => unit !== attacker).forEach(unit => { unit.hp = 0; idle(unit); });
+    for (const other of state.enemies.slice(1)) other.hp = 0;
+    state.enemies = [enemy]; enemy.hp = enemy.maxHp = 1; enemy.def = 0; enemy.x = attacker.x;
+    attacker.atk = 10_000; idle(attacker);
+    const timeline = createActionTimeline(attacker.sourceId, 'leap', state.tick);
+    attacker.action = { state: 'windup', kind: 'attack', targetId: enemy.id, targetSide: 'enemy', targetSlot: enemy.slot,
+      targetCount: state.enemies.length, ...timeline, abilityId: 'melee-cleave-strike', delivery: 'leap' };
+    const timeout = stageConfig(state.progress.stage).timeoutSec * CONFIG.sim.ticksPerSecond;
+    state.stageStartedTick = state.tick - timeout + timeline.impactTick + 2;
+
+    step(state, timeline.impactTick);
+    expect(enemy.hp).toBe(0);
+    expect(state.stats.losses).toBe(0);
+    expect(state.phase.kind).toBe('battle');
+    const hitCount = state.events.filter(event => event.data.type === 'hit' && event.data.attackerId === attacker.id).length;
+    step(state, timeline.readyTick - state.tick + 1);
+    expect(state.stats.losses).toBe(0);
+    expect(state.stats.clears).toBe(1);
+    expect(state.events.filter(event => event.data.type === 'hit' && event.data.attackerId === attacker.id)).toHaveLength(hitCount);
+  });
   it('clears old-clock effects, shields, procs, and projectiles at a real farm-pad encounter reset', () => {
     const state = createPartyState(277), hero = state.party[0]!;
     state.progress = { kind: 'FARMING', stage: 1, failedStage: 2, retryAtTick: Number.MAX_SAFE_INTEGER, failTick: 0, failedPower: Number.MAX_SAFE_INTEGER, failures: 1 };
@@ -78,10 +103,10 @@ describe('party-v2 positioning and actions', () => {
     const { state, tank, enemy } = contactState(), tankHp = tank.hp, enemyHp = enemy.hp;
     tank.gauge = 10000; enemy.gauge = 0;
     step(state);
-    expect(tank.action).toMatchObject({ state: 'windup', startTick: 1, impactTick: 1 + PARTY_V2.timing.windupTicks });
+    expect(tank.action).toMatchObject({ state: 'windup', startTick: 1, contactTick: 11, impactTick: 15, attackEndTick: 19 });
     expect(enemy.action).toMatchObject({ state: 'idle' });
     expect([tank.hp, enemy.hp]).toEqual([tankHp, enemyHp]);
-    step(state, PARTY_V2.timing.windupTicks - 1);
+    step(state, tank.action?.state === 'windup' ? tank.action.impactTick - state.tick - 1 : 0);
     expect([tank.hp, enemy.hp]).toEqual([tankHp, enemyHp]);
     step(state);
     expect(enemy.hp).toBeLessThan(enemyHp);
@@ -102,7 +127,7 @@ describe('party-v2 positioning and actions', () => {
     expect(tank.action?.state).toBe('windup');
     expect(tank.action).toMatchObject({ targetId: enemy.id });
     enemy.hp = 0;
-    step(state, PARTY_V2.timing.windupTicks);
+    impactNow(state, tank);
     expect(state.events.some(event => event.data.type === 'hit' && event.data.attackerId === tank.id)).toBe(false);
     expect(state.events.some(event => event.data.type === 'miss' && event.data.unitId === tank.id && event.data.reason === 'target')).toBe(true);
     expect(tank.attacks).toBe(0);
@@ -116,10 +141,10 @@ describe('party-v2 positioning and actions', () => {
     step(state);
     expect(tank.action).toMatchObject({ targetId: enemy.id });
     enemy.hp = 0;
-    step(state, PARTY_V2.timing.windupTicks);
+    impactNow(state, tank);
     expect(tank.action).toMatchObject({ state: 'recovery' });
     expect(tank.attacks).toBe(0);
-    step(state, PARTY_V2.timing.minimumRecoveryTicks);
+    step(state, tank.action?.state === 'recovery' ? tank.action.readyTick - state.tick : 0);
     expect(tank.action).toMatchObject({ state: 'idle' });
     spare.hp = spare.maxHp;
     tank.gauge = 10000;
@@ -199,7 +224,7 @@ describe('party-v2 positioning and actions', () => {
     healer.gauge = 10000; enemy.gauge = 0;
     const before = tank.hp;
     step(state); expect(healer.action?.state).toBe('windup'); expect(tank.hp).toBe(before);
-    step(state, PARTY_V2.timing.windupTicks); expect(tank.hp).toBeGreaterThan(before);
+    impactNow(state, healer); expect(tank.hp).toBeGreaterThan(before);
     const healEvent = state.events.find(event => event.data.type === 'heal' && event.data.targetId === tank.id);
     expect(healEvent).toBeDefined();
     expect(effectiveDamageReduction(state, tank)).toBe(0);
@@ -208,11 +233,11 @@ describe('party-v2 positioning and actions', () => {
     healer.action = { state: 'idle' }; healer.targetId = null; tank.hp = tank.maxHp - 50; healer.gauge = 10000;
     step(state); expect(healer.action?.state).toBe('windup');
     tank.hp = tank.maxHp;
-    step(state, PARTY_V2.timing.windupTicks);
+    impactNow(state, healer);
     expect(state.events.some(event => event.data.type === 'miss' && event.data.unitId === healer.id && event.data.reason === 'unneeded')).toBe(true);
     const afterSkip = currentAction(healer);
     expect(afterSkip?.state).toBe('recovery');
-    if (afterSkip?.state === 'recovery') expect(afterSkip.readyTick).toBe(afterSkip.impactTick + PARTY_V2.timing.minimumRecoveryTicks);
+    if (afterSkip?.state === 'recovery') expect(afterSkip.readyTick).toBe(afterSkip.returnEndTick! + PARTY_V2.timing.settleTicks);
   });
 
   it('does not heal a dead ally; formation heals still reach a far living ally', () => {
@@ -228,7 +253,7 @@ describe('party-v2 positioning and actions', () => {
     step(farState);
     expect(farHealer.targetId).toBe(farTank.id);
     expect(farHealer.action?.state).toBe('windup');
-    step(farState, PARTY_V2.timing.windupTicks);
+    impactNow(farState, farHealer);
     expect(farState.events.some(event => event.data.type === 'heal' && event.data.targetId === farTank.id)).toBe(true);
     expect(farTank.hp).toBeGreaterThan(1);
   });
@@ -239,7 +264,7 @@ describe('party-v2 positioning and actions', () => {
     const before = enemy.hp; step(state);
     for (let i = 0; i < CONFIG.runtime.eventLogLimit + 10; i += 1) emit(state, { type: 'gold', amount: 0, total: state.gold, reason: 'eviction-test' });
     expect(state.events.some(event => event.data.type === 'actionStart' && event.data.unitId === tank.id)).toBe(false);
-    step(state, PARTY_V2.timing.windupTicks);
+    impactNow(state, tank);
     expect(enemy.hp).toBeLessThan(before);
   });
 

@@ -307,3 +307,62 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 /* Native management window (compactMenu.native, Game Lead answer 3): integer scale, letterbox, internal scroll. */
 body.management-window { margin: 0; min-width: 0; min-height: 100vh; background: #0d121b; overflow: auto; }
 body.management-window #management-app.px-menu { position: relative; margin: 0 auto; transform: scale(var(--px-scale, 1)); transform-origin: top center; top: max(0px, calc((100vh - 560px * var(--px-scale, 1)) / 2)); }
+
+/* Centered hero loadout: stage, item strip, then hero strip. Scoped to Heroes only. */
+.px-menu main[data-view="party"] .px-loadout { position: relative; display: grid; height: 100%; min-width: 0; padding: 0 12px 4px; grid-template-rows: 24px 112px 56px 56px; gap: 4px; overflow: hidden; }
+.px-loadout-top { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.px-loadout-top strong { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #f2ce83; }
+.px-loadout-top > div { flex: none; display: flex; align-items: center; gap: 4px; }
+.px-loadout-action { height: 24px; font-size: 10px; padding: 0 4px; }
+.px-loadout-stage { position: relative; min-width: 0; overflow: hidden; background: #1e2a34; box-shadow: inset 0 0 0 1px #536276; }
+.px-loadout-hero-center { position: absolute; top: 4px; left: 50%; width: 96px; height: 104px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1px; z-index: 1; }
+.px-loadout-hero-center .px-portrait { max-width: 96px; max-height: 84px; object-fit: contain; image-rendering: pixelated; }
+.px-loadout-hero-center span { max-width: 96px; overflow: hidden; color: #f2ce83; font: 10px/11px Galmuri9, monospace; white-space: nowrap; }
+.px-loadout-equip { position: absolute; width: 64px; height: 42px; padding: 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; border: 0; box-shadow: inset 0 0 0 1px #536276; background: #293948; color: #f2e9cf; font: 10px/11px Galmuri9, monospace; cursor: pointer; overflow: hidden; }
+.px-loadout-equip:hover, .px-loadout-item:hover, .px-loadout-hero:hover { background: #354a59; }
+.px-loadout-equip:focus-visible, .px-loadout-item:focus-visible, .px-loadout-hero:focus-visible { outline: 1px solid #f2e9cf; outline-offset: -2px; z-index: 2; }
+.px-loadout-equip .px-icon { width: 16px; height: 16px; }
+.px-loadout-equip .px-shape { position: absolute; left: 2px; top: 2px; }
+.px-loadout-equip span { white-space: nowrap; }
+.px-loadout-equip small { color: #b0bcc8; font: 9px/10px Galmuri9, monospace; white-space: nowrap; }
+.px-loadout-equip.is-empty { color: #b0bcc8; background: #1c2731; }
+.px-loadout-equip[data-rarity="rare"] { box-shadow: inset 0 0 0 1px var(--px-rarity-rare); }
+.px-loadout-equip[data-rarity="epic"] { box-shadow: inset 0 0 0 1px var(--px-rarity-epic); }
+.px-loadout-equip[data-rarity="legendary"] { box-shadow: inset 0 0 0 1px var(--px-rarity-legendary); }
+.px-loadout-equip[data-loadout-slot="weapon"] { left: calc(50% - 128px); top: 36px; }
+.px-loadout-equip[data-loadout-slot="armor"] { left: calc(50% + 64px); top: 8px; }
+.px-loadout-equip[data-loadout-slot="charm"] { left: calc(50% + 64px); top: 62px; }
+.px-loadout-strip-section { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.px-loadout-strip-title { height: 16px; flex: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #e9bd68; font: 10px/14px Galmuri9, monospace; }
+.px-loadout-strip-title span { color: #b0bcc8; overflow: hidden; white-space: nowrap; }
+.px-loadout-strip { flex: 1; min-height: 0; min-width: 0; display: flex; align-items: flex-start; gap: 4px; overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: thin; scrollbar-color: #536276 #0d121b; }
+.px-loadout-item { position: relative; flex: 0 0 40px; width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border: 0; background: #17212d; box-shadow: inset 0 0 0 1px #536276; cursor: pointer; }
+.px-loadout-item.px-sel, .px-loadout-hero.px-sel { box-shadow: inset 0 0 0 2px #e9bd68; }
+.px-loadout-item .px-shape { position: absolute; top: 1px; left: 1px; }
+.px-loadout-item .px-icon { width: 20px; height: 20px; }
+.px-loadout-item small { position: absolute; right: 1px; bottom: 1px; color: #e9bd68; font: 9px/10px Galmuri9, monospace; }
+.px-loadout-item .px-lock { position: absolute; right: 2px; top: 2px; }
+.px-loadout-empty { align-self: center; color: #b0bcc8; font-size: 10px; }
+.px-loadout-hero { position: relative; flex: 0 0 64px; width: 64px; height: 40px; padding: 1px 2px; display: grid; grid-template-columns: 26px 1fr; grid-template-rows: 20px 12px; align-items: center; gap: 0 2px; border: 0; color: #f2e9cf; background: #293948; box-shadow: inset 0 0 0 1px #536276; cursor: pointer; }
+.px-loadout-hero .px-portrait { grid-row: 1 / span 2; width: auto; max-width: 24px; max-height: 36px; object-fit: contain; justify-self: center; }
+.px-loadout-hero-name { min-width: 0; overflow: hidden; font: 9px/10px Galmuri9, monospace; white-space: nowrap; }
+.px-loadout-hero small { color: #b0bcc8; font: 8px/9px Galmuri9, monospace; }
+.px-loadout-details, .px-loadout-item-overlay { position: absolute; z-index: 20; inset: 4px; padding: 6px 8px; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #17212d; box-shadow: inset 0 0 0 1px #e9bd68; }
+.px-loadout-details > header, .px-loadout-item-overlay > header { height: 28px; flex: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; color: #e9bd68; }
+.px-loadout-details > header .px-btn, .px-loadout-item-overlay > header .px-btn { height: 24px; }
+.px-loadout-details .px-hero-tabs { position: static; flex: none; height: 28px; }
+.px-loadout-detail-body { flex: 1; min-height: 0; overflow: auto; padding: 6px 2px; color: #d5e1e9; line-height: 14px; }
+.px-loadout-detail-body p { margin: 3px 0; white-space: normal; }
+.px-loadout-item-overlay .px-inspector { position: absolute; left: 6px; right: 6px; top: 34px; bottom: 6px; width: auto; height: auto; }
+.px-loadout-item-overlay .px-insp-scroll { min-height: 0; }
+.px-loadout-item-overlay .px-insp-foot { flex-wrap: wrap; }
+.px-menu[data-variant="native"] main[data-view="party"] .px-loadout { padding: 0 20px 8px; grid-template-rows: 28px 168px 96px 112px; gap: 4px; }
+.px-menu[data-variant="native"] .px-loadout-hero-center { top: 8px; width: 144px; height: 152px; }
+.px-menu[data-variant="native"] .px-loadout-hero-center .px-portrait { max-width: 140px; max-height: 136px; }
+.px-menu[data-variant="native"] .px-loadout-equip { width: 80px; height: 56px; font-size: 11px; line-height: 13px; }
+.px-menu[data-variant="native"] .px-loadout-equip[data-loadout-slot="weapon"] { left: calc(50% - 184px); top: 56px; }
+.px-menu[data-variant="native"] .px-loadout-equip[data-loadout-slot="armor"] { left: calc(50% + 104px); top: 28px; }
+.px-menu[data-variant="native"] .px-loadout-equip[data-loadout-slot="charm"] { left: calc(50% + 104px); top: 100px; }
+.px-menu[data-variant="native"] .px-loadout-strip-title { height: 18px; font-size: 11px; }
+.px-menu[data-variant="native"] .px-loadout-hero { flex-basis: 68px; width: 68px; height: 72px; grid-template-columns: 1fr; grid-template-rows: 48px 12px 10px; }
+.px-menu[data-variant="native"] .px-loadout-hero .px-portrait { grid-row: auto; max-width: 38px; max-height: 46px; }

@@ -138,8 +138,8 @@ function attackHero(state: GameState, hero: Unit): void {
     default: { const exhaustive: never = definition.role; return exhaustive; }
   }
 }
-export function combatTick(state: GameState): void {
-  if (state.combatRules === 'party-v2') { partyCombatTick(state); return; }
+export function combatTick(state: GameState, allowPartyAction = true): void {
+  if (state.combatRules === 'party-v2') { partyCombatTick(state, allowPartyAction); return; }
   for (const hero of state.party) {
     if (hero.shieldUntilTick <= combatTime(state)) hero.shield = 0;
     if (hero.hp > 0) hero.cooldown = Math.max(0, hero.cooldown - 1);
