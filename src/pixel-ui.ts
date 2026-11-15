@@ -1,29 +1,24 @@
-import { CONFIG, TICK_MS, heroConfig, raritySchema, stageConfig } from './config';
+﻿import { CONFIG, TICK_MS, heroConfig, raritySchema, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
 import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeChestGrid, welcomeDoneMs } from './reveal-timeline';
 import type { CardFace } from './reveal-timeline';
 import { BODY, FONT_FILES, HEADING, LINE_BOX, fitSize, fontFor, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
-import { bestChoice, cheapestEquippedUpgrade, fortuneMeter, gearScore, heroStats, lockedCount, recruitMeters, upgradeCost } from './core/economy';
-import { bossSecondsRemaining, statusText } from './core/game';
-import { affordability } from './core/selectors';
-import type { Action, GameState, Gear, ItemId } from './core/model';
+import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
-import { getPartyHeroDefinition } from './core/party-definitions';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
-const AVAILABLE: Record<PanelTab, string> = { heroes: ': gear upgrade affordable', gear: ': upgrade, better gear or a chest choice available', recruit: ': ticket ready to pull' };
 export interface Rect { x: number; y: number; width: number; height: number }
-/** Standalone reveal canvas: the expanded Recruit panel size (ui.md §4). */
-/** compactMenu.shortName: drop a leading 'Medieval ' and 'Martial Hero' → 'Martial' (cards and compact pull cards). */
+/** Standalone reveal canvas: the expanded Recruit panel size (ui.md Â§4). */
+/** compactMenu.shortName: drop a leading 'Medieval ' and 'Martial Hero' â†’ 'Martial' (cards and compact pull cards). */
 export function shortHeroName(heroId: string): string {
   return heroConfig(heroId).name.replace(' (recolored Wizard)', '').replace(/\s*\([^)]*\)/g, '').trim().replace(/^Medieval /, '').replace(/^Martial Hero\b/, 'Martial');
 }
 export const REVEAL_STAGE = { width: CONFIG.ui.expanded.panelWidth, height: CONFIG.ui.expanded.panelHeight, top: 72 } as const;
 export interface SourceHitRegion extends Rect { kind: 'hud' | 'panel'; id: string }
 interface Control extends Rect { id: string; label: string; disabled: boolean; click(): void; tooltip: string; cardIndex?: number; layer?: number }
-/** One recruit result as the reveal shows it (gacha.md §9: badge kind from the post-pull star count, pity from the event). */
+/** One recruit result as the reveal shows it (gacha.md Â§9: badge kind from the post-pull star count, pity from the event). */
 export interface RevealPull { heroId: string; rarity: Rarity; pity: boolean; badge: 'new' | 'star' | 'gold'; gold: number }
 interface Reveal { count: 1 | 10; pulls: RevealPull[]; startedAt: number; skipped: boolean; cued: boolean; flash: boolean | null }
 /** What the welcome-back panel shows: the offline result (already credited) plus the farm stage and best item. */
@@ -36,20 +31,15 @@ const feedback = CONFIG.ui.coreLoopFeedback;
 /** Text options: `exactY` for specs that give the real Galmuri draw y (otherwise y is a Pixel Operator-era layout slot). */
 export interface TextOptions { exactY?: boolean }
 const rootUrl = (): URL => new URL(`${import.meta.env.BASE_URL}ui/`, window.location.href);
-function short(value: number): string { return value >= 1e6 ? `${(value / 1e6).toFixed(1)}M` : value >= 1e4 ? `${(value / 1e3).toFixed(1)}K` : value.toLocaleString('en-US'); }
 /** Round half to even, as the designer's rect tables do (e.g. banner x 894.5 -> 894, 887.5 -> 888). */
 export function roundHalfEven(value: number): number { const floor = Math.floor(value); return value - floor !== 0.5 ? Math.round(value) : floor % 2 === 0 ? floor : floor + 1; }
-function hasPoint(rect: Rect, x: number, y: number): boolean { return x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height; }
 export class PixelUI {
   panel: PanelTab | null = null;
+  onPanelRequest: (tab: PanelTab) => void = () => undefined;
   private coreY = 0;
   selectedHero = CONFIG.heroes[0]?.id ?? '';
   heroDetailTab: 'ability' | 'stats' | 'items' = 'ability';
   selectedGear: ItemId | null = null;
-  private heroSlotFilter: Gear['slot'] | null = null;
-  targetSlot = 0;
-  private heroRow = 0;
-  private gearRow = 0;
   private readonly images = new Map<string, HTMLImageElement>();
   private readonly textCache = new Map<string, HTMLCanvasElement>();
   private measureContext: CanvasRenderingContext2D | null = null;
@@ -62,16 +52,12 @@ export class PixelUI {
   private controls = new Map<string, Control>();
   private current: GameState | null = null;
   private width = CONFIG.view.defaultWidth;
-  private compactMode = false;
+  private compactMode = true;
   private sourceHeight = CONFIG.ui.closed.height;
   private scaleToCss = 1;
   private hovered = '';
   private focused = '';
-  private hoverAt = 0;
-  private pointer = { x: 0, y: 0 };
   private readyFlag = false;
-  private pending = false;
-  private recruitHistoryOpen = false;
   /** M3: gacha reveal and welcome-back panel (renderer memory only; results are already in the state). */
   private reveal: Reveal | null = null;
   /** Standalone reveal (the DOM management menu hosts its own PixelUI that only draws the reveal for pulls it committed). */
@@ -85,7 +71,7 @@ export class PixelUI {
   private readonly flashes = new FlashLimiter();
   /** Presentation clock; the debug API can freeze it for shots and tests. */
   clock: () => number = () => performance.now();
-  /** Audio cue keys (gacha.md §7, offline-rewards.md); main wires these to the audio engine. */
+  /** Audio cue keys (gacha.md Â§7, offline-rewards.md); main wires these to the audio engine. */
   onCue: (key: string) => void = () => undefined;
   audio: AudioControls = { muted: false, volume: 0.5 };
   onAudio: (change: AudioControls) => void = () => undefined;
@@ -104,23 +90,6 @@ export class PixelUI {
   private quitRect(coreY: number): Rect { return { x: this.width - 80, y: coreY + 12, width: 28, height: 24 }; }
   constructor(private readonly atlas: AtlasLibrary, private readonly overlay: HTMLElement) {
     this.ready = this.load();
-    overlay.addEventListener('wheel', event => {
-      if (!this.panel) return;
-      const bounds = overlay.getBoundingClientRect();
-      const x = (event.clientX - bounds.left) / this.scaleToCss, y = (event.clientY - bounds.top) / this.scaleToCss;
-      const panel = this.panelRect();
-      const viewport = { x: panel.x + 16, y: this.panel === 'heroes' ? 104 : 112, width: this.panel === 'heroes' ? panel.width - 32 : 392, height: 248 };
-      if (!hasPoint(viewport, x, y) || this.panel === 'recruit') return;
-      event.preventDefault();
-      const delta = event.deltaY > 0 ? 1 : -1;
-      if (this.panel === 'heroes' && y >= 216 && y < 274) {
-        const items = (this.current?.inventory ?? []).filter(item => !this.heroSlotFilter || item.slot === this.heroSlotFilter);
-        this.gearRow = Math.max(0, Math.min(Math.ceil(items.length / Math.max(1, Math.floor((panel.width - 32) / 44))) - 1, this.gearRow + delta));
-      }
-      else if (this.panel === 'heroes') this.heroRow = Math.max(0, Math.min(Math.ceil(CONFIG.heroes.length / 4) - 1, this.heroRow + delta));
-      else this.gearRow = Math.max(0, Math.min(Math.ceil((this.current?.inventory.length ?? 0) / this.gearColumns()) - 5, this.gearRow + delta));
-      this.onRedraw();
-    }, { passive: false });
     window.addEventListener('keydown', event => {
       if (this.welcome && (event.code === 'Escape' || event.code === 'Enter')) { event.preventDefault(); this.collect(); return; }
       if (this.reveal && (this.panel === 'recruit' || this.standalone) && (event.code === 'Enter' || event.code === 'Space' || event.code === 'NumpadEnter')) {
@@ -128,19 +97,6 @@ export class PixelUI {
         if (this.revealMs() < Infinity && !this.revealDone()) this.skipReveal(); else if (event.code !== 'Space') this.finishReveal(true);
         return;
       }
-      if (event.code === 'Escape' && this.panel) { event.preventDefault(); this.setPanel(null); }
-      if (this.panel !== 'heroes' || !(event.target instanceof HTMLButtonElement) || event.target.dataset.cardIndex === undefined) return;
-      const deltas: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -4, ArrowDown: 4 };
-      const delta = deltas[event.key];
-      if (delta === undefined && event.key !== 'Home' && event.key !== 'End') return;
-      event.preventDefault();
-      const old = Number(event.target.dataset.cardIndex);
-      const next = event.key === 'Home' ? 0 : event.key === 'End' ? CONFIG.heroes.length - 1 : Math.max(0, Math.min(CONFIG.heroes.length - 1, old + (delta ?? 0)));
-      const hero = CONFIG.heroes[next]; if (!hero) return;
-      this.selectedHero = hero.id;
-      const row = Math.floor(next / 4);
-      this.heroRow = row;
-      this.onRedraw(); this.buttons.get(`hero-${hero.id}`)?.focus();
     });
   }
   private async load(): Promise<void> {
@@ -156,16 +112,10 @@ export class PixelUI {
     } catch (error) { this.errors.push(String(error)); }
   }
   setPanel(tab: PanelTab | null): void {
-    const wasOpen = this.isOpen();
-    // Closing or switching tabs mid-reveal is an implicit skip (gacha.md §6); results are already saved.
-    if (this.reveal && tab !== 'recruit') { if (!this.revealDone()) this.skipReveal(true); this.reveal = null; }
-    if (this.panel && !tab) this.onCue(CONFIG.ui.gacha.audio.close); else if (tab && !this.panel) this.onCue(CONFIG.ui.gacha.audio.open);
-    if (tab && this.welcome) this.welcome = null;
-    this.panel = tab;
-    if (wasOpen !== this.isOpen()) this.onLayoutChange(); else this.onRedraw();
+    if (tab) { this.onPanelRequest(tab); return; }
   }
   isOpen(): boolean { return this.panel !== null || this.welcome !== null; }
-  /** Welcome back (offline-rewards.md): shows when ≥ 60 s away and something was credited; Collect only acknowledges. */
+  /** Welcome back (offline-rewards.md): shows when â‰¥ 60 s away and something was credited; Collect only acknowledges. */
   showWelcome(data: WelcomeData): void {
     const spec = CONFIG.ui.offlineRewards;
     if (data.rawSeconds < spec.minSecondsToShow || (data.gold === 0 && data.xp === 0 && data.chests === 0 && !data.tickets)) return;
@@ -184,24 +134,6 @@ export class PixelUI {
     this.welcomeAt = this.clock() - 1e9; this.welcomeCloseAt = this.clock() + CONFIG.ui.offlineRewards.countUp.collectSnapHoldMs; this.onRedraw();
   }
   private closeWelcome(): void { this.welcome = null; this.welcomeCloseAt = null; this.onLayoutChange(); }
-  /** Starts a recruit reveal from the pull events the sim just emitted (the reveal is presentation only). */
-  private startRecruit(count: 1 | 10): void {
-    const state = this.current; if (!state || this.reveal && !this.revealDone()) return;
-    const before = state.eventSeq, stars = new Map(state.roster.map(hero => [hero.id, hero.stars]));
-    this.onCue(CONFIG.ui.gacha.audio.click);
-    this.pending = true; for (let i = 0; i < count; i += 1) this.onAction({ type: 'pull' }); this.pending = false;
-    const now = this.current ?? state, pulls: RevealPull[] = [];
-    for (const event of now.events) {
-      const data = event.data; if (event.seq <= before || data.type !== 'pull') continue;
-      const had = stars.get(data.heroId), gold = Math.round(CONFIG.runtime.duplicateGold * CONFIG.rarity.statMult[data.rarity]);
-      const badge = had === undefined ? 'new' : had < CONFIG.growth.starMax ? 'star' : 'gold';
-      stars.set(data.heroId, had === undefined ? 1 : Math.min(CONFIG.growth.starMax, had + 1));
-      pulls.push({ heroId: data.heroId, rarity: data.rarity, pity: data.pity !== false && data.pity !== null, badge, gold });
-    }
-    if (!pulls.length) { this.onRedraw(); return; }
-    this.reveal = { count, pulls, startedAt: this.clock(), skipped: false, cued: false, flash: null };
-    this.onCue(CONFIG.ui.gacha.audio.pull); this.onRedraw();
-  }
   private revealMs(): number { return !this.reveal ? 0 : this.reveal.skipped ? Infinity : this.clock() - this.reveal.startedAt; }
   private revealDone(): boolean {
     const reveal = this.reveal; if (!reveal) return true;
@@ -229,9 +161,9 @@ export class PixelUI {
   /** Standalone: drop the reveal without cues (tab change, menu close). */
   clearReveal(): void { if (this.reveal && !this.revealDone()) this.skipReveal(true); this.reveal = null; this.syncControls(); }
   revealState(): { count: 1 | 10; done: boolean; pulls: RevealPull[] } | null { const reveal = this.reveal; return reveal ? { count: reveal.count, done: this.revealDone(), pulls: structuredClone(reveal.pulls) } : null; }
-  /** Standalone: the 720×400 Recruit panel's reveal (same layout, tokens and timings as the lane panel), drawn from y=72 down. */
+  /** Standalone: the 720Ã—400 Recruit panel's reveal (same layout, tokens and timings as the lane panel), drawn from y=72 down. */
   /**
-   * `stageWidth` 624 = the docked browser panel at W=640: the 10-pull uses compactMenu.tenPullCompact (5×2 of 104×96) and
+   * `stageWidth` 624 = the docked browser panel at W=640: the 10-pull uses compactMenu.tenPullCompact (5Ã—2 of 104Ã—96) and
    * the single reveal keeps its standard card, centred; 720 (and the native window) keep gacha.tenPull / gacha.single.
    */
   drawRevealStage(ctx: CanvasRenderingContext2D, tickets: number, scaleToCss: number, stageWidth: number = REVEAL_STAGE.width): void {
@@ -244,8 +176,7 @@ export class PixelUI {
     if (this.reveal) this.drawReveal(ctx, tickets, panel, this.reveal);
     this.syncControls();
   }
-  private togglePanel(tab: PanelTab): void { this.setPanel(this.panel === tab ? null : tab); }
-  /** Compact lane edit mode (compact-menu.md §2.2): the stage heading shifts right of the Move handle. */
+  /** Compact lane edit mode (compact-menu.md Â§2.2): the stage heading shifts right of the Move handle. */
   compactEditing = false;
   /** Compact lane HUD: full-bleed field with a short stage id; Menu is the only DOM control. */
   private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, _paused: boolean): void {
@@ -262,7 +193,6 @@ export class PixelUI {
   }
   setCompactMode(value: boolean): void { this.compactMode = value; if (value) this.setPanel(null); this.onLayoutChange(); }
   height(): number { return this.compactMode ? CONFIG.ui.closed.height : this.isOpen() ? CONFIG.ui.expanded.height : CONFIG.ui.closed.height; }
-  private gearColumns(): number { return this.width >= 736 ? 8 : 6; }
   panelRect(): Rect {
     const width = this.width >= 736 ? CONFIG.ui.expanded.panelWidth : Math.max(608, this.width - 16);
     return { x: Math.max(8, this.width - width - CONFIG.ui.expanded.panelRightInset), y: 0, width, height: CONFIG.ui.expanded.panelHeight };
@@ -352,7 +282,7 @@ export class PixelUI {
     ctx.fillRect(rect.x, rect.y, rect.width, 1); ctx.fillRect(rect.x, rect.y + rect.height - 1, rect.width, 1); ctx.fillRect(rect.x, rect.y, 1, rect.height); ctx.fillRect(rect.x + rect.width - 1, rect.y, 1, rect.height);
   }
   /**
-   * Affordability pip (ui.md §10): 6x6 fill at (x+w-10, y+2) with a 1 px ink rim and a 2x2 highlight; red for the boss.
+   * Affordability pip (ui.md Â§10): 6x6 fill at (x+w-10, y+2) with a 1 px ink rim and a 2x2 highlight; red for the boss.
    * When a pip turns on it grows to 8x8 for 200 ms of each 1000 ms cycle, 3 cycles, then stays static. Hover, focus,
    * click or opening its panel ends the pulse; a pip waits 60 s before it may pulse again. Reduced motion: static.
    * The pulse clock is renderer memory keyed by sim tick, never sim state.
@@ -379,7 +309,7 @@ export class PixelUI {
     const button = this.managementRects()[tab === 'heroes' ? 0 : 1];
     return button ? button.x + button.width / 2 : this.width / 2;
   }
-  /** Stage-clear / boss-ready plate in the effects ceiling (ui.md §10): panel 9-slice, 24 px tall, sized to the measured label. */
+  /** Stage-clear / boss-ready plate in the effects ceiling (ui.md Â§10): panel 9-slice, 24 px tall, sized to the measured label. */
   drawBanner(ctx: CanvasRenderingContext2D, label: string, boss: boolean, centerX: number, y: number): void {
     const spec = feedback.stageBanner, width = this.measureText(label, BODY, true) + spec.padXPx * 2;
     const x = Math.max(spec.clampMarginPx, Math.min(this.width - spec.clampMarginPx - width, roundHalfEven(centerX - width / 2)));
@@ -421,102 +351,13 @@ export class PixelUI {
     this.current = state; this.width = width; this.coreY = coreY; this.sourceHeight = this.height(); this.scaleToCss = scaleToCss; this.controls.clear();
     if (!this.readyFlag) { this.syncControls(); return; }
     for (const event of state.events) if (event.seq > this.lastPullSeq && event.data.type === 'pull') {
-      this.history.unshift(`${heroConfig(event.data.heroId).name} · ${event.data.rarity}${event.data.duplicate ? ' · duplicate +star/gold' : ' · NEW'}`);
+      this.history.unshift(`${heroConfig(event.data.heroId).name} Â· ${event.data.rarity}${event.data.duplicate ? ' Â· duplicate +star/gold' : ' Â· NEW'}`);
       if (this.history.length > 10) this.history.pop(); this.lastPullSeq = event.seq;
     }
-    if (this.compactMode) { this.drawCompactLane(ctx, state, paused); this.syncControls(); return; }
-    const compact = width < 1000, islandWidth = compact ? 200 : 280;
-    const right = width - islandWidth - 8;
-    this.frame(ctx, { x: 8, y: coreY + 8, width: islandWidth, height: 64 });
-    this.frame(ctx, { x: right, y: coreY + 8, width: islandWidth, height: 64 });
-    const stage = CONFIG.stages[state.progress.stage - 1];
-    const island = feedback.islandText, boss = feedback.bossButton, progress = state.progress, bossReady = progress.kind === 'BOSS_READY';
-    // Boss countdown (#3) in the heading row: `BOSS {id}` clipped to leave the timer its fixed slot at islandWidth-80. Galmuri11 Bold 12 px.
-    const bossSeconds = bossReady ? null : bossSecondsRemaining(state);
-    const heading = progress.kind === 'BOSS_READY' ? boss.heading.replace('{id}', stageConfig(progress.bossStage).id) : bossSeconds !== null ? `BOSS ${stage?.id ?? ''}` : progress.kind === 'PUSHING' ? `GREENWAY / ${stage?.id ?? ''}` : statusText(state).replace(', next try in ', ' / ');
-    // CR-14-08 / design.md §16: a pending chest choice takes the heading ("Chest: pick 1 of 2", fallback "Pick 1/2"); a running boss countdown keeps the heading; BOSS_READY keeps its Fight button.
-    const choices = state.pendingChoice?.length ?? 0, prompt = choices > 0 && bossSeconds === null;
-    if (prompt) {
-      const room = islandWidth - 40, full = 'Chest: pick 1 of 2', label = this.measureText(full, BODY, true) <= room ? full : 'Pick 1/2';
-      this.text(ctx, label, 20, coreY + island.headingDrawY, palette.gold, BODY, true, room, { exactY: true });
-      this.icon(ctx, 'chest', islandWidth - 12, coreY + island.headingDrawY - 2);
-      this.hotspot(ctx, 'chest-choice', { x: 16, y: coreY + 10, width: islandWidth - 8, height: 20 }, () => this.setPanel('gear'), `Chest choice: keep 1 of 2 items, the other is salvaged${choices > 1 ? ` (${choices} waiting)` : ''}`);
-    } else this.text(ctx, heading, 20, coreY + island.headingDrawY, palette.gold, BODY, true, islandWidth - (bossSeconds !== null ? 100 : 20), { exactY: true });
-    if (bossSeconds !== null) this.text(ctx, `TIME ${Math.floor(bossSeconds / 60)}:${String(bossSeconds % 60).padStart(2, '0')}`, islandWidth - 80, coreY + island.headingDrawY, bossSeconds <= CONFIG.view.bossCountdownWarnSec ? palette.red : palette.gold, BODY, true, undefined, { exactY: true });
-    if (!bossReady || !boss.hidesWaveLabel) this.text(ctx, `WAVE ${state.wave}/${stage?.waves.length ?? 3}`, 20, coreY + island.row2DrawY, palette.muted, BODY, false, undefined, { exactY: true });
-    this.icon(ctx, 'gold', compact ? 108 : 160, coreY + island.coinIconY); this.text(ctx, short(state.gold), compact ? 128 : 182, coreY + island.row2DrawY, palette.gold, BODY, true, compact ? 70 : 96, { exactY: true });
-    // CR-14-03 Fortune meter (design.md §16): row 2 right of gold; label → number-only fallback → hidden when it can't fit.
-    const fortune = fortuneMeter(state);
-    if (fortune) {
-      const goldX = compact ? 128 : 182, x = goldX + Math.min(compact ? 70 : 96, this.measureText(short(state.gold), BODY, true)) + 10, room = islandWidth - x;
-      const labels = fortune.found ? [`Fortune ${fortune.since}/${fortune.limit}`, `F ${fortune.since}/${fortune.limit}`] : [`Legend in ${fortune.left}`, `L ${fortune.left}`];
-      const label = labels.find(value => this.measureText(value) <= room);
-      const tooltip = fortune.found ? `Gear Fortune ${fortune.since}/${fortune.limit}: the chest roll that reaches ${fortune.limit} is Legendary` : `First Legendary gear guaranteed within ${fortune.left} chest roll${fortune.left === 1 ? '' : 's'}`;
-      if (label) {
-        this.text(ctx, label, x, coreY + island.row2DrawY, CONFIG.ui.rarity.legendary.label, BODY, false, room, { exactY: true });
-        this.hotspot(ctx, 'fortune-meter', { x: x - 2, y: coreY + island.row2DrawY - 2, width: this.measureText(label) + 4, height: 18 }, () => this.setPanel('gear'), tooltip);
-      }
-    }
-    ctx.fillStyle = palette.ink; ctx.fillRect(20, coreY + 59, islandWidth - 24, 4); ctx.fillStyle = palette.blue; ctx.fillRect(20, coreY + 59, Math.round((islandWidth - 24) * (state.wave - 1) / 3), 4);
-    const dps = state.events.reduce((sum, event) => event.data.type === 'hit' && event.data.side === 'enemy' && state.tick - event.tick <= CONFIG.sim.ticksPerSecond * 5 ? sum + event.data.damage : sum, 0) / Math.min(5, Math.max(1, state.tick / CONFIG.sim.ticksPerSecond));
-    // CR-14-01/02 recruit meters (design.md §16) take the DPS slot (compact: the status slot); full text, then the fallbacks.
-    const meters = recruitMeters(state), statusX = right + (compact ? 12 : this.quitHandler ? 120 : 152);
-    if (meters) {
-      const x = right + 12, room = (compact ? width - 56 : statusX - 8) - x;
-      const epic = `Epic+ in ${meters.epicPlus}`, legend = meters.legendary === null ? '' : ` · Legend in ${meters.legendary}`, fresh = meters.newHero === null ? '' : `New hero in ${meters.newHero}`;
-      const short2 = `E+${meters.epicPlus}${meters.legendary === null ? '' : ` L${meters.legendary}`}`;
-      const label = [`${epic}${legend}`, `${short2}${meters.newHero === null ? '' : ` N${meters.newHero}`}`, short2].find(value => this.measureText(value, BODY, true) <= room) ?? short2;
-      this.text(ctx, label, x, coreY + island.rightRowDrawY, CONFIG.ui.rarity.epic.label, BODY, true, room, { exactY: true });
-      this.hotspot(ctx, 'recruit-meter', { x: x - 2, y: coreY + island.rightRowDrawY - 2, width: Math.min(room, this.measureText(label, BODY, true)) + 4, height: 18 }, () => this.setPanel('recruit'), [epic + legend, fresh].filter(Boolean).join(' · '));
-    } else if (!compact) this.text(ctx, `DPS ${short(Math.round(dps))}`, right + 12, coreY + island.rightRowDrawY, palette.blue, BODY, true, undefined, { exactY: true });
-    if (!(meters && compact)) this.text(ctx, paused ? 'PAUSED' : 'RUNNING', statusX, coreY + island.rightRowDrawY, paused ? palette.gold : palette.green, BODY, false, undefined, { exactY: true });
-    this.button(ctx, 'pause', paused ? '>' : 'II', { x: width - 48, y: coreY + 12, width: 28, height: 24 }, () => this.onPause(), { tooltip: paused ? 'Resume simulation (Space)' : 'Pause simulation (Space)' });
-    const quit = this.quitHandler;
-    if (quit) this.button(ctx, 'quit', 'X', this.quitRect(coreY), quit, { tooltip: 'Save and quit' });
-    const ready = affordability(state);
-    for (const [index, tab] of (['heroes', 'gear', 'recruit'] satisfies PanelTab[]).entries()) {
-      const rect = this.managementRects()[index]; if (!rect) continue;
-      this.button(ctx, `open-${tab}`, compact ? ['Hero', 'Gear', 'Pull'][index] ?? tab : ['Heroes', 'Gear', 'Recruit'][index] ?? tab,
-        rect, () => this.togglePanel(tab), { selected: this.panel === tab, ...(ready[tab] ? { badge: 'gold' as const } : {}), tooltip: `${['Heroes', 'Gear', 'Recruit'][index] ?? tab}${ready[tab] ? AVAILABLE[tab] : ''}`, ...(compact ? {} : { icon: ['sword', 'armor', 'chest'][index] ?? 'chest' }) });
-    }
-    if (progress.kind === 'BOSS_READY') {
-      const [bx = 16, by = 31, bw = 124, bh = 24] = compact ? boss.compactRectCoreLocal : boss.rectCoreLocal, labels = compact ? boss.compactLabels : boss.labels;
-      this.button(ctx, 'boss', (progress.bossLosses ? labels[1] : labels[0]) ?? 'Fight', { x: bx, y: coreY + by, width: bw, height: bh }, () => this.onAction({ type: 'retry' }), { tooltip: statusText(state), badge: 'boss', labelColor: boss.labelColor, bold: true });
-    }
-    if (this.panel) this.drawPanel(ctx, state, paused);
-    else if (this.welcome) this.drawWelcome(ctx, state, this.welcome);
-    for (const [id, memory] of this.badgeMemory) if (!this.badgesDrawn.has(id)) memory.on = false;
+    this.drawCompactLane(ctx, state, paused);
     this.syncControls();
-    const hovered = this.controls.get(this.hovered);
-    if (hovered && performance.now() - this.hoverAt >= 300 && hovered.tooltip !== hovered.label) {
-      const x = Math.min(this.width - 248, Math.max(8, this.pointer.x + 12)), y = Math.max(8, Math.min(this.sourceHeight - 48, this.pointer.y - 48));
-      ctx.fillStyle = palette.ink; ctx.fillRect(x, y, 240, 40); ctx.fillStyle = palette.edge; ctx.fillRect(x, y, 240, 1);
-      this.text(ctx, hovered.tooltip, x + 8, y + 8, palette.text, BODY, false, 224);
-    }
   }
-  private drawPanel(ctx: CanvasRenderingContext2D, state: GameState, paused: boolean): void {
-    const panel = this.panelRect(), x = panel.x, w = panel.width, ready = affordability(state);
-    this.frame(ctx, panel);
-    this.text(ctx, 'PARTY CAMP', x + 16, 9, palette.gold, HEADING, true);
-    this.text(ctx, paused ? 'BATTLE PAUSED' : 'BATTLE CONTINUES', x + w - 288, 13, paused ? palette.gold : palette.green, BODY);
-    this.button(ctx, 'close-panel', 'X', { x: x + w - 40, y: 8, width: 28, height: 24 }, () => this.setPanel(null), { tooltip: 'Close management (Esc)' });
-    for (const [index, tab] of (['heroes', 'gear', 'recruit'] satisfies PanelTab[]).entries()) {
-      const widths = [104, 96, 112], offsets = [16, 128, 232];
-      this.button(ctx, `tab-${tab}`, ['Heroes', 'Gear', 'Recruit'][index] ?? tab, { x: x + (offsets[index] ?? 16), y: 40, width: widths[index] ?? 104, height: 28 }, () => this.setPanel(tab), { selected: this.panel === tab, ...(ready[tab] ? { badge: 'gold' as const } : {}) });
-    }
-    this.icon(ctx, 'gold', x + w - 148, 45); this.text(ctx, state.gold.toLocaleString('en-US'), x + w - 128, 45, palette.gold, BODY, true);
-    // Audio: mute toggle and volume steps in the tab row (persisted by the audio engine).
-    const sound = this.audio, wide = w >= 720, mx = x + (wide ? 360 : 352);
-    this.button(ctx, 'sound-toggle', sound.muted ? 'Muted' : 'Sound', { x: mx, y: 40, width: wide ? 72 : 52, height: 28 }, () => this.onAudio({ ...sound, muted: !sound.muted }), { tooltip: sound.muted ? 'Sound off: click to unmute' : `Sound on (${Math.round(sound.volume * 100)}%): click to mute`, ...(sound.muted ? {} : { selected: false }) });
-    const vx = mx + (wide ? 76 : 56), step = 0.1, round = (value: number): number => Math.round(Math.max(0, Math.min(1, value)) * 10) / 10;
-    this.button(ctx, 'volume-down', '-', { x: vx, y: 40, width: 24, height: 28 }, () => this.onAudio({ muted: false, volume: round(sound.volume - step) }), { disabled: sound.volume <= 0, tooltip: `Volume ${Math.round(sound.volume * 100)}%: lower` });
-    this.button(ctx, 'volume-up', '+', { x: vx + 28, y: 40, width: 24, height: 28 }, () => this.onAudio({ muted: false, volume: round(sound.volume + step) }), { disabled: sound.volume >= 1, tooltip: `Volume ${Math.round(sound.volume * 100)}%: raise` });
-    if (this.panel !== 'heroes') { ctx.fillStyle = palette.edge; ctx.fillRect(x + 16, 357, w - 32, 1); }
-    if (this.panel === 'heroes') this.drawHeroes(ctx, state, panel);
-    if (this.panel === 'gear') this.drawGear(ctx, state, panel);
-    if (this.panel === 'recruit') { if (this.reveal) this.drawReveal(ctx, state.tickets, panel, this.reveal); else this.drawRecruit(ctx, state, panel); }
-  }
-  /** Rarity shape cue (rarity-drops.md §2) centred on (cx, cy), 1 px 4-neighbour ink outline; rare `twinkle` = 3×3 frame. */
+  /** Rarity shape cue (rarity-drops.md Â§2) centred on (cx, cy), 1 px 4-neighbour ink outline; rare `twinkle` = 3Ã—3 frame. */
   private drawShape(ctx: CanvasRenderingContext2D, tier: Rarity, cx: number, cy: number, twinkle = false): void {
     const shape = CONFIG.ui.rarityDrop.shapes[tier], map: readonly string[] = twinkle && 'twinkleMap' in shape ? shape.twinkleMap : shape.map;
     const colors: Record<string, string> = shape.colors, h = map.length, w = map[0]?.length ?? 0, x0 = Math.round(cx - Math.floor(w / 2)), y0 = Math.round(cy - Math.floor(h / 2));
@@ -530,7 +371,7 @@ export class PixelUI {
     ctx.fillStyle = spec.fill; ctx.fillRect(left, y, width, CONFIG.ui.badges.heightPx);
     this.text(ctx, label, left + 4, y + 1, spec.ink, BODY, true, undefined, { exactY: true });
   }
-  /** Card face (gacha.md §3): back = raised 9-slice with a "?" plate; front = 2 px rarity frame, fill and 16 px floor band. */
+  /** Card face (gacha.md Â§3): back = raised 9-slice with a "?" plate; front = 2 px rarity frame, fill and 16 px floor band. */
   private drawCard(ctx: CanvasRenderingContext2D, face: CardFace, tier: Rarity, heroId: string, rect: Rect, artHeight: number, floorY: number): void {
     if (rect.width <= 0) return;
     const colors = CONFIG.ui.rarity[tier];
@@ -566,14 +407,14 @@ export class PixelUI {
     if (reveal.flash === null && cue?.rarity === 'legendary' && ms >= cueAt && !reveal.skipped && !this.reducedMotion) reveal.flash = this.flashes.request(now);
     if (!done) this.hotspot(ctx, 'reveal-skip', { x: x + 8, y: 72, width: panel.width - 16, height: 320 }, () => this.skipReveal(), 'Click anywhere to skip', 0);
     const compact = this.standalone && panel.width < REVEAL_STAGE.width, small = CONFIG.ui.compactMenu.tenPullCompact;
-    // Compact: the 720-wide single stage is centred in the 624 body (it fits), the 10-pull switches to the 104×96 grid.
+    // Compact: the 720-wide single stage is centred in the 624 body (it fits), the 10-pull switches to the 104Ã—96 grid.
     if (reveal.count === 1) this.drawSingle(ctx, compact ? { ...panel, x: x + Math.floor((panel.width - REVEAL_STAGE.width) / 2) } : panel, reveal, ms); else this.drawTen(ctx, panel, reveal, ms, compact);
     if (!done) { this.text(ctx, 'Click anywhere to skip', x + 16, 368, palette.muted, BODY); return; }
     const cost = CONFIG.gacha.costTickets * reveal.count, short10 = tickets < cost;
     if (reveal.count === 1) this.text(ctx, 'Click a button or press Enter', x + 16, 368, palette.muted, BODY, false, 370);
-    else this.text(ctx, `Tickets ${tickets}${short10 ? ` · Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
+    else this.text(ctx, `Tickets ${tickets}${short10 ? ` Â· Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
     const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144, oh = 28] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
-    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: ay, width: aw, height: ah }, () => { this.reveal = null; if (this.standalone) this.onRevealAgain(reveal.count); else this.startRecruit(reveal.count); },
+    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: ay, width: aw, height: ah }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
       { icon: 'chest', disabled: short10, tooltip: short10 ? `Need ${cost} ticket${cost === 1 ? '' : 's'}` : `Recruit x${reveal.count} again: ${cost} ticket${cost === 1 ? '' : 's'}` });
     this.button(ctx, 'reveal-ok', 'OK', { x: x + ox, y: oy, width: ow, height: oh }, () => this.finishReveal(true), { primary: true, bold: true, tooltip: 'Back to Recruit (Enter)' });
   }
@@ -624,7 +465,7 @@ export class PixelUI {
       if (rect.width < 128) return;
       if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + 64 + dot.x, rect.y + 42 + dot.y, dot.size, dot.size); }
       let name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-      while (this.measureText(name) > 124 && name.length > 1) name = `${name.slice(0, -2)}…`;
+      while (this.measureText(name) > 124 && name.length > 1) name = `${name.slice(0, -2)}â€¦`;
       this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY);
       const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
       this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
@@ -635,7 +476,7 @@ export class PixelUI {
     });
     ctx.restore();
   }
-  /** compactMenu.tenPullCompact card: 104×96, art (0,0,104,68), label strip (0,68,104,28), short name ≤ 96 px. */
+  /** compactMenu.tenPullCompact card: 104Ã—96, art (0,0,104,68), label strip (0,68,104,28), short name â‰¤ 96 px. */
   private drawTenCompactCard(ctx: CanvasRenderingContext2D, x: number, pull: RevealPull, index: number, cardFrame: ReturnType<typeof tenFrame>['cards'][number], frame: ReturnType<typeof tenFrame>): void {
     const small = CONFIG.ui.compactMenu.tenPullCompact, [rx = 36, ry = 108, rw = 104, rh = 96] = small.cardRects[index] ?? [], [, , , artH = 68] = small.artArea;
     const tier = CONFIG.ui.rarity[pull.rarity], width = Math.round(cardFrame.width * rw / 128), full = cardFrame.width >= 128;
@@ -649,7 +490,7 @@ export class PixelUI {
     if (!full) return;
     if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + rw / 2 + dot.x, rect.y + artH / 2 + dot.y, dot.size, dot.size); }
     let name = shortHeroName(pull.heroId);
-    while (this.measureText(name) > small.nameMaxPx && name.length > 1) name = `${name.slice(0, -2)}…`;
+    while (this.measureText(name) > small.nameMaxPx && name.length > 1) name = `${name.slice(0, -2)}â€¦`;
     this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY);
     const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
     this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
@@ -659,7 +500,7 @@ export class PixelUI {
     }
   }
   /** Welcome back (ui/offline-rewards.md): rewards are already in the save; Collect acknowledges. */
-  private drawWelcome(ctx: CanvasRenderingContext2D, state: GameState, data: WelcomeData): void {
+  drawWelcome(ctx: CanvasRenderingContext2D, state: GameState, data: WelcomeData): void {
     const panel = this.panelRect(), x = panel.x, layout = CONFIG.ui.offlineRewards.layout, spec = CONFIG.ui.offlineRewards;
     if (this.welcomeCloseAt !== null && this.clock() >= this.welcomeCloseAt) { queueMicrotask(() => this.closeWelcome()); }
     const ms = this.welcomeMs(), rm = this.reducedMotion, closing = this.welcomeCloseAt !== null, capH = spec.capHours;
@@ -667,7 +508,7 @@ export class PixelUI {
     this.text(ctx, 'WELCOME BACK', x + 16, 9, palette.gold, HEADING, true);
     this.button(ctx, 'welcome-close', 'X', { x: x + 680, y: 8, width: 28, height: 24 }, () => this.collect(), { disabled: closing, tooltip: 'Collect and close (Esc)' });
     this.text(ctx, `Away ${awayLabel(data.rawSeconds)}`, x + 16, 46, palette.text, BODY, true);
-    const note = data.capped ? `Rewards capped · max ${capH}h` : `max ${capH}h`;
+    const note = data.capped ? `Rewards capped Â· max ${capH}h` : `max ${capH}h`;
     this.text(ctx, note, x + 704 - this.measureText(note), 46, data.capped ? palette.gold : palette.muted, BODY);
     const [bx = 16, by = 66, bw = 688, bh = 6] = layout.capBar;
     ctx.fillStyle = palette.ink; ctx.fillRect(x + bx, by, bw, bh);
@@ -678,16 +519,16 @@ export class PixelUI {
       this.text(ctx, value, x + rx + 64, ry + 28, color, HEADING, true, rw - 80);
     };
     row(layout.goldRow, 'gold', 'GOLD', rewardLabel(countUp(data.gold, ms, spec.countUp.goldStartMs, rm)), palette.gold);
-    row(layout.xpRow, 'potion', 'XP · EACH PARTY HERO', rewardLabel(countUp(data.xp, ms, spec.countUp.xpStartMs, rm)), palette.blue);
+    row(layout.xpRow, 'potion', 'XP Â· EACH PARTY HERO', rewardLabel(countUp(data.xp, ms, spec.countUp.xpStartMs, rm)), palette.blue);
     const [cx = 16, cy = 224, cw = 440, chh = 120] = layout.chestRow, expedition = data.expeditionChests !== undefined, max = expedition ? (CONFIG.v14.offline.expeditionChestMax || CONFIG.idle.offlineChestMax) : CONFIG.idle.offlineChestMax;
     this.frame(ctx, { x: x + cx, y: cy, width: cw, height: chh }, 'button-9slice.png');
     const title = expedition ? `EXPEDITION ${data.chests}/${max}` : `CHESTS ${data.chests}/${max}`;
     this.text(ctx, title, x + cx + 16, cy + 8, palette.text, BODY, true);
-    const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour · max ${max} · best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h · max ${max}`;
+    const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour Â· max ${max} Â· best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h Â· max ${max}`;
     this.text(ctx, rule, x + cx + 16 + this.measureText(title, BODY, true) + 12, cy + 8, palette.muted, BODY, false, cw - 40 - this.measureText(title, BODY, true));
     const slots = Math.max(max, 4), slot = layout.chestSlot, grid = welcomeChestGrid(slots), perRow = grid.perRow;
     for (let i = 0; i < slots; i += 1) {
-      // 4 slots: 40 px at stride 48. 9–16: two rows of 8 at 28 px, stride 34. 17–28: two rows of 14 at 26 px, stride 29 (ends at cy + 81).
+      // 4 slots: 40 px at stride 48. 9â€“16: two rows of 8 at 28 px, stride 34. 17â€“28: two rows of 14 at 26 px, stride 29 (ends at cy + 81).
       const size = grid.size, sxp = x + slot.x + (i % perRow) * grid.stride, syp = (grid.originY ? cy + grid.originY : slot.y) + Math.floor(i / perRow) * grid.stride;
       const shown = i < data.chests ? chestSlot(i, ms, rm, data.chests) : { shown: false, pop: false };
       if (!shown.shown) { ctx.fillStyle = palette.edge; ctx.fillRect(sxp, syp, size, 1); ctx.fillRect(sxp, syp + size - 1, size, 1); ctx.fillRect(sxp, syp, 1, size); ctx.fillRect(sxp + size - 1, syp, 1, size); continue; }
@@ -701,10 +542,10 @@ export class PixelUI {
       const best = this.measureText(full) <= room ? full : `Best: ${data.best.rarity.slice(0, 3).toUpperCase()}`;
       this.text(ctx, best, x + cx + cw - 16 - this.measureText(best), slots <= 4 ? cy + 8 : cy + chh - 22, CONFIG.ui.rarity[data.best.rarity].label, BODY);
     }
-    // Party panel: hero tiles with level before → after.
+    // Party panel: hero tiles with level before â†’ after.
     const [px = 464, py = 80, pw = 240, ph = 264] = layout.partyPanel, stageId = stageConfig(Math.max(1, data.stage)).id;
     this.frame(ctx, { x: x + px, y: py, width: pw, height: ph });
-    this.text(ctx, `PARTY · FARMED ${stageId}`, x + px + 12, py + 10, palette.text, BODY, true, pw - 24);
+    this.text(ctx, `PARTY Â· FARMED ${stageId}`, x + px + 12, py + 10, palette.text, BODY, true, pw - 24);
     data.heroes.slice(0, 3).forEach((hero, index) => {
       const tx = x + 472 + index * 76, ty = 120;
       ctx.fillStyle = '#141c26'; ctx.fillRect(tx, ty, 64, 80); ctx.fillStyle = palette.edge; ctx.fillRect(tx, ty + 72, 64, 8);
@@ -719,180 +560,6 @@ export class PixelUI {
     const [kx = 536, ky = 364, kw = 168, kh = 28] = layout.collectRect;
     this.button(ctx, 'welcome-collect', 'Collect', { x: x + kx, y: ky, width: kw, height: kh }, () => this.collect(), { icon: 'gold', primary: true, bold: true, disabled: closing, tooltip: 'Collect (Enter): rewards are already in your save' });
     void state;
-  }
-  private drawHeroes(ctx: CanvasRenderingContext2D, state: GameState, panel: Rect): void {
-    const x = panel.x, width = panel.width, center = x + Math.floor(width / 2), selected = state.roster.find(value => value.id === this.selectedHero);
-    const defs = CONFIG.heroes, page = Math.max(0, this.heroRow), slotNames = ['weapon', 'armor', 'charm'] as const;
-    this.text(ctx, 'HERO CENTER', x + 16, 80, palette.text, BODY, true);
-    this.text(ctx, `${selected ? heroConfig(selected.id).name : 'Select a hero'}${selected ? ` · Lv ${selected.level}` : ''}`, center - 84, 80, palette.gold, BODY, true, 168);
-    this.text(ctx, 'FORMATION', x + width - 104, 80, palette.muted, BODY, true);
-    ctx.fillStyle = '#18232f'; ctx.fillRect(x + 12, 92, width - 24, 116); ctx.fillStyle = palette.edge; ctx.fillRect(x + 12, 92, width - 24, 1);
-    if (selected) {
-      this.sprite(ctx, selected.id, center, 198, state.tick, 2);
-      this.text(ctx, selected.id.toUpperCase(), center - 35, 100, palette.muted, BODY, true, 70);
-      slotNames.forEach((slot, index) => {
-        const item = state.inventory.find(gear => gear.id === selected.equipment[slot]);
-        const rect = index === 0 ? { x: x + 20, y: 126, width: 72, height: 40 } : index === 1 ? { x: x + width - 92, y: 108, width: 72, height: 40 } : { x: x + width - 92, y: 158, width: 72, height: 40 };
-        this.button(ctx, `hero-slot-${slot}`, `${slot.toUpperCase()}${item ? ` +${item.level}` : ' empty'}`, rect, () => { this.heroSlotFilter = this.heroSlotFilter === slot ? null : slot; this.gearRow = 0; if (item) { this.selectedGear = item.id; this.heroDetailTab = 'items'; } this.onRedraw(); }, { selected: this.heroSlotFilter === slot || item?.id === this.selectedGear, tooltip: `${item ? `${item.rarity} ${slot} +${item.level}` : `No ${slot} equipped`}; filter stash by ${slot}` });
-        if (item) this.icon(ctx, slot === 'weapon' ? 'sword' : slot === 'armor' ? 'armor' : 'potion', rect.x + 3, rect.y + 12);
-      });
-    }
-    const stashItems = state.inventory.filter(item => !this.heroSlotFilter || item.slot === this.heroSlotFilter);
-    this.text(ctx, `ITEM STASH  ${stashItems.length}/${CONFIG.gear.inventoryCap}${this.heroSlotFilter ? ` ${this.heroSlotFilter.toUpperCase()}` : ''}`, x + 16, 216, palette.gold, BODY, true);
-    const gearPage = Math.max(0, this.gearRow), gearCount = Math.max(1, Math.floor((width - 32) / 44));
-    const gearPages = Math.max(1, Math.ceil(stashItems.length / gearCount));
-    this.button(ctx, 'hero-equip-item', 'Equip', { x: x + width - 124, y: 210, width: 48, height: 16 }, () => { const item = state.inventory.find(value => value.id === this.selectedGear); if (selected && item && selected.equipment[item.slot] !== item.id) this.onAction({ type: 'equip', heroId: selected.id, gearId: item.id }); }, { disabled: !selected || !state.inventory.some(value => value.id === this.selectedGear && selected.equipment[value.slot] !== value.id), tooltip: selected ? 'Equip selected stash item on this hero' : 'Select an owned hero' });
-    this.button(ctx, 'hero-stash-prev', '<', { x: x + width - 72, y: 210, width: 20, height: 16 }, () => { this.gearRow = Math.max(0, gearPage - 1); this.onRedraw(); }, { disabled: gearPage <= 0, tooltip: 'Previous stash items' });
-    this.button(ctx, 'hero-stash-next', '>', { x: x + width - 48, y: 210, width: 20, height: 16 }, () => { this.gearRow = Math.min(gearPages - 1, gearPage + 1); this.onRedraw(); }, { disabled: gearPage >= gearPages - 1, tooltip: 'Next stash items' });
-    ctx.save(); ctx.beginPath(); ctx.rect(x + 16, 224, width - 32, 48); ctx.clip();
-    for (let index = 0; index < gearCount; index += 1) {
-      const item = stashItems[gearPage * gearCount + index]; if (!item) break;
-      const rect = { x: x + 16 + index * 44, y: 226, width: 40, height: 40 };
-      this.button(ctx, `hero-stash-${item.id}`, '', rect, () => { this.selectedGear = item.id; this.heroDetailTab = 'items'; this.onRedraw(); }, { selected: item.id === this.selectedGear, tooltip: `${item.rarity} ${item.slot} +${item.level}${item.locked ? ', locked' : ''}` });
-      this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', rect.x + 11, rect.y + 8);
-      this.text(ctx, `+${item.level}`, rect.x + 7, rect.y + 25, palette.gold, BODY);
-    }
-    ctx.restore();
-    this.text(ctx, `HEROES ${state.roster.length}/${defs.length}  PAGE ${page + 1}/${Math.ceil(defs.length / 4)}`, x + 16, 272, palette.text, BODY, true);
-    for (let visible = 0; visible < 4; visible += 1) {
-      const index = page * 4 + visible, definition = defs[index]; if (!definition) continue;
-      const owned = state.roster.some(hero => hero.id === definition.id), card = { x: x + 16 + visible * Math.floor((width - 32) / 4), y: 286, width: Math.floor((width - 40) / 4), height: 42 };
-      this.button(ctx, `hero-${definition.id}`, '', card, () => { if (owned) { this.selectedHero = definition.id; this.onRedraw(); } }, { selected: this.selectedHero === definition.id, disabled: !owned, tooltip: `${definition.name}${owned ? '' : ' — not owned'}`, cardIndex: index });
-      this.text(ctx, shortHeroName(definition.id), card.x + 4, 290, owned ? palette.gold : palette.muted, BODY, true, card.width - 8);
-      if (state.partyIds.includes(definition.id)) this.text(ctx, 'DEPLOYED', card.x + 4, 308, palette.green, BODY, false, card.width - 8);
-    }
-    const heroDef = selected ? getPartyHeroDefinition(selected.id) : null;
-    const tabWidth = Math.floor((width - 40) / 3);
-    (['ability', 'stats', 'items'] as const).forEach((tab, index) => this.button(ctx, `hero-detail-${tab}`, tab.toUpperCase(), { x: x + 12 + index * (tabWidth + 4), y: 328, width: tabWidth, height: 24 }, () => { this.heroDetailTab = tab; this.onRedraw(); }, { selected: this.heroDetailTab === tab }));
-    if (this.heroDetailTab === 'ability' && heroDef) this.text(ctx, `${heroDef.active.id} · Auto at ${heroDef.active.manaCost ?? 60} mana`, x + 16, 352, palette.blue, BODY, false, width - 32);
-    else if (this.heroDetailTab === 'stats' && heroDef) { const stats = heroStats(state, selected!); this.text(ctx, `HP ${stats.maxHp}  ATK ${stats.atk}  DEF ${stats.def}`, x + 16, 352, palette.text, BODY, false, width - 32); }
-    else if (this.heroDetailTab === 'items') {
-      const item = state.inventory.find(value => value.id === this.selectedGear);
-      if (item) {
-        this.text(ctx, `${item.rarity.toUpperCase()} ${item.slot} +${item.level}${item.locked ? ' LOCKED' : ''}`, x + 16, 352, palette.text, BODY, false, width - 174);
-      } else this.text(ctx, 'Choose a stash item to inspect and equip.', x + 16, 352, palette.muted, BODY, false, width - 32);
-    }
-    for (let slot = 0; slot < CONFIG.sim.partySize; slot += 1) this.button(ctx, `replace-${slot}`, `${['Front', 'Middle', 'Rear'][slot]}`, { x: x + 16 + slot * 72, y: 364, width: 68, height: 28 }, () => {
-      const hero = state.roster.find(value => value.id === this.selectedHero); if (!hero) return;
-      const ids = [...state.partyIds], current = ids.indexOf(hero.id); if (current >= 0 && current !== slot) [ids[current], ids[slot]] = [ids[slot]!, ids[current]!]; else ids[slot] = hero.id;
-      if (new Set(ids).size === CONFIG.sim.partySize) this.onAction({ type: 'party', heroIds: ids });
-    }, { selected: state.partyIds[slot] === this.selectedHero, tooltip: `Assign selected hero to ${['Front', 'Middle', 'Rear'][slot]}; swaps deployed heroes` });
-    const item = cheapestEquippedUpgrade(state), cost = item ? upgradeCost(item) : null;
-    this.button(ctx, 'hero-upgrade', cost === null ? 'No gear' : `Upgrade ${short(cost)} G`, { x: x + width - 144, y: 364, width: 128, height: 28 }, () => { if (item) this.onAction({ type: 'upgrade', gearId: item.id }); }, { disabled: !item || state.gold < (cost ?? 0), tooltip: cost === null ? 'Defeat waves to earn gear' : `Upgrade equipped gear for ${cost} gold` });
-  }
-  private drawGear(ctx: CanvasRenderingContext2D, state: GameState, panel: Rect): void {
-    const x = panel.x, cols = this.gearColumns(), detailX = x + (panel.width >= 720 ? 424 : panel.width - 232), detailWidth = panel.width >= 720 ? 280 : 216;
-    const choice = state.pendingChoice?.[0];
-    if (choice) this.drawChestChoice(ctx, state, choice, x + 16, detailX - 16, state.pendingChoice?.length ?? 1);
-    else {
-      const cap = CONFIG.gear.inventoryCap, locked = lockedCount(state);
-      const bag = CONFIG.gear.salvage.lockMax > 0
-        ? (panel.width >= 720 ? `Bag ${state.inventory.length}/${cap} · ${locked} locked` : `Bag ${state.inventory.length}/${cap}`)
-        : `INVENTORY ${state.inventory.length}/${cap}`;
-      this.text(ctx, bag, x + 16, 80, palette.text, BODY, true);
-      const fortune = fortuneMeter(state);
-      if (fortune) { const label = fortune.found ? `Fortune ${fortune.since}/${fortune.limit}` : `Legend in ${fortune.left}`; this.text(ctx, label, detailX - 16 - this.measureText(label), 80, CONFIG.ui.rarity.legendary.label, BODY); }
-    }
-    if (!state.inventory.some(item => item.id === this.selectedGear)) this.selectedGear = state.inventory[0]?.id ?? null;
-    for (let visible = 0; visible < (choice ? 0 : cols * 5); visible += 1) {
-      const item = state.inventory[this.gearRow * cols + visible];
-      const rect = { x: x + 16 + visible % cols * 48, y: 112 + Math.floor(visible / cols) * 48, width: 40, height: 40 };
-      if (!item) { this.frame(ctx, rect, 'button-disabled-9slice.png'); continue; }
-      this.button(ctx, `gear-${item.id}`, '', rect, () => { this.selectedGear = item.id; this.onRedraw(); }, { selected: item.id === this.selectedGear, tooltip: `${item.rarity} ${item.slot} +${item.level}` });
-      this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', rect.x + 12, rect.y + 9);
-      this.text(ctx, String(item.level), rect.x + 24, rect.y + 24, palette.gold, BODY);
-      if (item.locked) { ctx.fillStyle = palette.gold; ctx.fillRect(rect.x + 3, rect.y + 4, 7, 5); ctx.fillRect(rect.x + 4, rect.y + 2, 1, 3); ctx.fillRect(rect.x + 8, rect.y + 2, 1, 3); ctx.fillRect(rect.x + 5, rect.y + 1, 3, 1); }
-    }
-    this.frame(ctx, { x: detailX, y: 80, width: detailWidth, height: 272 });
-    const item = state.inventory.find(item => item.id === this.selectedGear);
-    if (!item) { this.text(ctx, 'No gear yet.', detailX + 16, 112, palette.text); this.text(ctx, 'Defeat a wave.', detailX + 16, 136, palette.muted); }
-    else this.gearDetail(ctx, state, item, detailX, detailWidth);
-    this.button(ctx, 'gear-autoequip', 'Auto-equip best', { x: x + 16, y: 364, width: 176, height: 28 }, () => this.onAction({ type: 'autoEquip' }));
-    if (item && CONFIG.gear.salvage.lockMax > 0) {
-      const atCap = !item.locked && lockedCount(state) >= CONFIG.gear.salvage.lockMax;
-      this.button(ctx, 'gear-lock', item.locked ? 'Unlock' : 'Lock', { x: x + 200, y: 364, width: 104, height: 28 },
-        () => this.onAction({ type: 'lock', gearId: item.id, locked: !item.locked }),
-        { disabled: atCap, tooltip: item.locked ? 'Locked: never auto-salvaged' : atCap ? `Lock limit ${CONFIG.gear.salvage.lockMax} reached` : 'Lock' });
-    }
-    const cost = item ? upgradeCost(item) : 0;
-    this.button(ctx, 'gear-upgrade', item ? `Upgrade ${short(cost)} G` : 'Upgrade', { x: x + panel.width - 184, y: 364, width: 168, height: 28 }, () => { if (item) this.onAction({ type: 'upgrade', gearId: item.id }); }, { disabled: !item || item.level >= CONFIG.gear.upgrade.maxLevel || state.gold < cost, tooltip: item && state.gold < cost ? `Need ${cost - state.gold} more gold` : `${cost} gold; maximum +${CONFIG.gear.upgrade.maxLevel}` });
-    this.button(ctx, 'gear-equip', 'Equip', { x: x + panel.width - 288, y: 364, width: 96, height: 28 }, () => { const heroId = state.partyIds[this.targetSlot]; if (item && heroId) this.onAction({ type: 'equip', heroId, gearId: item.id }); }, { disabled: !item, tooltip: `Equip to slot ${this.targetSlot + 1}: ${heroConfig(state.partyIds[this.targetSlot] ?? '').name}` });
-  }
-  /** CR-14-08 pick-1-of-2: the oldest pending chest as two cards with Keep buttons, in the inventory grid's place. */
-  private drawChestChoice(ctx: CanvasRenderingContext2D, state: GameState, options: readonly [Gear, Gear], left: number, right: number, waiting: number): void {
-    this.text(ctx, 'CHEST: PICK 1 OF 2', left, 80, palette.gold, BODY, true);
-    if (waiting > 1) { const label = `${waiting} WAITING`; this.text(ctx, label, right - this.measureText(label), 80, palette.muted, BODY); }
-    const width = Math.floor((right - left - 8) / 2), target = state.roster.find(hero => hero.id === state.partyIds[this.targetSlot]);
-    options.forEach((item, index) => {
-      const card = { x: left + index * (width + 8), y: 104, width, height: 248 }, other = options[index === 0 ? 1 : 0];
-      const tier = CONFIG.ui.rarity[item.rarity];
-      this.frame(ctx, card);
-      ctx.fillStyle = tier.frame; ctx.fillRect(card.x + 4, card.y + 4, card.width - 8, 2);
-      this.text(ctx, `${item.rarity} ${item.slot}`.toUpperCase(), card.x + 12, card.y + 14, tier.label, BODY, true, card.width - 24);
-      this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', card.x + 12, card.y + 40, 3);
-      let row = 0;
-      for (const [key, value] of Object.entries(item.stats)) if (value) this.text(ctx, `+ ${key.toUpperCase()} ${key.endsWith('Pct') ? `${(value * 100).toFixed(1)}%` : value.toFixed(0)}`, card.x + 72, card.y + 44 + row++ * 20, palette.green, BODY, false, card.width - 80);
-      this.text(ctx, `SCORE ${gearScore(item).toFixed(0)}`, card.x + 12, card.y + 104, palette.text, BODY, false, card.width - 24);
-      const equipped = state.inventory.find(gear => gear.id === target?.equipment[item.slot]);
-      const delta = gearScore(item) - (equipped ? gearScore(equipped) : 0);
-      this.text(ctx, `vs slot ${this.targetSlot + 1}: ${delta >= 0 ? '+' : ''}${delta.toFixed(0)}`, card.x + 12, card.y + 128, delta >= 0 ? palette.green : palette.red, BODY, false, card.width - 24);
-      this.text(ctx, `DROP ${CONFIG.stages[item.dropStage - 1]?.id ?? ''}`, card.x + 12, card.y + 152, palette.muted, BODY, false, card.width - 24);
-      this.text(ctx, `Other salvaged +${Math.round(CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[other.rarity])} G`, card.x + 12, card.y + 176, palette.muted, BODY, false, card.width - 24);
-      this.button(ctx, `chest-keep-${index}`, 'Keep', { x: card.x + 12, y: card.y + 204, width: card.width - 24, height: 28 }, () => this.onAction({ type: 'chooseChest', keep: index }),
-        { tooltip: `Keep this ${item.rarity} ${item.slot}; salvage the other`, bold: true, ...(bestChoice(options) === index ? { selected: true } : {}) });
-    });
-  }
-  private gearDetail(ctx: CanvasRenderingContext2D, state: GameState, item: Gear, x: number, width: number): void {
-    this.text(ctx, `${item.rarity} ${item.slot}`, x + 16, 96, palette.gold, BODY, true, width - 32);
-    this.icon(ctx, item.slot === 'weapon' ? 'sword' : item.slot === 'armor' ? 'armor' : 'potion', x + 16, 128, 3);
-    this.text(ctx, `LEVEL +${item.level}`, x + 80, 134, palette.text, BODY);
-    this.text(ctx, `DROP ${CONFIG.stages[item.dropStage - 1]?.id}`, x + 80, 158, palette.muted, BODY);
-    if (item.locked) this.text(ctx, 'Locked', x + 80, 176, palette.gold, BODY, false, width - 96);
-    let row = 0;
-    for (const [key, value] of Object.entries(item.stats)) if (value) { const total = value * (1 + CONFIG.gear.upgrade.mainPerLevel * item.level); this.text(ctx, `+ ${key.toUpperCase()} ${key.endsWith('Pct') ? `${(total * 100).toFixed(1)}%` : total.toFixed(1)}`, x + 16, 200 + row++ * 22, palette.green, BODY); }
-    const target = state.roster.find(hero => hero.id === state.partyIds[this.targetSlot]);
-    const equipped = state.inventory.find(gear => gear.id === target?.equipment[item.slot]);
-    const delta = gearScore(item) - (equipped ? gearScore(equipped) : 0);
-    this.text(ctx, `vs equipped: ${delta >= 0 ? '+' : ''}${delta.toFixed(1)} score`, x + 16, 252, delta >= 0 ? palette.green : palette.red, BODY, false, width - 24);
-    this.text(ctx, 'EQUIP TO PARTY SLOT', x + 16, 280, palette.muted, BODY);
-    for (let slot = 0; slot < 3; slot += 1) this.button(ctx, `gear-target-${slot}`, String(slot + 1), { x: x + 16 + slot * 56, y: 304, width: 48, height: 28 }, () => { this.targetSlot = slot; this.onRedraw(); }, { selected: this.targetSlot === slot, tooltip: heroConfig(state.partyIds[slot] ?? '').name });
-  }
-  private drawRecruit(ctx: CanvasRenderingContext2D, state: GameState, panel: Rect): void {
-    const x = panel.x, detailX = x + (panel.width >= 720 ? 424 : panel.width - 232), detailWidth = panel.width >= 720 ? 280 : 216;
-    const leftWidth = panel.width >= 720 ? 184 : 136;
-    for (let banner = 0; banner < (this.recruitHistoryOpen ? 0 : 2); banner += 1) {
-      const bx = x + 16 + banner * (leftWidth + 8);
-      this.frame(ctx, { x: bx, y: 104, width: leftWidth, height: 224 });
-      this.text(ctx, banner ? 'EPIC+ PITY' : 'ALL HEROES', bx + 12, 116, palette.gold, BODY, true);
-      this.sprite(ctx, banner ? 'hk2' : 'wiz', bx + Math.floor(leftWidth / 2), 240, state.tick, 2);
-      this.text(ctx, banner ? `${state.pity} / ${CONFIG.gacha.pity.guaranteeEpicPlusEvery}` : '1 TICKET', bx + 12, 270, palette.text, BODY);
-      this.text(ctx, banner ? 'Same hero pool' : `${state.tickets} tickets`, bx + 12, 294, palette.muted, BODY, false, leftWidth - 20);
-    }
-    if (this.recruitHistoryOpen) {
-      this.frame(ctx, { x: x + 16, y: 104, width: detailX - x - 32, height: 224 });
-      this.text(ctx, 'RECENT RECRUITS', x + 28, 112, palette.gold, BODY, true);
-      this.history.slice(0, 9).forEach((entry, index) => this.text(ctx, entry, x + 28, 138 + index * 20, palette.text, BODY, false, detailX - x - 56));
-    }
-    this.frame(ctx, { x: detailX, y: 80, width: detailWidth, height: 272 });
-    this.text(ctx, 'ACTUAL ODDS', detailX + 16, 96, palette.text, BODY, true);
-    let row = 0;
-    for (const [rarity, rate] of Object.entries(CONFIG.gacha.rates)) this.text(ctx, `${rarity.toUpperCase()} ${(rate * 100).toFixed(0)}%`, detailX + 16, 126 + row++ * 22, palette.muted, BODY);
-    const meters = recruitMeters(state);
-    if (meters) {
-      this.text(ctx, `Epic+ in ${meters.epicPlus}${meters.legendary === null ? '' : ` · Legend in ${meters.legendary}`}`, detailX + 16, 224, palette.gold, BODY, false, detailWidth - 24);
-      this.text(ctx, meters.newHero === null ? '30th: Epic 76.5% / Leg 23.5%' : `New hero in ${meters.newHero}`, detailX + 16, 244, meters.newHero === null ? palette.muted : palette.green, BODY, false, detailWidth - 24);
-    } else {
-      this.text(ctx, `Pity: ${state.pity}/${CONFIG.gacha.pity.guaranteeEpicPlusEvery}`, detailX + 16, 224, palette.gold, BODY);
-      this.text(ctx, '30th: Epic 76.5% / Leg 23.5%', detailX + 16, 244, palette.muted, BODY, false, detailWidth - 24);
-    }
-    this.text(ctx, `Duplicates: +1 star (max ${CONFIG.growth.starMax})`, detailX + 16, 267, palette.text, BODY, false, detailWidth - 24);
-    this.text(ctx, 'Then rarity-based gold.', detailX + 16, 287, palette.text, BODY, false, detailWidth - 24);
-    this.text(ctx, this.history[0] ?? 'Earned tickets only.', detailX + 16, 320, palette.blue, BODY, false, detailWidth - 24);
-    this.text(ctx, `HISTORY ${state.stats.pulls} PULLS`, x + 16, 334, palette.muted, BODY);
-    this.button(ctx, 'recruit-history', this.recruitHistoryOpen ? 'Banners' : 'History', { x: x + 16, y: 364, width: 120, height: 28 }, () => { this.recruitHistoryOpen = !this.recruitHistoryOpen; this.onRedraw(); });
-    const recruit = (count: 1 | 10): void => { this.startRecruit(count); };
-    this.button(ctx, 'recruit-one', 'Recruit x1', { x: x + panel.width - 296, y: 364, width: 132, height: 28 }, () => recruit(1), { disabled: this.pending || state.tickets < CONFIG.gacha.costTickets, tooltip: `Cost ${CONFIG.gacha.costTickets} ticket; available ${state.tickets}` });
-    this.button(ctx, 'recruit-ten', 'Recruit x10', { x: x + panel.width - 156, y: 364, width: 140, height: 28 }, () => recruit(10), { disabled: this.pending || state.tickets < CONFIG.gacha.costTickets * 10, tooltip: `Cost ${CONFIG.gacha.costTickets * 10} tickets; available ${state.tickets}` });
   }
   private syncControls(): void {
     const regions = this.sourceRegions();
@@ -910,9 +577,8 @@ export class PixelUI {
         button.addEventListener('pointerdown', () => { this.pressed = control.id; this.onRedraw(); });
         button.addEventListener('pointerup', () => { this.pressed = ''; this.onRedraw(); });
         button.addEventListener('click', () => { this.controls.get(control.id)?.click(); });
-        button.addEventListener('pointerenter', () => { this.hovered = control.id; this.hoverAt = performance.now(); this.onRedraw(); });
+        button.addEventListener('pointerenter', () => { this.hovered = control.id; this.onRedraw(); });
         button.addEventListener('pointerleave', () => { if (this.hovered === control.id) this.hovered = ''; if (this.pressed === control.id) this.pressed = ''; this.onRedraw(); });
-        button.addEventListener('pointermove', event => { const bounds = this.overlay.getBoundingClientRect(); this.pointer = { x: (event.clientX - bounds.left) / this.scaleToCss, y: (event.clientY - bounds.top) / this.scaleToCss }; });
         button.addEventListener('focus', () => { this.focused = control.id; this.onRedraw(); });
         button.addEventListener('blur', () => { this.focused = ''; this.onRedraw(); });
         this.buttons.set(control.id, button); this.overlay.append(button);
@@ -925,7 +591,7 @@ export class PixelUI {
   }
   stateForDebug() {
     const reveal = this.reveal;
-    return { panel: this.panel, selectedHero: this.selectedHero, heroRow: this.heroRow, selectedGear: this.selectedGear, history: [...this.history], fontsReady: this.readyFlag,
+    return { panel: this.panel, selectedHero: this.selectedHero, selectedGear: this.selectedGear, history: [...this.history], fontsReady: this.readyFlag,
       reveal: reveal ? { count: reveal.count, pulls: reveal.pulls.map(pull => ({ ...pull })), skipped: reveal.skipped, cued: reveal.cued, done: this.revealDone() } : null,
       welcome: this.welcome ? { ...this.welcome, closing: this.welcomeCloseAt !== null } : null, audio: { ...this.audio } };
   }

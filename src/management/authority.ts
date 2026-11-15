@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { activeSalvageRules, CONFIG } from '../config';
-import { heroStats, partyBasicDpsForStats, partyGearUtilityGain, realizedBasicCycleTicks, upgradeCost } from '../core/economy';
+import { heroStats, partyBasicDpsForStats, partyGearUtilityGain, upgradeCost } from '../core/economy';
 import { input } from '../core/game';
 import { cloneState, parseAction, parseState } from '../core/model';
 import type { Action, GameState } from '../core/model';
 
 const requestSchema = z.object({ clientId: z.string().min(1).max(80), requestId: z.string().min(1).max(120), expectedRevision: z.number().int().nonnegative(), action: z.unknown() }).strict();
 export interface ManagementSnapshot {
-  revision: number; paused: boolean; tick: number; gold: number; tickets: number; pity: number; lockMax: number; combatRules?: GameState['combatRules']; progress: GameState['progress']; phase: GameState['phase'];
+  revision: number; paused: boolean; tick: number; gold: number; tickets: number; pity: number; lockMax: number; combatRules: GameState['combatRules']; progress: GameState['progress']; phase: GameState['phase'];
   highestCleared: number; roster: GameState['roster']; partyIds: string[]; partyPreset?: GameState['partyPreset']; inventory: GameState['inventory']; pendingChoice?: GameState['pendingChoice'];
   heroStats: Record<string, ReturnType<typeof heroStats>>; stats: GameState['stats']; balance: string; pityLegendary?: number; pityNewHero?: number;
   recruit: { cost: number; rates: Record<string, number>; epicPlusRemaining: number; legendaryRemaining: number | null; newHeroRemaining: number | null };
@@ -34,7 +34,7 @@ export class ManagementAuthority {
       newHeroRemaining: CONFIG.v14.recruit.newHeroGuaranteeEvery && roster.length < CONFIG.heroes.length ? CONFIG.v14.recruit.newHeroGuaranteeEvery - (pityNewHero ?? 0) : null };
     const recentPulls = this.state.events.filter(event => event.data.type === 'pull').slice(-10).map(event => event.data.type === 'pull' ? ({ seq: event.seq, heroId: event.data.heroId,
       rarity: event.data.rarity, duplicate: event.data.duplicate, pity: event.data.pity }) : null).filter((value): value is NonNullable<typeof value> => value !== null);
-    return structuredClone({ revision: this.revision, paused: this.paused, tick, gold, tickets, pity, lockMax: activeSalvageRules().lockMax, ...(combatRules ? { combatRules } : {}), ...(partyPreset ? { partyPreset } : {}), progress, phase, highestCleared, roster, partyIds, inventory,
+    return structuredClone({ revision: this.revision, paused: this.paused, tick, gold, tickets, pity, lockMax: activeSalvageRules().lockMax, combatRules, ...(partyPreset ? { partyPreset } : {}), progress, phase, highestCleared, roster, partyIds, inventory,
       heroStats: derivedStats, recruit, recentPulls, ...(pendingChoice ? { pendingChoice } : {}), stats, balance, ...(pityLegendary === undefined ? {} : { pityLegendary }), ...(pityNewHero === undefined ? {} : { pityNewHero }) });
   }
   compareGear(heroId: string, gearId: string): HeroGearComparison | null {
@@ -44,9 +44,7 @@ export class ManagementAuthority {
     const hero = draft.roster.find(value => value.id === heroId)!, gear = draft.inventory.find(value => value.id === gearId)!;
     for (const owned of draft.roster) if (owned.id !== heroId && owned.equipment[gear.slot] === gear.id) owned.equipment[gear.slot] = null;
     hero.equipment[gear.slot] = gear.id;
-    const after = heroStats(draft, hero), dps = (value: ReturnType<typeof heroStats>) => this.state.combatRules === 'party-v2'
-      ? partyBasicDpsForStats(heroId, value)
-      : value.atk * CONFIG.sim.ticksPerSecond / realizedBasicCycleTicks(value);
+    const after = heroStats(draft, hero), dps = (value: ReturnType<typeof heroStats>) => partyBasicDpsForStats(heroId, value);
     return { before, after, delta: { maxHp: after.maxHp - before.maxHp, atk: after.atk - before.atk, def: after.def - before.def,
       attackTicks: after.attackTicks - before.attackTicks, basicDps: dps(after) - dps(before) }, partyUtilityGain: partyGearUtilityGain(this.state, heroId, gear.id) };
   }
@@ -121,7 +119,6 @@ export class ManagementAuthority {
         if (new Set(action.heroIds).size !== action.heroIds.length || action.heroIds.some(id => !state.roster.some(hero => hero.id === id))) return 'Choose three distinct owned heroes.';
         return action.heroIds.every((id, index) => state.partyIds[index] === id) ? 'That party is already assigned.' : undefined;
       case 'lockHero': {
-        if (state.combatRules !== 'party-v2') return 'Preset locks are only available in the party preview.';
         const hero = state.roster.find(value => value.id === action.heroId);
         if (!hero) return 'That hero is not owned.';
         return (hero.partyLocked === true) === action.locked ? 'That hero already has this lock setting.' : undefined;

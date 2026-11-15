@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
-const baseUrl = process.env.PHASE1_BASE_URL ?? 'http://127.0.0.1:5173/?combat=party-v2';
+const baseUrl = process.env.PHASE1_BASE_URL ?? 'http://127.0.0.1:5173/';
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const context = await browser.newContext({ viewport: { width: 1280, height: 220 } });
 try {

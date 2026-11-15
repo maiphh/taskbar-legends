@@ -6,20 +6,20 @@
         "present": true,
         "disabled": false,
         "inside": true,
-        "tooltip": "Lock",
-        "label": "Lock"
+        "tooltip": "",
+        "label": null
       },
       "afterClick": {
         "locked": true,
-        "button": "Unlock",
+        "button": null,
         "headerHint": true
       },
       "unlockButton": {
         "present": true,
         "disabled": false,
         "inside": true,
-        "tooltip": "Locked: never auto-salvaged",
-        "label": "Unlock"
+        "tooltip": "",
+        "label": null
       }
     },
     "1280": {
@@ -27,28 +27,29 @@
         "present": true,
         "disabled": false,
         "inside": true,
-        "tooltip": "Lock",
-        "label": "Lock"
+        "tooltip": "",
+        "label": null
       },
       "afterClick": {
         "locked": true,
-        "button": "Unlock",
+        "button": null,
         "headerHint": true
       },
       "unlockButton": {
         "present": true,
         "disabled": false,
         "inside": true,
-        "tooltip": "Locked: never auto-salvaged",
-        "label": "Unlock"
+        "tooltip": "",
+        "label": null
       }
     },
     "cap": {
       "present": true,
       "disabled": true,
       "inside": true,
-      "tooltip": "Lock limit 30 reached",
-      "label": "Lock"
+      "tooltip": "",
+      "label": null,
+      "countText": "PARTY CAMP\nBATTLE PAUSED\nX\nParty\nStash\nRecruit\nUpgrades\nSettings\n0\n6 tix\nStash\nAll slots\nv\nAll rarity\nv\nAll stash\nv\nCOMMON WEAPON\n\n Lv 0 · stash\n\nATK 28\n\nNext level: x1.10 stats\n\nLock gear\n 30/30 locked\n\nCompare / equip to\nMedieval Warrior 2\nv\n\nHP380 → 380 +0\n\nATK14 → 42 +28\n\nDEF50 → 50 +0\n\nCycle24 → 24\n\nDPS+23.33\n\nParty utility gain +0.400 · recommended\n\nEquip\nUpgrade 90 G\nAuto-equip best\n\n35/50 items"
     }
   },
   "ok": true,

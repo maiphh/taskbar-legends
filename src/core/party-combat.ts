@@ -2,7 +2,7 @@ import { CONFIG, ticksForSeconds } from '../config';
 import { grantXp } from './economy';
 import { combatTime } from './clock';
 import { emit, goldChange } from './events';
-import { activePartyEffects, applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveDefense, effectActive, prunePartyEffects } from './party-effects';
+import { applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveDefense, effectActive, prunePartyEffects } from './party-effects';
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
 import { fillGauges, nextActor, spendTurn, type GaugeUnit } from './turn/action-bar';
@@ -45,11 +45,10 @@ export function edgeDistance(a: Body, b: Body): number { return Math.max(0, Math
 export function inEdgeReach(a: Body, b: Body, reach: number): boolean { return edgeDistance(a, b) <= reach; }
 export function presentationCombatTime(state: GameState): number {
   const native = combatTime(state);
-  if (state.combatRules !== 'party-v2' || state.phase.kind !== 'farmPad' || state.phase.presentationStartedAtTick === undefined) return native;
+  if (state.phase.kind !== 'farmPad' || state.phase.presentationStartedAtTick === undefined) return native;
   return native + Math.max(0, state.tick - state.phase.presentationStartedAtTick);
 }
 export function combatEventAge(state: GameState, event: GameEvent): number | null {
-  if (state.combatRules !== 'party-v2') return state.tick - event.tick;
   if (event.combatEncounter !== state.encounter) return null;
   return presentationCombatTime(state) - (event.combatTick ?? event.tick);
 }
@@ -319,10 +318,6 @@ function commitAbility(state: GameState, impact: Impact, now: number): boolean {
     case 'buff': applyEffect(state, source, target, { group: 'party-atk-buff', kind: 'atkBonus', magnitude: ability.atkBonus ?? 0, durationTicks: ability.durationTicks ?? 0 }, now); break;
     case 'weaken': applyEffect(state, source, target, { group: 'enemy-atk-weaken', kind: 'atkReduction', magnitude: ability.atkReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
       applyEffect(state, source, target, { group: 'enemy-def-weaken', kind: 'defReduction', magnitude: ability.defReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
-      if (state.combatRules !== 'party-v2' && def.passive.kind === 'firstWeakenShield' && !(target.procCounters?.firstWeakenShield ?? 0)) {
-        target.procCounters ??= {}; target.procCounters.firstWeakenShield = 1;
-        const ally = hurtAlly(state, 1) ?? living(state.party)[0]; if (ally) applyPartyShield(state, source, ally, ally.maxHp * (def.passive.shieldFraction ?? 0), def.passive.durationTicks ?? 0, now);
-      }
       break;
     case 'selfSustain': return false;
     case 'cleave': case 'projectile': case 'fireball': case 'singleBurst': return false;
@@ -338,21 +333,16 @@ interface DamageResult { intent: DamageIntent; total: number; hpDamage: number; 
 function applyDamageBatch(state: GameState, intents: DamageIntent[], now: number): DamageResult[] {
   const ordered = [...intents].sort((a, b) => a.source.id.localeCompare(b.source.id) || (a.projectileId ?? '').localeCompare(b.projectileId ?? '') || a.target.id.localeCompare(b.target.id));
   const shieldLeft = new Map<string, number>(), hpLeft = new Map<string, number>(), initialHp = new Map<string, number>(), results: DamageResult[] = [];
-  const procCount = new Map<string, number>();
   for (const intent of ordered) {
     const target = intent.target;
     if (target.hp <= 0 && !hpLeft.has(target.id)) continue;
     if (!shieldLeft.has(target.id)) { shieldLeft.set(target.id, target.shieldUntilTick > now ? target.shield : 0); hpLeft.set(target.id, target.hp); initialHp.set(target.id, target.hp); }
-    const counter = procCount.get(intent.source.id) ?? (intent.source.procCounters?.basicSuccess ?? 0);
-    const passive = state.combatRules === 'party-v2' ? undefined : partyDef(intent.source)?.passive;
-    const coefficient = intent.basic && passive?.kind === 'fourthBonus' && (counter + 1) % 4 === 0 ? intent.coefficient * (1 + (passive.coefficient ?? 0.2)) : intent.coefficient;
-    const amount = damageAmount(state, intent.source, target, coefficient, intent.snapAtk);
+    const amount = damageAmount(state, intent.source, target, intent.coefficient, intent.snapAtk);
     const absorbed = Math.min(shieldLeft.get(target.id) ?? 0, amount); shieldLeft.set(target.id, (shieldLeft.get(target.id) ?? 0) - absorbed);
     const hpDamage = Math.min(hpLeft.get(target.id) ?? 0, amount - absorbed); hpLeft.set(target.id, (hpLeft.get(target.id) ?? 0) - hpDamage);
     const total = absorbed + hpDamage; results.push({ intent, total, hpDamage, absorbed });
     if (absorbed > 0) emit(state, { type: 'shieldAbsorb', attackerId: intent.source.id, targetId: target.id, ...(target.shieldProviderId ? { providerId: target.shieldProviderId } : {}), amount: absorbed }, now);
     if (hpDamage > 0) emit(state, { type: 'hit', attackerId: intent.source.id, targetId: target.id, damage: hpDamage, side: target.side }, now);
-    if (intent.basic && total > 0) procCount.set(intent.source.id, counter + 1);
   }
   const targets = new Set(ordered.map(intent => intent.target.id));
   for (const targetId of [...targets].sort()) {
@@ -370,58 +360,17 @@ function applyDamageBatch(state: GameState, intents: DamageIntent[], now: number
   }
   return results;
 }
-function effectAura(state: GameState, now: number): void {
-  if (state.combatRules === 'party-v2') return;
-  const source = living(state.party).find(unit => partyDef(unit)?.passive.kind === 'livingAura');
-  if (!source) return;
-  const magnitude = partyDef(source)!.passive.atkReduction ?? 0.05;
-  for (const ally of living(state.party)) {
-    const prior = activePartyEffects(state, ally.id).find(effect => effect.group === 'party-guard-aura');
-    const changed = !prior || prior.sourceId !== source.id || prior.magnitude !== magnitude;
-    applyEffect(state, source, ally, { group: 'party-guard-aura', kind: 'damageReduction', magnitude, durationTicks: 2, stackPolicy: 'sourceAura' }, now, changed);
-  }
-}
-function reserveGuards(state: GameState, impacts: DamageIntent[], now: number, reserved: Set<string>): void {
-  if (state.combatRules === 'party-v2') return;
-  const guardians = living(state.party).filter(hero => ['intercept'].includes(partyDef(hero)!.passive.kind)).sort(compareId);
-  for (const impact of impacts.filter(value => value.interceptable && value.source.side === 'enemy' && value.target.side === 'hero').sort((a, b) => a.source.id.localeCompare(b.source.id) || (a.projectileId ?? '').localeCompare(b.projectileId ?? ''))) {
-    const target = impact.target;
-    const guardian = guardians.find(value => value.id !== target.id && !reserved.has(value.id) && (value.guardReadyTick ?? 0) <= now && inEdgeReach({ x: value.x, radius: radius(value) }, { x: target.x, radius: radius(target) }, partyDef(value)!.passive.range ?? 0));
-    if (!guardian) continue;
-    reserved.add(guardian.id); impact.target = guardian;
-    guardian.guardReadyTick = now + (partyDef(guardian)!.passive.cooldownTicks ?? ticksForSeconds(8));
-    emit(state, { type: 'guard', guardianId: guardian.id, fromTargetId: target.id, toTargetId: guardian.id }, now);
-  }
-}
-function successfulBasic(state: GameState, result: DamageResult, now: number, heals: PendingHeal[], procDamage: DamageIntent[]): void {
-  const { intent } = result, source = intent.source, target = intent.target;
+function successfulBasic(result: DamageResult): void {
+  const { intent } = result, source = intent.source;
   source.procCounters ??= {}; source.procCounters.basicSuccess = (source.procCounters.basicSuccess ?? 0) + 1;
   const def = partyDef(source); if (!def) return;
   source.mana = Math.min(manaCost(def), (source.mana ?? 0) + 20);
-  if (state.combatRules === 'party-v2') return;
-  const passive = def.passive, count = source.procCounters.basicSuccess;
-  if (passive.kind === 'fourthSelfHeal' && count % 4 === 0) heals.push({ source, target: source, amount: result.hpDamage * (passive.coefficient ?? 0) });
-  if (passive.kind === 'fourthGuard' && count % 4 === 0) applyEffect(state, source, source, { group: passive.group ?? 'bruiser-guard', kind: 'damageReduction', magnitude: passive.atkReduction ?? 0.1, durationTicks: passive.durationTicks ?? 0 }, now);
-  if (passive.kind === 'sameTargetRamp') {
-    source.procCounters ??= {};
-    source.procCounters.sameTarget = source.lastBasicTargetId === target.id
-      ? Math.min(passive.cap ?? 0, (source.procCounters.sameTarget ?? 0) + (passive.coefficient ?? 0.05))
-      : Math.min(passive.cap ?? 0, passive.coefficient ?? 0.05);
-    source.lastBasicTargetId = target.id; source.lastBasicRamp = source.procCounters.sameTarget;
-  }
-  if (passive.kind === 'thirdSplash' && count % 3 === 0) {
-    for (const secondary of living(targetPool(state, source, 'attack')).filter(unit => unit.id !== target.id && Math.abs(unit.x - target.x) <= (passive.radius ?? 0) + radius(unit)).sort(compareId)) {
-      procDamage.push({ source, target: secondary, coefficient: passive.coefficient ?? 0, abilityId: passive.id, basic: false, interceptable: false, primary: false });
-    }
-  }
 }
 function basicCoefficient(source: Unit, target: Unit): number {
   const def = partyDef(source); if (!def) return 1;
   if (source.action && source.side === 'hero') return def.basic.coefficient;
-  const passive = def.passive;
-  let coefficient = def.basic.coefficient;
-  if (passive.kind === 'sameTargetRamp' && source.lastBasicTargetId === target.id) coefficient *= 1 + (source.lastBasicRamp ?? 0);
-  return coefficient;
+  void target;
+  return def.basic.coefficient;
 }
 function prepareAttack(state: GameState, impact: Impact, now: number, damage: DamageIntent[], heals: PendingHeal[]): void {
   const source = impact.source, target = impact.target, def = partyDef(source), active = def?.active, id = impact.abilityId ?? def?.basic.id ?? 'enemy-basic';
@@ -561,9 +510,8 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
       const ability = def && !basic && def.active.id === impact.abilityId ? def.active : undefined;
       if (ability?.kind === 'shield') { commitAbility(state, impact, now); continue; }
       if (basic) {
-        const coefficient = def?.basic.coefficient ?? 1.2, passive = def?.passive;
-        heals.push({ source: impact.source, target: impact.target, amount: effectiveAttack(state, impact.source) * coefficient, impact, basic: true,
-          ...(state.combatRules !== 'party-v2' && passive?.kind === 'healGuard' ? { effect: { group: passive.group ?? 'healing-guard', kind: 'damageReduction' as const, magnitude: passive.coefficient ?? 0.1, durationTicks: passive.durationTicks ?? 0 } } : {}) });
+        const coefficient = def?.basic.coefficient ?? 1.2;
+        heals.push({ source: impact.source, target: impact.target, amount: effectiveAttack(state, impact.source) * coefficient, impact, basic: true });
       } else if (ability?.kind === 'selfHeal') {
         heals.push({ source: impact.source, target: impact.source, amount: impact.source.maxHp * (ability.healCoefficient ?? 0), impact, cooldownId: ability.id, cooldownTicks: ability.cooldownTicks });
       } else if (ability?.kind === 'burstHeal') {
@@ -573,16 +521,14 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     } else prepareAttack(state, impact, now, damage, heals);
   }
   const projectileImpacts = advanceProjectiles(state, now); damage.push(...projectileImpacts.damage);
-  const reservedGuards = new Set<string>(); reserveGuards(state, damage, now, reservedGuards);
-  const results = applyDamageBatch(state, damage, now), procDamage: DamageIntent[] = [], successfulHits = new Set<string>(), tankDamage = new Set<string>();
+  const results = applyDamageBatch(state, damage, now), successfulHits = new Set<string>(), tankDamage = new Set<string>();
   for (const result of results) {
     if (result.total > 0) successfulHits.add(`${result.intent.source.id}/${result.intent.target.id}`);
     const victim = result.intent.target;
-    if (state.combatRules === 'party-v2' && result.hpDamage > 0 && victim.side === 'hero' && isTank(victim) && result.intent.source.side === 'enemy') tankDamage.add(victim.id);
-    if (result.intent.basic && result.intent.primary && result.total > 0) successfulBasic(state, result, now, heals, procDamage);
+    if (result.hpDamage > 0 && victim.side === 'hero' && isTank(victim) && result.intent.source.side === 'enemy') tankDamage.add(victim.id);
+    if (result.intent.basic && result.intent.primary && result.total > 0) successfulBasic(result);
   }
   for (const id of tankDamage) { const tank = state.party.find(unit => unit.id === id); if (tank) tank.mana = Math.min(manaCost(partyDef(tank)!), (tank.mana ?? 0) + 5); }
-  if (procDamage.length) applyDamageBatch(state, procDamage, now);
   for (const impact of valid) {
     if (impact.abilityId) {
       const def = partyDef(impact.source), active = def?.active;
@@ -597,10 +543,9 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (actual > 0) {
       if (entry.effect) applyEffect(state, entry.source, entry.target, entry.effect, now);
       if (entry.cooldownId) {
-        if (state.combatRules === 'party-v2') entry.source.mana = 0;
-        else setCooldown(entry.source, entry.cooldownId, now + (entry.cooldownTicks ?? 0));
+        entry.source.mana = 0;
       }
-      if (entry.basic) { entry.source.attacks += 1; if (state.combatRules === 'party-v2') entry.source.mana = Math.min(manaCost(partyDef(entry.source)!), (entry.source.mana ?? 0) + 20); }
+      if (entry.basic) { entry.source.attacks += 1; entry.source.mana = Math.min(manaCost(partyDef(entry.source)!), (entry.source.mana ?? 0) + 20); }
     } else if (entry.impact) missedHeals.add(entry.impact);
   }
   for (const impact of missedHeals) emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: 'heal', reason: 'unneeded' }, now);
@@ -633,7 +578,7 @@ export function partyCombatTick(state: GameState, allowNewActions = true): void 
     }
   }
   if (living(state.enemies).some(enemy => enemy.moving)) return;
-  prunePartyEffects(state); effectAura(state, now);
+  prunePartyEffects(state);
   for (const unit of startUnits) if (unit.shieldUntilTick <= now) { unit.shield = 0; delete unit.shieldProviderId; }
   for (const unit of living(startUnits)) {
     if (unit.action?.state === 'recovery' && unit.action.readyTick <= now) unit.action = { state: 'idle' };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../src/config';
-import { createPartyState, load, snapshot, step } from '../src/core/game';
+import { createState, load, snapshot, step } from '../src/core/game';
 import { spawnWave } from '../src/core/combat';
 import { spawnParty } from '../src/core/combat';
 import { partyCombatTick } from '../src/core/party-combat';
@@ -16,7 +16,7 @@ function hold(unit: Unit): void {
   unit.statuses = [{ id: 'petrification', sourceId: 'hold', targetId: unit.id, stacks: 1, magnitude: 1, turnsLeft: 9999 }];
   unit.cooldown = Number.MAX_SAFE_INTEGER;
 }
-function impactNow(state: ReturnType<typeof createPartyState>, unit: Unit): void { const action = unit.action; if (action?.state === 'windup') step(state, Math.max(0, action.impactTick - state.tick)); }
+function impactNow(state: ReturnType<typeof createState>, unit: Unit): void { const action = unit.action; if (action?.state === 'windup') step(state, Math.max(0, action.impactTick - state.tick)); }
 function bullet(source: Unit, target: Unit, overrides: Partial<PartyProjectile> = {}): PartyProjectile {
   return { id: 'projectile-test-1', sourceId: source.id, sourceSide: source.side, targetId: target.id, targetSide: target.side, abilityId: 'test-arrow', delivery: 'homing',
     x: target.x - 25, speed: 500, atk: 50, coefficient: 1, releasedAtTick: 0, impactNotBeforeTick: 1, expiresAtTick: 80, ...overrides };
@@ -24,7 +24,7 @@ function bullet(source: Unit, target: Unit, overrides: Partial<PartyProjectile> 
 
 describe('party-v2 common impact resolution', () => {
   it('naturally commits mk1 banner at full mana before same-tick damage, then resumes basics', () => {
-    const state = createPartyState(2520);
+    const state = createState(2520);
     state.roster.push({ id: 'mk1', level: 1, xp: 0, stars: 1, equipment: { weapon: null, armor: null, charm: null } });
     state.partyIds = ['mk1', 'mw1', 'priest']; spawnParty(state);
     const banner = state.party.find(unit => unit.sourceId === 'mk1')!, target = state.party.find(unit => unit.sourceId === 'mw1')!;
@@ -48,7 +48,7 @@ describe('party-v2 common impact resolution', () => {
     expect(banner.attacks).toBeGreaterThan(0);
   });
   it('auto-casts one charged skill, spends mana at impact, and keeps committed recovery through save/load', () => {
-    const state = createPartyState(25200);
+    const state = createState(25200);
     state.partyIds = ['mw1', 'mw2', 'priest']; spawnParty(state);
     const melee = state.party.find(unit => unit.sourceId === 'mw1')!, enemy = state.enemies[0]!;
     state.enemies = [0, 1, 2].map(slot => ({ ...enemy, id: `charge-target-${slot}`, slot, hp: slot === 1 ? 0 : 100000, maxHp: 100000, x: melee.x }));
@@ -63,7 +63,7 @@ describe('party-v2 common impact resolution', () => {
     expect(recovered.party.find(unit => unit.id === melee.id)).toMatchObject({ mana: 0, action: { state: 'recovery', abilityId: 'cleave' } });
   });
   it('defers an unneeded healer signature and caps a successful basic heal at its mana cost', () => {
-    const state = createPartyState(25201), priest = state.party.find(unit => unit.sourceId === 'priest')!;
+    const state = createState(25201), priest = state.party.find(unit => unit.sourceId === 'priest')!;
     state.party.forEach(hold); state.enemies.forEach(hold);
     priest.statuses = []; priest.gauge = 10000; priest.mana = 60;
     step(state);
@@ -74,12 +74,12 @@ describe('party-v2 common impact resolution', () => {
     expect(state.events.some(event => event.data.type === 'skill' && event.data.unitId === priest.id && event.data.skill === 'priest-burst-heal')).toBe(false);
   });
   it('round-trips empty, partial and full mana values through a save', () => {
-    const state = createPartyState(25202);
+    const state = createState(25202);
     state.party[0]!.mana = 0; state.party[1]!.mana = 23; state.party[2]!.mana = 60;
     expect(load(snapshot(state)).party.map(unit => unit.mana)).toEqual([0, 23, 60]);
   });
   it('resumes a saved charged action before impact and never repeats its hit after impact', () => {
-    const state = createPartyState(25205), melee = state.party.find(unit => unit.sourceId === 'mw1')!, target = state.enemies[0]!;
+    const state = createState(25205), melee = state.party.find(unit => unit.sourceId === 'mw1')!, target = state.enemies[0]!;
     state.party.filter(unit => unit !== melee).forEach(hold); state.enemies = [target]; hold(target);
     melee.statuses = []; melee.mana = 60; melee.x = target.x; target.hp = target.maxHp = 100_000; target.def = 0;
     const timeline = createActionTimeline(melee.sourceId, 'leap', state.tick);
@@ -99,7 +99,7 @@ describe('party-v2 common impact resolution', () => {
     expect(postImpact.party.find(unit => unit.id === melee.id)?.mana).toBe(0);
   });
   it('caps basic mana gain at signature cost and keeps charge when its target dies before impact', () => {
-    const state = createPartyState(25203), melee = state.party[0]!, target = state.enemies[0]!;
+    const state = createState(25203), melee = state.party[0]!, target = state.enemies[0]!;
     melee.sourceId = 'mw1'; melee.mana = 55; melee.atk = 100; melee.x = target.x; hold(melee);
     state.party.slice(1).forEach(hold); state.enemies.forEach(hold); target.hp = target.maxHp = 10000; target.def = 0;
     melee.action = { state: 'windup', kind: 'attack', targetId: target.id, startTick: 0, impactTick: 1, abilityId: 'melee-cleave-strike' };
@@ -113,7 +113,7 @@ describe('party-v2 common impact resolution', () => {
     expect(state.events.some(event => event.data.type === 'miss' && event.data.unitId === melee.id && event.data.reason === 'target')).toBe(true);
   });
   it('grants a tank only one five-mana gain for multiple direct hits in one hostile action batch', () => {
-    const state = createPartyState(25204), tank = state.party.find(unit => unit.sourceId === 'mw2')!, archer = state.enemies[0]!;
+    const state = createState(25204), tank = state.party.find(unit => unit.sourceId === 'mw2')!, archer = state.enemies[0]!;
     state.party.forEach(hold); state.enemies.forEach(hold); archer.sourceId = 'archer'; tank.mana = 0;
     state.projectiles = [bullet(archer, tank, { id: 'tank-hit-a', x: tank.x - 25 }), bullet(archer, tank, { id: 'tank-hit-b', x: tank.x - 25 })];
     step(state);
@@ -121,7 +121,7 @@ describe('party-v2 common impact resolution', () => {
     expect(tank.mana).toBe(5);
   });
   it('counts natural boss_ch2 basic cast hits and then resolves its global volley', () => {
-    const state = createPartyState(2521), base = state.enemies[0]!;
+    const state = createState(2521), base = state.enemies[0]!;
     for (const hero of state.party) { hero.maxHp = 100_000; hero.hp = hero.maxHp; hold(hero); }
     const boss: Unit = { ...base, id: 'boss-natural', sourceId: 'boss_ch2', hp: 1_000_000, maxHp: 1_000_000, atk: 50, def: 0, attackTicks: 30, range: 260, x: 360,
       radius: 10, speed: 55, facing: -1 as const, targetId: null, moving: false, action: { state: 'idle' as const }, specialAction: undefined, partyCooldowns: {}, procCounters: {}, gauge: 10000 };
@@ -149,7 +149,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('cancels an unlaunched bomber area mark when the caster dies through game.step', () => {
-    const state = createPartyState(2522), hitter = state.party[0]!, template = state.enemies[0]!;
+    const state = createState(2522), hitter = state.party[0]!, template = state.enemies[0]!;
     hitter.sourceId = 'mw1'; hitter.atk = 10_000; hitter.x = 140;
     state.party.slice(1).forEach(unit => { unit.hp = 0; hold(unit); });
     const bomber = { ...template, id: 'last-bomber', sourceId: 'bomber', hp: 1, maxHp: 1, x: 140, radius: 10, speed: 50, range: 200, moving: false,
@@ -164,7 +164,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('cleave hits the primary and only its nearest secondary, with stable ID tie breaks', () => {
-    const state = createPartyState(2520), melee = state.party[0]!, template = state.enemies[0]!;
+    const state = createState(2520), melee = state.party[0]!, template = state.enemies[0]!;
     melee.sourceId = 'mw1'; melee.atk = 100; melee.x = 108; melee.mana = 60; melee.partyCooldowns = { cleave: Number.MAX_SAFE_INTEGER };
     state.party.slice(1).forEach(unit => { unit.hp = 0; hold(unit); });
     const main = { ...template, id: 'main', x: 140, hp: 10000, maxHp: 10000, def: 0 };
@@ -181,7 +181,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('applies a due guardian shield before same-tick damage regardless of unit ordering', () => {
-    const state = createPartyState(231), tank = state.party.find(unit => unit.sourceId === 'mw2')!, enemy = state.enemies[0]!;
+    const state = createState(231), tank = state.party.find(unit => unit.sourceId === 'mw2')!, enemy = state.enemies[0]!;
     state.party = [tank, ...state.party.filter(unit => unit !== tank).map(unit => ({ ...unit, hp: 0 }))];
     state.enemies = [enemy]; tank.hp = tank.maxHp - 80; tank.x = 100; enemy.x = 100; enemy.speed = 0; enemy.atk = 60; enemy.moving = false;
     tank.mana = 60; tank.action = { state: 'windup', kind: 'heal', targetId: tank.id, startTick: 0, impactTick: 1, abilityId: 'guardian-shield' };
@@ -193,7 +193,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('does not run the retired guardian intercept passive in party-v2', () => {
-    const state = createPartyState(232), tank = state.party.find(unit => unit.sourceId === 'mw2')!, melee = state.party.find(unit => unit.sourceId === 'mw1')!, priest = state.party.find(unit => unit.sourceId === 'priest')!;
+    const state = createState(232), tank = state.party.find(unit => unit.sourceId === 'mw2')!, melee = state.party.find(unit => unit.sourceId === 'mw1')!, priest = state.party.find(unit => unit.sourceId === 'priest')!;
     state.party.forEach(hold); tank.x = 100; melee.x = 140; priest.x = 50;
     const direct = state.enemies[0]!, archer = { ...state.enemies[1]!, id: 'enemy-archer-fixture', sourceId: 'archer', x: 180, hp: 5000, maxHp: 5000, atk: 40, speed: 0 };
     state.enemies = [direct, archer];
@@ -210,7 +210,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('keeps released payloads after source death, uses impact-time defense and shield, and resumes the same flight', () => {
-    const state = createPartyState(233), tank = state.party.find(unit => unit.sourceId === 'mw2')!, source = state.enemies[0]!;
+    const state = createState(233), tank = state.party.find(unit => unit.sourceId === 'mw2')!, source = state.enemies[0]!;
     state.party.forEach(hold); state.enemies = [source]; hold(source); source.hp = 0;
     tank.x = 100; tank.def = 100; tank.shield = 12; tank.shieldUntilTick = 20;
     state.projectiles = [bullet(source, tank, { x: 75, atk: 100, coefficient: 1 })];
@@ -225,7 +225,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('lets a hostile projectile finish through game.step after the last enemy dies, then loses if that impact kills the last hero', () => {
-    const state = createPartyState(234), tank = state.party.find(unit => unit.sourceId === 'mw2')!, enemy = state.enemies[0]!;
+    const state = createState(234), tank = state.party.find(unit => unit.sourceId === 'mw2')!, enemy = state.enemies[0]!;
     state.party.forEach(hold); state.enemies = [enemy]; hold(enemy); enemy.hp = 0;
     tank.x = 100; tank.hp = tank.maxHp - 20; state.wave = CONFIG.stages[state.progress.stage - 1]!.waves.length;
     state.projectiles = [bullet(enemy, tank, { x: tank.x - 25, atk: 50 })];
@@ -234,7 +234,7 @@ describe('party-v2 common impact resolution', () => {
     expect(state.phase.kind).not.toBe('battle');
     expect(state.stats.clears).toBe(1);
 
-    const loss = createPartyState(235), last = loss.party[0]!, lastEnemy = loss.enemies[0]!;
+    const loss = createState(235), last = loss.party[0]!, lastEnemy = loss.enemies[0]!;
     loss.party.forEach(unit => { unit.hp = 0; hold(unit); }); hold(lastEnemy);
     loss.projectiles = [bullet(lastEnemy, last, { atk: 5000 })];
     const gold = loss.gold; step(loss);
@@ -245,7 +245,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('locks ground AoE to its release center and excludes bodies outside the exact radius', () => {
-    const state = createPartyState(236);
+    const state = createState(236);
     state.party[0]!.sourceId = 'wiz';
     const [primary, nearby, outside] = state.enemies;
     if (!primary || !nearby || !outside) throw new Error('Expected enemy fixture');
@@ -262,7 +262,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('keeps the strongest shield and credits its provider after snapshot and impact', () => {
-    const state = createPartyState(237), guardian = state.party.find(unit => unit.sourceId === 'mw2')!, healer = state.party.find(unit => unit.sourceId === 'priest')!;
+    const state = createState(237), guardian = state.party.find(unit => unit.sourceId === 'mw2')!, healer = state.party.find(unit => unit.sourceId === 'priest')!;
     const attacker = state.enemies[0]!;
     state.party.forEach(hold); state.enemies = [attacker]; hold(attacker); attacker.atk = 50;
     applyPartyShield(state, guardian, guardian, 50, 100, 0);
@@ -276,7 +276,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('does not run the retired living-banner aura in party-v2', () => {
-    const state = createPartyState(238), banner = state.party[0]!;
+    const state = createState(238), banner = state.party[0]!;
     banner.sourceId = 'mk1'; state.party.forEach(hold); state.enemies.forEach(hold);
     step(state, 20);
     const auraEvents = state.events.filter(event => event.data.type === 'effect' && event.data.group === 'party-guard-aura');
@@ -287,7 +287,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('does not let a due heal rescue a unit killed in the same damage batch', () => {
-    const state = createPartyState(239), tank = state.party.find(unit => unit.sourceId === 'mw2')!, priest = state.party.find(unit => unit.sourceId === 'priest')!, enemy = state.enemies[0]!;
+    const state = createState(239), tank = state.party.find(unit => unit.sourceId === 'mw2')!, priest = state.party.find(unit => unit.sourceId === 'priest')!, enemy = state.enemies[0]!;
     state.party.forEach(hold); state.enemies = [enemy]; hold(enemy); enemy.atk = 5000; enemy.speed = 0; enemy.x = tank.x;
     tank.hp = 1; tank.action = { state: 'idle' }; tank.partyCooldowns = { 'guardian-shield': Number.MAX_SAFE_INTEGER }; priest.mana = 60;
     priest.action = { state: 'windup', kind: 'heal', targetId: tank.id, startTick: 0, impactTick: 1, abilityId: 'priest-burst-heal' };
@@ -298,7 +298,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('resolves the charged bruiser signature heal after a valid hit even when a shield absorbs it', () => {
-    const state = createPartyState(240), bruiser = state.party[0]!, target = state.enemies[0]!;
+    const state = createState(240), bruiser = state.party[0]!, target = state.enemies[0]!;
     bruiser.sourceId = 'fw'; bruiser.hp = bruiser.maxHp - 30; state.party.forEach(hold); state.enemies = [target]; hold(target);
     target.x = bruiser.x; target.shield = 500; target.shieldUntilTick = 100;
     bruiser.mana = 60; bruiser.action = { state: 'windup', kind: 'attack', targetId: target.id, startTick: 0, impactTick: 1, abilityId: 'bruiser-burst-heal' };
@@ -310,7 +310,7 @@ describe('party-v2 common impact resolution', () => {
 
   it('does not run the retired fourth-basic lifesteal passive in party-v2', () => {
     const runFourth = (seed: number, shield: number) => {
-      const state = createPartyState(seed), bruiser = state.party[0]!, target = state.enemies[0]!;
+      const state = createState(seed), bruiser = state.party[0]!, target = state.enemies[0]!;
       bruiser.sourceId = 'hk1'; bruiser.hp = bruiser.maxHp - 100; bruiser.procCounters = { basicSuccess: 3 };
       bruiser.partyCooldowns = { 'bruiser-heal': Number.MAX_SAFE_INTEGER };
       state.party.slice(1).forEach(unit => { unit.hp = 0; hold(unit); });
@@ -330,7 +330,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('does not run the retired fourth-shot passive and does not count an expired shot', () => {
-    const state = createPartyState(241), ranger = state.party[0]!, target = state.enemies[0]!;
+    const state = createState(241), ranger = state.party[0]!, target = state.enemies[0]!;
     ranger.sourceId = 'hu1'; ranger.atk = 100; ranger.procCounters = { basicSuccess: 2 }; hold(ranger);
     state.party.slice(1).forEach(hold); state.enemies = [target]; hold(target); target.def = 0; target.x = ranger.x + 25; target.hp = 1000; target.maxHp = 1000;
     const createShot = (id: string): PartyProjectile => bullet(ranger, target, { id, abilityId: 'ranger-shot', x: target.x - 25, atk: 100 });
@@ -340,7 +340,7 @@ describe('party-v2 common impact resolution', () => {
     expect(amounts).toEqual([100, 100]);
     expect(ranger.procCounters?.basicSuccess).toBe(4);
 
-    const expired = createPartyState(242), expiringRanger = expired.party[0]!, deadTarget = expired.enemies[0]!;
+    const expired = createState(242), expiringRanger = expired.party[0]!, deadTarget = expired.enemies[0]!;
     expiringRanger.sourceId = 'hu1'; expiringRanger.procCounters = { basicSuccess: 3 }; hold(expiringRanger);
     expired.party.slice(1).forEach(hold); expired.enemies = [deadTarget]; deadTarget.hp = 0;
     expired.projectiles = [bullet(expiringRanger, deadTarget, { abilityId: 'ranger-shot' })];
@@ -350,7 +350,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('does not ramp repeated basics after retiring the passive', () => {
-    const state = createPartyState(245), melee = state.party[0]!, first = state.enemies[0]!, second = { ...first, id: 'second-target', x: first.x };
+    const state = createState(245), melee = state.party[0]!, first = state.enemies[0]!, second = { ...first, id: 'second-target', x: first.x };
     melee.sourceId = 'mw1'; melee.atk = 100; melee.partyCooldowns = { cleave: Number.MAX_SAFE_INTEGER };
     state.party.slice(1).forEach(unit => { unit.hp = 0; hold(unit); }); state.enemies = [first, second];
     state.enemies.forEach(target => { hold(target); target.x = melee.x; target.def = 0; target.hp = 10000; target.maxHp = 10000; });
@@ -367,7 +367,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('keeps the strongest shared weaken, refreshes its deadline and expires it exactly', () => {
-    const state = createPartyState(246), weakener = state.party[0]!, stronger = state.party[1]!, target = state.enemies[0]!;
+    const state = createState(246), weakener = state.party[0]!, stronger = state.party[1]!, target = state.enemies[0]!;
     target.def = 100;
     const effect = (source: Unit, magnitude: number, expiry: number) => applyPartyEffect(state, {
       id: `enemy-def-weaken:${target.id}`, sourceId: source.id, targetId: target.id, group: 'enemy-def-weaken', kind: 'defReduction', magnitude,
@@ -382,7 +382,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('caps combined effect groups without mutating their base stats', () => {
-    const state = createPartyState(249), unit = state.party[0]!, atk = unit.atk, def = unit.def;
+    const state = createState(249), unit = state.party[0]!, atk = unit.atk, def = unit.def;
     const add = (group: string, kind: 'atkBonus' | 'atkReduction' | 'defReduction' | 'damageReduction', magnitude: number): void => applyPartyEffect(state, {
       id: `${group}:${unit.id}`, sourceId: unit.id, targetId: unit.id, group, kind, magnitude, appliedAtTick: 0, expiresAtTick: 100, stackPolicy: 'strongestRefresh',
     });
@@ -397,7 +397,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('applies the charged weaken without its retired first-weaken shield passive', () => {
-    const state = createPartyState(247), weakener = state.party[0]!, target = state.enemies[0]!;
+    const state = createState(247), weakener = state.party[0]!, target = state.enemies[0]!;
     weakener.sourceId = 'ew1'; state.party.slice(1).forEach(unit => { unit.hp = 0; hold(unit); });
     state.enemies = [target]; target.x = weakener.x; target.hp = 10000; target.maxHp = 10000; hold(target);
     const cast = (): void => {
@@ -412,7 +412,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('does not run the retired wizard third-shot splash passive', () => {
-    const state = createPartyState(248), wizard = state.party[0]!, primary = state.enemies[0]!;
+    const state = createState(248), wizard = state.party[0]!, primary = state.enemies[0]!;
     wizard.sourceId = 'wiz'; wizard.atk = 100; wizard.partyCooldowns = { fireball: Number.MAX_SAFE_INTEGER };
     state.party.slice(1).forEach(unit => { unit.hp = 0; hold(unit); });
     const secondary = { ...primary, id: 'splash-near', x: wizard.x + 30 }, outside = { ...primary, id: 'splash-far', x: wizard.x + 100 };
@@ -431,7 +431,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('marks then leaps the assassin onto its target without a retired guardian intercept', () => {
-    const state = createPartyState(252); state.highestCleared = 11; state.progress = { kind: 'PUSHING', stage: 12 }; state.wave = 1; spawnWave(state);
+    const state = createState(252); state.highestCleared = 11; state.progress = { kind: 'PUSHING', stage: 12 }; state.wave = 1; spawnWave(state);
     const assassin = state.enemies.find(unit => unit.sourceId === 'assassin')!, tank = state.party.find(unit => unit.sourceId === 'mw2')!, priest = state.party.find(unit => unit.sourceId === 'priest')!;
     state.enemies = [assassin]; state.party.forEach(hold); assassin.action = { state: 'idle' }; assassin.moving = false; assassin.x = 400;
     assassin.gauge = 10000;
@@ -453,7 +453,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('locks the bomber radius-48 mark, impacts only its local area and starts a six-second cooldown', () => {
-    const state = createPartyState(256); state.highestCleared = 11; state.progress = { kind: 'PUSHING', stage: 12 }; state.wave = 2; spawnWave(state);
+    const state = createState(256); state.highestCleared = 11; state.progress = { kind: 'PUSHING', stage: 12 }; state.wave = 2; spawnWave(state);
     const bomber = state.enemies.find(unit => unit.sourceId === 'bomber')!, tank = state.party.find(unit => unit.sourceId === 'mw2')!, melee = state.party.find(unit => unit.sourceId === 'mw1')!, priest = state.party.find(unit => unit.sourceId === 'priest')!;
     state.enemies = [bomber]; bomber.action = { state: 'idle' }; bomber.moving = false; bomber.gauge = 10000; state.party.forEach(hold);
     tank.x = 220; melee.x = 180; priest.x = 100; state.party.forEach(unit => { unit.speed = 0; });
@@ -471,7 +471,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('applies chapter-one local slam after its fifth basic and chapter-two global volley to all heroes', () => {
-    const first = createPartyState(253); first.highestCleared = 9; first.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 1, bossLosses: 0 }; first.wave = 3; spawnWave(first);
+    const first = createState(253); first.highestCleared = 9; first.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 1, bossLosses: 0 }; first.wave = 3; spawnWave(first);
     const boss = first.enemies.find(unit => unit.sourceId === 'boss_ch1')!, tank = first.party.find(unit => unit.sourceId === 'mw2')!, priest = first.party.find(unit => unit.sourceId === 'priest')!;
     first.enemies = [boss]; first.party.forEach(hold); first.party.forEach(unit => { unit.speed = 0; });
     boss.moving = false; boss.x = tank.x + radiusForTest(boss, tank); boss.atk = 10; boss.procCounters = { basicSuccess: 4, bossPattern: 0 }; boss.action = { state: 'windup', kind: 'attack', targetId: tank.id, startTick: 0, impactTick: 1, delivery: 'leap' };
@@ -487,7 +487,7 @@ describe('party-v2 common impact resolution', () => {
     expect(slamHits.some(event => event.data.type === 'hit' && event.data.targetId === priest.id)).toBe(false);
     expect(boss.procCounters?.basicSuccess).toBe(5);
 
-    const second = createPartyState(254); second.highestCleared = 19; second.progress = { kind: 'BOSS_FIGHT', stage: 20, failedPower: 1, bossLosses: 0 }; second.wave = 3; spawnWave(second);
+    const second = createState(254); second.highestCleared = 19; second.progress = { kind: 'BOSS_FIGHT', stage: 20, failedPower: 1, bossLosses: 0 }; second.wave = 3; spawnWave(second);
     const boss2 = second.enemies.find(unit => unit.sourceId === 'boss_ch2')!;
     second.enemies = [boss2]; second.party.forEach(hold); boss2.moving = false; boss2.x = 200; boss2.atk = 20; boss2.procCounters = { basicSuccess: 4, bossPattern: 0 }; boss2.action = { state: 'idle' }; boss2.gauge = 10000;
     step(second);
@@ -502,7 +502,7 @@ describe('party-v2 common impact resolution', () => {
   });
 
   it('enrages bosses once at sixty native seconds without mutating their base attack', () => {
-    const state = createPartyState(255), boss = state.enemies[0]!;
+    const state = createState(255), boss = state.enemies[0]!;
     boss.sourceId = 'boss_ch1'; boss.atk = 100; boss.bornTick = 0; state.tick = 0;
     expect(effectiveAttack(state, boss)).toBe(100);
     state.tick = CONFIG.sim.ticksPerSecond * 60;

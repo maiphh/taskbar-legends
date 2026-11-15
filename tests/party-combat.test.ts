@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG, stageConfig } from '../src/config';
-import { createPartyState, createState, load, snapshot, step } from '../src/core/game';
+import { createState, load, snapshot, step } from '../src/core/game';
 import { combatEventAge, edgeDistance, inEdgeReach, PARTY_V2, presentationCombatTime } from '../src/core/party-combat';
 import { getPartyHeroDefinition } from '../src/core/party-definitions';
 import { effectiveDamageReduction } from '../src/core/party-effects';
@@ -9,7 +9,7 @@ import { emit } from '../src/core/events';
 import type { GameState, Unit } from '../src/core/model';
 
 function partyState(): GameState {
-  const state = createPartyState(91);
+  const state = createState(91);
   for (const unit of state.party) unit.partyCooldowns = { [getPartyHeroDefinition(unit.sourceId).active.id]: Number.MAX_SAFE_INTEGER };
   return state;
 }
@@ -28,7 +28,7 @@ function impactDamage(attacker: Unit, defender: Unit): number { return Math.max(
 
 describe('party-v2 positioning and actions', () => {
   it('finishes a pre-deadline lethal clip and return before clearing instead of timing out', () => {
-    const state = createPartyState(917), attacker = state.party.find(unit => unit.sourceId === 'mw1')!, enemy = state.enemies[0]!;
+    const state = createState(917), attacker = state.party.find(unit => unit.sourceId === 'mw1')!, enemy = state.enemies[0]!;
     state.wave = CONFIG.stages[0]!.waves.length;
     state.party.filter(unit => unit !== attacker).forEach(unit => { unit.hp = 0; idle(unit); });
     for (const other of state.enemies.slice(1)) other.hp = 0;
@@ -51,7 +51,7 @@ describe('party-v2 positioning and actions', () => {
     expect(state.events.filter(event => event.data.type === 'hit' && event.data.attackerId === attacker.id)).toHaveLength(hitCount);
   });
   it('clears old-clock effects, shields, procs, and projectiles at a real farm-pad encounter reset', () => {
-    const state = createPartyState(277), hero = state.party[0]!;
+    const state = createState(277), hero = state.party[0]!;
     state.progress = { kind: 'FARMING', stage: 1, failedStage: 2, retryAtTick: Number.MAX_SAFE_INTEGER, failTick: 0, failedPower: Number.MAX_SAFE_INTEGER, failures: 1 };
     state.highestCleared = 1;
     state.farmClock = { scale: 1, minCycleTicks: 1, elapsedTicks: 0, remainder: 0 };
@@ -75,18 +75,16 @@ describe('party-v2 positioning and actions', () => {
     expect(resumed.projectiles).toEqual([]);
     expect(resumed.party.every(unit => unit.shield === 0 && unit.procCounters === undefined && unit.partyCooldowns?.['expired-next-encounter'] === undefined)).toBe(true);
   });
-  it('keeps legacy state fields absent while party-v2 saves its explicit rules and initialized unit mechanics', () => {
-    const legacy = createState(1), preview = partyState();
-    expect(legacy.combatRules).toBeUndefined();
-    expect(legacy.party[0]?.radius).toBeUndefined();
-    expect(preview.combatRules).toBe('party-v2');
-    expect(preview.partyIds).toEqual(['mw2', 'mw1', 'priest']);
-    expect(preview.roster.map(hero => hero.id)).toEqual(expect.arrayContaining(['mw2', 'hu1', 'wiz', 'mw1', 'priest']));
-    for (const unit of preview.party) expect(unit).toMatchObject({ action: { state: 'idle' }, targetId: null, moving: false });
-    for (const unit of preview.enemies) expect(unit).toMatchObject({ action: { state: 'idle' }, targetId: null, moving: true });
-    const restored = load(snapshot(preview));
-    expect(restored).toEqual(preview);
-    const invalid = structuredClone(preview); delete invalid.party[0]!.action;
+  it('creates and round-trips only the current party save format with initialized unit mechanics', () => {
+    const current = partyState();
+    expect(current.combatRules).toBe('party-v2');
+    expect(current.partyIds).toEqual(['mw2', 'mw1', 'priest']);
+    expect(current.roster.map(hero => hero.id)).toEqual(expect.arrayContaining(['mw2', 'hu1', 'wiz', 'mw1', 'priest']));
+    for (const unit of current.party) expect(unit).toMatchObject({ action: { state: 'idle' }, targetId: null, moving: false });
+    for (const unit of current.enemies) expect(unit).toMatchObject({ action: { state: 'idle' }, targetId: null, moving: true });
+    const restored = load(snapshot(current));
+    expect(restored).toEqual(current);
+    const invalid = structuredClone(current); delete invalid.party[0]!.action;
     expect(() => load(invalid)).toThrow(/missing combat state/);
   });
   it('uses inclusive symmetric edge reach, including targets behind the attacker', () => {

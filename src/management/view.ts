@@ -196,7 +196,8 @@ export class ManagementView {
     this.root.addEventListener('pointercancel', event => this.onPointer(event), { signal: this.abort.signal });
     document.addEventListener('pointerdown', event => { if (this.openDropdown && !(event.target instanceof Node && this.root.contains(event.target))) { this.openDropdown = null; this.contentKey = ''; this.renderContent(); } }, { signal: this.abort.signal });
   }
-  async open(): Promise<void> {
+  async open(tab: Tab = this.tab): Promise<void> {
+    this.tab = tab;
     if (!this.closed) return;
     this.closed = false; const generation = ++this.generation; this.clientId = crypto.randomUUID(); this.sequence = 0; this.root.hidden = false;
     this.client.cue?.('ui_open');

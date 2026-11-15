@@ -32,6 +32,7 @@ export function encodeSave(data: SaveData): SaveV2 {
 /** v1 -> v2: deterministic ids from the save's seed and old numeric id; progress, stats and events are kept. */
 export function migrateV1(value: unknown): SaveData {
   const save = saveV1Schema.parse(value);
+  if (save.state.combatRules !== 'party-v2') throw new Error('This legacy gameplay save is incompatible with the current party runtime. Its raw data was preserved; export the account from the previous version instead.');
   const { seed, tick } = save.state;
   const newId = (old: number) => itemId(seed, old);
   const inventory: Gear[] = save.state.inventory.map(({ id, ...item }) => ({ id: newId(id), templateId: gearTemplateId(item.slot, item.rarity),

@@ -31,8 +31,8 @@
   "trialCount": 105,
   "aggregate": {
     "clearCount": 83,
-    "heroLosses": 9,
-    "censored120sStress": 13
+    "heroLosses": 10,
+    "censored120sStress": 12
   },
   "cases": [
     {
@@ -41,14 +41,14 @@
       "team": "balanced",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "priest"
       ],
       "enemy": "grunt",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "priest"
         ],
         "party": [
@@ -63,10 +63,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -98,11 +98,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 347,
-        "heroHp": 989,
+        "ticks": 417,
+        "heroHp": 847,
         "enemyHp": 0,
-        "hits": 10,
-        "damage": 204,
+        "hits": 12,
+        "damage": 226,
         "marks": 0
       },
       "outcome": "win"
@@ -113,14 +113,14 @@
       "team": "fastFarm",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "ew2"
       ],
       "enemy": "grunt",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "ew2"
         ],
         "party": [
@@ -135,10 +135,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -170,11 +170,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 198,
-        "heroHp": 1000,
+        "ticks": 271,
+        "heroHp": 858,
         "enemyHp": 0,
-        "hits": 6,
-        "damage": 182,
+        "hits": 8,
+        "damage": 204,
         "marks": 0
       },
       "outcome": "win"
@@ -545,14 +545,14 @@
       "team": "balanced",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "priest"
       ],
       "enemy": "archer",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "priest"
         ],
         "party": [
@@ -567,10 +567,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -602,11 +602,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 174,
-        "heroHp": 1016,
+        "ticks": 223,
+        "heroHp": 879,
         "enemyHp": 0,
-        "hits": 6,
-        "damage": 117,
+        "hits": 8,
+        "damage": 134,
         "marks": 0
       },
       "outcome": "win"
@@ -617,14 +617,14 @@
       "team": "fastFarm",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "ew2"
       ],
       "enemy": "archer",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "ew2"
         ],
         "party": [
@@ -639,10 +639,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -674,8 +674,8 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 147,
-        "heroHp": 1005,
+        "ticks": 142,
+        "heroHp": 885,
         "enemyHp": 0,
         "hits": 5,
         "damage": 117,
@@ -1049,14 +1049,14 @@
       "team": "balanced",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "priest"
       ],
       "enemy": "bomber",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "priest"
         ],
         "party": [
@@ -1071,10 +1071,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -1106,11 +1106,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 420,
-        "heroHp": 710,
+        "ticks": 468,
+        "heroHp": 600,
         "enemyHp": 0,
-        "hits": 13,
-        "damage": 543,
+        "hits": 14,
+        "damage": 564,
         "marks": 3
       },
       "outcome": "win"
@@ -1121,14 +1121,14 @@
       "team": "fastFarm",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "ew2"
       ],
       "enemy": "bomber",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "ew2"
         ],
         "party": [
@@ -1143,10 +1143,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -1178,11 +1178,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 273,
-        "heroHp": 780,
+        "ticks": 301,
+        "heroHp": 646,
         "enemyHp": 0,
-        "hits": 10,
-        "damage": 422,
+        "hits": 11,
+        "damage": 436,
         "marks": 2
       },
       "outcome": "win"
@@ -1553,14 +1553,14 @@
       "team": "balanced",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "priest"
       ],
       "enemy": "assassin",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "priest"
         ],
         "party": [
@@ -1575,10 +1575,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -1610,12 +1610,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 321,
-        "heroHp": 843,
+        "ticks": 437,
+        "heroHp": 720,
         "enemyHp": 0,
-        "hits": 7,
-        "damage": 340,
-        "marks": 2
+        "hits": 9,
+        "damage": 363,
+        "marks": 3
       },
       "outcome": "win"
     },
@@ -1625,14 +1625,14 @@
       "team": "fastFarm",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "ew2"
       ],
       "enemy": "assassin",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "ew2"
         ],
         "party": [
@@ -1647,10 +1647,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -1682,10 +1682,10 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 262,
-        "heroHp": 840,
+        "ticks": 293,
+        "heroHp": 720,
         "enemyHp": 0,
-        "hits": 6,
+        "hits": 7,
         "damage": 312,
         "marks": 2
       },
@@ -2057,14 +2057,14 @@
       "team": "balanced",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "priest"
       ],
       "enemy": "boss_ch1",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "priest"
         ],
         "party": [
@@ -2079,10 +2079,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -2115,10 +2115,10 @@
       },
       "result": {
         "ticks": 2400,
-        "heroHp": 577,
-        "enemyHp": 2222,
+        "heroHp": 523,
+        "enemyHp": 2440,
         "hits": 43,
-        "damage": 1698,
+        "damage": 1434,
         "marks": 2
       },
       "outcome": "censored-120s-stress"
@@ -2129,14 +2129,14 @@
       "team": "fastFarm",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "ew2"
       ],
       "enemy": "boss_ch1",
       "input": {
         "teamIds": [
           "mk2",
-          "mh3",
+          "mw1",
           "ew2"
         ],
         "party": [
@@ -2151,10 +2151,10 @@
             "x": 128
           },
           {
-            "id": "mh3",
-            "hp": 340,
-            "atk": 38,
-            "def": 34,
+            "id": "mw1",
+            "hp": 220,
+            "atk": 25,
+            "def": 22,
             "attackTicks": 11,
             "moveSpeed": 90,
             "range": 12,
@@ -2186,14 +2186,14 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 83,
-        "enemyHp": 1723,
-        "hits": 59,
-        "damage": 2316,
+        "ticks": 2266,
+        "heroHp": 0,
+        "enemyHp": 1998,
+        "hits": 57,
+        "damage": 2004,
         "marks": 2
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "loss"
     },
     {
       "band": "intro",
@@ -7682,7 +7682,7 @@
       "team": "balanced",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "priest"
       ],
       "enemies": [
@@ -7710,11 +7710,11 @@
       ],
       "startHp": 480,
       "result": {
-        "ticks": 1507,
-        "heroHp": 949,
+        "ticks": 1839,
+        "heroHp": 794,
         "enemyHp": 0,
-        "hits": 29,
-        "damage": 766,
+        "hits": 38,
+        "damage": 852,
         "marks": 0
       },
       "outcome": "win"
@@ -7723,7 +7723,7 @@
       "team": "fastFarm",
       "teamIds": [
         "mk2",
-        "mh3",
+        "mw1",
         "ew2"
       ],
       "enemies": [
@@ -7751,11 +7751,11 @@
       ],
       "startHp": 480,
       "result": {
-        "ticks": 909,
-        "heroHp": 846,
+        "ticks": 1077,
+        "heroHp": 660,
         "enemyHp": 0,
-        "hits": 23,
-        "damage": 656,
+        "hits": 30,
+        "damage": 722,
         "marks": 0
       },
       "outcome": "win"

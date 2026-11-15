@@ -117,9 +117,9 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
   const begin = (next: Exclude<GestureState, 'idle'>): void => { const update = gestureGeneration(generation, next); generation = update.generation; gesture = update.state; clearTimeout(settleTimer); };
   const mode = await invoke<'overlay' | 'window'>('shell_mode'), passive = mode === 'overlay';
   const exit = createExit(() => hooks.flushSave(), command => invoke(command));
-  const recovery = document.getElementById('save-recovery'), editOverlay = document.getElementById('edit-overlay');
+  const recovery = document.getElementById('save-recovery'), legacyNotice = document.getElementById('legacy-save-notice'), editOverlay = document.getElementById('edit-overlay');
   const updateInputPolicy = async (editing = !(editOverlay?.hidden ?? true)): Promise<void> => {
-    await setIgnore(shouldIgnoreCursor(passive, !(recovery?.hidden ?? true), editing));
+    await setIgnore(shouldIgnoreCursor(passive, !(recovery?.hidden ?? true) || !(legacyNotice?.hidden ?? true), editing));
   };
   const setIgnore = (ignore: boolean): Promise<void> => passive ? win.setIgnoreCursorEvents(ignore) : Promise.resolve();
   const showEdit = async (): Promise<void> => { await setIgnore(shouldIgnoreCursor(passive, !(recovery?.hidden ?? true), true)); hooks.setEditing(true); gesture = 'idle'; };
@@ -157,8 +157,9 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
   cleanups.push(onControlEdit, onResetPosition, onResetSize, onQuit, onRelaunch);
   const onPrefs = (event: Event): void => { const detail = (event as CustomEvent<CompactPrefs>).detail; if (detail) void applyPreferences(detail, true).catch(() => undefined); };
   window.addEventListener('compact-prefs-change', onPrefs); cleanups.push(() => window.removeEventListener('compact-prefs-change', onPrefs));
-  const recoveryObserver = recovery ? new MutationObserver(() => { void updateInputPolicy(); }) : undefined;
+  const recoveryObserver = recovery || legacyNotice ? new MutationObserver(() => { void updateInputPolicy(); }) : undefined;
   recoveryObserver?.observe(recovery!, { attributes: true, attributeFilter: ['hidden'] });
+  if (legacyNotice) recoveryObserver?.observe(legacyNotice, { attributes: true, attributeFilter: ['hidden'] });
   if (recoveryObserver) cleanups.push(() => recoveryObserver.disconnect());
   hooks.setQuit(() => { void exit('quit_app'); });
   await updateInputPolicy();

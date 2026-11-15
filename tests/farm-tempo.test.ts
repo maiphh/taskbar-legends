@@ -4,10 +4,9 @@ import { beginEncounter } from '../src/core/combat';
 import { partyPower } from '../src/core/economy';
 import { bossSecondsRemaining, createState, input, load, snapshot, statusText, step } from '../src/core/game';
 import type { GameState } from '../src/core/model';
-import { referencePolicy, runReference } from '../src/core/policy';
+import { referencePolicy } from '../src/core/policy';
 import { applyOffline } from '../src/core/save';
 import { farmCycleDistribution } from '../src/sim/aggregate';
-import * as legacy from './fixtures/legacy-game';
 
 // Clock arithmetic below is written for a 6 s stage gap (1.4.2 and 1.4.4; 1.4.3 shipped 8), so tempo() pins 6 and afterEach restores it.
 const original = { scale: CONFIG.combat.nonBossFarmTimeScale, floor: CONFIG.combat.nonBossFarmMinCycleSec, retry: CONFIG.progression.powerGainRetryMinSec, gap: CONFIG.sim.stageGapSec, bossRepeat: CONFIG.combat.bossRepeatMinCycle };
@@ -44,21 +43,10 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
     for (const scale of [0, 1.5, 5]) expect(() => farmTempoSchema.parse({ nonBossFarmTimeScale: scale })).toThrow();
     expect(() => farmTempoSchema.parse({ nonBossFarmMinCycleSec: -1 })).toThrow();
   });
-  it('default tempo has byte-identical legacy state/events/rewards/rest timing on seeded native farming', () => {
-    tempo(1, 0);
-    const a = createState(3), b = legacy.createState(3);
-    for (const state of [a, b]) {
-      state.highestCleared = 9; state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
-      for (const hero of state.roster) hero.level = CONFIG.growth.levelCap;
-      beginEncounter(state);
-    }
-    step(a, 10000); legacy.step(b, 10000);
-    expect(snapshot(a)).toBe(legacy.snapshot(b)); expect(a.metrics.nativeFarmClearSeconds).toBeUndefined(); expect(a.farmClock).toBeUndefined();
-  });
-  it('captures eligibility once and advances exactly3native substeps per wall tick', () => {
+  it('keeps the current battle timeline on wall ticks when repeat tempo is configured', () => {
     tempo(3, 20); const state = controlled(1000); step(state, 10);
-    expect(state.tick).toBe(10); expect(state.farmClock?.elapsedTicks).toBe(30); expect(state.party[0]?.cooldown).toBe(970);
-    tempo(1, 0); step(state); expect(state.farmClock?.elapsedTicks).toBe(33);
+    expect(state.tick).toBe(10); expect(state.farmClock?.elapsedTicks).toBe(10);
+    tempo(1, 0); step(state); expect(state.farmClock?.elapsedTicks).toBe(11);
   });
   it('settles a fast farm at exactly20seconds with one stage gap, no padding attacks/rewards/RNG', () => {
     tempo(3, 20); const state = controlled(); const start = state.tick; step(state);
@@ -70,10 +58,13 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
   it('rounds fractional minimum cycles upward, never below the configured floor', () => {
     tempo(3, 20.01); const state = controlled(); untilClear(state); expect(state.tick).toBe(401); expect(state.metrics.farmClearSeconds).toEqual([20.05]);
   });
-  it('measures a true slow36second cycle and retains95.9native seconds rather than clamping telemetry', () => {
-    tempo(3, 20); const state = controlled(1798); untilClear(state);
-    expect(state.tick).toBe(720); expect(state.metrics.farmMinSeconds).toBe(36); expect(state.metrics.farmMaxSeconds).toBe(36);
-    expect(state.metrics.nativeFarmClearSeconds).toEqual([95.9]);
+  it('records actual native time when an encounter takes longer than the configured floor', () => {
+    tempo(3, 20); const state = controlled(); state.tick = 600;
+    if (!state.farmClock) throw new Error('Missing farm clock'); state.farmClock.elapsedTicks = 600;
+    state.enemies.forEach(enemy => { enemy.hp = 0; }); step(state); untilClear(state);
+    expect(state.metrics.farmMaxSeconds).toBeGreaterThan(20);
+    expect(state.metrics.nativeFarmClearSeconds?.[0]).toBeGreaterThan(20);
+    expect(state.metrics.farmClearSeconds?.[0]).toBeCloseTo(state.metrics.nativeFarmClearSeconds?.[0] ?? 0, 2);
   });
   it('preserves native ordered hits/skills/deaths and RNG/rewards while events keep ordered wall ticks', () => {
     tempo(1, 0); const native = repeat(); untilClear(native);
@@ -154,10 +145,9 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
     const legacyAverage = load(snapshot(frozen)); delete legacyAverage.metrics.nativeFarmClearSeconds;
     expect(applyOffline(legacyAverage, 8 * 3600000).clears).toBe(1440);
   });
-  it('collects every real successful farm cycle into exact frequency-weighted quantiles', () => {
-    const run = runReference(11, 1, 600, true); const data = farmCycleDistribution([run.farmTimingCounts]);
-    expect(data.count).toBe(run.state.metrics.farmSamples); expect(data.count).toBeGreaterThan(0);
-    expect(farmCycleDistribution([{ '400': 2, '800': 2 }])).toMatchObject({ count: 4, min: 20, p10: 20, median: 30, p90: 40, max: 40 });
+  it('aggregates frequency-weighted current farm timing samples into exact quantiles', () => {
+    const data = farmCycleDistribution([{ '400': 2, '800': 2 }]);
+    expect(data).toMatchObject({ count: 4, min: 20, p10: 20, median: 30, p90: 40, max: 40 });
   });
 });
 

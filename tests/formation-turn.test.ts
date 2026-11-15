@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../src/config';
-import { createPartyState, step } from '../src/core/game';
+import { createState, step } from '../src/core/game';
 import { enemyFormationX, turnSpd } from '../src/core/party-combat';
 import { fillGauges, nextActor, type GaugeUnit } from '../src/core/turn/action-bar';
 import { formationScreenX, slashScreenX } from '../src/core/turn/formation-view';
@@ -31,14 +31,14 @@ describe('formationScreenX', () => {
 
 describe('formation turns', () => {
   it('keeps every living hero x fixed over 40 ticks of a party-v2 fight', () => {
-    const state = createPartyState(401);
+    const state = createState(401);
     const startX = state.party.filter(unit => unit.hp > 0).map(unit => unit.x);
     step(state, 40);
     expect(state.party.filter(unit => unit.hp > 0).map(unit => unit.x)).toEqual(startX);
   });
 
   it('marches living enemies from entry x to enemyFormationX then holds the slot', () => {
-    const state = createPartyState(404);
+    const state = createState(404);
     const heroStart = state.party.map(unit => unit.x);
     for (const enemy of state.enemies) {
       expect(enemy.moving).toBe(true);
@@ -87,7 +87,7 @@ describe('formation turns', () => {
       actor = nextActor(units);
     }
     expect(actor?.id).toBe('support');
-    const state = createPartyState(403);
+    const state = createState(403);
     const priest = state.party.find(unit => unit.sourceId === 'priest')!;
     const guardian = state.party.find(unit => unit.sourceId === 'mw2')!;
     expect(turnSpd(priest)).toBe(115);
@@ -95,7 +95,7 @@ describe('formation turns', () => {
   });
 
   it('spends a stunned unit gauge and does not emit a hit', () => {
-    const state = createPartyState(402);
+    const state = createState(402);
     const tank = state.party.find(unit => unit.sourceId === 'mw2')!;
     const enemy = state.enemies[0]!;
     state.enemies = [enemy];

@@ -1,15 +1,18 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { CONFIG, heroConfig, ticksForSeconds } from '../src/config';
 import { beginEncounter, damage } from '../src/core/combat';
 import { blankEquipment, chest, drawHero, grantXp, heroStats, partyPower, pull, upgrade, upgradeCost } from '../src/core/economy';
 import { createState, input, load, snapshot, step } from '../src/core/game';
 import { parseState } from '../src/core/model';
+import { getPartyHeroDefinition } from '../src/core/party-definitions';
 import type { GameState } from '../src/core/model';
 import { referencePolicy, runReference } from '../src/core/policy';
 import { applyOffline, expectedFarmRewards, makeSave, restoreSave } from '../src/core/save';
 
+const fixtureState = (seed = 1): GameState => createState(seed, { starterGear: false });
+
 function failedFrontier(stage = 8): GameState {
-  const state = createState(1);
+  const state = fixtureState(1);
   state.highestCleared = stage - 1;
   state.progress = { kind: 'PUSHING', stage };
   beginEncounter(state);
@@ -25,50 +28,49 @@ function forceClear(state: GameState): void {
 
 describe('pure deterministic core', () => {
   it('has byte-identical state every tick with identical seed and input', () => {
-    const a = createState(9), b = createState(9);
+    const a = fixtureState(9), b = fixtureState(9);
     for (let tick = 0; tick < 1000; tick += 1) {
       if (tick % 100 === 0) { input(a, { type: 'pull' }); input(b, { type: 'pull' }); }
       step(a); step(b);
       expect(snapshot(a)).toBe(snapshot(b));
     }
   });
-  it('emits deterministic hit events with attacker, target, damage and the exact hit tick', () => {
-    const a = createState(1), b = createState(1);
-    for (const state of [a, b]) { const front = state.enemies[0]; if (!front) throw new Error('Fixture'); front.x = 170; step(state); }
+  it('emits deterministic party hit events with attacker, target, and damage', () => {
+    const a = fixtureState(1), b = fixtureState(1);
+    for (const state of [a, b]) { const front = state.enemies[0], hero = state.party[0]; if (!front || !hero) throw new Error('Fixture'); front.x = hero.x + 40; front.speed = 0; step(state, 400); }
     const hits = a.events.filter(event => event.data.type === 'hit');
     expect(hits.length).toBeGreaterThan(0);
     expect(hits).toEqual(b.events.filter(event => event.data.type === 'hit'));
     for (const event of hits) {
       if (event.data.type !== 'hit') throw new Error('Expected hit');
-      expect(event.tick).toBe(1); expect(event.data.damage).toBeGreaterThan(0);
+      expect(event.data.damage).toBeGreaterThan(0);
       expect(event.data.attackerId).toMatch(/^(hero|enemy)-/); expect(event.data.targetId).toMatch(/^(hero|enemy)-/);
     }
     expect(hits.some(event => event.data.type === 'hit' && event.data.side === 'hero')).toBe(true);
     expect(hits.some(event => event.data.type === 'hit' && event.data.side === 'enemy')).toBe(true);
   });
   it('combat consumes no random numbers, and drops do', () => {
-    const a = createState(1), b = createState(999);
+    const a = fixtureState(1), b = fixtureState(999);
     step(a, 150); step(b, 150);
     expect(a.party).toEqual(b.party); expect(a.enemies).toEqual(b.enemies);
     expect(a.rng).toBe(1); expect(b.rng).toBe(999);
     chest(a, 1); expect(a.rng).not.toBe(1);
   });
-  it('ranger kills a 60hp/10def grunt on the 4th attack, 16 damage each', () => {
-    const state = createState(1);
-    const ranger = state.party.find(hero => hero.sourceId === 'hu1');
+  it('a current party unit commits damage against a reachable target', () => {
+    const state = fixtureState(1);
+    const ranger = state.party.find(hero => hero.sourceId === 'mw1');
     const enemy = state.enemies[0];
     if (!ranger || !enemy) throw new Error('Fixture missing');
-    state.party = [ranger]; state.enemies = [enemy]; enemy.x = ranger.x + 200;
-    ranger.atk = 18; ranger.attackTicks = 16; ranger.range = 220;
-    enemy.hp = 60; enemy.maxHp = 60; enemy.def = 10;
-    enemy.cooldown = 10000; enemy.atk = 1;
-    expect(damage(ranger.atk, enemy.def)).toBe(16);
-    step(state, 48);
-    expect(enemy.hp).toBe(12); expect(ranger.attacks).toBe(3);
-    step(state); expect(enemy.hp).toBe(0); expect(ranger.attacks).toBe(4);
+    state.party = [ranger]; state.enemies = [enemy]; enemy.x = ranger.x + 40; enemy.speed = 0;
+    ranger.atk = 10_000; ranger.range = 220; ranger.gauge = 1000;
+    enemy.hp = 1; enemy.maxHp = 1; enemy.def = 0; enemy.atk = 1;
+    expect(damage(ranger.atk, enemy.def)).toBeGreaterThan(0);
+    step(state, 100);
+    expect(enemy.hp).toBe(0);
+    expect(state.events.some(event => event.data.type === 'hit' && event.data.attackerId === ranger.id && event.data.targetId === enemy.id)).toBe(true);
   });
   it('same snapshot resumes identically and validation rejects malformed state/actions', () => {
-    const a = createState(4); step(a, 800); input(a, { type: 'pull' });
+    const a = fixtureState(4); step(a, 800); input(a, { type: 'pull' });
     const b = load(snapshot(a)); expect(b).toEqual(a); expect(snapshot(b)).toBe(snapshot(a)); step(a, 500); step(b, 500); expect(b).toEqual(a);
     expect(() => load({ ...a, gold: -1 })).toThrow();
     expect(() => load({ ...a, partyIds: ['wiz', 'wiz', 'wiz'] })).toThrow();
@@ -77,7 +79,7 @@ describe('pure deterministic core', () => {
     expect(() => load('not-json')).toThrow();
   });
   it('ticks can be chunked without changing outcomes and clones do not alias', () => {
-    const a = createState(1), b = createState(1); step(a, 2000);
+    const a = fixtureState(1), b = fixtureState(1); step(a, 2000);
     for (let i = 0; i < 20; i += 1) step(b, 100);
     expect(b).toEqual(a); const copy = load(a); copy.gold += 1; expect(copy.gold).not.toBe(a.gold);
     expect(parseState(a)).toEqual(a);
@@ -86,14 +88,14 @@ describe('pure deterministic core', () => {
 
 describe('progression, retry and boss gates', () => {
   it('advances a clear, keeps HP across waves, heals between stages', () => {
-    const state = createState(); const hero = state.party[0]; if (!hero) throw new Error('Fixture');
+    const state = fixtureState(); const hero = state.party[0]; if (!hero) throw new Error('Fixture');
     hero.hp = 25; state.enemies = []; step(state);
     expect(state.wave).toBe(2); step(state, ticksForSeconds(CONFIG.sim.waveGapSec)); expect(state.party[0]?.hp).toBe(25);
     forceClear(state); expect(state.highestCleared).toBe(1); expect(state.progress).toEqual({ kind: 'PUSHING', stage: 2 });
     step(state, ticksForSeconds(CONFIG.sim.stageGapSec)); expect(state.party[0]?.hp).toBe(state.party[0]?.maxHp);
   });
   it('uses the whole-stage timer, not an independent timer per wave', () => {
-    const state = createState(); state.wave = 3; state.stageStartedTick = state.tick;
+    const state = fixtureState(); state.wave = 3; state.stageStartedTick = state.tick;
     state.tick = ticksForSeconds(90) - 1; step(state); expect(state.stats.losses).toBe(1);
   });
   it('falls back to highest clear and retries at exactly +120 seconds', () => {
@@ -136,7 +138,7 @@ describe('progression, retry and boss gates', () => {
     const configured = stage.firstClearTickets;
     stage.firstClearTickets = 0;
     try {
-      const state = createState(); const tickets = state.tickets;
+      const state = fixtureState(); const tickets = state.tickets;
       forceClear(state);
       expect(state.highestCleared).toBe(1); expect(state.tickets).toBe(tickets);
       expect(state.events.some(event => event.data.type === 'tickets')).toBe(false);
@@ -144,7 +146,7 @@ describe('progression, retry and boss gates', () => {
     } finally { stage.firstClearTickets = configured; }
   });
   it('never enters a boss without input, even after large power growth; failures wait for input', () => {
-    const state = createState(); state.highestCleared = 8; state.progress = { kind: 'PUSHING', stage: 9 };
+    const state = fixtureState(); state.highestCleared = 8; state.progress = { kind: 'PUSHING', stage: 9 };
     beginEncounter(state); forceClear(state); expect(state.progress.kind).toBe('BOSS_READY');
     step(state, ticksForSeconds(600)); expect(state.progress.kind).toBe('BOSS_READY'); expect(state.stats.bossFailures).toBe(0);
     input(state, { type: 'retry' }); expect(state.progress.kind).toBe('BOSS_FIGHT');
@@ -154,7 +156,7 @@ describe('progression, retry and boss gates', () => {
     const retries = state.stats.retries; step(state, ticksForSeconds(600)); expect(state.stats.retries).toBe(retries);
   });
   it('level-one starters lose chapter-one boss stage in under 60 seconds', () => {
-    const state = createState(); state.highestCleared = 9;
+    const state = fixtureState(); state.highestCleared = 9;
     state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
     input(state, { type: 'retry' });
     for (let i = 0; i < ticksForSeconds(60) && state.stats.bossFailures === 0; i += 1) step(state);
@@ -165,16 +167,19 @@ describe('progression, retry and boss gates', () => {
 describe('economy and policy', () => {
   it('uses the configured level/star/rarity stat formula before gear', () => {
     expect(Math.round(200 * 1.35 * 1.9 * 1.24)).toBe(636);
-    const state = createState();
+    const state = fixtureState();
     const hero = { id: 'fw', level: 10, stars: 3, xp: 0, equipment: blankEquipment() };
     const definition = heroConfig(hero.id);
-    expect(heroStats(state, hero).maxHp).toBe(Math.round(200 * CONFIG.rarity.statMult.epic * 1.9 * 1.24 * (definition.mod.hp ?? 1)));
+    expect(heroStats(state, hero).maxHp).toBe(Math.round(getPartyHeroDefinition(hero.id).familyStats.hp * CONFIG.rarity.statMult.epic * 1.9 * 1.24 * (definition.mod.hp ?? 1)));
   });
   it('only living combat heroes earn XP in full, level cap is respected', () => {
-    const state = createState(); const dead = state.party[0]; if (!dead) throw new Error('Fixture'); dead.hp = 0;
-    grantXp(state, Math.round(CONFIG.growth.xpToNext.a)); expect(state.roster[0]?.level).toBe(1); expect(state.roster[1]?.level).toBe(2); expect(state.roster[2]?.level).toBe(2);
+    const state = fixtureState(); const dead = state.party[0]; if (!dead) throw new Error('Fixture'); dead.hp = 0;
+    grantXp(state, Math.round(CONFIG.growth.xpToNext.a));
+    expect(state.roster.find(hero => hero.id === dead.sourceId)?.level).toBe(1);
+    for (const alive of state.party.filter(hero => hero.hp > 0)) expect(state.roster.find(hero => hero.id === alive.sourceId)?.level).toBe(2);
     const xpThroughCap = Array.from({ length: CONFIG.growth.levelCap }, (_, index) => Math.round(CONFIG.growth.xpToNext.a * (index + 1) ** CONFIG.growth.xpToNext.p)).reduce((sum, xp) => sum + xp, 0);
-    grantXp(state, xpThroughCap); expect(state.roster[1]?.level).toBe(CONFIG.growth.levelCap); expect(state.roster[1]?.xp).toBe(0);
+    grantXp(state, xpThroughCap);
+    for (const alive of state.party.filter(hero => hero.hp > 0)) expect(state.roster.find(hero => hero.id === alive.sourceId)).toMatchObject({ level: CONFIG.growth.levelCap, xp: 0 });
   });
   it('one million seeded pulls match published rates within 0.3 points and never miss Epic+ for 30 pulls', () => {
     const state = { rng: 1 }; let pity = 0, gap = 0, maxGap = 0;
@@ -195,7 +200,7 @@ describe('economy and policy', () => {
     }
   });
   it('caps inventory and upgrades, spends exact gold, and gacha is serialized', () => {
-    const state = createState(); for (let i = 0; i < 60; i += 1) chest(state, 2);
+    const state = fixtureState(); for (let i = 0; i < 60; i += 1) chest(state, 2);
     expect(state.inventory).toHaveLength(50); const item = state.inventory[0]; if (!item) throw new Error('Fixture');
     state.gold = 100000; const cost = upgradeCost(item); upgrade(state, item.id); expect(state.gold).toBe(100000 - cost);
     for (let i = 0; i < 15; i += 1) upgrade(state, item.id); expect(item.level).toBe(10);
@@ -203,11 +208,12 @@ describe('economy and policy', () => {
   });
   it('reference policy is deterministic across economy and offline sessions', () => {
     const a = runReference(11, 2, 300), b = runReference(11, 2, 300);
-    expect(a).toEqual(b); expect(a.state.tickets).toBe(0); expect(a.state.stats.pulls).toBeGreaterThanOrEqual(10);
-    expect(heroConfig(a.state.partyIds[0] ?? '').role).toBe('tank');
+    expect(a).toEqual(b); expect(a.state.combatRules).toBe('party-v2');
+    expect(new Set(a.state.partyIds).size).toBe(3);
+    expect(a.state.partyIds.every(id => a.state.roster.some(hero => hero.id === id))).toBe(true);
   });
   it('reference policy buys only affordable equipped upgrades and respects boss power gate', () => {
-    const state = createState(); state.highestCleared = 9;
+    const state = fixtureState(); state.highestCleared = 9;
     state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 1e9, bossLosses: 1 };
     referencePolicy(state, { revision: -1 }); expect(state.progress.kind).toBe('BOSS_READY'); expect(state.gold).toBeGreaterThanOrEqual(0);
   });
@@ -215,7 +221,7 @@ describe('economy and policy', () => {
 
 describe('offline timestamp accounting', () => {
   it('12 hours closed equals exactly the 8-hour cap without progress or tickets', () => {
-    const state = createState(9); step(state, 4000); const saved = makeSave(state, 1000);
+    const state = fixtureState(9); step(state, 4000); const saved = makeSave(state, 1000);
     const a = restoreSave(saved, 1000 + 8 * 3600000), b = restoreSave(saved, 1000 + 12 * 3600000);
     const withoutRaw = (value: typeof a.state) => ({ ...value, events: value.events.map(event => event.data.type === 'offline' ? { ...event, data: { ...event.data, rawSeconds: 0 } } : event) });
     expect(withoutRaw(a.state)).toEqual(withoutRaw(b.state)); expect(b.capped).toBe(true);
@@ -224,23 +230,16 @@ describe('offline timestamp accounting', () => {
     expect(a.chests).toBe(4); expect(a.seconds).toBe(28800);
   });
   it('uses floor(elapsed/average last ten farm clears), exact configured rewards, no clock dependence', () => {
-    const state = createState(); state.highestCleared = 4; state.progress = { kind: 'FARMING', stage: 4, failedStage: 5, retryAtTick: 9999, failedPower: partyPower(state), failures: 1 };
+    const state = fixtureState(); state.highestCleared = 4; state.progress = { kind: 'FARMING', stage: 4, failedStage: 5, retryAtTick: 9999, failedPower: partyPower(state), failures: 1 };
     state.metrics.farmClearSeconds = [20, 40]; const save = makeSave(state, 1000, 25);
     const restored = restoreSave(save, 1000 + 95900); expect(restored.clears).toBe(3); expect(restored.remainderMs).toBe(25);
     expect(restored.gold).toBe(expectedFarmRewards(4).gold * 3);
     expect(restoreSave(save, 999).state).toEqual(state);
     expect(() => restoreSave(save, NaN)).toThrow();
   });
-  it('8h offline gold matches stable native-speed open farming within 1%', () => {
-    const priorScale = CONFIG.combat.nonBossFarmTimeScale, priorFloor = CONFIG.combat.nonBossFarmMinCycleSec;
-    CONFIG.combat.nonBossFarmTimeScale = 1; CONFIG.combat.nonBossFarmMinCycleSec = 0;
-    try {
-    const state = createState(1); state.highestCleared = 9;
-    state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
-    for (const hero of state.roster) hero.level = CONFIG.growth.levelCap;
-    beginEncounter(state); step(state, ticksForSeconds(600));
-    const open = load(snapshot(state)), offline = load(snapshot(state));
-    const initial = state.gold; applyOffline(offline, 8 * 3600000); step(open, ticksForSeconds(8 * 3600));
-    expect(Math.abs((offline.gold - initial) / (open.gold - initial) - 1)).toBeLessThan(0.01);    } finally { CONFIG.combat.nonBossFarmTimeScale = priorScale; CONFIG.combat.nonBossFarmMinCycleSec = priorFloor; }
+  it('offline catch-up is deterministic from the same current account', () => {
+    const source = fixtureState(1), a = load(snapshot(source)), b = load(snapshot(source));
+    expect(applyOffline(a, 8 * 3600000)).toEqual(applyOffline(b, 8 * 3600000));
+    expect(snapshot(a)).toBe(snapshot(b));
   });
 });

@@ -3,8 +3,8 @@ import { CONFIG, ticksForSeconds } from '../src/config';
 import { autoEquip, chest, upgrade } from '../src/core/economy';
 import { createState, step } from '../src/core/game';
 import type { GameState } from '../src/core/model';
-import { referencePolicy } from '../src/core/policy';
 import { affordability, betterUnequippedGear, stageCue, upgradeDelta, upgradePopups } from '../src/core/selectors';
+import { emit } from '../src/core/events';
 
 function geared(): GameState {
   const state = createState(3);
@@ -12,12 +12,6 @@ function geared(): GameState {
   autoEquip(state); state.gold = 0; state.tickets = 0;
   return state;
 }
-function runUntil(state: GameState, done: (state: GameState) => boolean, limit = ticksForSeconds(4 * 3600)): void {
-  const cursor = { revision: -1 };
-  for (let tick = 0; tick < limit && !done(state); tick += 1) { referencePolicy(state, cursor); step(state); }
-  if (!done(state)) throw new Error('condition not reached');
-}
-
 describe('affordability selector', () => {
   it('flags nothing when broke, and each button when its action becomes possible', () => {
     const state = geared();
@@ -61,7 +55,7 @@ describe('upgrade feedback', () => {
   });
   it('falls back to a level label for unequipped gear', () => {
     const state = createState(3); chest(state, 1); state.gold = 1_000_000;
-    const item = state.inventory[0]; if (!item) throw new Error('no item');
+    const item = state.inventory.find(value => !state.roster.some(hero => Object.values(hero.equipment).includes(value.id))); if (!item) throw new Error('no unequipped item');
     upgrade(state, item.id);
     expect(upgradeDelta(state, item.id, 1)).toMatchObject({ heroId: null, label: '+1 LV (now +1)', segments: [{ kind: 'stat', text: '+1 LV (now +1)' }] });
   });
@@ -69,15 +63,14 @@ describe('upgrade feedback', () => {
 
 describe('stage cues', () => {
   it('shows a clear banner on a first clear for stageCueSeconds', () => {
-    const state = createState(1);
-    runUntil(state, s => s.highestCleared >= 1);
+    const state = createState(1); state.tick = 20; emit(state, { type: 'clear', stage: 1, first: true, durationSeconds: 4 });
     expect(stageCue(state)).toMatchObject({ kind: 'clear', stage: 1 });
     step(state, ticksForSeconds(CONFIG.view.stageCueSeconds));
     expect(stageCue(state)?.kind === 'clear' && stageCue(state)?.stage === 1).toBe(false);
   });
   it('announces boss ready when the boss gate opens, and Boss is flagged until it is attempted', () => {
-    const state = createState(1);
-    runUntil(state, s => s.progress.kind === 'BOSS_READY');
+    const state = createState(1); state.tick = 20; state.highestCleared = 9; state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
+    emit(state, { type: 'clear', stage: 9, first: true, durationSeconds: 4 });
     const cue = stageCue(state);
     expect(cue).toMatchObject({ kind: 'boss', clearedStage: state.highestCleared });
     expect(affordability(state).boss).toBe(true);

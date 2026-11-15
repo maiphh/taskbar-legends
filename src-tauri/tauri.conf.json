@@ -16,7 +16,7 @@
         "label": "main",
         "url": "index.html",
         "title": "Taskbar Legends",
-        "width": 1280,
+        "width": 640,
         "height": 160,
         "transparent": true,
         "decorations": false,

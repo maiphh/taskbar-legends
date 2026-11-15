@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CONFIG } from '../src/config';
-import { createPartyState, createState, step } from '../src/core/game';
+import { createState, step } from '../src/core/game';
 import { spawnWave } from '../src/core/combat';
 import { enemyFormationX } from '../src/core/party-combat';
 import { formationScreenX } from '../src/core/turn/formation-view';
@@ -125,7 +125,7 @@ describe('party-v2 compact combat camera', () => {
   });
 
   it('slews at most 4px on every consecutive step of a free-party assassin leap while hero x stays fixed', () => {
-    const state = createPartyState(252);
+    const state = createState(252);
     state.highestCleared = 11;
     state.progress = { kind: 'PUSHING', stage: 12 };
     state.wave = 1;
@@ -262,7 +262,7 @@ describe('party-v2 compact combat camera', () => {
   });
 
   it('does not mutate unit x, hp, tick, or events when framing a live combat state', () => {
-    const state = createPartyState(252);
+    const state = createState(252);
     state.highestCleared = 11;
     state.progress = { kind: 'PUSHING', stage: 12 };
     state.wave = 1;
@@ -308,7 +308,7 @@ describe('party-v2 compact combat camera', () => {
     const { Renderer } = await import('../src/renderer');
     const renderer = new Renderer(canvas as unknown as HTMLCanvasElement, controls as unknown as HTMLElement);
     (renderer as unknown as { cameraTranslation: number }).cameraTranslation = 20;
-    const state = createPartyState(1);
+    const state = createState(1);
     state.party = [];
     renderer.setCompactViewport(true, 1);
     renderer.resize(480);
@@ -320,23 +320,24 @@ describe('party-v2 compact combat camera', () => {
     expect(Math.abs(second - first)).toBeLessThanOrEqual(4);
   });
 
-  it('keeps non-party combat at translation 0 without party-v2 framing', async () => {
+  it('uses party framing for every current root account', async () => {
     const { canvas, controls } = makeRenderer();
     const { Renderer } = await import('../src/renderer');
     const renderer = new Renderer(canvas as unknown as HTMLCanvasElement, controls as unknown as HTMLElement);
     (renderer as unknown as { cameraTranslation: number }).cameraTranslation = 20;
     const state = createState(1);
-    expect(state.combatRules).toBeUndefined();
+    expect(state.combatRules).toBe('party-v2');
     renderer.setCompactViewport(true, 1);
     renderer.resize(480);
-    expect(renderer.getCombatProjection(state).cameraLeft).toBe(0);
-    expect((renderer as unknown as { cameraTranslation: number }).cameraTranslation).toBe(0);
+    const projection = renderer.getCombatProjection(state);
+    expect(Number.isFinite(projection.cameraLeft)).toBe(true);
+    expect(Math.abs(projection.cameraLeft)).toBeLessThan(renderer.getLayout().width);
   });
   it('holds a killed or removed target slot through contact and eases home across a three-slot wave', async () => {
     const { canvas, controls } = makeRenderer(), { Renderer } = await import('../src/renderer');
     const renderer = new Renderer(canvas as unknown as HTMLCanvasElement, controls as unknown as HTMLElement);
     renderer.resize(1600);
-    const state = createPartyState(2), base = state.enemies[0]!;
+    const state = createState(2), base = state.enemies[0]!;
     state.enemies = [0, 1, 2].map(slot => ({ ...base, id: `anchor-${slot}`, slot, hp: slot === 1 ? 0 : base.maxHp, action: { state: 'idle' as const } }));
     const hero = state.party[0]!;
     hero.action = { state: 'recovery', kind: 'attack', targetId: 'anchor-1', targetSide: 'enemy', targetSlot: 1, targetCount: 3,

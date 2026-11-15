@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG, heroConfig } from '../src/config';
 import { heroStats } from '../src/core/economy';
-import { createPartyState, createState } from '../src/core/game';
+import { createState } from '../src/core/game';
 import { getPartyHeroDefinition, getPartyHeroDefinitions, isPartyAbilityId } from '../src/core/party-definitions';
 import { parseState } from '../src/core/model';
 
@@ -25,23 +25,18 @@ describe('versioned party hero definitions', () => {
     }
   });
 
-  it('uses family profiles for party-v2 stats and leaves legacy role-derived stats unchanged', () => {
-    const legacy = createState(12), preview = createPartyState(12);
-    const legacyHero = legacy.roster.find(hero => hero.id === 'wiz')!;
-    const partyHero = preview.roster.find(hero => hero.id === 'wiz')!;
-    const oldRole = CONFIG.roles[heroConfig('wiz').role], original = heroConfig('wiz');
-    const legacyStats = heroStats(legacy, legacyHero), previewStats = heroStats(preview, partyHero);
-    const legacyGrowth = CONFIG.rarity.statMult[original.rarity] * (1 + CONFIG.growth.perLevel * (legacyHero.level - 1)) * (1 + CONFIG.growth.perStar * (legacyHero.stars - 1));
-    expect(legacyStats).toMatchObject({ maxHp: Math.round(oldRole.hp * (original.mod.hp ?? 1) * legacyGrowth), atk: Math.round(oldRole.atk * (original.mod.atk ?? 1) * legacyGrowth), def: Math.round(oldRole.def * (original.mod.def ?? 1) * legacyGrowth), attackTicks: oldRole.attackIntervalTicks, range: oldRole.rangePx });
+  it('uses family profiles for the current root party stats', () => {
+    const current = createState(12);
+    const hero = current.roster.find(value => value.id === 'wiz')!;
+    const original = heroConfig('wiz'), currentStats = heroStats(current, hero);
+    const growth = CONFIG.rarity.statMult[original.rarity] * (1 + CONFIG.growth.perLevel * (hero.level - 1)) * (1 + CONFIG.growth.perStar * (hero.stars - 1));
     const profile = getPartyHeroDefinition('wiz').familyStats;
-    expect(previewStats).toMatchObject({ maxHp: Math.round(profile.hp * (original.mod.hp ?? 1) * legacyGrowth), atk: Math.round(profile.atk * (original.mod.atk ?? 1) * legacyGrowth), def: Math.round(profile.def * (original.mod.def ?? 1) * legacyGrowth), attackTicks: profile.attackTicks, range: 260 });
-    expect(heroStats(preview, { id: 'hu2', level: 1, xp: 0, stars: 1, equipment: { weapon: null, armor: null, charm: null } }).range).toBe(320);
+    expect(currentStats).toMatchObject({ maxHp: Math.round(profile.hp * (original.mod.hp ?? 1) * growth), atk: Math.round(profile.atk * (original.mod.atk ?? 1) * growth), def: Math.round(profile.def * (original.mod.def ?? 1) * growth), attackTicks: profile.attackTicks, range: 260 });
+    expect(heroStats(current, { id: 'hu2', level: 1, xp: 0, stars: 1, equipment: { weapon: null, armor: null, charm: null } }).range).toBe(320);
   });
 
-  it('accepts optional party preset and lock fields without adding them to legacy snapshots', () => {
-    const legacy = createState(13), party = createPartyState(13);
-    expect(legacy.roster.every(hero => hero.partyLocked === undefined)).toBe(true);
-    const withOptions = structuredClone(party);
+  it('round-trips the current party preset and lock fields', () => {
+    const withOptions = structuredClone(createState(13));
     withOptions.partyPreset = 'balanced'; withOptions.roster[0]!.partyLocked = true;
     expect(parseState(withOptions).partyPreset).toBe('balanced');
     expect(parseState(withOptions).roster[0]!.partyLocked).toBe(true);

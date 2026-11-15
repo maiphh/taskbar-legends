@@ -136,14 +136,6 @@ pub fn visibility_label(visible: bool) -> &'static str {
     }
 }
 
-fn relaunch_arguments(party_preview: bool) -> Vec<&'static str> {
-    if party_preview {
-        vec!["--party-preview"]
-    } else {
-        Vec::new()
-    }
-}
-
 /// Exit requests are idempotent: the first one wins, the rest are ignored.
 #[derive(Default)]
 pub struct ExitGate {
@@ -164,7 +156,6 @@ impl ExitGate {
 pub struct ShellState {
     pub mode: ShellMode,
     pub prefs_path: Option<PathBuf>,
-    pub party_preview: bool,
     pub exit: ExitGate,
     visibility: Mutex<VisibilitySnapshot>,
 }
@@ -193,7 +184,7 @@ pub mod native {
     use super::*;
     use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem};
     use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-    use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, Wry};
+    use tauri::{AppHandle, Emitter, Manager, State, Wry};
 
     pub fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         let prefs_path = app
@@ -225,10 +216,6 @@ pub mod native {
             .first()
             .ok_or("Missing main window")?
             .clone();
-        let party_preview = std::env::args().any(|arg| arg == "--party-preview");
-        if party_preview {
-            config.url = WebviewUrl::App("party-preview.html".into());
-        }
         let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
         let builder = match mode {
             ShellMode::Window => builder
@@ -241,15 +228,14 @@ pub mod native {
                 .shadow(true)
                 .resizable(true)
                 .focused(true)
-                .inner_size(800.0, 488.0)
+                .inner_size(640.0, 160.0)
                 .center(),
             // Windows/Linux overlay is exactly the declarative tauri.conf.json window.
-            ShellMode::Overlay => overlay_platform(builder).resizable(party_preview),
+            ShellMode::Overlay => overlay_platform(builder).resizable(true),
         };
         app.manage(ShellState {
             mode,
             prefs_path,
-            party_preview,
             exit: ExitGate::default(),
             visibility: Mutex::new(VisibilitySnapshot::default()),
         });
@@ -546,7 +532,6 @@ pub mod native {
             // Relaunch without the one-shot override so the saved choice applies.
             if let Ok(exe) = std::env::current_exe() {
                 let _ = std::process::Command::new(exe)
-                    .args(relaunch_arguments(app.state::<ShellState>().party_preview))
                     .env_remove("TASKBAR_LEGENDS_OPAQUE")
                     .spawn();
             }
@@ -657,12 +642,6 @@ mod tests {
                 client_height: 560,
             }
         );
-    }
-
-    #[test]
-    fn opaque_relaunch_preserves_only_preview_discriminator() {
-        assert!(super::relaunch_arguments(false).is_empty());
-        assert_eq!(super::relaunch_arguments(true), vec!["--party-preview"]);
     }
 
     use super::*;

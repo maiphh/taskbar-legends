@@ -10,15 +10,18 @@ canvas { display: block; image-rendering: pixelated; pointer-events: none; }
 #notice { position: absolute; top: 4px; left: 8px; max-width: calc(100% - 16px); background: #17212d; color: #f2e9cf; font: 12px Galmuri11, monospace; pointer-events: none; }
 #notice:empty { display: none; }
 #save-recovery:not([hidden]) { position: fixed; z-index: 20; inset: 8px; padding: 16px; overflow: auto; background: #17212d; border: 2px solid #f2e9cf; color: #f2e9cf; font: 14px system-ui, sans-serif; }
-body.compact-preview #app { overflow:hidden; }
-body.compact-preview #controls { pointer-events:none; }
-body.compact-preview #notice { top:auto; left:8px; bottom:3px; max-width:calc(100% - 160px); }
+body.compact-shell #app { overflow:hidden; }
+body.compact-shell #controls { pointer-events:none; }
+body.compact-shell #notice { top:auto; left:8px; bottom:3px; max-width:calc(100% - 160px); }
 body.native-shell #compact-menu-bar { display:none; }
 body.native-shell #management { display:none !important; }
 #save-recovery h1 { margin-top: 0; font-size: 1.2rem; }
 #save-recovery p { line-height: 1.45; }
 #save-recovery button { margin: 8px 8px 0 0; min-height: 36px; padding: 6px 12px; color: #17212d; background: #f2e9cf; border: 1px solid #fff; cursor: pointer; }
 #save-recovery button:focus-visible { outline: 3px solid #79d7e8; outline-offset: 2px; }
+#legacy-save-notice:not([hidden]) { position: fixed; z-index: 30; inset: auto 8px 8px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #17212d; border: 2px solid #f2e9cf; color: #f2e9cf; font: 13px system-ui, sans-serif; }
+#legacy-save-notice button { flex: none; min-height: 32px; padding: 4px 10px; color: #17212d; background: #f2e9cf; border: 1px solid #fff; cursor: pointer; }
+#legacy-save-notice [aria-live] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
 .pixel-surface { position: absolute; pointer-events: auto; background: transparent; }
 
@@ -58,9 +61,9 @@ body.native-window #app { position: relative; bottom: auto; }
 #compact-menu-bar button, #edit-overlay button { height: calc(28px * var(--z)); width: calc(56px * var(--z)); font-size: calc(12px * var(--z)); line-height: calc(12px * var(--z)); border-width: calc(8px * var(--z)); border-image-width: calc(8px * var(--z)); }
 #compact-menu-bar button[hidden] { display: inline-flex; visibility: hidden; }
 #compact-menu-bar button#compact-edit-button { display: none; }
-body:not(.compact-preview) #compact-menu-bar { position: fixed; top: 4px; right: 6px; bottom: auto; }
+body:not(.compact-shell) #compact-menu-bar { position: fixed; top: 4px; right: 6px; bottom: auto; }
 #edit-overlay { --z: var(--px-z, 1); position: fixed; z-index: 14; left: 0; right: 0; bottom: 0; height: calc(80px * var(--z)); pointer-events: none; }
-body.compact-preview #edit-overlay { position: absolute; }
+body.compact-shell #edit-overlay { position: absolute; }
 /* The gold/ink HUD-band frame is drawn by the lane canvas (PixelUI.drawCompactLane) so it stays on whole pixels. */
 .edit-frame { position: absolute; inset: 0; pointer-events: none; }
 .edit-frame button { position: absolute; pointer-events: auto; }
@@ -68,7 +71,7 @@ body.compact-preview #edit-overlay { position: absolute; }
 #resize-handle { right: calc(16px * var(--z)); bottom: calc(4px * var(--z)); height: calc(20px * var(--z)) !important; cursor: nwse-resize; }
 #edit-done { right: calc(16px * var(--z)); bottom: calc(34px * var(--z)); cursor: pointer; }
 #edit-done .px-btn-label, #edit-done { color: #e9bd68; }
-body.compact-preview.compact-dock-above #app { position: fixed; left: 0; bottom: 0; }
+body.compact-shell.compact-dock-above #app { position: fixed; left: 0; bottom: 0; }
 
 /* Native control window (compactMenu.controlWindow): Menu (4,4,56,28), Edit (64,4,56,28) on the panel fill. */
 body.control-window { margin: 0; min-width: 0; min-height: 0; background: #202c39; }

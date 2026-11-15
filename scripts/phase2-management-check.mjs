@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
-const baseUrl = process.env.PHASE2_BASE_URL ?? 'http://127.0.0.1:5173/?combat=party-v2&compact=1';
+const baseUrl = process.env.PHASE2_BASE_URL ?? 'http://127.0.0.1:5173/';
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const context = await browser.newContext({ viewport: { width: 960, height: 360 } });
 const errors = [];
@@ -297,17 +297,18 @@ try {
     assert.equal(await left.evaluate(() => window.__game.snapshot()), await right.evaluate(() => window.__game.snapshot()), 'menu and resize operations do not alter deterministic combat');
   } finally { await leftContext.close(); await rightContext.close(); }
 
-  const legacyContext = await browser.newContext({ viewport: { width: 960, height: 360 } });
+  const defaultContext = await browser.newContext({ viewport: { width: 960, height: 360 } });
   try {
-    const legacy = await legacyContext.newPage();
-    await legacy.goto(new URL('/', baseUrl).href);
-    await legacy.waitForFunction(() => !!window.__game);
-    const legacyState = await legacy.evaluate(() => ({ state: window.__game.getState(), layout: window.__game.getLayout() }));
-    assert.equal(legacyState.state.combatRules, undefined, 'the default browser entry remains legacy');
-    assert.equal(legacyState.layout.compact, false, 'legacy default does not activate compact presentation');
-  } finally { await legacyContext.close(); }
+    const defaultPage = await defaultContext.newPage();
+    await defaultPage.goto(new URL('/', baseUrl).href);
+    await defaultPage.waitForFunction(() => !!window.__game);
+    const defaultState = await defaultPage.evaluate(() => ({ state: window.__game.getState(), layout: window.__game.getLayout() }));
+    assert.equal(defaultState.state.combatRules, 'party-v2', 'root starts the current party runtime');
+    assert.equal(defaultState.state.party.length, 3, 'root creates the current three-hero party');
+    assert.equal(defaultState.layout.compact, true, 'root uses the compact presentation');
+  } finally { await defaultContext.close(); }
 
-  console.log(JSON.stringify({ passed: true, previewUrl: baseUrl, menuCycles: 100, commandRevision: afterCommand.authority.revision, screenshots }));
+  console.log(JSON.stringify({ passed: true, rootUrl: baseUrl, menuCycles: 100, commandRevision: afterCommand.authority.revision, screenshots }));
 } finally {
   await context.close();
   await browser.close();

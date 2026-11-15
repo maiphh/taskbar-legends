@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import { CONFIG, stageConfig, ticksForSeconds } from '../src/config';
 import { spawnParty } from '../src/core/combat';
 import { autoParty } from '../src/core/economy';
-import { createPartyState, step } from '../src/core/game';
+import { createState, step } from '../src/core/game';
 import { itemId, gearTemplateId } from '../src/core/model';
 import type { GameState, Gear, Unit } from '../src/core/model';
 import { partyUnitFields } from '../src/core/party-combat';
@@ -27,7 +27,7 @@ function makeGear(state: GameState, slot: Gear['slot'], serial: number, band: Ba
     rarity: 'common', dropStage: 1, level: 0, spent: 0, stats: base };
 }
 function buildFixture(stage: number, band: Band, team: typeof teams[number], enemyId: typeof enemies[number], seed: number): GameState {
-  const state = createPartyState(seed);
+  const state = createState(seed);
   for (const definition of CONFIG.heroes) if (!state.roster.some(hero => hero.id === definition.id)) state.roster.push({ id: definition.id, level: band.level, xp: 0, stars: band.stars, equipment: { weapon: null, armor: null, charm: null } });
   for (const hero of state.roster) { hero.level = band.level; hero.stars = band.stars; }
   state.progress = { kind: 'PUSHING', stage };

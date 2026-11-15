@@ -1,4 +1,4 @@
-import { CONFIG, TICK_MS, enemyKindSchema, heroConfig, stageConfig, ticksForSeconds } from './config';
+import { CONFIG, TICK_MS, heroConfig, stageConfig, ticksForSeconds } from './config';
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
@@ -49,22 +49,22 @@ export class Renderer {
     const allUnits = [...state.party, ...state.enemies];
     const statusNames: Record<string, string> = { 'party-atk-buff': 'ATK up', 'enemy-atk-weaken': 'ATK down', 'enemy-def-weaken': 'DEF down', 'healing-guard': 'Damage guard', 'party-guard-aura': 'Damage guard', 'bruiser-guard': 'Damage guard' };
     const statusRows = new Map<string, number>();
-    const statusCues = state.combatRules === 'party-v2' ? allUnits.filter(unit => unit.hp > 0).flatMap(unit => activePartyEffects(state, unit.id).flatMap(effect => {
+    const statusCues = allUnits.filter(unit => unit.hp > 0).flatMap(unit => activePartyEffects(state, unit.id).flatMap(effect => {
       const label = statusNames[effect.group]; if (!label) return [];
       const row = statusRows.get(unit.id) ?? 0; statusRows.set(unit.id, row + 1);
       return [{ targetId: unit.id, side: unit.side, screenX: this.position(unit, state), y: baselineY - 56 - row * 12, label, kind: effect.kind }];
-    })) : [];
+    }));
     return { fieldLeft: field.x, fieldWidth: field.width, cameraLeft,
       units: [...state.party, ...state.enemies].map(unit => ({ id: unit.id, worldX: unit.x, screenX: this.position(unit, state) })),
       edgeMarkers: this.edgeMarkers(state, field),
       projectiles: (state.projectiles ?? []).map(projectile => ({ id: projectile.id, screenX: sx(projectile.x), y: baselineY - 27,
         delivery: projectile.delivery, direction: Math.sign((projectile.delivery === 'ground' ? projectile.centerX ?? projectile.x : allUnits.find(unit => unit.id === projectile.targetId)?.x ?? projectile.x) - projectile.x) })),
       statusCues,
-      guardCues: state.combatRules === 'party-v2' ? state.events.flatMap(event => {
+      guardCues: state.events.flatMap(event => {
         const age = combatEventAge(state, event);
         return event.data.type === 'guard' && age !== null && age >= 0 && age <= ticksForSeconds(0.8)
           ? [{ guardianId: event.data.guardianId, fromTargetId: event.data.fromTargetId, toTargetId: event.data.toTargetId, age }] : [];
-      }) : [] };
+      }) };
   }
   setCompactViewport(enabled: boolean, zoom: 1 | 2 = 1): void {
     this.compact = enabled; this.zoom = enabled ? zoom : 1; this.ui.setCompactMode(enabled); this.resize(window.innerWidth);
@@ -83,11 +83,10 @@ export class Renderer {
     }
   }
   private field() {
-    if (this.compact) return compactLaneLayout(this.width).field;
-    const compact = this.width < 1000; return { x: compact ? 216 : 304, width: Math.max(0, this.width - (compact ? 432 : 608)) };
+    return compactLaneLayout(this.width).field;
   }
   private cameraInput(state: GameState, field: { x: number; width: number }): CombatCameraInput | null {
-    if (state.combatRules !== 'party-v2' || field.width >= CONFIG.sim.laneWidthPx) return null;
+    if (field.width >= CONFIG.sim.laneWidthPx) return null;
     const party = state.party.filter(unit => unit.hp > 0).map(unit => unit.x);
     if (!party.length) return null;
     const partyById = new Map(state.party.filter(unit => unit.hp > 0).map(unit => [unit.id, unit]));
@@ -115,11 +114,6 @@ export class Renderer {
   }
   private cameraLeft(state: GameState, field: { x: number; width: number }): number {
     if (this.frameCamera !== null) return this.frameCamera;
-    if (state.combatRules !== 'party-v2') {
-      this.cameraTranslation = 0;
-      this.frameCamera = 0;
-      return 0;
-    }
     const input = this.cameraInput(state, field) ?? { fieldWidth: field.width, laneWidth: CONFIG.sim.laneWidthPx, partyXs: [], threats: [] };
     const next = stepCombatCamera(this.cameraTranslation, input);
     this.cameraTranslation = next;
@@ -127,7 +121,6 @@ export class Renderer {
     return next;
   }
   private edgeMarkers(state: GameState, field: { x: number; width: number }): { threatId: string; worldX: number; screenX: number; edge: 'left' | 'right'; label: string }[] {
-    if (state.combatRules !== 'party-v2') return [];
     const camera = this.cameraLeft(state, field), markers: { threatId: string; worldX: number; screenX: number; edge: 'left' | 'right'; label: string }[] = [];
     const add = (threatId: string, worldX: number, label: string): void => {
       const rawScreenX = Math.round(field.x + worldX - camera);
@@ -146,48 +139,40 @@ export class Renderer {
   }
   private position(unit: Unit, state: GameState): number {
     const field = this.field();
-    if (state.combatRules === 'party-v2') {
-      const enemyCount = state.enemies.length;
-      const side = unit.side === 'hero' ? 'hero' as const : 'enemy' as const;
-      let screenX = formationScreenX(side, unit.slot, enemyCount, field.width);
-      const action = unit.action;
-      const now = presentationCombatTime(state);
-      if (action && (action.state === 'windup' || action.state === 'recovery') && action.delivery === 'leap') {
-        const target = [...state.party, ...state.enemies].find(other => other.id === action.targetId);
-        const targetSide = target?.side ?? action.targetSide;
-        const targetSlot = target?.slot ?? action.targetSlot;
-        if (targetSide && targetSlot !== undefined) {
-          const timeline = actionBoundaries(unit.sourceId, action.delivery, action);
-          const sample = sampleActionPresentation(action.delivery, timeline, now);
-          const home = formationScreenX(side, unit.slot, enemyCount, field.width);
-          const targetScreen = formationScreenX(targetSide, targetSlot, action.targetCount ?? enemyCount, field.width);
-          const contact = targetScreen - Math.sign(targetScreen - home || 1) * 18;
-          if (sample.phase === 'approach') screenX = home + (contact - home) * sample.progress;
-          else if (sample.phase === 'attack') screenX = contact;
-          else if (sample.phase === 'return') screenX = contact + (home - contact) * easeReturn(sample.progress);
-          else screenX = home;
-        }
-      } else if (unit.side === 'enemy' && unit.moving) {
-        const spawnX = CONFIG.sim.enemySpawnX + unit.slot * CONFIG.sim.enemySpawnSpacingPx;
-        const home = enemyFormationX(unit.slot);
-        const t = spawnX === home ? 0 : Math.max(0, Math.min(1, (unit.x - home) / (spawnX - home)));
-        screenX = screenX + t * (field.width + 16 - screenX);
+    const enemyCount = state.enemies.length;
+    const side = unit.side;
+    let screenX = formationScreenX(side, unit.slot, enemyCount, field.width);
+    const action = unit.action;
+    const now = presentationCombatTime(state);
+    if (action && (action.state === 'windup' || action.state === 'recovery') && action.delivery === 'leap') {
+      const target = [...state.party, ...state.enemies].find(other => other.id === action.targetId);
+      const targetSide = target?.side ?? action.targetSide;
+      const targetSlot = target?.slot ?? action.targetSlot;
+      if (targetSide && targetSlot !== undefined) {
+        const timeline = actionBoundaries(unit.sourceId, action.delivery, action);
+        const sample = sampleActionPresentation(action.delivery, timeline, now);
+        const home = formationScreenX(side, unit.slot, enemyCount, field.width);
+        const targetScreen = formationScreenX(targetSide, targetSlot, action.targetCount ?? enemyCount, field.width);
+        const contact = targetScreen - Math.sign(targetScreen - home || 1) * 18;
+        if (sample.phase === 'approach') screenX = home + (contact - home) * sample.progress;
+        else if (sample.phase === 'attack') screenX = contact;
+        else if (sample.phase === 'return') screenX = contact + (home - contact) * easeReturn(sample.progress);
+        else screenX = home;
       }
-      return Math.round(field.x + screenX);
+    } else if (unit.side === 'enemy' && unit.moving) {
+      const spawnX = CONFIG.sim.enemySpawnX + unit.slot * CONFIG.sim.enemySpawnSpacingPx;
+      const home = enemyFormationX(unit.slot);
+      const t = spawnX === home ? 0 : Math.max(0, Math.min(1, (unit.x - home) / (spawnX - home)));
+      screenX += t * (field.width + 16 - screenX);
     }
-    const compact = field.width < 300;
-    if (unit.side === 'hero') return Math.round(field.x + field.width * (compact ? [0.60, 0.38, 0.16][unit.slot] ?? 0.16 : [0.46, 0.39, 0.32][unit.slot] ?? 0.32));
-    const front = state.party.find(hero => hero.hp > 0);
-    const rangeX = (front?.x ?? CONFIG.sim.heroSlotX[0] ?? 140) + unit.range;
-    const approach = Math.max(0, unit.x - rangeX) / CONFIG.sim.enemySpawnX;
-    return Math.round(field.x + field.width * ((compact ? 0.75 + unit.slot * 0.2 : 0.54 + unit.slot * 0.07) + (compact ? 0 : approach * 0.35)));
+    return Math.round(field.x + screenX);
   }
   private latest(state: GameState, predicate: (event: GameEvent) => boolean): GameEvent | undefined {
     for (let i = state.events.length - 1; i >= 0; i -= 1) { const event = state.events[i]; if (event && predicate(event)) return event; }
     return undefined;
   }
   private animation(state: GameState, unit: Unit, key: string | undefined): { name: AnimationName; ageMs: number; returning?: boolean } {
-    const now = state.combatRules === 'party-v2' ? presentationCombatTime(state) : state.tick;
+    const now = presentationCombatTime(state);
     const age = (event: GameEvent | undefined): number => {
       if (!event) return Infinity;
       const ticks = combatEventAge(state, event);
@@ -195,25 +180,16 @@ export class Renderer {
     };
     const dead = this.latest(state, event => event.data.type === 'death' && event.data.unitId === unit.id);
     if (unit.hp <= 0) return { name: 'death', ageMs: Number.isFinite(age(dead)) ? age(dead) : 0 };
-    if (state.combatRules === 'party-v2') {
-      const action = unit.action;
-      if (action && (action.state === 'windup' || action.state === 'recovery')) {
-        const delivery = action.delivery ?? (action.kind === 'heal' ? 'cast' : 'leap');
-        const timeline = actionBoundaries(unit.sourceId, delivery, action);
-        const sample = sampleActionPresentation(delivery, timeline, now);
-        if (sample.phase !== 'done') return { name: sample.animation, ageMs: sample.ageMs, returning: sample.phase === 'return' };
-      }
+    const action = unit.action;
+    if (action && (action.state === 'windup' || action.state === 'recovery')) {
+      const delivery = action.delivery ?? (action.kind === 'heal' ? 'cast' : 'leap');
+      const timeline = actionBoundaries(unit.sourceId, delivery, action);
+      const sample = sampleActionPresentation(delivery, timeline, now);
+      if (sample.phase !== 'done') return { name: sample.animation, ageMs: sample.ageMs, returning: sample.phase === 'return' };
     }
     const hurt = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
     if (age(hurt) < (key ? this.atlases.durationMs(key, 'hit') ?? CONFIG.view.hurtFallbackMs : CONFIG.view.hurtFallbackMs)) return { name: 'hit', ageMs: age(hurt) };
-    if (state.combatRules === 'party-v2') {
-      return { name: unit.moving ? 'run' : 'idle', ageMs: Math.max(0, now - (unit.nativeBornTick ?? unit.bornTick)) * TICK_MS };
-    }
-    const attack = this.latest(state, event => ((event.data.type === 'hit' && event.data.attackerId === unit.id) || (event.data.type === 'heal' && event.data.sourceId === unit.id)) || (event.data.type === 'skill' && event.data.unitId === unit.id));
-    if (age(attack) < (key ? this.atlases.durationMs(key, 'attack') ?? CONFIG.view.attackFallbackMs : CONFIG.view.attackFallbackMs)) return { name: 'attack', ageMs: age(attack) };
-    const front = state.party.find(hero => hero.hp > 0);
-    const moving = unit.side === 'enemy' && front && unit.x - front.x > unit.range;
-    return { name: moving ? 'run' : 'idle', ageMs: (state.tick - unit.bornTick) * 1000 / CONFIG.sim.ticksPerSecond };
+    return { name: unit.moving ? 'run' : 'idle', ageMs: Math.max(0, now - (unit.nativeBornTick ?? unit.bornTick)) * TICK_MS };
   }
   render(state: GameState, paused = false): void {
     this.rendering = true;
@@ -229,22 +205,20 @@ export class Renderer {
     ctx.fillStyle = '#293c35'; ctx.fillRect(field.x, coreY + 48, field.width, 32);
     ctx.fillStyle = '#3f5542'; ctx.fillRect(field.x, coreY + 48, field.width, 2);
     for (let x = field.x + 5; x < field.x + field.width; x += 28) { ctx.fillStyle = x % 3 ? '#52664a' : '#223d32'; ctx.fillRect(x, coreY + 51, 2, 2); ctx.fillRect(x + 12, coreY + 65, 3, 1); }
-    const enemies = state.combatRules !== 'party-v2' && field.width < 300 ? state.enemies.slice(0, 2) : state.enemies;
+    const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
     for (const unit of units) {
       const x = this.position(unit, state);
-      const depth = state.combatRules === 'party-v2' && unit.side === 'hero' ? unit.slot * 4 : 0;
+      const depth = unit.side === 'hero' ? unit.slot * 4 : 0;
       const unitBaseline = baselineY - depth;
-      const enemyVisual = unit.side === 'enemy'
-        ? state.combatRules === 'party-v2' ? getPartyEnemyDefinition(unit.sourceId).visualKind : enemyKindSchema.parse(unit.sourceId)
-        : undefined;
+      const enemyVisual = unit.side === 'enemy' ? getPartyEnemyDefinition(unit.sourceId).visualKind : undefined;
       const color = unit.side === 'hero' ? view.roleColors[heroConfig(unit.sourceId).role] : view.enemyColors[enemyVisual!];
       const key = unit.side === 'hero' ? Object.entries(view.heroAssets).find(([id]) => id === unit.sourceId)?.[1] : view.enemyAssets[enemyVisual!];
       const anim = this.animation(state, unit, key);
       const lastHit = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
       const lastHitAge = lastHit ? combatEventAge(state, lastHit) : null;
       const flash = lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
-      const flip = state.combatRules === 'party-v2' ? (anim.returning ? unit.side === 'hero' : unit.facing === -1) : unit.side === 'enemy';
+      const flip = anim.returning ? unit.side === 'hero' : unit.facing === -1;
       if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, 1, flash)) {
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : color; ctx.fillRect(x - view.heroWidth / 2, unitBaseline - view.heroHeight, view.heroWidth, view.heroHeight);
       }
@@ -253,7 +227,7 @@ export class Renderer {
       ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
       ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, hpWidth - 2, CONFIG.ui.unitHpBars.height - 2);
       ctx.fillStyle = unit.side === 'hero' ? palette.green : palette.red; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, Math.round((hpWidth - 2) * unit.hp / unit.maxHp), CONFIG.ui.unitHpBars.height - 2);
-      if (state.combatRules === 'party-v2') {
+      {
         ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY - 3, hpWidth, 2);
         ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, hpWidth - 2, 2);
         ctx.fillStyle = palette.gold; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, Math.round((hpWidth - 2) * gaugeRatio(unit.gauge)), 2);
@@ -267,7 +241,7 @@ export class Renderer {
       }
       if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
     }
-    if (state.combatRules === 'party-v2') {
+    {
       const allUnits = [...state.party, ...state.enemies];
       const camera = this.cameraLeft(state, field), sx = (worldX: number): number => Math.round(field.x + worldX - camera);
       const combatProjection = this.getCombatProjection(state);
@@ -342,7 +316,7 @@ export class Renderer {
       }
     }
     const lifetime = ticksForSeconds(CONFIG.runtime.damageLabelSeconds), bucket = ticksForSeconds(CONFIG.runtime.damageCoalesceSeconds);
-    const labelClock = state.combatRules === 'party-v2' ? presentationCombatTime(state) : state.tick;
+    const labelClock = presentationCombatTime(state);
     const groups = new Map<string, { targetId: string; tick: number; amount: number; heal: boolean }>();
     for (const event of state.events) {
       const data = event.data;
@@ -364,7 +338,6 @@ export class Renderer {
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, BODY, true);
       this.ui.text(ctx, label, x, y, group.heal ? palette.green : palette.gold, BODY, true);
     }
-    if (state.enemies.length > enemies.length) this.ui.text(ctx, `+${state.enemies.length - enemies.length}`, field.x + field.width - 32, coreY + 3, palette.muted, BODY);
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
     this.drawFeedback(ctx, state, units, field, coreY);

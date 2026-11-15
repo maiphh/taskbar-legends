@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG, stageConfig } from '../src/config';
-import { createPartyState, load, snapshot } from '../src/core/game';
+import { createState, load, snapshot } from '../src/core/game';
 import { spawnWave } from '../src/core/combat';
 import { step } from '../src/core/game';
 import { getPartyEnemyDefinition, isPartyEnemyId, partyWaveKinds } from '../src/core/party-enemies';
@@ -41,7 +41,7 @@ describe('party-v2 enemy registry and wave overrides', () => {
   });
 
   it('spawns and snapshots a scaled party-only assassin while leaving a legacy stage enemy-valid', () => {
-    const state = createPartyState(251); state.highestCleared = 10; state.progress = { kind: 'PUSHING', stage: 11 }; state.wave = 1;
+    const state = createState(251); state.highestCleared = 10; state.progress = { kind: 'PUSHING', stage: 11 }; state.wave = 1;
     spawnWave(state);
     const assassin = state.enemies.find(enemy => enemy.sourceId === 'assassin');
     expect(assassin).toMatchObject({ hp: Math.round(65 * CONFIG.enemies.scalingPerStage ** 10), maxHp: Math.round(65 * CONFIG.enemies.scalingPerStage ** 10), speed: 110, range: 12 });
@@ -50,7 +50,7 @@ describe('party-v2 enemy registry and wave overrides', () => {
   });
 
   it('lets the assassin reach the rear support after the retired intercept passive is removed', () => {
-    const state = createPartyState(252); state.highestCleared = 10; state.progress = { kind: 'PUSHING', stage: 11 }; state.wave = 1; spawnWave(state);
+    const state = createState(252); state.highestCleared = 10; state.progress = { kind: 'PUSHING', stage: 11 }; state.wave = 1; spawnWave(state);
     const assassin = state.enemies.find(enemy => enemy.sourceId === 'assassin')!, priest = state.party.find(unit => unit.sourceId === 'priest')!;
     expect(assassin.hp).toBe(Math.round(65 * CONFIG.enemies.scalingPerStage ** 10));
     const unguardedRaw = Math.max(1, Math.round(assassin.atk * 100 / (100 + priest.def)));

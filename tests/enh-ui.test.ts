@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { busLevel, clipGain, DEFAULT_VOLUMES, parseSettings } from '../src/audio';
 import { CONFIG } from '../src/config';
-import { createPartyState, snapshot } from '../src/core/game';
+import { createState, snapshot } from '../src/core/game';
 import uiTokens from '../src/ui-tokens.json';
 
-describe('party-v2 starter gear (feat/enhancement-ui)', () => {
-  it('is opt-in, deterministic and equipped on the starting party', () => {
-    expect(createPartyState(1).inventory).toEqual([]);
-    const a = createPartyState(7, { starterGear: true }), b = createPartyState(7, { starterGear: true });
+describe('current runtime starter kit', () => {
+  it('starts with deterministic, equipped gear and allows explicit empty test fixtures', () => {
+    expect(createState(7).inventory).toHaveLength(3);
+    const a = createState(7), b = createState(7);
     expect(snapshot(a)).toEqual(snapshot(b));
     expect(a.inventory.map(item => `${item.rarity} ${item.slot} ${item.acquiredAt.source} L${item.level}`)).toEqual(['common weapon starter L0', 'common armor starter L0', 'common charm starter L0']);
     const wearer = (id: string) => a.roster.find(hero => Object.values(hero.equipment).includes(id as never))?.id;
     expect(a.inventory.map(item => wearer(item.id))).toEqual(['mw1', 'mw2', 'priest']);
     expect(new Set(a.inventory.map(item => item.id)).size).toBe(3);
-    expect(a.nextGearId).toBe(createPartyState(7).nextGearId + 3);
     expect(a.inventory[0]?.stats.atk).toBe(CONFIG.gear.slots.weapon.main.atk);
+    expect(createState(7, { starterGear: false }).inventory).toEqual([]);
   });
-  it('does not touch the party RNG stream (encounters match a gearless start)', () => {
-    const plain = createPartyState(3), geared = createPartyState(3, { starterGear: true });
+  it('does not touch the party RNG stream when the test fixture omits the kit', () => {
+    const plain = createState(3, { starterGear: false }), geared = createState(3);
     expect(geared.rng).toEqual(plain.rng);
     expect(geared.enemies.map(enemy => enemy.sourceId)).toEqual(plain.enemies.map(enemy => enemy.sourceId));
   });

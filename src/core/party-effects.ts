@@ -38,7 +38,7 @@ function sum(state: GameState, unit: Unit, kind: PartyEffect['kind']): number {
 export function effectiveAttack(state: GameState, unit: Unit): number {
   const bonus = Math.min(0.5, sum(state, unit, 'atkBonus'));
   const reduction = Math.min(0.5, sum(state, unit, 'atkReduction'));
-  const enemy = state.combatRules === 'party-v2' && unit.side === 'enemy' ? getPartyEnemyDefinition(unit.sourceId) : undefined;
+  const enemy = unit.side === 'enemy' ? getPartyEnemyDefinition(unit.sourceId) : undefined;
   const bossEnraged = Boolean(enemy?.special && ['bossLocal', 'bossGlobal'].includes(enemy.special.kind)
     && combatTime(state) - (unit.nativeBornTick ?? unit.bornTick) >= ticksForSeconds(60));
   return Math.max(0, unit.atk * (1 + bonus) * (1 - reduction) * (bossEnraged ? 1.5 : 1));

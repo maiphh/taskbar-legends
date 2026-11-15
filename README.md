@@ -1,17 +1,12 @@
-# Taskbar Legends — milestone 1
+﻿# Taskbar Legends
 
-Local fantasy idle auto-battler: TypeScript + Vite + hand-written Canvas 2D, no engine. Branch `m1-prototype` comes from local `main`. **No remote repository, push, deployment or merge has been created.**
+Taskbar Legends is a compact fantasy idle auto-battler built with TypeScript, Vite, and Canvas 2D.
 
-## Phase 3 party preview
+Run `npm ci` and `npm run dev`, then open [http://127.0.0.1:5173/](http://127.0.0.1:5173/). The root route starts the current party game and compact presentation; no gameplay query flag is required. The native desktop build uses the same compact game with native management and control windows.
 
-Run `npm ci` and `npm run dev`, then open **[the compact party preview](http://127.0.0.1:5173/?combat=party-v2&compact=1)**. This opt-in preview uses the separate `taskbar-legends:v1:party-v2` save slot. A normal no-query launch continues using the legacy game/account; account migration and default activation have not started.
+Current party progress is stored at `taskbar-legends:v1:party-v2`. The separate older `taskbar-legends:v1` account is never merged or overwritten. If only that previous account exists, the game offers an export while starting the current account separately.
 
-The preview adds Tank/DPS/Support definitions for all 18 existing heroes, timed melee contact, projectiles, healing/buffs/debuffs, guardian interception, local AoE and marked assassins. Menu opens Party, Stash, Recruit, Upgrades and Settings. Party presets preserve locked deployed positions; equipment comparisons and recommendations use the wearer's stats. Hero locks constrain presets; item protection/salvage remains a later phase. Kit values and roster variants are provisional, not a completed population-balance certification.
-
-The initial compact viewport is 640×160 with separate 1×/2× zoom. The native opt-in flag is `--party-preview`; native compilation, actual OS click-through, window gestures and monitor/DPI acceptance remain unverified under the user's explicit deferral. Browser checks do not establish native acceptance.
-
-Implementation and review evidence: [compact party implementation log](docs/COMPACT-PARTY-IMPLEMENTATION.md). Current stopping boundary is Phase 3, including its final review; Phases 4–5 remain unstarted. The milestone-one descriptions below describe the legacy path unless stated otherwise.
-
+The current runtime includes all 18 heroes, party formation, single-signature abilities, timed contact animations, equipment and salvage protection, Recruit, Upgrades, Settings, offline progress, and save recovery. Older milestone notes below are retained as history.
 ## Run / verify
 
 Node 24 LTS recommended.
@@ -43,14 +38,14 @@ The **160 source-pixel canvas** is transparent above its **80px opaque strip**. 
 
 All UI text uses local Galmuri (OFL-1.1) at its only crisp sizes: Galmuri11 12px body and bold, Galmuri11 Bold 24px headings, Galmuri9 10px small (Bold only for Latin-1 strings; Vietnamese/Cyrillic use Regular). See docs/DECISIONS.md \"Font: Galmuri\". Text is cached into monochrome-alpha rasters after fonts load. Kenney-derived 48px 9-slices preserve their 8px corners. Hover/pressed/disabled/selected/focus states are explicit. Controls are accessible DOM hit targets over Canvas labels, with input restricted to two HUD islands and the open panel. This is **not a claim of native desktop click-through**; Tauri/Windows acceptance remains M2.
 
-Native-pixel q=1 mode uses physical backing dimensions `floor(CSS width * DPR) × sourceHeight`, CSS display dimensions divided by DPR, integer draw coordinates, and `imageSmoothingEnabled=false`. This preserves physical 160px height at DPR1/1.25/1.5, rather than double-applying OS scaling. Browser DPI emulation is tested; real Windows monitor transfer is not. Default width is 1280; the exact 1920px reference is captured too. Compact HUD activates below 1000 source pixels to keep controls usable; below 736 only two representative enemy sprites plus `+N` draw, while all enemies still simulate. The spec's separate native management-window fallback below 608px is deferred to M2; use a wider browser viewport for management.
+Native-pixel q=1 mode uses physical backing dimensions `floor(CSS width * DPR) Ã— sourceHeight`, CSS display dimensions divided by DPR, integer draw coordinates, and `imageSmoothingEnabled=false`. This preserves physical 160px height at DPR1/1.25/1.5, rather than double-applying OS scaling. Browser DPI emulation is tested; real Windows monitor transfer is not. Default width is 1280; the exact 1920px reference is captured too. Compact HUD activates below 1000 source pixels to keep controls usable; below 736 only two representative enemy sprites plus `+N` draw, while all enemies still simulate. The spec's separate native management-window fallback below 608px is deferred to M2; use a wider browser viewport for management.
 
 Uniform hit feedback is renderer-owned: **`CONFIG.view.hitFlashMs=90`**, **`hitFlashColor='#ffffff'`**. Each outlined sheet gets one cached white copy using offscreen `source-atop`; frames are not re-tinted during play. Every hit flashes its target for the first two 20Hz state frames, then returns to its normal animation. The cleaned delivery explicitly marks bakedHitFlash=false; source hurt/attack animation timing stays unchanged and independent of the90ms flash. `shots/10-hit-flash-1280.png` shows both a hero and enemy mid-flash; screenshot 11 shows recovery at +100ms. Audio remains an isolated no-op adapter.
 
 ## Configuration / provenance
 
 - **`src/config.ts`** is the single typed entry point for all tunables. It imports exact delivered copies **`src/design-config.json`** and **`src/ui-tokens.json`**, validates domain discriminants, and adds implementation/presentation constants and asset-ID mappings. Drop future designer JSONs into these paths. Config wins over prose; bump its balance version when incompatible values change.
-- The design directory and manifest were absent at kickoff but arrived during implementation. Final code uses the delivered v1.1 game config, UI tokens, 18 heroes, 9 enemies, and outlined atlases—not provisional placeholder balance.
+- The design directory and manifest were absent at kickoff but arrived during implementation. Final code uses the delivered v1.1 game config, UI tokens, 18 heroes, 9 enemies, and outlined atlasesâ€”not provisional placeholder balance.
 - `public/assets/` contains approved CC0 atlas assets; `public/ui/` only the runtime frame/icon crops and license; `public/fonts/` only the three used Galmuri subsets and their OFL licence. Research references, mockups, previews, source archives and unused vendor font alternates are excluded from shipping.
 - `CREDITS.md` lists every supplied source/license, including LuizMelo, Merchant-Shade/Kurt Gabriel Sotelo, Pixel Operator/Jayvee Enaguas and Kenney/Lynn Evers. Evidence: `docs/asset-licenses.md`, `docs/ui-assets.md`.
 - Docs preserve the design, art, atlas and UI handoffs. `docs/DECISIONS.md` explains resolved ambiguities. `docs/VERIFICATION.md` records measured results; `docs/UI-CHECKS.md` separates browser proof from native pending gates.
@@ -154,7 +149,7 @@ Designer v1.2.0 is imported without number tuning; the requested overrides are `
 npm run --silent sim -- --policy reference --days 9 --seeds 25 > sim-ref-v13-25seeds-9d.json
 ```
 
-Aggregate reports include all seven targets plus `farmCycles` (real pooled min/p10/median/p90/max/count and exact duration histogram). It observes every successful online clear; no clamping, discarded outliers or last-ten-only sampling. Boss farm repeats are included, unscaled.25 seeds are diagnostic, not the designer's required100-seed population certification. Config snapshot and SHA256 are retained in the report. Boss fights show a wall-time countdown in the opaque strip, in existing 16px gold/red tokens; new screenshots12–14cover wide/compact/final-five views. Countdown placement needs Game Graphic Designer review because no dedicated timer token was specified.
+Aggregate reports include all seven targets plus `farmCycles` (real pooled min/p10/median/p90/max/count and exact duration histogram). It observes every successful online clear; no clamping, discarded outliers or last-ten-only sampling. Boss farm repeats are included, unscaled.25 seeds are diagnostic, not the designer's required100-seed population certification. Config snapshot and SHA256 are retained in the report. Boss fights show a wall-time countdown in the opaque strip, in existing 16px gold/red tokens; new screenshots12â€“14cover wide/compact/final-five views. Countdown placement needs Game Graphic Designer review because no dedicated timer token was specified.
 
 ### Mac test build (M2 draft)
 

@@ -1,4 +1,4 @@
-// §19 lock UI: Gear panel Lock/Unlock at 1280 and 960, covered by getHitRegions and click-tested. npm run shot:lock
+// Current DOM Stash Lock/Unlock control at desktop and compact widths. npm run shot:lock
 import { writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -29,7 +29,10 @@ for (let atk = 1; atk <= 32; atk += 1) addGear(capFixture, testItem(capFixture, 
 for (const item of capFixture.inventory.slice(0, 30)) setLocked(capFixture, item.id, true);
 
 const server = await preview({ preview: { host: '127.0.0.1', port: 4177, strictPort: true } });
-const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH ?? ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find(path => existsSync(path));
+const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH ?? [
+  'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
+].find(path => existsSync(path));
 const browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), headless: true, args: ['--no-sandbox'] });
 const errors: string[] = [], checks: Record<string, unknown> = {};
 const inside = async (page: Page, id: string) => page.evaluate((target: string) => {
@@ -44,7 +47,7 @@ try {
     page.on('pageerror', error => errors.push(String(error)));
     await page.goto(`http://127.0.0.1:4177${process.env.VITE_BASE_PATH || '/'}?shot`, { waitUntil: 'networkidle' });
     await page.evaluate(async (state: GameState) => { window.__game.pause(); await window.__game.whenReady(); window.__game.load(state); window.__game.openPanel('gear'); }, fixture);
-    await page.waitForFunction(() => window.__game.getLayout().height > 160 && document.querySelector('[data-control="gear-lock"]'));
+    await page.waitForFunction(() => !document.querySelector<HTMLElement>('#management')?.hidden && document.querySelector('#management [data-view="stash"]') && document.querySelector('#management [data-control="gear-lock"]'));
     const before = await inside(page, 'gear-lock');
     await page.screenshot({ path: `shots/${width === 1280 ? 40 : 41}-gear-lock-${width}.png`, omitBackground: true });
     await page.click('[data-control="gear-lock"]');
@@ -69,10 +72,11 @@ try {
     await capPage.waitForSelector(`[data-control="gear-${unlockedId}"]`);
     await capPage.click(`[data-control="gear-${unlockedId}"]`);
   }
-  await capPage.waitForFunction(() => document.querySelector('[data-control="gear-lock"]'));
+  await capPage.waitForFunction(() => document.querySelector('#management [data-view="stash"]') && document.querySelector('#management [data-control="gear-lock"]'));
   const cap = await inside(capPage, 'gear-lock');
+  const capText = await capPage.locator('#management').innerText();
   await capPage.screenshot({ path: 'shots/44-gear-lock-cap-1280.png', omitBackground: true });
-  checks.cap = cap;
+  checks.cap = { ...cap, countText: capText };
   await capPage.close();
   const clickOk = (checks['1280'] as { lockButton: { present: boolean; inside: boolean; disabled: boolean }; afterClick: { locked: boolean } }).lockButton.present
     && (checks['1280'] as { lockButton: { inside: boolean; disabled: boolean } }).lockButton.inside
@@ -84,7 +88,7 @@ try {
     && (checks.cap as { present: boolean; inside: boolean; disabled: boolean; tooltip: string | null }).present
     && (checks.cap as { inside: boolean }).inside
     && (checks.cap as { disabled: boolean }).disabled
-    && /Lock limit 30 reached/.test((checks.cap as { tooltip: string | null }).tooltip ?? '');
+    && /30\/30 locked/.test((checks.cap as { countText: string }).countText);
   await writeFile('shots/lock-checks.json', JSON.stringify({ fixture: 'seed 2, 8 bag items, design salvage true/true/30; cap fixture seed 3 with 30 locks', checks, ok: clickOk, errors }, null, 2) + '\n');
   process.stdout.write(JSON.stringify({ screenshots: ['40-gear-lock-1280.png', '41-gear-lock-960.png', '42-gear-locked-1280.png', '43-gear-locked-960.png', '44-gear-lock-cap-1280.png'], ok: clickOk, errors, checks }, null, 2) + '\n');
   if (!clickOk || errors.length) process.exitCode = 1;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CONFIG, V14_DESIGN, enemyKindSchema, heroConfig, raritySchema, slotSchema, stageConfig } from '../config';
+import { CONFIG, V14_DESIGN, heroConfig, raritySchema, slotSchema, stageConfig } from '../config';
 import { isPartyEnemyId } from './party-enemies';
 
 const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
@@ -118,7 +118,7 @@ export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
   // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
   version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2'), z.literal('1.4.3')]).transform(() => CONFIG.version), tick: natural,
-  combatRules: z.literal('party-v2').optional(),
+  combatRules: z.literal('party-v2'),
   partyPreset: z.enum(['balanced', 'fastFarm', 'bossSustain']).optional(),
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
   gold: natural, tickets: natural, pity: natural.max(CONFIG.gacha.pity.guaranteeEpicPlusEvery - 1),
@@ -164,11 +164,9 @@ export const stateSchema = z.object({
   if (owned.size !== state.roster.length || state.roster.some(hero => !CONFIG.heroes.some(def => def.id === hero.id))) invalid('Invalid roster');
   if (new Set(state.partyIds).size !== CONFIG.sim.partySize || state.partyIds.some(id => !owned.has(id))) invalid('Invalid party');
   if (state.party.some(unit => unit.side !== 'hero') || state.enemies.some(unit => unit.side !== 'enemy')) invalid('Invalid unit side');
-  if (state.combatRules === 'party-v2') {
-    for (const unit of [...state.party, ...state.enemies]) if (unit.hp > 0 && (unit.radius === undefined || unit.speed === undefined || unit.facing === undefined
-      || unit.targetId === undefined || unit.moving === undefined || unit.action === undefined)) invalid(`Party v2 unit ${unit.id} is missing combat state`);
-  }
-  if (state.enemies.some(unit => !(state.combatRules === 'party-v2' ? isPartyEnemyId(unit.sourceId) : enemyKindSchema.safeParse(unit.sourceId).success))) invalid('Invalid enemy');
+  for (const unit of [...state.party, ...state.enemies]) if (unit.hp > 0 && (unit.radius === undefined || unit.speed === undefined || unit.facing === undefined
+    || unit.targetId === undefined || unit.moving === undefined || unit.action === undefined)) invalid(`Party unit ${unit.id} is missing combat state`);
+  if (state.enemies.some(unit => !isPartyEnemyId(unit.sourceId))) invalid('Invalid enemy');
   if (state.party.some(unit => !owned.has(unit.sourceId))) invalid('Invalid combat party');
   const gearIds = new Set(state.inventory.map(item => item.id));
   if (gearIds.size !== state.inventory.length || state.inventory.some(item => item.id >= itemId(state.seed, state.nextGearId) || !item.id.startsWith(itemId(state.seed, 0).slice(0, 13))

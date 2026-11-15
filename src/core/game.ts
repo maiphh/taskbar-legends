@@ -9,26 +9,29 @@ import { normalizeSeed, random } from './rng';
 
 export function stageName(stage: number): string { return stageConfig(stage).id; }
 export function isBoss(stage: number): boolean { return stageConfig(stage).isBoss; }
-export function createState(seed = 1): GameState {
+export function createState(seed = 1, options: { starterGear?: boolean } = {}): GameState {
   const normalized = normalizeSeed(seed);
   const starters = CONFIG.heroes.filter(hero => hero.starter);
+  const roster = starters.map(hero => ({ id: hero.id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() }));
+  for (const id of ['mw1', 'priest']) if (!roster.some(hero => hero.id === id)) roster.push({ id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() });
   const state: GameState = {
     version: 2, balance: CONFIG.version, tick: 0, rng: normalized, seed: normalized, gold: 0,
     tickets: CONFIG.rewards.startingTickets, pity: 0, highestCleared: 0, progress: { kind: 'PUSHING', stage: 1 },
     phase: { kind: 'battle' }, wave: 1, encounter: 0, stageStartedTick: 0, attemptPower: 0,
-    roster: starters.map(hero => ({ id: hero.id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() })),
-    partyIds: starters.map(hero => hero.id), inventory: [], nextGearId: 1, party: [], enemies: [], retryFailures: 0, economyRevision: 0,
+    combatRules: 'party-v2', partyPreset: 'balanced', roster, partyIds: ['mw2', 'mw1', 'priest'],
+    inventory: [], nextGearId: 1, party: [], enemies: [], retryFailures: 0, economyRevision: 0,
     stats: { clears: 0, losses: 0, retries: 0, bossFailures: 0, goldEarned: 0, pulls: 0, chests: 0, offlineClears: 0, offlineSeconds: 0 },
     metrics: { firstAttemptTicks: {}, firstClearTicks: {}, fullRosterTick: null, farmClearSeconds: [], farmMinSeconds: null,
       farmMaxSeconds: null, farmSamples: 0, maxNonBossStallSeconds: 0 }, eventSeq: 0, eventCounts: {}, events: [],
   };
+  if (options.starterGear !== false) addStarterGear(state);
   beginEncounter(state);
-  return state;
+  return parseState(state);
 }
 /**
  * Party-v2 fresh-account kit: one common weapon (melee DPS), armor (tank) and charm (healer), equipped, so Stash and Upgrades
  * are not empty on a new seed. Deterministic: fixed stage-1 common stats (`gear.mainRoll` is [1, 1]; charm uses the low end of
- * its range), ids from `nextGearId`, no RNG drawn. Only `createPartyState(seed, { starterGear: true })` (the browser/native
+ * its range), ids from `nextGearId`, no RNG drawn. Only `createState(seed, { starterGear: true })` (the browser/native
  * party preview) calls it; legacy `createState` and its golden output are unchanged.
  */
 export function addStarterGear(state: GameState): void {
@@ -44,20 +47,6 @@ export function addStarterGear(state: GameState): void {
       slot, rarity: 'common', dropStage: 1, level: 0, spent: 0, stats });
     hero.equipment[slot] = id;
   }
-}
-/** Isolated opt-in rules preview. Legacy createState and its serialized output remain unchanged. */
-export function createPartyState(seed = 1, options: { starterGear?: boolean } = {}): GameState {
-  const state = createState(seed);
-  state.combatRules = 'party-v2';
-  for (const id of ['mw1', 'priest']) if (!state.roster.some(hero => hero.id === id)) {
-    state.roster.push({ id, level: 1, xp: 0, stars: 1, equipment: blankEquipment() });
-  }
-  state.partyIds = ['mw2', 'mw1', 'priest'];
-  if (options.starterGear) addStarterGear(state);
-  state.party = []; state.enemies = []; state.encounter = 0; state.wave = 1;
-  state.events = []; state.eventSeq = 0; state.eventCounts = {};
-  beginEncounter(state);
-  return parseState(state);
 }
 function rest(state: GameState, next: 'encounter' | 'wave'): void {
   state.phase = { kind: 'rest', remainingTicks: ticksForSeconds(next === 'wave' ? CONFIG.sim.waveGapSec : CONFIG.sim.stageGapSec), next };
@@ -134,7 +123,7 @@ function win(state: GameState): void {
   if (clock) {
     const gapTicks = ticksForSeconds(CONFIG.sim.stageGapSec);
     state.phase = { kind: 'farmPad', settleAtTick: Math.max(state.tick + gapTicks, state.stageStartedTick + clock.minCycleTicks),
-      nativeDurationTicks: clock.elapsedTicks + gapTicks, ...(state.combatRules === 'party-v2' ? { presentationStartedAtTick: state.tick } : {}) };
+      nativeDurationTicks: clock.elapsedTicks + gapTicks, presentationStartedAtTick: state.tick };
     return;
   }
   awardClear(state, (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond + CONFIG.sim.stageGapSec);
@@ -173,7 +162,7 @@ function encounterSubstep(state: GameState): void {
     return;
   }
   if (state.phase.kind !== 'battle') return;
-  if (state.combatRules === 'party-v2' && state.enemies.every(enemy => enemy.hp <= 0)) {
+  if (state.enemies.every(enemy => enemy.hp <= 0)) {
     expireFriendlyDeadTargetProjectiles(state);
     combatTick(state, false);
     if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); lose(state); return; }
@@ -182,12 +171,12 @@ function encounterSubstep(state: GameState): void {
   }
   const elapsed = state.farmClock?.elapsedTicks ?? state.tick - state.stageStartedTick;
   const timedOut = elapsed >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec);
-  if (timedOut && (state.combatRules !== 'party-v2' || !hasPendingActionPresentation(state))) { lose(state); return; }
+  if (timedOut && !hasPendingActionPresentation(state)) { lose(state); return; }
   combatTick(state, !timedOut);
-  if (state.party.every(hero => hero.hp <= 0)) { if (state.combatRules === 'party-v2') cancelPartyEncounterEffects(state); lose(state); }
+  if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); lose(state); }
   else if (state.enemies.every(enemy => enemy.hp <= 0)) {
-    if (state.combatRules === 'party-v2') expireFriendlyDeadTargetProjectiles(state);
-    if (state.combatRules !== 'party-v2' || (!hasPendingHostileImpact(state) && !hasPendingActionPresentation(state))) win(state);
+    expireFriendlyDeadTargetProjectiles(state);
+    if (!hasPendingHostileImpact(state) && !hasPendingActionPresentation(state)) win(state);
   }
 }
 function tick(state: GameState): void {
@@ -211,8 +200,7 @@ function tick(state: GameState): void {
     return;
   }
   const farmScale = state.farmClock?.scale ?? 1;
-  const readableBeat = state.combatRules === 'party-v2'
-    && (state.phase.kind === 'battle' || (state.phase.kind === 'rest' && state.phase.next === 'wave'));
+  const readableBeat = state.phase.kind === 'battle' || (state.phase.kind === 'rest' && state.phase.next === 'wave');
   const scale = readableBeat ? 1 : farmScale;
   for (let substep = 0; substep < scale; substep += 1) {
     if (state.farmClock) { state.farmClock.remainder = scale - substep - 1; state.farmClock.elapsedTicks += 1; }

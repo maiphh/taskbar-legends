@@ -1,96 +1,41 @@
-import { readFileSync } from 'node:fs';
+﻿import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { CONFIG } from '../src/config';
-import { createState, step } from '../src/core/game';
-import { itemId, itemNamespace } from '../src/core/model';
+import { createState, snapshot, step } from '../src/core/game';
 import type { GameState } from '../src/core/model';
 import { referencePolicy } from '../src/core/policy';
-import { decodeSave, encodeSave, makeSave, migrateV1, restoreSave } from '../src/core/save';
+import { decodeSave, encodeSave, makeSave, restoreSave } from '../src/core/save';
 import { memorySaveStore, TextSaveStore } from '../src/core/save-store';
 import type { SaveStore } from '../src/core/save-store';
 
 const fixture = (name: string): unknown => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8'));
-interface V1Fixture { state: { tick: number; gold: number; tickets: number; highestCleared: number; seed: number; inventory: { id: number }[];
-  roster: { id: string; level: number; equipment: Record<string, number | null> }[]; stats: unknown; progress: unknown; eventSeq: number } }
-const v1 = (name: string): V1Fixture => fixture(name) as V1Fixture;
 function referenceRun(seed: number, ticks: number): GameState {
   const state = createState(seed), cursor = { revision: -1 };
   for (let tick = 0; tick < ticks; tick += 1) { referencePolicy(state, cursor); step(state); }
   return state;
 }
 
-describe('save v1 -> v2 migration', () => {
-  it('keeps all progress and gives existing items deterministic ids with source migration', () => {
-    const old = v1('save-v1-geared.json'), { state } = migrateV1(old);
-    expect(state.version).toBe(2);
-    expect({ tick: state.tick, gold: state.gold, tickets: state.tickets, highest: state.highestCleared, stats: state.stats, progress: state.progress, seq: state.eventSeq })
-      .toEqual({ tick: old.state.tick, gold: old.state.gold, tickets: old.state.tickets, highest: old.state.highestCleared, stats: old.state.stats, progress: old.state.progress, seq: old.state.eventSeq });
-    expect(state.inventory.map(item => item.id)).toEqual(old.state.inventory.map(item => itemId(old.state.seed, item.id)));
-    for (const item of state.inventory) {
-      expect(item).toMatchObject({ tradeable: false, acquiredAt: { tick: old.state.tick, source: 'migration' }, templateId: `gear.${item.slot}.${item.rarity}` });
-    }
-    const equipped = old.state.roster.flatMap(hero => Object.values(hero.equipment)).filter(id => id !== null).length;
-    expect(equipped).toBeGreaterThan(0);
-    old.state.roster.forEach((hero, index) => {
-      for (const [slot, id] of Object.entries(hero.equipment)) expect(state.roster[index]?.equipment[slot as 'weapon']).toBe(id === null ? null : itemId(old.state.seed, id));
-      expect(state.roster[index]?.level).toBe(hero.level);
-    });
-    expect(migrateV1(fixture('save-v1-geared.json'))).toEqual(migrateV1(fixture('save-v1-geared.json')));
+describe('current party save format', () => {
+  it('round-trips current party progress and its stable starter inventory', () => {
+    const state = referenceRun(11, 600);
+    expect(state.combatRules).toBe('party-v2');
+    const raw = makeSave(state, 1_700_000_000_000);
+    const restored = decodeSave(JSON.parse(raw));
+    expect(restored.state).toEqual(state);
+    expect(restored.state.partyIds).toEqual(state.partyIds);
+    expect(restored.state.partyIds).toHaveLength(3);
+    expect(restored.state.inventory).toEqual(state.inventory);
   });
-  it('matches what v2 itself produces for the same seed and inputs (ids line up; only provenance differs)', () => {
-    // Rebuild a v1-format save from a run under the current balance, so this holds across balance passes.
-    const fresh = referenceRun(11, 20 * 3600 * 2);
-    const serial = (id: string): number => Number.parseInt(id.slice(-8), 16);
-    const v1State = { ...structuredClone(fresh), version: 1,
-      inventory: fresh.inventory.map(item => ({ id: serial(item.id), slot: item.slot, rarity: item.rarity, dropStage: item.dropStage, level: item.level, spent: item.spent, stats: item.stats })),
-      roster: fresh.roster.map(hero => ({ ...hero, equipment: Object.fromEntries(Object.entries(hero.equipment).map(([slot, id]) => [slot, id === null ? null : serial(id)])) })),
-      events: fresh.events.map(event => event.data.type === 'gear' || event.data.type === 'upgrade' ? { ...event, data: { ...event.data, gearId: serial(event.data.gearId) } } : event) };
-    expect(fresh.inventory.length).toBeGreaterThan(10);
-    const migrated = migrateV1({ format: 'taskbar-legends-save-v1', savedAtMs: 0, remainderMs: 0, state: v1State }).state;
-    const withoutProvenance = (items: GameState['inventory']) => items.map(item => ({ ...item, acquiredAt: null }));
-    expect(withoutProvenance(migrated.inventory)).toEqual(withoutProvenance(fresh.inventory));
-    expect(migrated.roster).toEqual(fresh.roster);
-    expect(migrated.events).toEqual(fresh.events);
-    expect({ ...migrated, inventory: [] }).toEqual({ ...fresh, inventory: [] });
+  it('rejects incompatible legacy v1 gameplay with export-preserved guidance', () => {
+    const raw = fixture('save-v1-fresh.json');
+    expect(() => decodeSave(raw)).toThrow(/legacy gameplay save is incompatible.*raw data was preserved/i);
+    expect(() => restoreSave(JSON.stringify(raw), 1_700_000_000_000)).toThrow(/export the account from the previous version/i);
   });
-  it('loads v1 fixtures saved under an earlier balance version and restamps them to the current one', () => {
-    expect((fixture('save-v1-geared.json') as { state: { balance: string } }).state.balance).toBe('1.1.0');
-    expect(migrateV1(fixture('save-v1-geared.json')).state.balance).toBe(CONFIG.version);
-  });
-  it('loads a fresh v1 save through restoreSave, and resaves as v2 with wallet and inventory split out', () => {
-    const raw = JSON.stringify(fixture('save-v1-fresh.json'));
-    const restored = restoreSave(raw, 1_700_000_000_000);
-    expect(restored.state.tick).toBe(200);
-    const v2 = encodeSave({ state: restored.state, savedAtMs: 1, remainderMs: 0 });
-    expect(v2.format).toBe('taskbar-legends-save-v2');
-    expect(v2.wallet).toEqual({ gold: restored.state.gold, tickets: restored.state.tickets });
-    expect(Object.keys(v2.state)).not.toContain('gold');
-    expect(Object.keys(v2.state)).not.toContain('inventory');
-    expect(decodeSave(JSON.parse(JSON.stringify(v2))).state).toEqual(restored.state);
+  it('accepts same-seed current runs and current saves byte-identically', () => {
+    const a = referenceRun(4, 1200), b = referenceRun(4, 1200);
+    expect(snapshot(a)).toBe(snapshot(b));
+    expect(encodeSave({ state: a, savedAtMs: 123, remainderMs: 10 })).toEqual(encodeSave({ state: b, savedAtMs: 123, remainderMs: 10 }));
   });
 });
-
-describe('stable item ids', () => {
-  const run = referenceRun(4, 20 * 3600 * 2);
-  it('are identical across runs with the same seed and inputs', () => {
-    expect(run.inventory.length).toBeGreaterThan(10);
-    expect(referenceRun(4, 20 * 3600 * 2).inventory).toEqual(run.inventory);
-  });
-  it('are unique, ordered by acquisition, and namespaced by seed', () => {
-    const ids = run.inventory.map(item => item.id);
-    expect(new Set(ids).size).toBe(ids.length);
-    expect([...ids].sort()).toEqual(ids);
-    expect(ids.every(id => id.startsWith(`itm_${itemNamespace(4)}_`))).toBe(true);
-    const other = referenceRun(5, 20 * 3600).inventory.map(item => item.id);
-    expect(other.some(id => ids.includes(id))).toBe(false);
-    expect(new Set([1, 2, 3, 4, 5, 0xffffffff].map(itemNamespace)).size).toBe(6);
-  });
-  it('record drop provenance and default to untradeable', () => {
-    for (const item of run.inventory) expect(item).toMatchObject({ tradeable: false, acquiredAt: { source: 'drop' } });
-    expect(run.inventory.every(item => item.acquiredAt.tick <= run.tick)).toBe(true);
-  });
-});
-
 describe('save validation', () => {
   const good = (): Record<string, unknown> => JSON.parse(makeSave(referenceRun(4, 20 * 600), 1000)) as Record<string, unknown>;
   const reject = (mutate: (save: Record<string, any>) => void): void => { // eslint-disable-line @typescript-eslint/no-explicit-any
