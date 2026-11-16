@@ -19,6 +19,10 @@ jobs:
       - run: npm run lint
       - run: npm run test
       - run: npm run build
+        env:
+          VITE_ONLINE_ENABLED: ${{ vars.VITE_ONLINE_ENABLED }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - name: Deterministic sim smoke
         run: |
           npm run --silent sim -- --seed 1 --ticks 600 > sim-smoke.json
@@ -39,6 +43,10 @@ jobs:
             sim-v14-smoke.json
       - name: Build relative-path web preview
         run: npx vite build --base ./ --outDir web-preview
+        env:
+          VITE_ONLINE_ENABLED: ${{ vars.VITE_ONLINE_ENABLED }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - uses: actions/upload-artifact@v4
         with:
           name: web-preview

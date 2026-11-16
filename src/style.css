@@ -327,6 +327,14 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 
 /* Settings (§7.5): one column from y=88, 8 px gaps. */
 .px-settings { position: absolute; left: 16px; top: 0; width: calc(var(--px-panel-w) - 32px); height: var(--px-body-h); display: flex; flex-direction: column; gap: 0; overflow-y: auto; }
+.px-account { border: 1px solid var(--px-line, #526171); padding: 8px; margin-bottom: 8px; background: rgba(12, 20, 29, .88); }
+.px-account h3 { margin: 0 0 4px; font-size: 12px; }
+.px-account p { margin: 3px 0 6px; font-size: 11px; line-height: 1.35; }
+.px-account label { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 11px; }
+.px-account input { min-width: 0; flex: 1; height: 26px; padding: 3px 6px; border: 1px solid #687787; border-radius: 2px; background: #101820; color: #f1eee3; font: inherit; }
+.px-account input:focus-visible { outline: 2px solid #e8c778; outline-offset: 1px; }
+.px-account input:disabled { opacity: .55; }
+.px-account-actions { display: flex; justify-content: flex-end; margin: 4px 0; }
 .px-srow { flex: none; }
 .px-srow { display: flex; align-items: center; gap: 8px; height: 28px; }
 .px-zoomrow { margin-top: 4px; }

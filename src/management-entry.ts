@@ -49,6 +49,13 @@ class NativeManagementClient implements ManagementClient {
   cue(key: string): void { void this.request('cue', { cue: key }).catch(() => undefined); }
   async getCompactPrefs(): Promise<CompactPrefs> { const result = await this.request('compact-get'); return result.result as CompactPrefs; }
   async setCompactPrefs(value: CompactPrefs): Promise<void> { await this.request('compact-set', { prefs: value }); }
+  async getAccountStatus() {
+    const result = await this.request('account-status');
+    return result.result as Awaited<ReturnType<NonNullable<ManagementClient['getAccountStatus']>>>;
+  }
+  async sendLoginCode(email: string): Promise<void> { await this.request('account-send-code', { email }); }
+  async verifyLoginCode(email: string, code: string): Promise<void> { await this.request('account-verify-code', { email, code }); }
+  async signOut(): Promise<void> { await this.request('account-sign-out'); }
   close(): void {
     this.rpc.close();
     void invoke('hide_management').catch(() => undefined);

@@ -24,6 +24,20 @@ npm run test
 npm run shot                # build + isolated Playwright preview on 127.0.0.1:4175
 ```
 
+### Local online accounts (optional)
+
+Online mode stays off unless `.env.local` sets `VITE_ONLINE_ENABLED=true` plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. `npm run dev` loads that file. Copy `.env.example` and fill local values; keep `SUPABASE_SERVICE_ROLE_KEY` (scripts also accept `SERVICE_ROLE_KEY`) unprefixed and never expose it as a `VITE_` variable.
+
+The local project id is `taskbar-legends` (API `54321`, DB `54322`, Mailpit `54324`). If the stack was stopped without `--no-backup`, the database is preserved — do **not** run `supabase db reset` unless you intentionally want disposable data replaced. Start with unused services excluded and redirect CLI output to an ignored log (for example `artifacts/supabase-start.log`; `*.log` is already ignored) because startup output can contain local credentials. Do not print that log:
+
+```sh
+npx supabase start -x realtime,storage-api,imgproxy,postgres-meta,studio,logflare,vector,supavisor > artifacts/supabase-start.log 2>&1
+```
+
+Edge runtime is already enabled in `supabase/config.toml`, so a normal start serves `game-api`. `npm run supabase:serve` is for server-side function iteration only. Hosted deploy is blocked until a project ref exists. The Edge handler still calls `getUser` even though `verify_jwt = false`.
+
+Useful checks once the stack and `.env.local` are ready: `npm run test:online:integration`, `npm run test:online:ui` (expects `npm run dev` on `http://127.0.0.1:5173`), and `npx supabase test db`.
+
 For screenshots install Chromium with `npx playwright install chromium`, or set `CHROMIUM_EXECUTABLE_PATH`. The script detects `/usr/bin/google-chrome` on this box and uses a fresh, unsigned-in profile. It checks browser errors, all sprite/UI/font loads, debug snapshot roundtrip, panel resizing, keyboard roster access, actual purchase costs, insufficient tickets, continued battle, flash expiry and emulated DPI. Results are `shots/ui-checks.json`; screenshots/state artifacts are retained in `shots/`.
 
 ### HUD / controls

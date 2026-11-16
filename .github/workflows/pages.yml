@@ -32,6 +32,9 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE_PATH: ${{ inputs.base_path || format('/{0}/', github.event.repository.name) }}
+          VITE_ONLINE_ENABLED: ${{ vars.VITE_ONLINE_ENABLED }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

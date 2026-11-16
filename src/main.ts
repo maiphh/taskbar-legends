@@ -24,6 +24,10 @@ import { readCompactPrefs, writeCompactPrefs } from './platform/compact-prefs';
 import { parseCompactPrefs } from './platform/desktop/compact-geometry';
 import type { CompactPrefs } from './platform/desktop/compact-geometry';
 import { startManagementBridge } from './platform/desktop/management-bridge';
+import { OnlineGateway } from './online/gateway';
+import type { AccountStatus } from './online/gateway';
+import { canPersistLocalAuthority, canRestoreLocalAuthority, shouldCheckpointLocalBeforeConnecting, shouldFreezeLocalForConnecting } from './online/gateway-guards';
+import { syncPresentationEconomy } from './online/presentation';
 
 function element(id: string): HTMLElement {
   const value = document.getElementById(id); if (!value) throw new Error(`Missing UI element ${id}`); return value;
@@ -31,6 +35,7 @@ function element(id: string): HTMLElement {
 const query = new URLSearchParams(location.search);
 setV14Rules(parseV14Flag(query.get('v14')));
 setSalvageRules(query.get('salvage') === 'off' ? 'default' : 'design');
+const localV14Rules = activeV14Rules(), localSalvageRules = activeSalvageRules();
 /** Shot harness only (`?shot&menu=native`): render the 760×560 native-window variant in the page to compare it with its mockups. */
 const nativeMenuShot = query.has('shot') && query.get('menu') === 'native';
 const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing canvas');
@@ -42,11 +47,39 @@ const renderer = new Renderer(canvas, element('controls'));
 let compactPrefs: CompactPrefs = readCompactPrefs();
 document.body.classList.add('compact-shell'); renderer.setCompactViewport(true, compactPrefs.zoom);
 const newSelectedState = (seed = 1) => createState(seed);
-let state = newSelectedState(), paused = false, accumulatorMs = 0, hidden = document.hidden;
+let state = newSelectedState(), paused = false, onlinePaused = false, onlineState: ReturnType<typeof newSelectedState> | null = null, onlineVisualState: ReturnType<typeof newSelectedState> | null = null, onlineAccumulatorMs = 0, accumulatorMs = 0, hidden = document.hidden;
 let restoring = false, failedSave = false, checkpointBlocked = false, rendering = false;
 const managementAuthority = new ManagementAuthority(state, paused, next => { state = next; render(); });
 managementAuthority.setAvailable(false);
+let accountStatus: AccountStatus = { mode: 'local', enabled: false, email: null, lastSync: null, message: '', paused: false };
+let localFrozenForAccount = false;
+let localSaveHydrated = false;
+const accountGateway = new OnlineGateway(managementAuthority, {
+  onCloudState: (next, reason) => {
+    const returnToLocal = localFrozenForAccount && next === null && reason === 'sign-out';
+    onlineState = next; onlineVisualState = next ? cloneState(next) : null;
+    if (next) { setV14Rules(parseV14Flag(null)); setSalvageRules('design'); onlinePaused = accountStatus.paused; }
+    else {
+      setV14Rules(localV14Rules); setSalvageRules(localSalvageRules); onlinePaused = false; onlineAccumulatorMs = 0;
+      // leaveCloud publishes status after this callback, so mirror local mode before any restore decision.
+      if (reason === 'sign-out') { localFrozenForAccount = false; accountStatus = { ...accountStatus, mode: 'local' }; }
+      if (returnToLocal && !hidden) void restore();
+    }
+    render();
+  },
+  onStatus: next => {
+    if (next.mode === 'connecting' && shouldFreezeLocalForConnecting(accountStatus.mode, !!onlineState)) {
+      if (shouldCheckpointLocalBeforeConnecting(localSaveHydrated, hidden, restoring, failedSave, checkpointBlocked)) checkpointVisibleTime();
+      localFrozenForAccount = true;
+    }
+    accountStatus = next; if (onlineState) onlinePaused = next.paused; render();
+  },
+});
 function replaceSelectedState(next: typeof state): void { managementAuthority.replaceState(next); }
+async function setPaused(value: boolean): Promise<void> {
+  if (onlineState || accountGateway.isOnline()) { await accountGateway.pause(value); return; }
+  paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render();
+}
 function setCompactSettings(next: CompactPrefs): void {
   compactPrefs = parseCompactPrefs(next); writeCompactPrefs(compactPrefs);
   renderer.setCompactViewport(true, compactPrefs.zoom); resize();
@@ -76,12 +109,12 @@ if (!('__TAURI_INTERNALS__' in window)) document.body.append(managementRoot);
 canvas.setAttribute('aria-label', 'A movable battlefield for your heroes. Use Menu for management or Edit to move and resize.');
 function managementClient(): ManagementClient {
   return {
-    snapshot: async () => managementAuthority.snapshot(),
-    execute: async (value, revision, requestId) => value.type === 'pullMany'
-      ? managementAuthority.executeManyPulls({ clientId: `browser:${requestId.split(':')[0] ?? 'view'}`, requestId, expectedRevision: revision, count: value.count })
-      : managementAuthority.execute({ clientId: `browser:${requestId.split(':')[0] ?? 'view'}`, requestId, expectedRevision: revision, action: value }),
-    compare: async (heroId, gearId) => managementAuthority.compareGear(heroId, gearId),
-    pause: async value => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); }, close: () => undefined,
+    snapshot: async () => accountGateway.snapshot(),
+    execute: async (value, revision, requestId) => accountGateway.execute(value, revision, requestId),
+    compare: async (heroId, gearId) => accountGateway.compare(heroId, gearId),
+    pause: async value => { if (hidden || restoring || checkpointBlocked || failedSave) return; await setPaused(value); }, close: () => undefined,
+    getAccountStatus: async () => accountGateway.status(), sendLoginCode: email => accountGateway.sendLoginCode(email),
+    verifyLoginCode: (email, code) => accountGateway.verifyLoginCode(email, code), signOut: () => accountGateway.signOut(),
     getAudio: async () => audio.settings(), setAudio: async value => { audio.set(value); renderer.ui.audio = audio.settings(); render(); },
     getCompactPrefs: async () => compactPrefs, setCompactPrefs: async value => setCompactSettings(value),
     cue: key => { audio.play(key); },
@@ -160,7 +193,8 @@ element('compact-edit-button').addEventListener('click', () => setEditing(docume
 element('edit-done').addEventListener('click', () => setEditing(false));
 let restoreTask: Promise<void> | null = null;
 function restore(): Promise<void> {
-  if (hidden || checkpointBlocked) return Promise.resolve();
+  if (onlineState) { void accountGateway.sync(onlinePaused ? 'paused' : 'active').catch(() => undefined); return Promise.resolve(); }
+  if (hidden || checkpointBlocked || !canRestoreLocalAuthority(accountStatus.mode, !!onlineState, localFrozenForAccount)) return Promise.resolve();
   if (restoreTask) { void restoreCoordinator.restore(() => !hidden && !checkpointBlocked); return restoreTask; }
   restoring = true; managementAuthority.setAvailable(false); render();
   const task = (async () => {
@@ -176,6 +210,8 @@ function restore(): Promise<void> {
         if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq));
           if (!renderer.ui.welcome) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears · ${Math.round(saved.partialClears * 100)}% toward next clear${saved.capped ? ' (8h cap)' : ''}`); }
       }
+      // Coordinator finished a visible restore: save applied, or confirmed absent.
+      localSaveHydrated = true;
       if (failedSave) {
         failedSave = false; recovery.hidden = true;
         recoveryTitle.textContent = 'Save could not be loaded';
@@ -207,7 +243,7 @@ function restore(): Promise<void> {
   void task.then(() => { if (restoreTask === task) restoreTask = null; }, () => { if (restoreTask === task) restoreTask = null; });
   return task;
 }
-void restore();
+void restore().then(() => accountGateway.initialize());
 /** Welcome-back data: the offline result plus the farm stage, the best item rolled and the choices waiting. */
 function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number): WelcomeData {
   let best: WelcomeData['best'] = null;
@@ -217,13 +253,13 @@ function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number)
   return { ...result, stage: result.stage, partialClears: result.partialClears, best, choices: activeV14Rules().includes('chestChoice') && result.chests ? state.pendingChoice?.length ?? 0 : 0 };
 }
 function save(): void {
-  if (restoring || failedSave || checkpointBlocked || hidden) return;
+  if (restoring || failedSave || checkpointBlocked || hidden || !canPersistLocalAuthority(accountStatus.mode, !!onlineState)) return;
   store.save({ state, savedAtMs: saveTimestamp.next(Date.now()), remainderMs: accumulatorMs })
     .catch(() => { showNotice('Save failed: storage unavailable/full. Export __game.snapshot().'); });
 }
 /** Consume the final visible frame into a durable timestamp before the browser freezes the page. */
 function checkpointVisibleTime(): void {
-  if (restoring || failedSave || checkpointBlocked) return;
+  if (restoring || failedSave || checkpointBlocked || !canPersistLocalAuthority(accountStatus.mode, !!onlineState)) return;
   const now = performance.now();
   if (!paused) {
     accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
@@ -257,21 +293,24 @@ function render(): void {
   if (rendering) return;
   rendering = true;
   try {
-  renderer.render(state, paused);
-  const status = statusText(state); if (liveStatus.textContent !== status) liveStatus.textContent = status;
+  const visibleState = onlineVisualState ?? state;
+  renderer.render(visibleState, onlineState ? onlinePaused : paused);
+  const status = statusText(visibleState); if (liveStatus.textContent !== status) liveStatus.textContent = status;
   if (performance.now() > noticeUntil) notice.textContent = '';
   } finally { rendering = false; }
 }
 function action(value: unknown): void {
   if (hidden || restoring || checkpointBlocked || failedSave) return;
-  const before = state.eventSeq;
-  const reply = managementAuthority.execute({ clientId: 'battlefield-keyboard', requestId: `key:${++internalRequest}`, expectedRevision: managementAuthority.snapshot().revision, action: value as Action });
-  if (!reply.accepted) showNotice(reply.reason ?? 'Action unavailable.');
-  state = managementAuthority.getState();
-  for (const event of state.events) if (event.seq > before && event.data.type === 'salvage') showNotice(salvageToast(event.data));
-  render();
+  void (async () => {
+    const before = (onlineState ?? state).eventSeq, current = await accountGateway.snapshot();
+    const reply = await accountGateway.execute(value as Action, current.revision, `battlefield:${++internalRequest}`);
+    if (!reply.accepted) showNotice(reply.reason ?? 'Action unavailable.');
+    const after = onlineState ?? state;
+    for (const event of after.events) if (event.seq > before && event.data.type === 'salvage') showNotice(salvageToast(event.data));
+    render();
+  })().catch(error => showNotice(error instanceof Error ? error.message : 'Action could not reach the account service.'));
 }
-function togglePause(): void { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = !paused; managementAuthority.setPaused(paused); lastFrame = performance.now(); render(); }
+function togglePause(): void { if (hidden || restoring || checkpointBlocked || failedSave) return; void setPaused(onlineState ? !onlinePaused : !paused).catch(error => showNotice(error instanceof Error ? error.message : 'Could not change pause state.')); }
 let lastCompactPresentationKey = '';
 function announceCompactPresentation(): void {
   const detail = { welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() };
@@ -290,12 +329,18 @@ renderer.ui.onAction = action; renderer.ui.onPause = togglePause; renderer.ui.on
 renderer.ui.onCue = key => { audio.play(key); };
 renderer.ui.audio = audio.settings();
 renderer.ui.onAudio = change => { audio.set(change); renderer.ui.audio = audio.settings(); render(); };
-bindInput({ action, togglePause, cheapestUpgrade: () => { const item = cheapestEquippedUpgrade(state); if (item) action({ type: 'upgrade', gearId: item.id }); } });
-void startManagementBridge(managementAuthority, {
+bindInput({ action, togglePause, cheapestUpgrade: () => { const item = cheapestEquippedUpgrade(onlineState ?? state); if (item) action({ type: 'upgrade', gearId: item.id }); } });
+void startManagementBridge({
+  snapshot: () => accountGateway.snapshot(),
+  execute: (value, revision, requestId) => accountGateway.execute(value, revision, requestId),
+  compare: (heroId, gearId) => accountGateway.compare(heroId, gearId),
+}, {
   audio: () => audio.settings(),
   setAudio: value => { audio.set(value); renderer.ui.audio = audio.settings(); render(); },
-  setPaused: value => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); },
+  setPaused: async value => { if (hidden || restoring || checkpointBlocked || failedSave) return; await setPaused(value); },
   compactPrefs: () => compactPrefs ?? readCompactPrefs(), setCompactPrefs: value => setCompactSettings(parseCompactPrefs(value)),
+  accountStatus: () => accountGateway.status(), sendLoginCode: email => accountGateway.sendLoginCode(email),
+  verifyLoginCode: (email, code) => accountGateway.verifyLoginCode(email, code), signOut: () => accountGateway.signOut(),
 }).then(stop => window.addEventListener('pagehide', stop, { once: true })).catch(error => showNotice(`Management bridge unavailable: ${String(error)}`));
 window.addEventListener('resize', resize); resize();
 window.addEventListener('pagehide', () => { if (!hidden) save(); audio.dispose(); managementView?.dispose(); });
@@ -304,42 +349,48 @@ document.addEventListener('visibilitychange', () => {
     // Freeze authority before saving: a management poll/action must not commit
     // against a state snapshot that is about to be replaced on foreground.
     hidden = true; managementAuthority.setAvailable(false);
-    checkpointVisibleTime(); restoreCoordinator.invalidate();
+    if (onlineState) { void accountGateway.sync('inactive').catch(() => undefined); save(); }
+    else { if (canPersistLocalAuthority(accountStatus.mode, !!onlineState)) checkpointVisibleTime(); restoreCoordinator.invalidate(); }
   } else if (!document.hidden && hidden) {
-    hidden = false; lastFrame = performance.now(); if (!checkpointBlocked && !failedSave) void restore();
+    hidden = false; lastFrame = performance.now();
+    if (!checkpointBlocked && !failedSave) {
+      if (onlineState) void accountGateway.sync(onlinePaused ? 'paused' : 'active').catch(() => undefined);
+      else if (canRestoreLocalAuthority(accountStatus.mode, !!onlineState, localFrozenForAccount)) void restore();
+    }
   }
   render();
 });
 const debug: GameDebug = {
-  getState: () => cloneState(state),
-  step: (ticks = 1) => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks simulation input'); if (!paused) throw new Error('Pause before stepping'); step(state, ticks); render(); return cloneState(state); },
-  pause: () => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = true; managementAuthority.setPaused(true); render(); }, resume: () => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = false; managementAuthority.setPaused(false); lastFrame = performance.now(); render(); }, isPaused: () => paused,
-  input: value => { action(value); return cloneState(state); },
-  setSeed: seed => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); replaceSelectedState(newSelectedState(seed)); renderer.ui.resetHistory(); accumulatorMs = 0; paused = true; managementAuthority.setPaused(true); render(); return cloneState(state); },
-  snapshot: () => snapshot(state),
+  getState: () => cloneState(onlineState ?? state),
+  step: (ticks = 1) => { if (onlineState) throw new Error('Online combat is advanced by the verified account service.'); if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks simulation input'); if (!paused) throw new Error('Pause before stepping'); step(state, ticks); render(); return cloneState(state); },
+  pause: () => { if (hidden || restoring || checkpointBlocked || failedSave) return; void setPaused(true); }, resume: () => { if (hidden || restoring || checkpointBlocked || failedSave) return; void setPaused(false); }, isPaused: () => onlineState ? onlinePaused : paused,
+  input: value => { action(value); return cloneState(onlineState ?? state); },
+  setSeed: seed => { if (onlineState) throw new Error('Seeds are local-only; sign out before changing local state.'); if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); replaceSelectedState(newSelectedState(seed)); renderer.ui.resetHistory(); accumulatorMs = 0; paused = true; managementAuthority.setPaused(true); render(); return cloneState(state); },
+  snapshot: () => snapshot(onlineState ?? state),
   load: value => {
+    if (onlineState) throw new Error('Local save import is unavailable while signed in online. Sign out to use the local save.');
     if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes');
     const next = load(value);
     if (next.combatRules !== 'party-v2') throw new Error('Snapshot is not a current party save; it was not loaded.');
     replaceSelectedState(next); renderer.ui.resetHistory(); accumulatorMs = 0; lastFrame = performance.now(); render(); return cloneState(state);
   },
-  getEvents: () => structuredClone(state.events), getHitRegions: () => [...renderer.getHitRegions(), ...domHitRegions()], getManagementReveal: () => managementView?.revealState() ?? null, getLayout: () => renderer.getLayout(),
-  getCombatProjection: (source = state) => renderer.getCombatProjection(source),
+  getEvents: () => structuredClone((onlineState ?? state).events), getHitRegions: () => [...renderer.getHitRegions(), ...domHitRegions()], getManagementReveal: () => managementView?.revealState() ?? null, getLayout: () => renderer.getLayout(),
+  getCombatProjection: (source = onlineState ?? state) => renderer.getCombatProjection(source),
   openPanel: tab => { if (tab) openManagement(tab === 'heroes' ? 'party' : tab === 'gear' ? 'stash' : 'recruit'); else managementView?.close(); },
   whenReady: () => Promise.all([renderer.atlases.ready, renderer.ui.ready]).then(() => { render(); }),
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
-  setV14Rules: rules => { setV14Rules(rules); render(); return activeV14Rules(); }, getV14Rules: () => activeV14Rules(),
-  setSalvageRules: rules => { const next = setSalvageRules(rules); render(); return next; }, getSalvageRules: () => activeSalvageRules(),
+  setV14Rules: rules => { if (onlineState) throw new Error('Online rules are fixed by the verified server build.'); setV14Rules(rules); render(); return activeV14Rules(); }, getV14Rules: () => activeV14Rules(),
+  setSalvageRules: rules => { if (onlineState) throw new Error('Online salvage rules are fixed by the verified server build.'); const next = setSalvageRules(rules); render(); return next; }, getSalvageRules: () => activeSalvageRules(),
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
   getAudio: () => audio.debug(),
-  away: ms => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
+  away: ms => { if (onlineState) throw new Error('Offline rewards are verified by the account server.'); if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };
 window.__game = debug;
 if (import.meta.env.DEV) window.__management = {
-  snapshot: () => managementAuthority.snapshot(),
-  execute: (value: unknown) => managementAuthority.execute(value),
-  compare: (heroId: string, gearId: string) => managementAuthority.compareGear(heroId, gearId),
+  snapshot: () => accountGateway.snapshot(),
+  execute: async (value: unknown) => { const current = await accountGateway.snapshot(); const request = value as { action?: Action; requestId?: string }; return accountGateway.execute(request.action ?? value as Action, current.revision, request.requestId ?? `debug:${crypto.randomUUID()}`); },
+  compare: (heroId: string, gearId: string) => accountGateway.compare(heroId, gearId),
 };
 void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler),
   presentationState: () => ({ welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() }) }, {
@@ -348,14 +399,26 @@ void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler 
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
 void debug.whenReady().then(() => { if (debug.getAssetErrors().length) showNotice('Some UI/art unavailable; see __game.getAssetErrors().'); });
 function frame(now: number): void {
-  if (!paused && !hidden && !restoring && !failedSave && !checkpointBlocked) {
+  if (onlineState) {
+    if (!onlinePaused && !hidden && onlineVisualState) {
+      onlineAccumulatorMs += Math.min(Math.max(0, now - lastFrame), 250);
+      const ticks = Math.floor(onlineAccumulatorMs / TICK_MS); if (ticks > 0) {
+        step(onlineVisualState, ticks); onlineAccumulatorMs -= ticks * TICK_MS;
+        // Speculative combat may animate, but economy/progression remains the last server-confirmed snapshot.
+        syncPresentationEconomy(onlineVisualState, onlineState);
+        onlineVisualState.events = onlineVisualState.events.filter(event => event.data.type !== 'gear' && event.data.type !== 'pull' && event.data.type !== 'upgrade'
+          && event.data.type !== 'tickets' && event.data.type !== 'offline' && event.data.type !== 'chestChoice' && event.data.type !== 'salvage'
+          && event.data.type !== 'gold' && event.data.type !== 'xp' && event.data.type !== 'clear');
+      }
+    }
+  } else if (canPersistLocalAuthority(accountStatus.mode, !!onlineState) && !paused && !hidden && !restoring && !failedSave && !checkpointBlocked) {
     accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
     const ticks = Math.floor(accumulatorMs / TICK_MS); if (ticks > 0) { step(state, ticks); accumulatorMs -= ticks * TICK_MS; }
   }
-  lastFrame = now; audio.consume(state.events); render();
+  lastFrame = now; audio.consume((onlineState ?? state).events); render();
   if (!hidden && now - lastSave >= CONFIG.runtime.autosaveSeconds * 1000) { save(); lastSave = now; }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
-declare global { interface Window { __management?: { snapshot(): ReturnType<typeof managementAuthority.snapshot>; execute(value: unknown): ReturnType<typeof managementAuthority.execute>; compare(heroId: string, gearId: string): ReturnType<typeof managementAuthority.compareGear> } } }
+declare global { interface Window { __management?: { snapshot(): ReturnType<typeof accountGateway.snapshot>; execute(value: unknown): ReturnType<typeof accountGateway.execute>; compare(heroId: string, gearId: string): ReturnType<typeof accountGateway.compare> } } }

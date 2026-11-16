@@ -24,6 +24,10 @@ export interface ManagementClient {
   close(): void;
   /** Optional UI sound (ui_click, ui_open, ui_close, gacha cues); the host maps it to its audio buses. */
   cue?(key: string): void;
+  getAccountStatus?(): Promise<{ mode: string; enabled: boolean; email: string | null; lastSync: string | null; message: string; paused?: boolean }>;
+  sendLoginCode?(email: string): Promise<void>;
+  verifyLoginCode?(email: string, code: string): Promise<void>;
+  signOut?(): Promise<void>;
 }
 /** Epic+ pity window, as used by ManagementAuthority's epicPlusRemaining. */
 const EPIC_PITY_PULLS = 30;
@@ -147,6 +151,9 @@ export class ManagementView {
   private pendingCompare = false;
   private pendingCompareGeneration = -1;
   private audioValue: AudioValue = { muted: false, volume: 0.5 };
+  private accountStatus = { mode: 'local', enabled: false, email: null as string | null, lastSync: null as string | null, message: '' };
+  private accountEmailDraft = '';
+  private accountCodeDraft = '';
   private compactPrefs: CompactPrefs | null = null;
   private dragging: { name: string; pointerId: number } | null = null;
   private formationGesture: FormationGesture | null = null;
@@ -196,6 +203,11 @@ export class ManagementView {
     }, { signal: this.abort.signal });
     this.header.querySelector('[data-close]')?.addEventListener('click', () => this.close(), { signal: this.abort.signal });
     this.root.addEventListener('click', event => this.onClick(event), { signal: this.abort.signal });
+    this.root.addEventListener('input', event => {
+      const input = event.target instanceof HTMLInputElement ? event.target : null;
+      if (input?.dataset.accountEmail !== undefined) this.accountEmailDraft = input.value;
+      else if (input?.dataset.accountCode !== undefined) this.accountCodeDraft = input.value;
+    }, { signal: this.abort.signal });
     this.root.addEventListener('keydown', event => this.onKey(event), { signal: this.abort.signal });
     this.root.addEventListener('pointerdown', event => this.onPointer(event), { signal: this.abort.signal });
     this.root.addEventListener('pointermove', event => this.onPointer(event), { signal: this.abort.signal });
@@ -214,6 +226,7 @@ export class ManagementView {
     this.closed = false; const generation = ++this.generation; this.clientId = crypto.randomUUID(); this.sequence = 0; this.root.hidden = false;
     this.client.cue?.('ui_open');
     try { [this.audioValue, this.compactPrefs] = await Promise.all([this.client.getAudio(), this.client.getCompactPrefs()]); } catch { /* window settings remain available from the main view */ }
+    try { this.accountStatus = await this.client.getAccountStatus?.() ?? this.accountStatus; } catch { /* account status can be refreshed later */ }
     if (!this.isLive(generation)) return;
     if (!this.atlas) this.atlas = new AtlasLibrary();
     void this.atlas.ready.then(() => { this.portraits.clear(); this.contentKey = ''; this.renderContent(); });
@@ -238,9 +251,14 @@ export class ManagementView {
   private async refresh(generation = this.generation): Promise<void> {
     if (!this.isLive(generation)) return;
     try {
-      const fresh = await this.client.snapshot(); if (!this.isLive(generation) || !this.isNewer(fresh, this.snapshotValue)) return;
+      const fresh = await this.client.snapshot(); if (!this.isLive(generation)) return;
+      let accountChanged = false;
+      try { const account = await this.client.getAccountStatus?.(); if (account && JSON.stringify(account) !== JSON.stringify(this.accountStatus)) { this.accountStatus = account; accountChanged = true; } } catch { /* leave the last status visible */ }
+      if (!this.isNewer(fresh, this.snapshotValue)) { if (accountChanged) { this.contentKey = ''; this.renderContent(); } return; }
       const prior = this.snapshotValue; this.snapshotValue = fresh; this.renderHeader(); this.renderNav();
-      if (!prior || this.contentSignature(prior) !== this.contentSignature(fresh)) { if (!this.dragging) this.renderContent(); }
+      if (accountChanged || !prior || this.contentSignature(prior) !== this.contentSignature(fresh)) {
+        if (!this.dragging) { if (accountChanged) this.contentKey = ''; this.renderContent(); }
+      }
     } catch (error) { if (this.isLive(generation)) { this.message = `Management could not refresh: ${String(error)}`; this.renderStatus(); } }
   }
   private contentSignature(value: ManagementSnapshot): string {
@@ -511,6 +529,7 @@ export class ManagementView {
     if (this.openDropdown && !target.closest('.px-dd')) { this.openDropdown = null; this.contentKey = ''; this.renderContent(); }
     if (!button || !this.snapshotValue || button.disabled) return;
     const action = button.dataset.action, state = this.snapshotValue;
+    if (button.dataset.accountAction) { void this.accountCommand(button.dataset.accountAction); return; }
     if (button.dataset.helpToggle !== undefined) { this.tooltip.toggle(button); return; }
     if (button.dataset.detailsOpen !== undefined) { this.detailsOpen = true; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.detailsClose !== undefined) { this.detailsOpen = false; this.contentKey = ''; this.renderContent(); return; }
@@ -547,6 +566,19 @@ export class ManagementView {
     else if (action === 'mute') { this.audioValue = { ...this.audioValue, muted: !this.audioValue.muted }; void this.settingRequest(this.client.setAudio(this.audioValue)); this.contentKey = ''; this.renderContent(); }
     else if (action === 'reset-size' && this.compactPrefs) { this.compactPrefs = { ...this.compactPrefs, sourceWidth: 640, sourceHeight: 160 }; void this.settingRequest(this.client.setCompactPrefs(this.compactPrefs)); this.contentKey = ''; this.renderContent(); }
   }
+  private async accountCommand(action: string): Promise<void> {
+    const emailInput = this.root.querySelector<HTMLInputElement>('[data-account-email]'), codeInput = this.root.querySelector<HTMLInputElement>('[data-account-code]');
+    const email = emailInput?.value.trim() || this.accountEmailDraft.trim() || this.accountStatus.email || '', code = codeInput?.value.trim() || this.accountCodeDraft.trim();
+    this.message = 'Contacting account service…'; this.renderStatus();
+    try {
+      if (action === 'send-code') { this.accountEmailDraft = email; await this.client.sendLoginCode?.(email); }
+      else if (action === 'verify-code') { await this.client.verifyLoginCode?.(email, code); this.accountCodeDraft = ''; if (codeInput) codeInput.value = ''; }
+      else if (action === 'sign-out') { await this.client.signOut?.(); this.accountEmailDraft = ''; this.accountCodeDraft = ''; }
+      this.accountStatus = await this.client.getAccountStatus?.() ?? this.accountStatus;
+      this.message = this.accountStatus.message || (action === 'sign-out' ? 'Using local account. Online progress remains saved separately.' : 'Account updated.');
+    } catch (error) { this.message = error instanceof Error ? error.message : 'Account request failed.'; }
+    this.contentKey = ''; this.renderContent(); this.renderStatus();
+  }
   /** Dropdown commits: filters and selections re-render; the preset applies at once (as the old select did). */
   private choose(name: string, value: string): void {
     if (name === 'slot') this.slotFilter = value;
@@ -571,18 +603,30 @@ export class ManagementView {
   }
   private renderContent(): void {
     const state = this.snapshotValue; if (!state || this.closed) return;
-    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.detailsOpen}:${this.loadoutItemOpen}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
+    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.detailsOpen}:${this.loadoutItemOpen}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${JSON.stringify(this.accountStatus)}:${!!this.comparison}:${this.portraits.size}`;
     if (signature === this.contentKey) return;
     if (this.formationGesture) { this.deferredFormationRender = true; return; }
     this.tooltip.hide();
+    const liveEmail = this.root.querySelector<HTMLInputElement>('[data-account-email]');
+    const liveCode = this.root.querySelector<HTMLInputElement>('[data-account-code]');
+    if (liveEmail) this.accountEmailDraft = liveEmail.value;
+    if (liveCode) this.accountCodeDraft = liveCode.value;
     const active = document.activeElement, focusId = active instanceof HTMLElement && (this.main.contains(active) || this.footer.contains(active)) ? active.dataset.control : undefined;
+    const selectionStart = active instanceof HTMLInputElement ? active.selectionStart : null;
+    const selectionEnd = active instanceof HTMLInputElement ? active.selectionEnd : null;
     const scroll = [...this.main.querySelectorAll<HTMLElement>('[data-scroll]')].map(node => [node.dataset.scroll, node.scrollTop, node.scrollLeft] as const);
     this.contentKey = signature; this.main.dataset.view = this.tab; this.root.dataset.view = this.tab;
     const [body, foot] = this.tab === 'party' ? this.party(state) : this.tab === 'stash' ? this.stash(state) : this.tab === 'recruit' ? this.recruit(state) : this.tab === 'upgrades' ? this.upgrades(state) : this.settings(state);
     this.main.innerHTML = body; this.footer.innerHTML = foot;
     for (const [key, top, left] of scroll) { const node = this.main.querySelector<HTMLElement>(`[data-scroll="${key}"]`); if (node) { node.scrollTop = top; node.scrollLeft = left; } }
     this.renderStatus();
-    if (focusId) this.root.querySelector<HTMLElement>(`[data-control="${CSS.escape(focusId)}"]`)?.focus({ preventScroll: true });
+    if (focusId) {
+      const focused = this.root.querySelector<HTMLElement>(`[data-control="${CSS.escape(focusId)}"]`);
+      focused?.focus({ preventScroll: true });
+      if (focused instanceof HTMLInputElement && selectionStart !== null && selectionEnd !== null) {
+        try { focused.setSelectionRange(selectionStart, selectionEnd); } catch { /* some input types reject selection ranges */ }
+      }
+    }
     if (this.revealUi && !this.revealHost.hidden) this.drawReveal();
     if ((this.tab === 'stash' || this.tab === 'party' && this.partyWorkspace === 'heroes' && this.loadoutItemOpen) && this.selectedGear && this.selectedHero) void this.loadComparison(state);
   }
@@ -747,7 +791,18 @@ export class ManagementView {
     const prefs = this.compactPrefs, width = this.variant === 'native' ? 400 : 280, zoom = String(prefs?.zoom ?? 1);
     const nextChest = Math.max(0, Math.ceil(state.offline.secondsUntilNextChest)), chestTime = nextChest >= 3600
       ? `${Math.floor(nextChest / 3600)}h ${Math.ceil(nextChest % 3600 / 60)}m` : `${Math.ceil(nextChest / 60)}m`;
-    return [`<h2 class="px-sr">Settings</h2><div class="px-settings">`
+    const modeLabels: Record<string, string> = { local: 'Local', connecting: 'Connecting', online: 'Online', reconnecting: 'Reconnecting', error: 'Error' };
+    const connected = this.accountStatus.mode === 'online' || this.accountStatus.mode === 'reconnecting';
+    const account = `<section class="px-account" aria-label="Online account"><h3>Account · ${esc(modeLabels[this.accountStatus.mode] ?? this.accountStatus.mode)}</h3>`
+      + `<p>${esc(this.accountStatus.message || (connected ? `Signed in as ${this.accountStatus.email ?? 'your account'}.` : 'Sign in to verify rewards and inventory across devices.'))}</p>`
+      + `<p>Your local save stays separate and is never uploaded.</p>`
+      + `${connected ? `<p class="px-muted">Last synced: ${esc(this.accountStatus.lastSync ? new Date(this.accountStatus.lastSync).toLocaleString() : 'connecting')}</p>${button('account-sign-out', 'Use local account', 'data-account-action="sign-out"')}`
+        : `<label>Email<input type="email" autocomplete="email" maxlength="254" data-control="account-email" data-account-email value="${esc(this.accountEmailDraft || this.accountStatus.email || '')}" ${this.accountStatus.enabled ? '' : 'disabled'}></label>`
+          + `<div class="px-account-actions">${button('account-send-code', 'Send code', 'data-account-action="send-code"', { disabled: !this.accountStatus.enabled })}</div>`
+          + `<label>Sign-in code<input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" data-control="account-code" data-account-code value="${esc(this.accountCodeDraft)}" ${this.accountStatus.enabled ? '' : 'disabled'}></label>`
+          + `<div class="px-account-actions">${button('account-verify-code', 'Verify and connect', 'data-account-action="verify-code"', { primary: true, disabled: !this.accountStatus.enabled })}</div>`}`
+      + `</section>`;
+    return [`<h2 class="px-sr">Settings</h2><div class="px-settings">${account}`
       + `<section class="px-offline-summary" aria-label="Offline progress"><div class="px-offline-rate"><h3>Offline progress</h3><span class="px-badge ${state.offline.earned ? 'px-green' : ''}">${state.offline.earned ? 'Earned' : 'Estimate'}</span></div><p>Farm ${esc(state.offline.stageId)} · ~${fmt(state.offline.goldPerHour)} gold/h · ~${fmt(state.offline.xpPerHour)} XP/h per hero</p>${button('offline-help', '?', `data-help-toggle data-help="${esc(`${state.offline.earned ? 'Rates earned by the current formation from its last measured clear.' : 'Starting estimate; a successful stage clear with a proven formation replaces it with earned rates.'} Next ${state.offline.chestKind === 'expedition' ? 'expedition chest' : 'chest'} after ${chestTime}. Partial gold, XP, tickets, and chest progress carry across visits. Offline rewards are capped at ${state.offline.capHours} hours per absence.`)}"`, { aria: 'Explain offline progress rates and carry' })}</section>`
       // Toggles follow the mockup: the pause switch is "running" (off while paused), the label names the action it takes.
       + `<div class="px-srow">${toggle('pause', 'pause', !state.paused, state.paused ? 'Resume simulation' : 'Pause simulation', 'Simulation running')}</div>`
