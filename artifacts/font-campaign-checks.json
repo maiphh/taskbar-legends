@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-16",
+  "fonts": {
+    "regularSha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
+    "semiboldSha256": "87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5",
+    "browserFacesLoaded": ["GameSans 400", "GameSans 600", "GameSymbols 400"],
+    "initialAssetErrors": [],
+    "pageErrors": [],
+    "externalBlockedReloadAssetErrors": []
+  },
+  "commands": {
+    "tests": "npm test — 35 files, 311 tests passed",
+    "lint": "npm run lint — passed",
+    "typecheck": "npm run typecheck — passed",
+    "build": "npm run build — passed",
+    "canvasFontAssertion": "node scripts/font-canvas-check.mjs — passed; observed actual app fillText fonts 600 12px GameSans stack and normal 12px GameSans stack after canvas resize"
+  },
+  "browser": {
+    "engine": "Google Chrome installed app via Playwright",
+    "viewportWidths": [480, 640, 960],
+    "tabOverlap": false,
+    "campaignBossAction": "All five tabs showed BOSS_READY; Fight boss clicked from Stash entered BOSS_FIGHT with retries=1.",
+    "managementTabs": ["party", "stash", "recruit", "upgrades", "settings"],
+    "recruitX10Pulls": 10,
+    "deviceScaleFactors": [1, 1.25, 2],
+    "nativeShotVariant": "760x560",
+    "controlEntryLocalFontReload": "passed with external requests blocked",
+    "nativeTauriWindowTest": "not run"
+  },
+  "screenshots": [
+    "font-campaign-480.png",
+    "font-campaign-640.png",
+    "font-campaign-960.png",
+    "font-campaign-lane-480.png",
+    "font-campaign-lane-640.png",
+    "font-campaign-lane-960.png",
+    "font-campaign-boss-ready-480.png",
+    "font-campaign-native-shot.png",
+    "font-campaign-specimen.png",
+    "font-campaign-stash-960.png",
+    "font-campaign-reveal-x1-960.png",
+    "font-campaign-reveal-x10-960.png",
+    "font-canvas-draw-check.png"
+  ]
+}

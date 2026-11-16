@@ -12,7 +12,7 @@ describe('ui tokens', () => {
   });
   it('types the font, core-loop feedback and rarity-drop blocks', () => {
     const font: FontTokens = CONFIG.ui.font, feedback: CoreLoopFeedbackTokens = CONFIG.ui.coreLoopFeedback, drop: RarityDropTokens = CONFIG.ui.rarityDrop;
-    expect([font.body.cssPx, font.heading.cssPx, font.small.cssPx]).toEqual([12, 24, 10]);
+    expect([font.body.cssPx, font.heading.cssPx, font.small.cssPx]).toEqual([12, 22, 11]);
     expect(feedback.stepMs).toBe(40);
     expect(drop).toBeTypeOf('object');
   });

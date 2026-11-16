@@ -1,6 +1,23 @@
-import { CONFIG, slotSchema, ticksForSeconds } from '../config';
+import { CONFIG, slotSchema, stageConfig, ticksForSeconds } from '../config';
 import { cheapestEquippedUpgrade, gearScore, getOwned, heroStats, upgradeCost } from './economy';
-import type { GameEvent, GameState, Gear, ItemId } from './model';
+import type { GameEvent, GameState, Gear, ItemId, Progress } from './model';
+
+export interface CampaignPresentation { lane: string; management: string; tone: 'normal' | 'farm' | 'boss' | 'complete'; action: 'Push now' | 'Fight boss' | 'Retry boss' | null }
+/** Short, persistent, read-only explanation of the current campaign gate. */
+export function campaignPresentation(progress: Progress, paused: boolean): CampaignPresentation {
+  let result: CampaignPresentation;
+  switch (progress.kind) {
+    case 'PUSHING': result = { lane: `Stage ${stageConfig(progress.stage).id} · Pushing`, management: `Stage ${stageConfig(progress.stage).id} · Pushing`, tone: 'normal', action: null }; break;
+    case 'FARMING': result = { lane: `Farming ${stageConfig(progress.stage).id}`, management: `Farming ${stageConfig(progress.stage).id} · auto retries toward ${stageConfig(progress.failedStage).id}`, tone: 'farm', action: 'Push now' }; break;
+    case 'BOSS_READY': {
+      const boss = stageConfig(progress.bossStage).id, farm = stageConfig(progress.stage).id;
+      result = { lane: `Boss ${boss} ready`, management: `Boss ${boss} ready · farming ${farm} until start${progress.bossLosses ? ` · ${progress.bossLosses} failed` : ''}`, tone: 'boss', action: progress.bossLosses ? 'Retry boss' : 'Fight boss' }; break;
+    }
+    case 'BOSS_FIGHT': result = { lane: `Boss ${stageConfig(progress.stage).id} · Fighting`, management: `Boss ${stageConfig(progress.stage).id} · Fighting`, tone: 'boss', action: null }; break;
+    case 'COMPLETE': result = { lane: 'Campaign complete', management: 'Campaign complete · farming the final stage continues.', tone: 'complete', action: null }; break;
+  }
+  return paused ? { ...result, lane: `Paused · ${result.lane}`, management: `Paused · ${result.management}` } : result;
+}
 
 /** Pure read-only views over GameState used by the HUD for feedback; never mutate state. */
 export interface Affordability { heroes: boolean; gear: boolean; recruit: boolean; boss: boolean }

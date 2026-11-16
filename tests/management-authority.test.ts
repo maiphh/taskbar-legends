@@ -22,6 +22,27 @@ describe('management authority', () => {
     expect(collision).toMatchObject({ accepted: false, revision: 1, reason: expect.stringContaining('different action') });
     expect(authority.getState().stats.pulls).toBe(beforePulls + 1);
   });
+  it('starts a ready boss only through one explicit retry command and replays it idempotently', () => {
+    const state = createState(311);
+    state.highestCleared = 9;
+    state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
+    const authority = new ManagementAuthority(state), beforeRetryEvents = state.events.filter(event => event.data.type === 'retry').length;
+    const first = authority.execute(request(0, 'boss:1', { type: 'retry' }));
+    const replay = authority.execute(request(0, 'boss:1', { type: 'retry' }));
+    expect(first.accepted).toBe(true); expect(replay).toEqual(first);
+    expect(authority.getState().progress).toMatchObject({ kind: 'BOSS_FIGHT', stage: 10 });
+    expect(authority.getState().stats.retries).toBe(1);
+    expect(authority.getState().events.filter(event => event.data.type === 'retry')).toHaveLength(beforeRetryEvents + 1);
+    expect(authority.getState().events.filter(event => event.data.type === 'spawn' && event.data.side === 'enemy').length).toBeGreaterThan(0);
+    expect(authority.execute(request(1, 'boss:2', { type: 'retry' })).accepted).toBe(false);
+  });
+  it('snapshots and invalid retry requests never start a boss', () => {
+    const authority = new ManagementAuthority(createState(312));
+    for (let i = 0; i < 10; i += 1) authority.snapshot();
+    expect(authority.execute(request(0, 'no-boss:1', { type: 'retry' })).accepted).toBe(false);
+    expect(authority.getState().progress.kind).toBe('PUSHING');
+    expect(authority.getState().events.some(event => event.data.type === 'retry')).toBe(false);
+  });
   it('rejects stale revisions without mutation while simulation ticks do not stale a current view', () => {
     const state = createState(32); state.tickets = 3;
     const authority = new ManagementAuthority(state);

@@ -3,10 +3,11 @@ import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
 import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeChestGrid, welcomeDoneMs } from './reveal-timeline';
 import type { CardFace } from './reveal-timeline';
-import { BODY, FONT_FILES, HEADING, LINE_BOX, fitSize, fontFor, slotOffsetY } from './font';
+import { BODY, HEADING, LINE_BOX, fitSize, fontFor, loadFonts, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
+import { campaignPresentation } from './core/selectors';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -28,7 +29,7 @@ export interface WelcomeData { seconds: number; rawSeconds: number; capped: bool
 export interface AudioControls { muted: boolean; volume: number }
 const palette = CONFIG.ui.palette;
 const feedback = CONFIG.ui.coreLoopFeedback;
-/** Text options: `exactY` for specs that give the real Galmuri draw y (otherwise y is a Pixel Operator-era layout slot). */
+/** Text options retain `exactY` for caller compatibility; active text has no optical y offset. */
 export interface TextOptions { exactY?: boolean }
 const rootUrl = (): URL => new URL(`${import.meta.env.BASE_URL}ui/`, window.location.href);
 /** Round half to even, as the designer's rect tables do (e.g. banner x 894.5 -> 894, 887.5 -> 888). */
@@ -101,11 +102,7 @@ export class PixelUI {
   }
   private async load(): Promise<void> {
     try {
-      await Promise.all(FONT_FILES.map(async ([name, file]) => {
-        const font = new FontFace(name, `url(${new URL(`${import.meta.env.BASE_URL}fonts/${file}`, window.location.href).href})`);
-        await font.load(); document.fonts.add(font);
-      }));
-      await document.fonts.ready;
+      await loadFonts();
       const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png'];
       await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
@@ -182,10 +179,10 @@ export class PixelUI {
   private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, _paused: boolean): void {
     void _paused;
     const width = this.width, coreY = this.sourceHeight - CONFIG.ui.closed.coreHeight;
-    const progress = state.progress;
-    const stageId = progress.kind === 'BOSS_READY' ? stageConfig(progress.bossStage).id : (CONFIG.stages[progress.stage - 1]?.id ?? '');
-    const color = progress.kind === 'BOSS_READY' || progress.kind === 'BOSS_FIGHT' ? palette.red : palette.gold;
-    this.text(ctx, stageId, 8, coreY + 8, color, BODY, true, undefined, { exactY: true });
+    const campaign = campaignPresentation(state.progress, _paused);
+    const color = campaign.tone === 'boss' ? palette.red : campaign.tone === 'complete' ? palette.green : palette.gold;
+    // Sit above the bottom-lane health bars; the battlefield is empty at this height.
+    this.text(ctx, campaign.lane, 8, Math.max(0, coreY - 40), color, BODY, true, Math.max(0, width - 16), { exactY: true });
     if (this.compactEditing) {
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameInk; ctx.fillRect(0, coreY, width, 1); ctx.fillRect(0, coreY + 79, width, 1); ctx.fillRect(0, coreY, 1, 80); ctx.fillRect(width - 1, coreY, 1, 80);
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameColor; ctx.fillRect(1, coreY + 1, width - 2, 1); ctx.fillRect(1, coreY + 78, width - 2, 1); ctx.fillRect(1, coreY + 1, 1, 78); ctx.fillRect(width - 2, coreY + 1, 1, 78);
@@ -233,27 +230,29 @@ export class PixelUI {
     const family = fontFor(value, size, bold);
     // textBaseline 'top' at whole pixels; layout slots get the per-size optical offset.
     y = Math.round(y) + (options.exactY ? 0 : slotOffsetY(size, bold));
-    const key = `${family}|${size}|${color}|${value}`;
+    const key = `${family}|${bold ? 600 : 400}|${size}|${color}|${value}`;
     let raster = this.textCache.get(key);
     if (!raster) {
       raster = document.createElement('canvas'); const measure = raster.getContext('2d', { willReadFrequently: true }); if (!measure) return;
-      measure.font = `${size}px ${family}`; raster.width = Math.ceil(measure.measureText(value).width) + 2; raster.height = size + 4;
-      measure.font = `${size}px ${family}`; measure.textBaseline = 'top'; measure.fillStyle = color; measure.fillText(value, 0, 0);
-      const pixels = measure.getImageData(0, 0, raster.width, raster.height);
-      for (let i = 3; i < pixels.data.length; i += 4) pixels.data[i] = (pixels.data[i] ?? 0) >= 128 ? 255 : 0;
-      measure.putImageData(pixels, 0, 0); this.textCache.set(key, raster);
+      measure.font = `${bold ? 600 : 400} ${size}px ${family}`;
+      const metrics = measure.measureText(value), ascent = Math.ceil(metrics.actualBoundingBoxAscent || size), descent = Math.ceil(metrics.actualBoundingBoxDescent || Math.ceil(size / 4));
+      raster.width = Math.ceil(metrics.width) + 2; raster.height = ascent + descent + 2;
+      // Assigning canvas dimensions resets every context property, including the font.
+      measure.font = `${bold ? 600 : 400} ${size}px ${family}`;
+      measure.textBaseline = 'alphabetic'; measure.fillStyle = color; measure.fillText(value, 1, ascent + 1);
+      this.textCache.set(key, raster);
       if (this.textCache.size > CONFIG.runtime.textCacheLimit) { const first = this.textCache.keys().next().value; if (first !== undefined) this.textCache.delete(first); }
     }
     ctx.save();
-    if (maxWidth !== undefined) { ctx.beginPath(); ctx.rect(Math.round(x), Math.round(y), maxWidth, size + 5); ctx.clip(); }
+    if (maxWidth !== undefined) { ctx.beginPath(); ctx.rect(Math.round(x), Math.round(y), maxWidth, size + 6); ctx.clip(); }
     ctx.drawImage(raster, Math.round(x), Math.round(y)); ctx.restore();
   }
-  /** Advance width in source pixels (Galmuri advances are whole pixels at native sizes). */
+  /** Advance width in source pixels, matching the face and weight used by text(). */
   measureText(value: string, size = BODY, bold = false): number {
     this.measureContext ??= document.createElement('canvas').getContext('2d');
     if (!this.measureContext) return 0;
-    this.measureContext.font = `${size}px ${fontFor(value, size, bold)}`;
-    return Math.round(this.measureContext.measureText(value).width);
+    this.measureContext.font = `${bold ? 600 : 400} ${size}px ${fontFor(value, size, bold)}`;
+    return this.measureContext.measureText(value).width;
   }
   private icon(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, scale = 1): void {
     const image = this.images.get(`icon-${name}.png`); if (image) ctx.drawImage(image, Math.round(x), Math.round(y), 16 * scale, 16 * scale);

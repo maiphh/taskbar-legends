@@ -1,9 +1,10 @@
 import { CONFIG, heroConfig, raritySchema } from '../config';
 import audioManifest from '../audio-manifest.json';
 import { AtlasLibrary } from '../atlas';
-import { FONT_FILES } from '../font';
+import { loadFonts } from '../font';
 import { PixelUI, REVEAL_STAGE, shortHeroName, type RevealPull } from '../pixel-ui';
 import { upgradeCost } from '../core/economy';
+import { campaignPresentation } from '../core/selectors';
 import { getPartyHeroDefinition } from '../core/party-definitions';
 import type { Action, GameState } from '../core/model';
 import type { HeroGearComparison, ManagementReply, ManagementSnapshot } from './authority';
@@ -83,12 +84,6 @@ function slider(name: string, label: string, value: number, width: number): stri
   const pct = Math.round(value * 100), thumb = Math.round(value * (width - SLIDER.thumb[0]!));
   return `<div class="px-slider-row"><span class="px-slider-label">${esc(label)}</span><div class="px-slider" role="slider" tabindex="0" data-slider="${name}" ${control(`slider-${name}`)} aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-valuetext="${pct}%" style="width:${width}px"><span class="px-track"><span class="px-fill" style="width:${thumb + 4}px"></span></span><span class="px-thumb" style="left:${thumb}px"></span></div><span class="px-pct">${pct}%</span></div>`;
 }
-let fontsLoading: Promise<void> | null = null;
-/** Galmuri faces (same files and names PixelUI registers); CSS falls back to monospace until they load. */
-function loadFonts(): Promise<void> {
-  fontsLoading ??= Promise.all(FONT_FILES.map(async ([name, file]) => { const face = new FontFace(name, `url(${asset(`fonts/${file}`)})`); await face.load(); document.fonts.add(face); })).then(() => undefined).catch(() => undefined);
-  return fontsLoading;
-}
 const shapeCache = new Map<string, string>();
 /** rarityDrop shape cue (dot / diamond / star / crown) with its 1 px ink outline, as a data URL for <img>. */
 function shape(rarity: string): string {
@@ -118,8 +113,8 @@ export interface ManagementViewOptions {
 }
 
 /**
- * Management sheet in the PixelUI style (ui/compact-menu.md, ui-tokens compactMenu): Galmuri11 12/24 px (Galmuri9 10 px
- * hints), panel/button 9-slices, palette tokens, idle-0 outlined portraits, and pixel widgets only (button, dropdown,
+ * Management sheet in the PixelUI style (ui/compact-menu.md, ui-tokens compactMenu): Noto Sans 12/22 px (11 px
+ * compact metadata), panel/button 9-slices, palette tokens, idle-0 outlined portraits, and pixel widgets only (button, dropdown,
  * slider, toggle, exclusive pair) — no native <select> or range input. Polling updates values and only replaces tab
  * contents when data or selection changes; the focused control is restored by its data-control id.
  */
@@ -161,12 +156,15 @@ export class ManagementView {
   private revealUi: PixelUI | null = null;
   private revealFrame = 0;
   private pulling = false;
+  private campaignPending = false;
   private atlas: AtlasLibrary | null;
   private readonly portraits = new Map<string, string>();
   private readonly variant: ManagementVariant;
   private readonly abort = new AbortController();
   constructor(private readonly root: HTMLElement, private readonly client: ManagementClient, private readonly onClose: () => void, private readonly options: ManagementViewOptions = {}) {
-    void loadFonts().then(() => { this.contentKey = ''; this.renderContent(); });
+    void loadFonts().then(() => { this.contentKey = ''; this.renderContent(); }).catch(error => {
+      this.message = `Local font could not load; using system text: ${String(error)}`; this.renderStatus();
+    });
     this.variant = options.variant ?? 'browser'; this.atlas = options.atlas ?? null;
     this.root.classList.add('px-menu'); this.root.dataset.variant = this.variant;
     for (const [key, value] of Object.entries(CONFIG.ui.palette)) this.root.style.setProperty(`--px-${key}`, value);
@@ -175,7 +173,7 @@ export class ManagementView {
       this.root.style.setProperty(`--px-${name}-9slice`, `url("${asset(`ui/${file}.png`)}")`);
     }
     this.root.innerHTML = `<header class="management-header"><h1>PARTY CAMP</h1><span class="px-run" data-run></span>${button('menu-close', 'X', 'data-close', { aria: 'Close management', className: 'px-close' })}</header>`
-      + `<nav aria-label="Management tabs"></nav><span class="px-wallet" data-wallet></span><div class="management-status" role="status" aria-live="polite"></div><main></main><div class="px-divider"></div><footer class="px-footer"></footer>`
+      + `<nav aria-label="Management tabs"></nav><div class="campaign-row"><span class="campaign-status" data-campaign></span><span class="px-wallet" data-wallet></span><span data-campaign-action></span></div><div class="management-status" role="status" aria-live="polite"></div><main></main><div class="px-divider"></div><footer class="px-footer"></footer>`
       + `<section class="reveal-stage" aria-label="Recruit reveal" hidden><canvas width="${REVEAL_STAGE.width}" height="${REVEAL_STAGE.height}" role="img" aria-label="Recruit results"></canvas><div class="reveal-controls"></div></section>`;
     this.header = this.root.querySelector('.management-header')!; this.nav = this.root.querySelector('nav')!;
     this.status = this.root.querySelector('.management-status')!; this.main = this.root.querySelector('main')!; this.footer = this.root.querySelector('footer')!;
@@ -239,6 +237,18 @@ export class ManagementView {
     const wallet = this.root.querySelector<HTMLElement>('[data-wallet]'), run = this.header.querySelector<HTMLElement>('[data-run]');
     if (wallet) wallet.innerHTML = `${icon('gold')}<span class="px-gold">${shortGold(state.gold)}</span><span class="px-gold">${state.tickets} tix</span>`;
     if (run) { run.textContent = state.paused ? 'BATTLE PAUSED' : 'BATTLE CONTINUES'; run.dataset.paused = String(state.paused); }
+    const campaign = campaignPresentation(state.progress, state.paused), label = this.root.querySelector<HTMLElement>('[data-campaign]'), actionHost = this.root.querySelector<HTMLElement>('[data-campaign-action]');
+    if (label) { label.textContent = campaign.management; label.dataset.tone = campaign.tone; label.title = campaign.management; }
+    if (actionHost) {
+      const existing = actionHost.querySelector<HTMLButtonElement>('[data-action="retry"]');
+      if (!campaign.action) {
+        const hadFocus = actionHost.contains(document.activeElement);
+        actionHost.replaceChildren();
+        if (hadFocus) this.nav.querySelector<HTMLButtonElement>(`[data-tab="${this.tab}"]`)?.focus({ preventScroll: true });
+      }
+      else if (existing) { existing.textContent = campaign.action; existing.disabled = this.campaignPending; existing.setAttribute('aria-label', `${campaign.action}: start the next campaign encounter`); }
+      else actionHost.innerHTML = button('campaign-retry', campaign.action, 'data-action="retry"', { primary: true, aria: `${campaign.action}: start the next campaign encounter` });
+    }
   }
   /** Five 9-slice tabs (§5.2) with the 6×6 affordance pips: Stash blue while a chest choice waits, Upgrades gold, Recruit gold. */
   private renderNav(): void {
@@ -273,6 +283,7 @@ export class ManagementView {
       this.renderHeader(); this.renderNav(); this.contentKey = ''; this.renderContent(); this.renderStatus();
       return reply;
     } catch (error) { if (this.isLive(generation)) { this.message = `Action was not applied: ${String(error)}`; await this.refresh(generation); if (this.isLive(generation)) this.renderStatus(); } return null; }
+    finally { if (action.type === 'retry') { this.campaignPending = false; this.renderHeader(); } }
   }
   /** Recruit: commit the pulls through the authority, then play the PixelUI gacha reveal (gacha.md) for exactly those pull events. */
   private async recruitPull(count: 1 | 10): Promise<void> {
@@ -431,7 +442,7 @@ export class ManagementView {
     else if (action === 'auto-equip') void this.command({ type: 'autoEquip' });
     else if (action === 'inspect-items') { this.tab = 'stash'; const hero = state.roster.find(value => value.id === this.selectedHero); this.selectedGear = (hero?.equipment.weapon ?? hero?.equipment.armor ?? hero?.equipment.charm ?? state.inventory[0]?.id ?? '') as string; this.contentKey = ''; this.renderContent(); }
     else if (action === 'choose-0' || action === 'choose-1') void this.command({ type: 'chooseChest', keep: action === 'choose-0' ? 0 : 1 });
-    else if (action === 'retry') void this.command({ type: 'retry' });
+    else if (action === 'retry' && !this.campaignPending) { this.campaignPending = true; this.renderHeader(); void this.command({ type: 'retry' }); }
     else if (action === 'upgrade' && this.selectedGear) void this.command({ type: 'upgrade', gearId: this.selectedGear as GameState['inventory'][number]['id'] });
     else if (action === 'equip' && this.selectedGear && this.selectedHero) void this.command({ type: 'equip', heroId: this.selectedHero, gearId: this.selectedGear as GameState['inventory'][number]['id'] });
     else if (action === 'pause') { const generation = this.generation; void this.settingRequest(this.client.pause(!state.paused).then(() => this.refresh(generation))); }
@@ -634,8 +645,6 @@ export class ManagementView {
   /** Settings (§7.5): pause and mute toggles, four volume sliders (master + buses), zoom pair, placement dropdown, notes. */
   private settings(state: ManagementSnapshot): [string, string] {
     const prefs = this.compactPrefs, width = this.variant === 'native' ? 400 : 280, zoom = String(prefs?.zoom ?? 1);
-    const retry = state.progress.kind === 'BOSS_READY' || state.progress.kind === 'FARMING'
-      ? button('retry', state.progress.kind === 'BOSS_READY' ? 'Retry boss' : 'Start encounter', 'data-action="retry"', { pip: 'red', className: 'px-boss' }) : '';
     return [`<h2 class="px-sr">Settings</h2><div class="px-settings">`
       // Toggles follow the mockup: the pause switch is "running" (off while paused), the label names the action it takes.
       + `<div class="px-srow">${toggle('pause', 'pause', !state.paused, state.paused ? 'Resume simulation' : 'Pause simulation', 'Simulation running')}</div>`
@@ -643,9 +652,9 @@ export class ManagementView {
       + slider('master', 'Volume', this.audioValue.volume, width) + slider('music', 'Music', this.sliderValue('music'), width) + slider('sfx', 'SFX', this.sliderValue('sfx'), width) + slider('ui', 'UI', this.sliderValue('ui'), width)
       + `<div class="px-srow px-zoomrow"><span class="px-slider-label">Zoom</span><span class="px-pair" role="group" aria-label="Zoom">${['1', '2'].map(value => button(`zoom-${value}`, `${value}×`, `data-zoom="${value}"`, { selected: zoom === value, className: 'px-zoom' })).join('')}</span>`
       + `${this.dropdown('placement', 'Placement', [{ value: 'free', label: 'Free' }, { value: 'snapped', label: 'Snap to bottom' }], prefs?.placement ?? 'free', 160, 'data-setting="placement"')}${button('reset-size', 'Reset size', 'data-action="reset-size"')}</div>`
-      + `<div class="px-notes"><p class="px-muted">${state.progress.kind === 'BOSS_READY' ? `<span class="px-red">Boss ${state.progress.bossStage} is ready.</span> Starting it requires an explicit action.` : state.progress.kind === 'FARMING' ? 'The next push starts automatically when its timer or retry condition is met.' : 'Campaign is active.'}</p>`
-      + (import.meta.env.DEV ? '<p class="px-muted" data-dev-note>Dev: party v2 preview uses a separate save key; the legacy account stays untouched.</p>' : '')
+      + '<div class="px-notes"><p class="px-muted">Campaign status and its available action stay above on every tab.</p>'
+      + (import.meta.env.DEV ? '<p class="px-muted" data-dev-note>Dev: party v2 is active; the legacy account stays untouched.</p>' : '')
       + '<p class="px-muted">If a save cannot be loaded, use the game window recovery panel to export it or discard it.</p></div></div>',
-      `<p class="px-muted">Esc closes the menu.</p>${retry}`];
+      '<p class="px-muted">Esc closes the menu.</p>'];
   }
 }

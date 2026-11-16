@@ -2,10 +2,11 @@
 
 All shipped LuizMelo sprites (including the priest recolor), Merchant-Shade icons, and Kenney UI frames are declared CC0-1.0 by their original vendor files and/or retained official-source-page declarations. CC0 allows reuse, modification and public redistribution, including commercial use. No conflicting restriction was found.
 
-The Galmuri fonts (Lee Minseo, https://github.com/quiple/galmuri) are licensed under the SIL Open Font License 1.1, which allows bundling, embedding and redistribution with the game; the fonts themselves may not be sold on their own. The shipped TTFs are subsets and keep their copyright/licence name records.
+The Noto Sans fonts (The Noto Project Authors, https://github.com/notofonts/noto-fonts) and Galmuri symbol fallback (Lee Minseo, https://github.com/quiple/galmuri) are licensed under the SIL Open Font License 1.1, which allows bundling, embedding and redistribution with the game; the fonts themselves may not be sold on their own. Noto Sans files are unmodified upstream static hinted TTFs; the shipped Galmuri file is a subset and keeps its copyright/licence name records.
 
 - `CC0-1.0.txt`: complete CC0 legal code, retained verbatim (originally from a vendor archive).
 - `Galmuri-OFL-1.1.txt`: the Galmuri copyright notice and OFL-1.1 text, unmodified (same file as `public/fonts/LICENSE.txt`).
+- `OFL-1.1-Noto.txt`: complete upstream Noto Project Authors copyright notice and SIL OFL-1.1 text (also copied to `public/fonts/OFL-1.1-Noto.txt`).
 - `Kenney-Pixel-UI.txt`: original vendor license text, unmodified.
 - `LuizMelo/`: unmodified enclosed pack notices where supplied.
 - `source-declarations/`: exact license excerpts and official URLs for every deduplicated sprite/icon pack, plus a hash of the retained official page text.

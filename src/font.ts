@@ -1,37 +1,35 @@
 import { CONFIG } from './config';
 
-/** Galmuri faces as registered with FontFace (see PixelUI.load). */
-export const FONT_FILES = [['Galmuri11', 'Galmuri11.ttf'], ['Galmuri11Bold', 'Galmuri11-Bold.ttf'], ['Galmuri9', 'Galmuri9.ttf']] as const;
-export type FontName = (typeof FONT_FILES)[number][0];
+/** Locally bundled text faces. Noto Sans handles prose; Galmuri is a symbol-only fallback. */
+export const FONT_FILES = [
+  ['GameSans', 'NotoSans-Regular.ttf', '400'],
+  ['GameSans', 'NotoSans-SemiBold.ttf', '600'],
+  ['GameSymbols', 'Galmuri11.ttf', '400'],
+] as const;
+export type FontName = string;
+export const CSS_FONT_STACK = 'GameSans, GameSymbols, system-ui, sans-serif';
+export const CSS_SEMIBOLD_STACK = 'GameSans, GameSymbols, system-ui, sans-serif';
 const font = CONFIG.ui.font;
-/**
- * Native canvas sizes (ui-tokens `font.*.cssPx`): Galmuri11 is pixel-exact only at 12/24 px, Galmuri9 only at 10 px.
- * The "11/22/9" names are cap heights; 11 px or 9 px font-size is off the glyph grid and antialiases.
- */
-export const BODY = font.body.cssPx, HEADING = font.heading.cssPx, SMALL = font.small.cssPx;
-/** Line box for 12 px text (14 px); buttons centre this box. */
-export const LINE_BOX = font.body.lineBoxPx;
-/**
- * Galmuri11 Bold covers only Basic Latin + Latin-1 (+ a few punctuation/arrow/star glyphs), so Vietnamese, Cyrillic and
- * anything else falls back to Regular instead of a missing-glyph box. tests/font-coverage.test.ts checks this set against the TTF.
- */
-export const BOLD_SAFE = /^[\u0020-\u007e\u00a0-\u00ff\u2010-\u2027\u2190-\u2193\u2605]*$/u;
+export const BODY = font.body.cssPx, HEADING = 22, SMALL = 11;
+export const LINE_BOX = 16;
+let loading: Promise<void> | null = null;
+
+/** Shared cached loader for canvas, browser management, and the native control window. */
+export function loadFonts(): Promise<void> {
+  loading ??= Promise.all(FONT_FILES.map(async ([family, file, weight]) => {
+    const url = new URL(`${import.meta.env.BASE_URL}fonts/${file}`, window.location.href);
+    const face = new FontFace(family, `url(${url.href})`, { weight });
+    await face.load(); document.fonts.add(face);
+  })).then(() => document.fonts.ready.then(() => undefined));
+  return loading;
+}
+
 export function fontFor(value: string, size: number, bold: boolean): FontName {
-  if (size === SMALL) return 'Galmuri9';
-  return bold && BOLD_SAFE.test(value) ? 'Galmuri11Bold' : 'Galmuri11';
+  void value; void size; void bold;
+  return CSS_FONT_STACK;
 }
-/**
- * Text y values written for the Pixel Operator layout are slots; Galmuri draws at slot + `font.slotOffsetY`
- * (+2 at 12 px, -1 at 24 px, 0 at 10 px) to keep the same optical cap centre. Specs from 2026-11-09 give real draw y.
- */
-export function slotOffsetY(size: number, bold: boolean): number {
-  const offset = font.slotOffsetY;
-  return size === HEADING ? offset.heading : size === SMALL ? offset.small : bold ? offset.bodyBold : offset.body;
-}
-/**
- * General overflow rule (Game Lead, 2026-11-09): body text wider than the box it is given (e.g. an 80 px roster card label)
- * drops to Galmuri9 at its native 10 px instead of clipping. Headings and small text keep their size and clip.
- */
+/** Noto's native metrics do not need the old Galmuri slot correction. */
+export function slotOffsetY(size: number, bold: boolean): number { void size; void bold; return 0; }
 export function fitSize(width: number, maxWidth: number, size: number): number {
   return size === BODY && width > maxWidth ? SMALL : size;
 }

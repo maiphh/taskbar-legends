@@ -33,16 +33,13 @@ Hit events use explicit attackerId, targetId, damage and enclosing tick fields. 
 
 The exact 1920px layout is implemented and compared to the supplied mockups. A compact HUD switches earlier (below 1000 source pixels) to keep buttons usable; below 736, two representative enemies plus +N are rendered without changing simulation. Below 608px, the UI spec calls for a separate normal management window; that native fallback is M2, so use a wider browser for M1 management. Native click-through, screen-space taskbar anchoring and real Windows monitor/DPI transfer are explicitly unverified, not simulated by CSS.
 
-## Font: Galmuri (replaces Pixel Operator)
+## Font: Noto Sans (2026-11-16)
 
-- Galmuri11/Galmuri11 Bold/Galmuri9 by Lee Minseo, OFL-1.1, subset by `scripts/subset-fonts.py` (12.6 MB of Hangul/CJK → about 0.48 MB; the game and file:// build only need Latin, Vietnamese and Cyrillic).
-- "11", "22" and "9" are cap heights, not CSS sizes. Galmuri11 has 1200 units per em on a 100-unit pixel grid, so it is pixel-exact only at **12px** and **24px**; Galmuri9 (1000 upem) only at **10px**. At 11px the alpha threshold merges stems (`mmmm` renders `#...#...##...#`). `src/ui-tokens.json` is the designer's `runtime/ui-tokens.json` verbatim (`font.body/bodyBold/heading/small.cssPx` 12/12/24/10).
-- Positions written for the Pixel Operator layout are slots: `PixelUI.text` draws at slot y + `font.slotOffsetY` (+2 at 12px, -1 at 24px, 0 at 10px). Specs from 2026-11-09 (`coreLoopFeedback`: island text, buttons, banner, popup, chip) give the real draw y and pass `exactY`. Button labels centre the 14px line box. All draws use textBaseline 'top' at whole pixels, then the ≥128 alpha threshold.
-- Galmuri11 Bold has no Vietnamese or Cyrillic glyphs. `fontFor` uses Bold only when every character is in Bold's cmap (`BOLD_SAFE`, checked against the TTF in `tests/font-coverage.test.ts`); otherwise Regular, so locale text is always Regular.
-- General overflow rule (Game Lead decision, 2026-11-09): any 12px body label wider than the box it is drawn in drops to Galmuri9 at 10px (`fitSize`), e.g. "Hero Knight 1/2" (86/88px) on the 80px roster card; the full name stays in the tooltip. Headings keep 24px and clip. The badge pulse runs on the sim tick and freezing while paused is accepted.
-- Boss countdown (#3) uses Galmuri11 Bold 12px at the island heading draw y (`coreLoopFeedback.islandText.headingDrawY`), `TIME m:ss` at islandWidth-80, with `BOSS {id}` clipped to islandWidth-100; red at <=5 s, no blink.
-- Core-loop feedback follows `review-core-loop-feedback.md` and ui.md §10: pip with pulse (renderer memory keyed by sim tick, 60 s cooldown, stops on hover/focus/click/panel), banner plate sized by `measureText`, two-colour popup at core-local -22 rising 16px, single panel chip, boss button in the left island row 2, management buttons 88/72/88. Centred rects use round-half-even to match the designer's tables. Timing is in `src/motion.ts` (pure, tested); `npm run shot` renders with `prefers-reduced-motion` so shots are static and byte-stable.
-- Historical handoff docs (`docs/ui-v1.md`, `docs/ui-assets.md`) still describe the M1 Pixel Operator choice and are left as written.
+- Replaced active Galmuri body typography with the unmodified upstream Noto Sans Regular and SemiBold static hinted TTFs from the official Noto repository. The primary files and exact SHA-256 values are recorded in `CREDITS.md`; full SIL OFL 1.1 notices ship in `public/fonts/OFL-1.1-Noto.txt` and `LICENSES/OFL-1.1-Noto.txt`.
+- Galmuri11 remains locally bundled only after Noto Sans in the per-glyph fallback stack for symbols such as stars and arrows. No host font install or runtime network request is required. Both CSS and Canvas use the shared cached `loadFonts()` helper and the same regular/600 face registrations.
+- Canvas text retains grayscale antialiasing and uses padded glyph bounds for accents and descenders. Measurement uses matching face, weight, and size. Vector UI text no longer disables browser smoothing; sprite scaling remains pixelated.
+- Active text sizes are body 12px, heading 22px, and compact metadata 11px (with 10px as the compact card metadata floor). Text overflow may use a modest 11px fallback or an ellipsis; names retain accessible full labels in the DOM.
+- The `scripts/subset-fonts.py` and older Galmuri-specific design measurements remain historical tooling/specification. They do not build or modify the new Noto assets.
 
 ## v1.4 chests and luck (Game Lead decisions, 2026-11-09)
 

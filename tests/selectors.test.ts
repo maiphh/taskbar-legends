@@ -3,7 +3,7 @@ import { CONFIG, ticksForSeconds } from '../src/config';
 import { autoEquip, chest, upgrade } from '../src/core/economy';
 import { createState, step } from '../src/core/game';
 import type { GameState } from '../src/core/model';
-import { affordability, betterUnequippedGear, stageCue, upgradeDelta, upgradePopups } from '../src/core/selectors';
+import { affordability, betterUnequippedGear, campaignPresentation, stageCue, upgradeDelta, upgradePopups } from '../src/core/selectors';
 import { emit } from '../src/core/events';
 
 function geared(): GameState {
@@ -32,6 +32,22 @@ describe('affordability selector', () => {
     const first = state.inventory[0]; if (!first) throw new Error('no gear');
     affordability(state); upgradeDelta(state, first.id, 1); stageCue(state); upgradePopups(state);
     expect(state).toEqual(before);
+  });
+});
+
+describe('campaign presentation selector', () => {
+  it('describes each progress kind, distinguishes boss target from farm stage, and explains retry behavior', () => {
+    expect(campaignPresentation({ kind: 'PUSHING', stage: 3 }, false)).toMatchObject({ lane: 'Stage 1-3 · Pushing', action: null });
+    expect(campaignPresentation({ kind: 'FARMING', stage: 9, failedStage: 10, retryAtTick: 50, failedPower: 0, failures: 1 }, false)).toMatchObject({ lane: 'Farming 1-9', management: expect.stringContaining('auto retries toward 1-10'), action: 'Push now' });
+    expect(campaignPresentation({ kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 }, false)).toMatchObject({ lane: 'Boss 1-10 ready', management: expect.stringContaining('farming 1-9'), action: 'Fight boss' });
+    expect(campaignPresentation({ kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 2 }, false)).toMatchObject({ action: 'Retry boss', management: expect.stringContaining('2 failed') });
+    expect(campaignPresentation({ kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 1 }, false)).toMatchObject({ lane: 'Boss 1-10 · Fighting', action: null });
+    expect(campaignPresentation({ kind: 'COMPLETE', stage: CONFIG.stages.length }, false)).toMatchObject({ lane: 'Campaign complete', management: expect.stringContaining('final stage'), action: null });
+  });
+  it('marks paused campaigns and does not mutate the supplied progress', () => {
+    const progress = { kind: 'BOSS_READY' as const, stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 }, before = structuredClone(progress);
+    expect(campaignPresentation(progress, true).management).toContain('Paused');
+    expect(progress).toEqual(before);
   });
 });
 

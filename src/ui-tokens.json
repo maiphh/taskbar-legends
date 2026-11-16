@@ -53,48 +53,48 @@
     "sampling": "nearest"
   },
   "font": {
-    "family": "Galmuri11",
+    "family": "Noto Sans",
     "licence": "OFL-1.1",
-    "source": "https://github.com/quiple/galmuri",
-    "files": "../fonts/ (Galmuri11.ttf, Galmuri11-Bold.ttf, Galmuri9.ttf, LICENSE.txt)",
-    "note": "Named sizes are cap/grid heights. Canvas font-size must be the native em: 11 -> 12px, 22 -> 24px, 9 -> 10px. Font-size 11px or 9px is off-grid and antialiases.",
+    "source": "https://github.com/notofonts/noto-fonts",
+    "files": "../fonts/ (NotoSans-Regular.ttf, NotoSans-SemiBold.ttf, Galmuri11.ttf symbol fallback)",
+    "note": "Noto Sans Regular and SemiBold are the primary antialiased text faces; GameSymbols supplies explicit local symbol fallback before system-ui.",
     "body": {
-      "face": "Galmuri11",
+      "face": "Noto Sans Regular",
       "cssPx": 12,
-      "capPx": 11,
-      "capTopPx": 1,
-      "lineBoxPx": 14
+      "capPx": 9,
+      "capTopPx": 2,
+      "lineBoxPx": 16
     },
     "bodyBold": {
-      "face": "Galmuri11 Bold",
+      "face": "Noto Sans SemiBold",
       "cssPx": 12,
-      "capPx": 11,
-      "capTopPx": 1,
-      "lineBoxPx": 14
+      "capPx": 9,
+      "capTopPx": 2,
+      "lineBoxPx": 16
     },
     "heading": {
-      "face": "Galmuri11 Bold",
-      "cssPx": 24,
-      "capPx": 22,
-      "capTopPx": 2,
-      "lineBoxPx": 28
+      "face": "Noto Sans SemiBold",
+      "cssPx": 22,
+      "capPx": 16,
+      "capTopPx": 3,
+      "lineBoxPx": 26
     },
     "small": {
-      "face": "Galmuri9",
-      "cssPx": 10,
-      "capPx": 9,
-      "capTopPx": 1,
-      "lineBoxPx": 11,
+      "face": "Noto Sans Regular",
+      "cssPx": 11,
+      "capPx": 8,
+      "capTopPx": 2,
+      "lineBoxPx": 14,
       "use": "non-essential hints only"
     },
-    "render": "textBaseline top; draw at integer x,y; rasterise to an offscreen canvas and threshold alpha >=128 -> 255 else 0",
+    "render": "textBaseline alphabetic; measure exact face and weight; retain grayscale antialias alpha; padded raster includes accent and descender bounds",
     "slotOffsetY": {
-      "body": 2,
-      "bodyBold": 2,
-      "heading": -1,
+      "body": 0,
+      "bodyBold": 0,
+      "heading": 0,
       "small": 0
     },
-    "slotOffsetNote": "Text y positions in ui.md, gacha.md and offline-rewards.md are layout slots from the Pixel Operator era; draw Galmuri at slot y + slotOffsetY to keep the same optical cap centre. New coreLoopFeedback/rarityDrop rects give the real draw y.",
+    "slotOffsetNote": "Legacy positions remain in older design notes. Active Noto rendering uses no optical slot correction.",
     "glyphs": {
       "middot": "U+00B7 present",
       "plus": "present",
@@ -103,7 +103,7 @@
       "times": "U+00D7 present",
       "arrow": "U+2192 present"
     },
-    "boldCoverageWarning": "Galmuri11 Bold lacks Cyrillic and most Vietnamese; localised builds use Regular + colour emphasis."
+    "boldCoverageWarning": "Both Noto weights cover supported Vietnamese and Cyrillic."
   },
   "palette": {
     "ink": "#0d121b",
@@ -1471,7 +1471,7 @@
   },
   "compactMenu": {
     "source": "ui/compact-menu.md; feat/enhancement 235dd9e restyle",
-    "font": "Galmuri11 12/24 and Galmuri9 10; real draw y, do not add slotOffsetY",
+    "font": "Noto Sans Regular/SemiBold 12/22 and 11px metadata; real draw y, no slot correction",
     "lane": {
       "width": 640,
       "height": 160,
