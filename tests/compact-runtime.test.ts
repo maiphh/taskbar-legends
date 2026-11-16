@@ -7,6 +7,7 @@ vi.mock('@tauri-apps/api/window', () => ({ availableMonitors: h.monitors, curren
 vi.mock('@tauri-apps/api/webviewWindow', () => ({ getAllWebviewWindows: h.getViews }));
 
 import { startCompactDesktop } from '../src/platform/desktop/compact-runtime';
+import { COMPACT_DEFAULTS } from '../src/platform/desktop/compact-geometry';
 
 const regular = { name: 'regular', position: { x: 0, y: 0 }, scaleFactor: 1, workArea: { position: { x: 0, y: 0 }, size: { width: 1920, height: 1080 } } };
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve: (value: T) => resolve(value) }; }
@@ -16,15 +17,18 @@ let ignored: boolean[];
 let eventHandlers: Record<string, (event?: unknown) => void>;
 let nodeHandlers: Record<string, (event?: unknown) => void>;
 let currentWindow: Record<string, ReturnType<typeof vi.fn>>;
-let controlWebview: { label: string; innerSize: ReturnType<typeof vi.fn>; show: ReturnType<typeof vi.fn> };
+let controlWebview: { label: string; innerSize: ReturnType<typeof vi.fn>; show: ReturnType<typeof vi.fn>; hide: ReturnType<typeof vi.fn> };
 
 beforeEach(() => {
   vi.useFakeTimers(); ignored = []; eventHandlers = {}; nodeHandlers = {}; current = { x: 100, y: 100, width: 640, height: 160 };
   vi.stubGlobal('window', globalThis);
-  Object.assign(globalThis, { addEventListener: vi.fn(), removeEventListener: vi.fn(), localStorage: { getItem: () => null, setItem: vi.fn() } });
+  Object.assign(globalThis, {
+    addEventListener: vi.fn((name: string, callback: (event?: unknown) => void) => { eventHandlers[`window:${name}`] = callback; }),
+    removeEventListener: vi.fn(), localStorage: { getItem: vi.fn(() => null), setItem: vi.fn() },
+  });
   const nodes = new Map<string, { hidden?: boolean; addEventListener?: (name: string, callback: (event?: unknown) => void) => void }>();
   for (const id of ['save-recovery', 'edit-overlay', 'drag-handle', 'resize-handle', 'edit-done']) nodes.set(id, { hidden: id === 'edit-overlay' || id === 'save-recovery', addEventListener: (name, callback) => { nodeHandlers[`${id}:${name}`] = callback; } });
-  vi.stubGlobal('document', { getElementById: (id: string) => nodes.get(id) ?? null });
+  vi.stubGlobal('document', { getElementById: (id: string) => nodes.get(id) ?? null, body: { classList: { toggle: vi.fn() } } });
   vi.stubGlobal('MutationObserver', class { constructor(private readonly callback: () => void) {} observe() { void this.callback; } disconnect() {} });
   currentWindow = {
     innerPosition: vi.fn(async () => ({ x: current.x, y: current.y })), outerPosition: vi.fn(async () => ({ x: current.x, y: current.y })),
@@ -33,7 +37,7 @@ beforeEach(() => {
     onResized: vi.fn(async (callback: () => void) => { eventHandlers.resized = callback; return vi.fn(); }), onScaleChanged: vi.fn(async (callback: () => void) => { eventHandlers.scale = callback; return vi.fn(); }),
     show: vi.fn(async () => undefined), startDragging: vi.fn(async () => undefined), startResizeDragging: vi.fn(async () => undefined),
   };
-  controlWebview = { label: 'controls', innerSize: vi.fn(async () => ({ width: 136, height: 36 })), show: vi.fn(async () => undefined) };
+  controlWebview = { label: 'controls', innerSize: vi.fn(async () => ({ width: 136, height: 36 })), show: vi.fn(async () => undefined), hide: vi.fn(async () => undefined) };
   h.invoke.mockImplementation(async (command: string) => command === 'shell_mode' ? 'overlay' : undefined);
   h.listen.mockImplementation(async (name: string, callback: (event?: unknown) => void) => { eventHandlers[name] = callback; return vi.fn(); });
   h.monitors.mockResolvedValue([regular]); h.currentMonitor.mockResolvedValue(regular); h.primaryMonitor.mockResolvedValue(regular);
@@ -42,6 +46,69 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
 
 describe('compact native runtime integration seams', () => {
+  it('opens a startup welcome transiently, accepts clicks, hides controls, then restores saved host bounds without writes', async () => {
+    h.invoke.mockImplementation(async (command: string, args?: { bounds?: { x: number; y: number; width: number; height: number } }) => {
+      if (command === 'set_overlay_bounds' && args?.bounds) current = { ...args.bounds };
+      return command === 'shell_mode' ? 'overlay' : undefined;
+    });
+    const storage = localStorage as unknown as { setItem: ReturnType<typeof vi.fn> };
+    const cleanup = await startCompactDesktop({ flushSave: vi.fn(), setQuit: vi.fn(), setEditing: vi.fn(), presentationState: () => ({ welcomeOpen: true, sourceHeight: 488 }) });
+    expect(current).toMatchObject({ width: 640, height: 488 });
+    expect(controlWebview.hide).toHaveBeenCalled(); expect(ignored.at(-1)).toBe(false);
+    eventHandlers['window:compact-presentation-change']?.({ detail: { welcomeOpen: false, sourceHeight: 160 } });
+    await vi.waitFor(() => expect(current.height).toBe(160));
+    expect(current).toMatchObject({ width: 640, height: 160 });
+    expect(controlWebview.show).toHaveBeenCalled(); expect(ignored.at(-1)).toBe(true);
+    expect((document as unknown as { body: { classList: { toggle: ReturnType<typeof vi.fn> } } }).body.classList.toggle).toHaveBeenCalledWith('native-welcome-scroll', false);
+    expect(storage.setItem).not.toHaveBeenCalled();
+    cleanup();
+  });
+
+  it('clamps a zoomed welcome to the work area, enables scroll mode, and ignores transient resize persistence', async () => {
+    const small = { ...regular, workArea: { position: { x: 0, y: 0 }, size: { width: 1920, height: 600 } } };
+    h.monitors.mockResolvedValue([small]); h.currentMonitor.mockResolvedValue(small); h.primaryMonitor.mockResolvedValue(small);
+    const storage = localStorage as unknown as { getItem: ReturnType<typeof vi.fn>; setItem: ReturnType<typeof vi.fn> };
+    storage.getItem.mockReturnValue(JSON.stringify({ ...COMPACT_DEFAULTS, zoom: 2 }));
+    h.invoke.mockImplementation(async (command: string, args?: { bounds?: { x: number; y: number; width: number; height: number } }) => {
+      if (command === 'set_overlay_bounds' && args?.bounds) current = { ...args.bounds };
+      return command === 'shell_mode' ? 'overlay' : undefined;
+    });
+    const cleanup = await startCompactDesktop({ flushSave: vi.fn(), setQuit: vi.fn(), setEditing: vi.fn(), presentationState: () => ({ welcomeOpen: true, sourceHeight: 488 }) });
+    expect(current).toMatchObject({ width: 1280, height: 600 });
+    expect((document as unknown as { body: { classList: { toggle: ReturnType<typeof vi.fn> } } }).body.classList.toggle).toHaveBeenCalledWith('native-welcome-scroll', true);
+    expect(ignored.at(-1)).toBe(false); expect(controlWebview.hide).toHaveBeenCalled();
+    eventHandlers.resized?.(); eventHandlers.moved?.(); eventHandlers.scale?.();
+    await vi.advanceTimersByTimeAsync(400); await Promise.resolve(); await Promise.resolve();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    eventHandlers['window:compact-presentation-change']?.({ detail: { welcomeOpen: false, sourceHeight: 160 } });
+    await vi.waitFor(() => expect(current.height).toBe(320));
+    expect(current).toMatchObject({ width: 1280, height: 320 });
+    expect(controlWebview.show).toHaveBeenCalled(); expect(ignored.at(-1)).toBe(true);
+    cleanup();
+  });
+
+  it('keeps the normal host size after a welcome closes while its open resize request is pending', async () => {
+    const delayed = deferred<void>(); let setBoundsCalls = 0;
+    h.invoke.mockImplementation((command: string, args?: { bounds?: { x: number; y: number; width: number; height: number } }) => {
+      if (command === 'set_overlay_bounds' && args?.bounds) {
+        setBoundsCalls += 1;
+        if (setBoundsCalls === 2) return delayed.promise.then(() => { current = { ...args.bounds! }; });
+        current = { ...args.bounds };
+      }
+      return Promise.resolve(command === 'shell_mode' ? 'overlay' : undefined);
+    });
+    const cleanup = await startCompactDesktop({ flushSave: vi.fn(), setQuit: vi.fn(), setEditing: vi.fn() });
+    eventHandlers['window:compact-presentation-change']?.({ detail: { welcomeOpen: true, sourceHeight: 488 } });
+    await vi.waitFor(() => expect(setBoundsCalls).toBe(2));
+    expect(current.height).toBe(160); // The native resize request is still pending.
+    eventHandlers['window:compact-presentation-change']?.({ detail: { welcomeOpen: false, sourceHeight: 160 } });
+    for (let turn = 0; turn < 12; turn += 1) await Promise.resolve(); // Let the close request queue behind the pending open IPC.
+    expect(setBoundsCalls).toBe(2);
+    delayed.resolve(); await vi.waitFor(() => expect(setBoundsCalls).toBe(3));
+    expect(current.height).toBe(160);
+    cleanup();
+  });
+
   it('keeps input captured when recovery is visible initially and after exiting Edit', async () => {
     const recovery = document.getElementById('save-recovery') as { hidden: boolean };
     recovery.hidden = false;

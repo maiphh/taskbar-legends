@@ -7,6 +7,7 @@ import type { GameState } from '../src/core/model';
 import { referencePolicy } from '../src/core/policy';
 import { applyOffline } from '../src/core/save';
 import { farmCycleDistribution } from '../src/sim/aggregate';
+import { setFarmProofFixture } from './helpers/farm-proof-fixture';
 
 // Clock arithmetic below is written for a 6 s stage gap (1.4.2 and 1.4.4; 1.4.3 shipped 8), so tempo() pins 6 and afterEach restores it.
 const original = { scale: CONFIG.combat.nonBossFarmTimeScale, floor: CONFIG.combat.nonBossFarmMinCycleSec, retry: CONFIG.progression.powerGainRetryMinSec, gap: CONFIG.sim.stageGapSec, bossRepeat: CONFIG.combat.bossRepeatMinCycle };
@@ -86,6 +87,9 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
     };
     for (const [boss, repeatBoss] of [[false, false], [true, false], [true, true]]) {
       const a = run(1, 0, boss ?? false, repeatBoss), b = run(3, 20, boss ?? false, repeatBoss);
+      if (a.encounterFarmContext && b.encounterFarmContext) {
+        a.encounterFarmContext.rulesSignature = b.encounterFarmContext.rulesSignature;
+      }
       expect(a).toEqual(b); expect(b.farmClock).toBeUndefined();
     }
   });
@@ -129,21 +133,32 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
   });
   it('offline uses frozen native averages identically for8h/12h regardless of tempo/floor', () => {
     tempo(3, 20); const frozen = controlled(); step(frozen); frozen.metrics.farmClearSeconds = [20, 20]; frozen.metrics.nativeFarmClearSeconds = [30, 40];
-    const results = [], raw: number[] = [];
+    setFarmProofFixture(frozen, 1, 35, 20);
+    const results: { state: GameState; report: ReturnType<typeof applyOffline> }[] = [], raw: number[] = [];
     for (const [scale, floor] of [[1, 0], [3, 20]]) {
       tempo(scale ?? 1, floor ?? 0);
+      const current = load(snapshot(frozen)); setFarmProofFixture(current, 1, 35, 20);
       for (const hours of [8, 12]) {
-        const state = load(snapshot(frozen)); const report = applyOffline(state, hours * 3600000); raw.push(report.rawSeconds);
+        const state = load(snapshot(current)); const report = applyOffline(state, hours * 3600000); raw.push(report.rawSeconds);
         // rawSeconds (pre-cap time, #8) legitimately differs between 8h and 12h; everything credited must not.
         for (const event of state.events) if (event.data.type === 'offline') event.data.rawSeconds = event.data.seconds;
         results.push({ state, report: { ...report, rawSeconds: report.seconds, capped: false } });
       }
     }
     expect(raw).toEqual([28800, 43200, 28800, 43200]);
-    expect(results[1]).toEqual(results[0]); expect(results[2]).toEqual(results[0]); expect(results[3]).toEqual(results[0]);
+    const withoutRuntimeFingerprint = (value: typeof results[number]) => {
+      const state = structuredClone(value.state);
+      if (state.encounterFarmContext) state.encounterFarmContext.rulesSignature = 'tempo-test';
+      for (const proof of state.farmProofs ?? []) proof.rulesSignature = 'tempo-test';
+      return { ...value, state };
+    };
+    expect(withoutRuntimeFingerprint(results[1]!)).toEqual(withoutRuntimeFingerprint(results[0]!));
+    expect(withoutRuntimeFingerprint(results[2]!)).toEqual(withoutRuntimeFingerprint(results[0]!));
+    expect(withoutRuntimeFingerprint(results[3]!)).toEqual(withoutRuntimeFingerprint(results[0]!));
     expect(results[0]?.report.clears).toBe(Math.floor(28800 / 35));
     const legacyAverage = load(snapshot(frozen)); delete legacyAverage.metrics.nativeFarmClearSeconds;
-    expect(applyOffline(legacyAverage, 8 * 3600000).clears).toBe(1440);
+    delete legacyAverage.farmProofs;
+    expect(applyOffline(legacyAverage, 8 * 3600000).clears).toBe(Math.floor(28800 / CONFIG.idle.avgFarmClearSecDefault));
   });
   it('aggregates frequency-weighted current farm timing samples into exact quantiles', () => {
     const data = farmCycleDistribution([{ '400': 2, '800': 2 }]);

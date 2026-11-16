@@ -38,6 +38,14 @@ export function restoreCompactGeometry(prefsInput: CompactPrefs, monitorInput: D
     cssWidth: size.width / monitor.scaleFactor, cssHeight: size.height / monitor.scaleFactor,
     constrained: size.width !== prefs.sourceWidth * prefs.zoom || size.height !== prefs.sourceHeight * prefs.zoom };
 }
+/** Temporary native host bounds for a modal canvas taller than the user's saved compact window. */
+export function presentationClientBounds(prefsInput: CompactPrefs, monitorInput: DesktopMonitor, insets: FrameInsets, sourceHeight: number): { rect: PhysicalRect; constrained: boolean } {
+  const prefs = prefsSchema.parse(prefsInput), area = clientWorkArea(monitorSchema.parse(monitorInput), insets);
+  const normal = restoreCompactGeometry(prefs, area).rect, requestedHeight = Math.max(1, Math.round(sourceHeight * prefs.zoom));
+  const height = Math.min(requestedHeight, area.workArea.height);
+  const y = prefs.placement === 'snapped' ? area.workArea.y + area.workArea.height - height : normal.y;
+  return { rect: constrainCompactRect({ ...normal, y, height }, area), constrained: height < requestedHeight };
+}
 /** Recompute a saved anchor after a DPI/work-area change and clamp to the same monitor. */
 export function constrainCompactRect(rectInput: PhysicalRect, monitorInput: DesktopMonitor): PhysicalRect {
   const rect = z.object({ x: z.number().finite(), y: z.number().finite(), width: z.number().finite().positive(), height: z.number().finite().positive() }).parse(rectInput);

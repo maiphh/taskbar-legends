@@ -645,7 +645,10 @@ export class ManagementView {
   /** Settings (§7.5): pause and mute toggles, four volume sliders (master + buses), zoom pair, placement dropdown, notes. */
   private settings(state: ManagementSnapshot): [string, string] {
     const prefs = this.compactPrefs, width = this.variant === 'native' ? 400 : 280, zoom = String(prefs?.zoom ?? 1);
+    const nextChest = Math.max(0, Math.ceil(state.offline.secondsUntilNextChest)), chestTime = nextChest >= 3600
+      ? `${Math.floor(nextChest / 3600)}h ${Math.ceil(nextChest % 3600 / 60)}m` : `${Math.ceil(nextChest / 60)}m`;
     return [`<h2 class="px-sr">Settings</h2><div class="px-settings">`
+      + `<section class="px-offline-summary" aria-label="Offline progress"><h3>Offline progress</h3><p>Farm ${esc(state.offline.stageId)} · ~${fmt(state.offline.goldPerHour)} gold/h · ~${fmt(state.offline.xpPerHour)} XP/h per hero</p><p>${state.offline.earned ? 'Earned by this formation · last measured clear' : 'Starting estimate — clear a stage with this formation to improve it'}</p><p>Next ${state.offline.chestKind === 'expedition' ? 'expedition chest' : 'chest'} after ${chestTime} away</p><p>Partial rewards carry between visits · ${state.offline.capHours}h cap per absence</p></section>`
       // Toggles follow the mockup: the pause switch is "running" (off while paused), the label names the action it takes.
       + `<div class="px-srow">${toggle('pause', 'pause', !state.paused, state.paused ? 'Resume simulation' : 'Pause simulation', 'Simulation running')}</div>`
       + `<div class="px-srow">${toggle('mute', 'mute', this.audioValue.muted, this.audioValue.muted ? 'Unmute audio' : 'Mute audio', 'Audio muted')}</div>`

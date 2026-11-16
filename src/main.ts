@@ -6,7 +6,9 @@ import { salvageToast } from './salvage-copy';
 import { createState, load, snapshot, statusText, step } from './core/game';
 import { cloneState } from './core/model';
 import { bindInput } from './input';
-import { applyOffline, resumeSave } from './core/save';
+import { applyOffline } from './core/save';
+import { RestoreCoordinator, RestorePhaseError } from './core/restore-coordinator';
+import { SaveTimestamp } from './core/save-timestamp';
 import type { WelcomeData } from './pixel-ui';
 import { raritySchema } from './config';
 import { localSaveStore } from './platform/storage';
@@ -41,7 +43,9 @@ let compactPrefs: CompactPrefs = readCompactPrefs();
 document.body.classList.add('compact-shell'); renderer.setCompactViewport(true, compactPrefs.zoom);
 const newSelectedState = (seed = 1) => createState(seed);
 let state = newSelectedState(), paused = false, accumulatorMs = 0, hidden = document.hidden;
+let restoring = false, failedSave = false, checkpointBlocked = false, rendering = false;
 const managementAuthority = new ManagementAuthority(state, paused, next => { state = next; render(); });
+managementAuthority.setAvailable(false);
 function replaceSelectedState(next: typeof state): void { managementAuthority.replaceState(next); }
 function setCompactSettings(next: CompactPrefs): void {
   compactPrefs = parseCompactPrefs(next); writeCompactPrefs(compactPrefs);
@@ -55,6 +59,8 @@ const showNotice = (message: string): void => { notice.textContent = message; no
 export const canonicalSaveKey = `${CONFIG.runtime.saveKey}:party-v2`;
 const store = localSaveStore(canonicalSaveKey);
 const hasCanonicalSave = (() => { try { return localStorage.getItem(canonicalSaveKey) !== null; } catch { return true; } })();
+const restoreCoordinator = new RestoreCoordinator(store);
+const saveTimestamp = new SaveTimestamp();
 try { legacyNotice.hidden = hasCanonicalSave || localStorage.getItem(CONFIG.runtime.saveKey) === null; } catch { legacyNotice.hidden = true; }
 exportLegacy.addEventListener('click', () => {
   try {
@@ -75,7 +81,7 @@ function managementClient(): ManagementClient {
       ? managementAuthority.executeManyPulls({ clientId: `browser:${requestId.split(':')[0] ?? 'view'}`, requestId, expectedRevision: revision, count: value.count })
       : managementAuthority.execute({ clientId: `browser:${requestId.split(':')[0] ?? 'view'}`, requestId, expectedRevision: revision, action: value }),
     compare: async (heroId, gearId) => managementAuthority.compareGear(heroId, gearId),
-    pause: async value => { paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); }, close: () => undefined,
+    pause: async value => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); }, close: () => undefined,
     getAudio: async () => audio.settings(), setAudio: async value => { audio.set(value); renderer.ui.audio = audio.settings(); render(); },
     getCompactPrefs: async () => compactPrefs, setCompactPrefs: async value => setCompactSettings(value),
     cue: key => { audio.play(key); },
@@ -152,35 +158,54 @@ function setEditing(value: boolean): void {
 element('compact-menu-button').addEventListener('click', () => openManagement());
 element('compact-edit-button').addEventListener('click', () => setEditing(document.getElementById('edit-overlay')?.hasAttribute('hidden') ?? false));
 element('edit-done').addEventListener('click', () => setEditing(false));
-let restoring = false;
-let failedSave = false;
-async function restore(): Promise<void> {
-  restoring = true;
-  try {
-    const data = await store.load();
-    if (data && data.state.combatRules !== 'party-v2') throw new Error(`The current save at ${canonicalSaveKey} is incompatible and has been preserved for export. It was not overwritten.`);
-    if (data) { const saved = resumeSave(data, Date.now()); replaceSelectedState(saved.state); accumulatorMs = saved.remainderMs;
-      if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq));
-        if (!renderer.ui.welcome) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears${saved.capped ? ' (8h cap)' : ''}`); }
+let restoreTask: Promise<void> | null = null;
+function restore(): Promise<void> {
+  if (hidden || checkpointBlocked) return Promise.resolve();
+  if (restoreTask) { void restoreCoordinator.restore(() => !hidden && !checkpointBlocked); return restoreTask; }
+  restoring = true; managementAuthority.setAvailable(false); render();
+  const task = (async () => {
+    try {
+      const outcome = await restoreCoordinator.restore(() => !hidden && !checkpointBlocked);
+      if (outcome.kind !== 'restored' || hidden || checkpointBlocked) return;
+      const { data, saved } = outcome;
+      saveTimestamp.observe(outcome.timestamp, data?.savedAtMs ?? 0);
+      if (data && saved) {
+        if (data.state.combatRules !== 'party-v2') throw new Error(`The current save at ${canonicalSaveKey} is incompatible and has been preserved for export. It was not overwritten.`);
+        // RestoreCoordinator wrote the new state, remainder, and consumed timestamp before it can be exposed here.
+        replaceSelectedState(saved.state); accumulatorMs = saved.remainderMs;
+        if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq));
+          if (!renderer.ui.welcome) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears · ${Math.round(saved.partialClears * 100)}% toward next clear${saved.capped ? ' (8h cap)' : ''}`); }
+      }
+      if (failedSave) {
+        failedSave = false; recovery.hidden = true;
+        recoveryTitle.textContent = 'Save could not be loaded';
+        recoveryDescription.textContent = 'The original save is preserved when readable. Export it for recovery, or discard it to start fresh. Autosaving is paused until you choose.';
+        recoveryStatus.textContent = '';
+      }
+    } catch (error) {
+      if (hidden) return;
+      if (error instanceof RestorePhaseError && error.phase === 'checkpoint') {
+        checkpointBlocked = true; paused = true; managementAuthority.setPaused(true); managementAuthority.setAvailable(false);
+        notice.textContent = 'Idle return could not be saved. Original save is preserved; free storage, then close and reopen the game.'; noticeUntil = Infinity;
+      } else {
+        failedSave = true;
+        recoveryTitle.textContent = 'Save could not be loaded';
+        recoveryDescription.textContent = 'The original save is preserved when readable. Export it for recovery, or discard it to start fresh. Autosaving is paused until you choose.';
+        recoveryStatus.textContent = '';
+        exportFailed.disabled = false; discardFailed.textContent = 'Discard save and start fresh'; recovery.hidden = false;
+        showNotice(`Save unavailable or incompatible. Autosaving paused; ${error instanceof Error ? error.message : 'use the save recovery controls.'}`);
+      }
+    } finally {
+      restoring = false;
+      managementAuthority.setAvailable(!hidden && !failedSave && !checkpointBlocked);
+      lastFrame = performance.now();
+      if (!hidden && !failedSave && !checkpointBlocked) lastSave = lastFrame;
+      render();
     }
-    if (failedSave) {
-      // A transient read failure is recoverable only after a full successful decode/resume. Keep the loaded state intact.
-      failedSave = false; recovery.hidden = true;
-      recoveryTitle.textContent = 'Save could not be loaded';
-      recoveryDescription.textContent = 'The original save is preserved when readable. Export it for recovery, or discard it to start fresh. Autosaving is paused until you choose.';
-      recoveryStatus.textContent = '';
-    }
-  } catch (error) {
-    failedSave = true;
-    recoveryTitle.textContent = 'Save could not be loaded';
-    recoveryDescription.textContent = 'The original save is preserved when readable. Export it for recovery, or discard it to start fresh. Autosaving is paused until you choose.';
-    recoveryStatus.textContent = '';
-    exportFailed.disabled = false;
-    discardFailed.textContent = 'Discard save and start fresh';
-    recovery.hidden = false;
-    showNotice(`Save unavailable or incompatible. Autosaving paused; ${error instanceof Error ? error.message : 'use the save recovery controls.'}`);
-  }
-  finally { restoring = false; render(); }
+  })();
+  restoreTask = task;
+  void task.then(() => { if (restoreTask === task) restoreTask = null; }, () => { if (restoreTask === task) restoreTask = null; });
+  return task;
 }
 void restore();
 /** Welcome-back data: the offline result plus the farm stage, the best item rolled and the choices waiting. */
@@ -189,12 +214,27 @@ function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number)
   const consider = (rarity: (typeof raritySchema.options)[number], slot: string): void => { if (!best || raritySchema.options.indexOf(rarity) > raritySchema.options.indexOf(best.rarity)) best = { rarity, slot }; };
   for (const event of state.events) if (event.seq > beforeSeq && event.data.type === 'gear') consider(event.data.rarity, event.data.slot);
   for (const pair of state.pendingChoice ?? []) for (const item of pair) if (item.acquiredAt.tick === state.tick) consider(item.rarity, item.slot);
-  return { ...result, stage: Math.max(1, state.highestCleared), best, choices: activeV14Rules().includes('chestChoice') && result.chests ? state.pendingChoice?.length ?? 0 : 0 };
+  return { ...result, stage: result.stage, partialClears: result.partialClears, best, choices: activeV14Rules().includes('chestChoice') && result.chests ? state.pendingChoice?.length ?? 0 : 0 };
 }
 function save(): void {
-  if (restoring || failedSave) return;
-  store.save({ state, savedAtMs: Date.now(), remainderMs: accumulatorMs })
+  if (restoring || failedSave || checkpointBlocked || hidden) return;
+  store.save({ state, savedAtMs: saveTimestamp.next(Date.now()), remainderMs: accumulatorMs })
     .catch(() => { showNotice('Save failed: storage unavailable/full. Export __game.snapshot().'); });
+}
+/** Consume the final visible frame into a durable timestamp before the browser freezes the page. */
+function checkpointVisibleTime(): void {
+  if (restoring || failedSave || checkpointBlocked) return;
+  const now = performance.now();
+  if (!paused) {
+    accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
+    const ticks = Math.floor(accumulatorMs / TICK_MS);
+    if (ticks > 0) { step(state, ticks); accumulatorMs -= ticks * TICK_MS; }
+  }
+  lastFrame = now; lastSave = now;
+  store.save({ state, savedAtMs: saveTimestamp.next(Date.now()), remainderMs: accumulatorMs }).catch(() => {
+    checkpointBlocked = true; paused = true; managementAuthority.setPaused(true); managementAuthority.setAvailable(false);
+    notice.textContent = 'Idle return could not be saved. Original save is preserved; free storage, then close and reopen the game.'; noticeUntil = Infinity; render();
+  });
 }
 exportFailed.addEventListener('click', () => {
   try {
@@ -209,10 +249,10 @@ exportFailed.addEventListener('click', () => {
 discardFailed.addEventListener('click', () => {
   void store.discardFailed().then(() => {
     failedSave = false; recovery.hidden = true; replaceSelectedState(newSelectedState()); accumulatorMs = 0; save();
+    managementAuthority.setAvailable(!hidden && !checkpointBlocked);
     showNotice('Failed save discarded. A fresh save has started.'); render();
   }).catch(() => { recoveryStatus.textContent = 'Could not discard the failed save; it remains protected.'; });
 });
-let rendering = false;
 function render(): void {
   if (rendering) return;
   rendering = true;
@@ -223,6 +263,7 @@ function render(): void {
   } finally { rendering = false; }
 }
 function action(value: unknown): void {
+  if (hidden || restoring || checkpointBlocked || failedSave) return;
   const before = state.eventSeq;
   const reply = managementAuthority.execute({ clientId: 'battlefield-keyboard', requestId: `key:${++internalRequest}`, expectedRevision: managementAuthority.snapshot().revision, action: value as Action });
   if (!reply.accepted) showNotice(reply.reason ?? 'Action unavailable.');
@@ -230,12 +271,20 @@ function action(value: unknown): void {
   for (const event of state.events) if (event.seq > before && event.data.type === 'salvage') showNotice(salvageToast(event.data));
   render();
 }
-function togglePause(): void { paused = !paused; managementAuthority.setPaused(paused); lastFrame = performance.now(); render(); }
+function togglePause(): void { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = !paused; managementAuthority.setPaused(paused); lastFrame = performance.now(); render(); }
+let lastCompactPresentationKey = '';
+function announceCompactPresentation(): void {
+  const detail = { welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() };
+  const key = `${detail.welcomeOpen}:${detail.sourceHeight}`;
+  if (key === lastCompactPresentationKey) return;
+  lastCompactPresentationKey = key;
+  window.dispatchEvent(new CustomEvent('compact-presentation-change', { detail }));
+}
 function resize(): void {
   const native = '__TAURI_INTERNALS__' in window;
   const cssWidth = !native ? compactPrefs.sourceWidth * compactPrefs.zoom / (window.devicePixelRatio || 1) : window.innerWidth;
   if (!native) document.getElementById('app')!.style.width = `${cssWidth}px`;
-  renderer.resize(cssWidth); syncCompactScale(); dockManagement(); render();
+  renderer.resize(cssWidth); syncCompactScale(); dockManagement(); render(); announceCompactPresentation();
 }
 renderer.ui.onAction = action; renderer.ui.onPause = togglePause; renderer.ui.onLayoutChange = resize; renderer.ui.onRedraw = render;
 renderer.ui.onCue = key => { audio.play(key); };
@@ -245,20 +294,31 @@ bindInput({ action, togglePause, cheapestUpgrade: () => { const item = cheapestE
 void startManagementBridge(managementAuthority, {
   audio: () => audio.settings(),
   setAudio: value => { audio.set(value); renderer.ui.audio = audio.settings(); render(); },
-  setPaused: value => { paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); },
+  setPaused: value => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); },
   compactPrefs: () => compactPrefs ?? readCompactPrefs(), setCompactPrefs: value => setCompactSettings(parseCompactPrefs(value)),
 }).then(stop => window.addEventListener('pagehide', stop, { once: true })).catch(error => showNotice(`Management bridge unavailable: ${String(error)}`));
 window.addEventListener('resize', resize); resize();
 window.addEventListener('pagehide', () => { if (!hidden) save(); audio.dispose(); managementView?.dispose(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else void restore(); hidden = document.hidden; lastFrame = performance.now(); render(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !hidden) {
+    // Freeze authority before saving: a management poll/action must not commit
+    // against a state snapshot that is about to be replaced on foreground.
+    hidden = true; managementAuthority.setAvailable(false);
+    checkpointVisibleTime(); restoreCoordinator.invalidate();
+  } else if (!document.hidden && hidden) {
+    hidden = false; lastFrame = performance.now(); if (!checkpointBlocked && !failedSave) void restore();
+  }
+  render();
+});
 const debug: GameDebug = {
   getState: () => cloneState(state),
-  step: (ticks = 1) => { if (!paused) throw new Error('Pause before stepping'); step(state, ticks); render(); return cloneState(state); },
-  pause: () => { paused = true; managementAuthority.setPaused(true); render(); }, resume: () => { paused = false; managementAuthority.setPaused(false); lastFrame = performance.now(); render(); }, isPaused: () => paused,
+  step: (ticks = 1) => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks simulation input'); if (!paused) throw new Error('Pause before stepping'); step(state, ticks); render(); return cloneState(state); },
+  pause: () => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = true; managementAuthority.setPaused(true); render(); }, resume: () => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = false; managementAuthority.setPaused(false); lastFrame = performance.now(); render(); }, isPaused: () => paused,
   input: value => { action(value); return cloneState(state); },
-  setSeed: seed => { replaceSelectedState(newSelectedState(seed)); renderer.ui.resetHistory(); accumulatorMs = 0; paused = true; managementAuthority.setPaused(true); render(); return cloneState(state); },
+  setSeed: seed => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); replaceSelectedState(newSelectedState(seed)); renderer.ui.resetHistory(); accumulatorMs = 0; paused = true; managementAuthority.setPaused(true); render(); return cloneState(state); },
   snapshot: () => snapshot(state),
   load: value => {
+    if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes');
     const next = load(value);
     if (next.combatRules !== 'party-v2') throw new Error('Snapshot is not a current party save; it was not loaded.');
     replaceSelectedState(next); renderer.ui.resetHistory(); accumulatorMs = 0; lastFrame = performance.now(); render(); return cloneState(state);
@@ -273,7 +333,7 @@ const debug: GameDebug = {
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
   getAudio: () => audio.debug(),
-  away: ms => { const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
+  away: ms => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };
 window.__game = debug;
 if (import.meta.env.DEV) window.__management = {
@@ -281,13 +341,14 @@ if (import.meta.env.DEV) window.__management = {
   execute: (value: unknown) => managementAuthority.execute(value),
   compare: (heroId: string, gearId: string) => managementAuthority.compareGear(heroId, gearId),
 };
-void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler) }, {
+void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler),
+  presentationState: () => ({ welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() }) }, {
   setEditing,
 }).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
 void debug.whenReady().then(() => { if (debug.getAssetErrors().length) showNotice('Some UI/art unavailable; see __game.getAssetErrors().'); });
 function frame(now: number): void {
-  if (!paused && !hidden) {
+  if (!paused && !hidden && !restoring && !failedSave && !checkpointBlocked) {
     accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
     const ticks = Math.floor(accumulatorMs / TICK_MS); if (ticks > 0) { step(state, ticks); accumulatorMs -= ticks * TICK_MS; }
   }

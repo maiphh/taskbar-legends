@@ -43,9 +43,9 @@ describe('levelBefore / levelAfter', () => {
     expect(result.heroes.some(hero => hero.levelAfter > hero.levelBefore)).toBe(true);
     expect(offlineEvent(state).heroes).toEqual(result.heroes);
   });
-  it('reports unchanged levels when nothing was farmed', () => {
+  it('carries fractional XP across sub-clear time without claiming a full clear', () => {
     const state = farmer(), result = applyOffline(state, 1000);
-    expect(result.xp).toBe(0);
+    expect(result.clears).toBe(0); expect(result.xp).toBeGreaterThan(0); expect(result.partialClears).toBeGreaterThan(0);
     expect(result.heroes.every(hero => hero.levelBefore === hero.levelAfter)).toBe(true);
   });
   it('level-up summary on xp events: levels lists only heroes that levelled; omitted otherwise', () => {

@@ -8,6 +8,7 @@ import { getPartyHeroDefinition } from '../src/core/party-definitions';
 import type { GameState } from '../src/core/model';
 import { referencePolicy, runReference } from '../src/core/policy';
 import { applyOffline, expectedFarmRewards, makeSave, restoreSave } from '../src/core/save';
+import { setFarmProofFixture } from './helpers/farm-proof-fixture';
 
 const fixtureState = (seed = 1): GameState => createState(seed, { starterGear: false });
 
@@ -229,11 +230,11 @@ describe('offline timestamp accounting', () => {
     expect(a.state.tick).toBe(state.tick); expect(a.state.progress).toEqual(state.progress); expect(a.state.tickets).toBe(state.tickets);
     expect(a.chests).toBe(4); expect(a.seconds).toBe(28800);
   });
-  it('uses floor(elapsed/average last ten farm clears), exact configured rewards, no clock dependence', () => {
+  it('uses continuous expected reward rates, preserves timestamp remainder, and ignores backward clocks', () => {
     const state = fixtureState(); state.highestCleared = 4; state.progress = { kind: 'FARMING', stage: 4, failedStage: 5, retryAtTick: 9999, failedPower: partyPower(state), failures: 1 };
-    state.metrics.farmClearSeconds = [20, 40]; const save = makeSave(state, 1000, 25);
+    state.metrics.farmClearSeconds = [20, 40]; setFarmProofFixture(state, 4, 30, 30); const save = makeSave(state, 1000, 25);
     const restored = restoreSave(save, 1000 + 95900); expect(restored.clears).toBe(3); expect(restored.remainderMs).toBe(25);
-    expect(restored.gold).toBe(expectedFarmRewards(4).gold * 3);
+    expect(restored.gold).toBe(Math.floor(95.9 / 30 * expectedFarmRewards(4).gold * CONFIG.idle.offlineEfficiency));
     expect(restoreSave(save, 999).state).toEqual(state);
     expect(() => restoreSave(save, NaN)).toThrow();
   });

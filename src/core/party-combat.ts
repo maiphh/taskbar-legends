@@ -5,6 +5,7 @@ import { emit, goldChange } from './events';
 import { applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveDefense, effectActive, prunePartyEffects } from './party-effects';
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
+import { partyKillReward } from './rewards';
 import { fillGauges, nextActor, spendTurn, type GaugeUnit } from './turn/action-bar';
 import { canAct, onTurnStart, type RunningStatus } from './turn/statuses';
 import { actionBoundaries, createActionTimeline, hasUnfinishedPresentation } from './turn/animation-timing';
@@ -280,8 +281,8 @@ function miss(state: GameState, impact: Impact, reason: Impact['reason']): void 
 }
 function rewardDeath(state: GameState, target: Unit): void {
   if (target.side !== 'enemy') return;
-  const base = CONFIG.enemies[getPartyEnemyDefinition(target.sourceId).rewardKind], mult = CONFIG.rewards.killScaling ** (state.progress.stage - 1);
-  goldChange(state, Math.round(base.gold * mult), 'kill'); grantXp(state, Math.round(base.xp * mult));
+  const reward = partyKillReward(target.sourceId, state.progress.stage);
+  goldChange(state, reward.gold, 'kill'); grantXp(state, reward.xp);
 }
 function applyEffect(state: GameState, source: Unit, target: Unit, effect: { group: string; kind: EffectKind; magnitude: number; durationTicks: number; stackPolicy?: 'strongestRefresh' | 'sourceAura' }, now: number, emitIfChanged = true): void {
   const value = { id: `${effect.group}:${target.id}`, sourceId: source.id, targetId: target.id, group: effect.group, kind: effect.kind, magnitude: effect.magnitude, appliedAtTick: now, expiresAtTick: now + effect.durationTicks, stackPolicy: effect.stackPolicy ?? 'strongestRefresh' } as const;

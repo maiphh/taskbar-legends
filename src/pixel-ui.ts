@@ -1,13 +1,15 @@
 ﻿import { CONFIG, TICK_MS, heroConfig, raritySchema, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
-import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeChestGrid, welcomeDoneMs } from './reveal-timeline';
+import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
 import type { CardFace } from './reveal-timeline';
 import { BODY, HEADING, LINE_BOX, fitSize, fontFor, loadFonts, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
 import { campaignPresentation } from './core/selectors';
+import { welcomeLayout } from './welcome-layout';
+import { ellipsize } from './text-fit';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -24,7 +26,8 @@ export interface RevealPull { heroId: string; rarity: Rarity; pity: boolean; bad
 interface Reveal { count: 1 | 10; pulls: RevealPull[]; startedAt: number; skipped: boolean; cued: boolean; flash: boolean | null }
 /** What the welcome-back panel shows: the offline result (already credited) plus the farm stage and best item. */
 export interface WelcomeData { seconds: number; rawSeconds: number; capped: boolean; clears: number; gold: number; xp: number; chests: number;
-  heroes: readonly { id: string; levelBefore: number; levelAfter: number }[]; expeditionChests?: number; tickets?: number; stage: number;
+  heroes: readonly { id: string; levelBefore: number; levelAfter: number }[]; expeditionChests?: number; tickets?: number; stage: number; partialClears?: number;
+  earned: boolean; farmReason: 'no-earned-clear' | 'formation-or-combat-changed' | null;
   best: { rarity: Rarity; slot: string } | null; choices: number }
 export interface AudioControls { muted: boolean; volume: number }
 const palette = CONFIG.ui.palette;
@@ -189,13 +192,18 @@ export class PixelUI {
     }
   }
   setCompactMode(value: boolean): void { this.compactMode = value; if (value) this.setPanel(null); this.onLayoutChange(); }
-  height(): number { return this.compactMode ? CONFIG.ui.closed.height : this.isOpen() ? CONFIG.ui.expanded.height : CONFIG.ui.closed.height; }
+  height(): number { return this.welcome ? CONFIG.ui.expanded.height : this.compactMode ? CONFIG.ui.closed.height : this.isOpen() ? CONFIG.ui.expanded.height : CONFIG.ui.closed.height; }
   panelRect(): Rect {
+    if (this.welcome) {
+      const slots = this.welcome.expeditionChests !== undefined ? CONFIG.v14.offline.expeditionChestMax || CONFIG.idle.offlineChestMax : CONFIG.idle.offlineChestMax;
+      return welcomeLayout(this.width, Math.max(4, slots)).panel;
+    }
     const width = this.width >= 736 ? CONFIG.ui.expanded.panelWidth : Math.max(608, this.width - 16);
     return { x: Math.max(8, this.width - width - CONFIG.ui.expanded.panelRightInset), y: 0, width, height: CONFIG.ui.expanded.panelHeight };
   }
   sourceRegions(): SourceHitRegion[] {
     if (this.standalone) return [{ kind: 'panel', id: 'reveal-stage', x: 0, y: REVEAL_STAGE.top, width: this.revealStageWidth, height: REVEAL_STAGE.height - REVEAL_STAGE.top }];
+    if (this.welcome) return [{ kind: 'panel', id: 'welcome', ...this.panelRect() }];
     if (this.compactMode) {
       const dy = this.height() - CONFIG.ui.closed.coreHeight - CONFIG.ui.closed.coreY, layout = compactLaneLayout(this.width);
       return [
@@ -350,9 +358,10 @@ export class PixelUI {
     this.current = state; this.width = width; this.coreY = coreY; this.sourceHeight = this.height(); this.scaleToCss = scaleToCss; this.controls.clear();
     if (!this.readyFlag) { this.syncControls(); return; }
     for (const event of state.events) if (event.seq > this.lastPullSeq && event.data.type === 'pull') {
-      this.history.unshift(`${heroConfig(event.data.heroId).name} Â· ${event.data.rarity}${event.data.duplicate ? ' Â· duplicate +star/gold' : ' Â· NEW'}`);
+      this.history.unshift(`${heroConfig(event.data.heroId).name} · ${event.data.rarity}${event.data.duplicate ? ' · duplicate +star/gold' : ' · NEW'}`);
       if (this.history.length > 10) this.history.pop(); this.lastPullSeq = event.seq;
     }
+    if (this.welcome) { this.drawWelcome(ctx, state, this.welcome); this.syncControls(); return; }
     this.drawCompactLane(ctx, state, paused);
     this.syncControls();
   }
@@ -411,7 +420,7 @@ export class PixelUI {
     if (!done) { this.text(ctx, 'Click anywhere to skip', x + 16, 368, palette.muted, BODY); return; }
     const cost = CONFIG.gacha.costTickets * reveal.count, short10 = tickets < cost;
     if (reveal.count === 1) this.text(ctx, 'Click a button or press Enter', x + 16, 368, palette.muted, BODY, false, 370);
-    else this.text(ctx, `Tickets ${tickets}${short10 ? ` Â· Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
+    else this.text(ctx, `Tickets ${tickets}${short10 ? ` · Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
     const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144, oh = 28] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
     this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: ay, width: aw, height: ah }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
       { icon: 'chest', disabled: short10, tooltip: short10 ? `Need ${cost} ticket${cost === 1 ? '' : 's'}` : `Recruit x${reveal.count} again: ${cost} ticket${cost === 1 ? '' : 's'}` });
@@ -464,7 +473,7 @@ export class PixelUI {
       if (rect.width < 128) return;
       if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + 64 + dot.x, rect.y + 42 + dot.y, dot.size, dot.size); }
       let name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-      while (this.measureText(name) > 124 && name.length > 1) name = `${name.slice(0, -2)}â€¦`;
+      name = ellipsize(name, 124, value => this.measureText(value));
       this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY);
       const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
       this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
@@ -489,7 +498,7 @@ export class PixelUI {
     if (!full) return;
     if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + rw / 2 + dot.x, rect.y + artH / 2 + dot.y, dot.size, dot.size); }
     let name = shortHeroName(pull.heroId);
-    while (this.measureText(name) > small.nameMaxPx && name.length > 1) name = `${name.slice(0, -2)}â€¦`;
+    name = ellipsize(name, small.nameMaxPx, value => this.measureText(value));
     this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY);
     const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
     this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
@@ -500,64 +509,101 @@ export class PixelUI {
   }
   /** Welcome back (ui/offline-rewards.md): rewards are already in the save; Collect acknowledges. */
   drawWelcome(ctx: CanvasRenderingContext2D, state: GameState, data: WelcomeData): void {
-    const panel = this.panelRect(), x = panel.x, layout = CONFIG.ui.offlineRewards.layout, spec = CONFIG.ui.offlineRewards;
-    if (this.welcomeCloseAt !== null && this.clock() >= this.welcomeCloseAt) { queueMicrotask(() => this.closeWelcome()); }
+    const spec = CONFIG.ui.offlineRewards;
+    const max = data.expeditionChests !== undefined ? CONFIG.v14.offline.expeditionChestMax || CONFIG.idle.offlineChestMax : CONFIG.idle.offlineChestMax;
+    const layout = welcomeLayout(this.width, Math.max(4, max));
+    const panel = layout.panel, x = panel.x;
+    if (this.welcomeCloseAt !== null && this.clock() >= this.welcomeCloseAt) queueMicrotask(() => this.closeWelcome());
     const ms = this.welcomeMs(), rm = this.reducedMotion, closing = this.welcomeCloseAt !== null, capH = spec.capHours;
     this.frame(ctx, panel);
     this.text(ctx, 'WELCOME BACK', x + 16, 9, palette.gold, HEADING, true);
-    this.button(ctx, 'welcome-close', 'X', { x: x + 680, y: 8, width: 28, height: 24 }, () => this.collect(), { disabled: closing, tooltip: 'Collect and close (Esc)' });
+    this.button(ctx, 'welcome-close', 'X', { ...layout.close, x: x + layout.close.x }, () => this.collect(), { disabled: closing, tooltip: 'Collect and close (Esc)' });
     this.text(ctx, `Away ${awayLabel(data.rawSeconds)}`, x + 16, 46, palette.text, BODY, true);
-    const note = data.capped ? `Rewards capped Â· max ${capH}h` : `max ${capH}h`;
-    this.text(ctx, note, x + 704 - this.measureText(note), 46, data.capped ? palette.gold : palette.muted, BODY);
-    const [bx = 16, by = 66, bw = 688, bh = 6] = layout.capBar;
-    ctx.fillStyle = palette.ink; ctx.fillRect(x + bx, by, bw, bh);
-    ctx.fillStyle = palette.gold; ctx.fillRect(x + bx + 1, by + 1, Math.round((bw - 2) * Math.min(1, data.seconds / (capH * 3600))), bh - 2);
-    const row = (rect: readonly number[], icon: string, label: string, value: string, color: string): void => {
-      const [rx = 16, ry = 80, rw = 440, rh = 64] = rect; this.frame(ctx, { x: x + rx, y: ry, width: rw, height: rh }, 'button-9slice.png');
-      this.icon(ctx, icon, x + rx + 16, ry + 16, 2); this.text(ctx, label, x + rx + 64, ry + 10, palette.muted, BODY);
-      this.text(ctx, value, x + rx + 64, ry + 28, color, HEADING, true, rw - 80);
+    const note = data.capped ? `Rewards capped · max ${capH}h` : `Max ${capH}h`;
+    this.text(ctx, note, x + panel.width - 16 - Math.min(this.measureText(note), panel.width - 150), 46, data.capped ? palette.gold : palette.muted, BODY, false, panel.width - 150);
+    ctx.fillStyle = palette.ink; ctx.fillRect(x + layout.capBar.x, layout.capBar.y, layout.capBar.width, layout.capBar.height);
+    ctx.fillStyle = palette.gold; ctx.fillRect(x + layout.capBar.x + 1, layout.capBar.y + 1, Math.round((layout.capBar.width - 2) * Math.min(1, data.seconds / (capH * 3600))), layout.capBar.height - 2);
+
+    const row = (area: Rect, icon: string, label: string, value: string, color: string): void => {
+      this.frame(ctx, { ...area, x: x + area.x }, 'button-9slice.png');
+      const iconX = area.x + (layout.compact ? 8 : 16), labelX = area.x + (layout.compact ? 34 : 64);
+      this.icon(ctx, icon, x + iconX, area.y + (layout.compact ? 8 : 16), layout.compact ? 1 : 2);
+      const textWidth = area.width - (labelX - area.x) - 8;
+      this.text(ctx, label, x + labelX, area.y + 7, palette.muted, BODY, false, textWidth);
+      this.text(ctx, value, x + labelX, area.y + 27, color, HEADING, true, textWidth);
     };
-    row(layout.goldRow, 'gold', 'GOLD', rewardLabel(countUp(data.gold, ms, spec.countUp.goldStartMs, rm)), palette.gold);
-    row(layout.xpRow, 'potion', 'XP Â· EACH PARTY HERO', rewardLabel(countUp(data.xp, ms, spec.countUp.xpStartMs, rm)), palette.blue);
-    const [cx = 16, cy = 224, cw = 440, chh = 120] = layout.chestRow, expedition = data.expeditionChests !== undefined, max = expedition ? (CONFIG.v14.offline.expeditionChestMax || CONFIG.idle.offlineChestMax) : CONFIG.idle.offlineChestMax;
-    this.frame(ctx, { x: x + cx, y: cy, width: cw, height: chh }, 'button-9slice.png');
-    const title = expedition ? `EXPEDITION ${data.chests}/${max}` : `CHESTS ${data.chests}/${max}`;
-    this.text(ctx, title, x + cx + 16, cy + 8, palette.text, BODY, true);
-    const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour Â· max ${max} Â· best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h Â· max ${max}`;
-    this.text(ctx, rule, x + cx + 16 + this.measureText(title, BODY, true) + 12, cy + 8, palette.muted, BODY, false, cw - 40 - this.measureText(title, BODY, true));
-    const slots = Math.max(max, 4), slot = layout.chestSlot, grid = welcomeChestGrid(slots), perRow = grid.perRow;
+    row(layout.gold, 'gold', 'GOLD', rewardLabel(countUp(data.gold, ms, spec.countUp.goldStartMs, rm)), palette.gold);
+    row(layout.xp, 'potion', layout.compact ? 'XP / HERO' : 'XP · EACH PARTY HERO', rewardLabel(countUp(data.xp, ms, spec.countUp.xpStartMs, rm)), palette.blue);
+
+    const expedition = data.expeditionChests !== undefined;
+    const chest = layout.chest, title = expedition ? `EXPEDITION ${data.chests}/${max}` : `CHESTS ${data.chests}/${max}`;
+    this.frame(ctx, { ...chest, x: x + chest.x }, 'button-9slice.png');
+    this.text(ctx, title, x + layout.chestTitle.x, layout.chestTitle.y, palette.text, BODY, true);
+    const titleWidth = this.measureText(title, BODY, true);
+    const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour · max ${max} · best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h · max ${max}`;
+    const ruleX = layout.compact ? layout.chestRule.x : layout.chest.x + 16 + titleWidth + 12;
+    const ruleWidth = layout.compact ? layout.chestRule.width : Math.max(1, layout.chest.width - 40 - titleWidth);
+    this.text(ctx, ellipsize(rule, ruleWidth, value => this.measureText(value)), x + ruleX, layout.chestRule.y, palette.muted, BODY, false, ruleWidth);
+    const slots = Math.max(max, 4), grid = layout.chestGrid;
     for (let i = 0; i < slots; i += 1) {
-      // 4 slots: 40 px at stride 48. 9â€“16: two rows of 8 at 28 px, stride 34. 17â€“28: two rows of 14 at 26 px, stride 29 (ends at cy + 81).
-      const size = grid.size, sxp = x + slot.x + (i % perRow) * grid.stride, syp = (grid.originY ? cy + grid.originY : slot.y) + Math.floor(i / perRow) * grid.stride;
+      const sxp = x + grid.x + (i % grid.perRow) * grid.stride, syp = grid.y + Math.floor(i / grid.perRow) * grid.stride;
       const shown = i < data.chests ? chestSlot(i, ms, rm, data.chests) : { shown: false, pop: false };
-      if (!shown.shown) { ctx.fillStyle = palette.edge; ctx.fillRect(sxp, syp, size, 1); ctx.fillRect(sxp, syp + size - 1, size, 1); ctx.fillRect(sxp, syp, 1, size); ctx.fillRect(sxp + size - 1, syp, 1, size); continue; }
-      const lift = shown.pop ? -1 : 0, scale = size >= 40 ? 2 : 1; this.frame(ctx, { x: sxp, y: syp + lift, width: size, height: size }, 'button-9slice.png'); this.icon(ctx, 'chest', sxp + Math.floor((size - 16 * scale) / 2), syp + lift + Math.floor((size - 16 * scale) / 2), scale);
+      if (!shown.shown) {
+        ctx.fillStyle = palette.edge;
+        ctx.fillRect(sxp, syp, grid.size, 1); ctx.fillRect(sxp, syp + grid.size - 1, grid.size, 1);
+        ctx.fillRect(sxp, syp, 1, grid.size); ctx.fillRect(sxp + grid.size - 1, syp, 1, grid.size);
+        continue;
+      }
+      const lift = shown.pop ? -1 : 0, iconScale = grid.size >= 32 ? 2 : 1;
+      this.frame(ctx, { x: sxp, y: syp + lift, width: grid.size, height: grid.size }, 'button-9slice.png');
+      this.icon(ctx, 'chest', sxp + Math.floor((grid.size - 16 * iconScale) / 2), syp + lift + Math.floor((grid.size - 16 * iconScale) / 2), iconScale);
     }
     const sent = data.choices > 0 ? `${data.choices} pick-1-of-2 waiting in Gear` : 'Gear sent to inventory';
-    if (slots <= 4) this.text(ctx, sent, x + 232, 262, palette.muted, BODY, false, 216);
-    else this.text(ctx, sent, x + cx + 16, cy + chh - 22, palette.muted, BODY, false, cw - 32);
-    if (data.best && data.chests > 0) {
-      const full = `Best: ${data.best.rarity[0]?.toUpperCase()}${data.best.rarity.slice(1)} ${data.best.slot[0]?.toUpperCase()}${data.best.slot.slice(1)}`, room = cw - 48 - this.measureText(sent);
-      const best = this.measureText(full) <= room ? full : `Best: ${data.best.rarity.slice(0, 3).toUpperCase()}`;
-      this.text(ctx, best, x + cx + cw - 16 - this.measureText(best), slots <= 4 ? cy + 8 : cy + chh - 22, CONFIG.ui.rarity[data.best.rarity].label, BODY);
-    }
-    // Party panel: hero tiles with level before â†’ after.
-    const [px = 464, py = 80, pw = 240, ph = 264] = layout.partyPanel, stageId = stageConfig(Math.max(1, data.stage)).id;
-    this.frame(ctx, { x: x + px, y: py, width: pw, height: ph });
-    this.text(ctx, `PARTY Â· FARMED ${stageId}`, x + px + 12, py + 10, palette.text, BODY, true, pw - 24);
+    const best = !layout.compact && data.best && data.chests > 0 ? `Best: ${data.best.rarity[0]?.toUpperCase()}${data.best.rarity.slice(1)} ${data.best.slot[0]?.toUpperCase()}${data.best.slot.slice(1)}` : '';
+    const bestWidth = best ? this.measureText(best) : 0, sentWidth = layout.compact ? chest.width - 24 : Math.max(1, chest.width - 32 - (best ? bestWidth + 12 : 0));
+    this.text(ctx, ellipsize(sent, sentWidth, value => this.measureText(value)), x + chest.x + 12, layout.chestSentY, palette.muted, BODY, false, sentWidth);
+    if (best) this.text(ctx, ellipsize(best, chest.width - 32, value => this.measureText(value)), x + chest.x + chest.width - 16 - bestWidth, chest.y + chest.height - 22, CONFIG.ui.rarity[data.best!.rarity].label, BODY);
+
+    const stageId = stageConfig(Math.max(1, data.stage)).id;
+    if (!layout.compact) this.frame(ctx, { ...layout.party, x: x + layout.party.x });
+    this.text(ctx, `PARTY · FARMED ${stageId}`, x + layout.partyTitle.x, layout.partyTitle.y, palette.text, BODY, true, layout.partyTitle.width);
     data.heroes.slice(0, 3).forEach((hero, index) => {
-      const tx = x + 472 + index * 76, ty = 120;
-      ctx.fillStyle = '#141c26'; ctx.fillRect(tx, ty, 64, 80); ctx.fillStyle = palette.edge; ctx.fillRect(tx, ty + 72, 64, 8);
-      ctx.save(); ctx.beginPath(); ctx.rect(tx, ty, 64, 80); ctx.clip(); this.sprite(ctx, hero.id, tx + 32, 192, 0); ctx.restore();
-      this.text(ctx, `Lv ${hero.levelBefore}`, tx + 4, 206, palette.muted, BODY, false, 60);
-      if (hero.levelAfter > hero.levelBefore) this.text(ctx, `> ${hero.levelAfter}`, tx + 4, 224, palette.green, BODY, true, 60);
+      const tile = layout.heroes[index]; if (!tile) return;
+      if (layout.compact) {
+        ctx.fillStyle = '#141c26'; ctx.fillRect(x + tile.x, tile.y, tile.width, tile.height);
+        ctx.fillStyle = palette.edge; ctx.fillRect(x + tile.x, tile.y + tile.height - 2, tile.width, 2);
+        ctx.save(); ctx.beginPath(); ctx.rect(x + tile.x, tile.y, tile.width, tile.height - 10); ctx.clip();
+        this.sprite(ctx, hero.id, x + tile.x + tile.width / 2, tile.y + 36, 0); ctx.restore();
+        const level = `Lv ${hero.levelBefore}${hero.levelAfter > hero.levelBefore ? ` → ${hero.levelAfter}` : ''}`;
+        this.text(ctx, ellipsize(level, tile.width - 8, value => this.measureText(value)), x + tile.x + 4, tile.y + 40, hero.levelAfter > hero.levelBefore ? palette.green : palette.muted, BODY, hero.levelAfter > hero.levelBefore, tile.width - 8);
+      } else {
+        ctx.fillStyle = '#141c26'; ctx.fillRect(x + tile.x, tile.y, tile.width, tile.height);
+        ctx.fillStyle = palette.edge; ctx.fillRect(x + tile.x, tile.y + 72, tile.width, 8);
+        ctx.save(); ctx.beginPath(); ctx.rect(x + tile.x, tile.y, tile.width, tile.height); ctx.clip();
+        this.sprite(ctx, hero.id, x + tile.x + tile.width / 2, tile.y + tile.height - 8, 0); ctx.restore();
+        this.text(ctx, `Lv ${hero.levelBefore}`, x + tile.x + 4, tile.y + 86, palette.muted, BODY, false, tile.width - 8);
+        if (hero.levelAfter > hero.levelBefore) this.text(ctx, `→ ${hero.levelAfter}`, x + tile.x + 4, tile.y + 104, palette.green, BODY, true, tile.width - 8);
+      }
     });
-    const tickets = data.tickets === undefined ? 'No tickets offline' : data.tickets > 0 ? `+${data.tickets} ticket${data.tickets === 1 ? '' : 's'} offline` : 'Ticket progress carried';
-    [`${data.clears.toLocaleString('en-US')} clears at ${stageId}`, tickets, 'Progress paused'].forEach((line, index) => this.text(ctx, line, x + px + 12, 252 + index * 18, data.tickets && index === 1 ? palette.green : palette.muted, BODY, false, pw - 24));
-    ctx.fillStyle = palette.edge; ctx.fillRect(x + 16, 357, panel.width - 32, 1);
-    this.text(ctx, 'Rewards are already in your save', x + 16, 368, palette.muted, BODY);
-    const [kx = 536, ky = 364, kw = 168, kh = 28] = layout.collectRect;
-    this.button(ctx, 'welcome-collect', 'Collect', { x: x + kx, y: ky, width: kw, height: kh }, () => this.collect(), { icon: 'gold', primary: true, bold: true, disabled: closing, tooltip: 'Collect (Enter): rewards are already in your save' });
+    const ticketStatus = data.tickets === undefined ? 'No tickets offline' : data.tickets > 0 ? `+${data.tickets} ticket${data.tickets === 1 ? '' : 's'} offline` : 'Ticket progress carried';
+    const partial = `Next clear ${Math.round((data.partialClears ?? 0) * 100)}% complete`;
+    const rate = data.earned ? 'Rate earned by this formation' : 'Starting estimate · clear to earn a stage rate';
+    if (layout.compact) {
+      const clears = data.clears >= 1_000_000 ? `${(data.clears / 1_000_000).toFixed(1)}M` : data.clears >= 10_000 ? `${(data.clears / 1_000).toFixed(1)}K` : data.clears.toLocaleString('en-US');
+      this.text(ctx, ellipsize(`${clears} clears · ${ticketStatus}`, layout.clearSummary.width, value => this.measureText(value)), x + layout.clearSummary.x, layout.clearSummary.y, data.tickets ? palette.green : palette.muted, BODY, false, layout.clearSummary.width);
+      this.text(ctx, partial, x + layout.partialSummary.x, layout.partialSummary.y, palette.muted, BODY, false, layout.partialSummary.width);
+      this.text(ctx, rate, x + layout.rateSummary.x, layout.rateSummary.y, data.earned ? palette.muted : palette.gold, BODY, false, layout.rateSummary.width);
+    } else {
+      this.text(ctx, `${data.clears.toLocaleString('en-US')} clears at ${stageId}`, x + layout.clearSummary.x, layout.clearSummary.y, palette.muted, BODY, false, layout.clearSummary.width);
+      this.text(ctx, ticketStatus, x + layout.partialSummary.x, layout.partialSummary.y, data.tickets ? palette.green : palette.muted, BODY, false, layout.partialSummary.width);
+      this.text(ctx, partial, x + layout.rateSummary.x, layout.rateSummary.y, palette.muted, BODY, false, layout.rateSummary.width);
+      this.text(ctx, data.earned ? 'Rate earned by this formation' : 'Starting estimate', x + layout.party.x + 12, layout.party.y + 230, data.earned ? palette.muted : palette.gold, BODY, false, layout.party.width - 24);
+      if (!data.earned) this.text(ctx, 'Clear a stage to earn its rate', x + layout.party.x + 12, layout.party.y + 246, palette.gold, BODY, false, layout.party.width - 24);
+    }
+    ctx.fillStyle = palette.edge; ctx.fillRect(x + 16, layout.dividerY, panel.width - 32, 1);
+    this.text(ctx, layout.compact ? 'Rewards already saved' : 'Rewards are already in your save', x + layout.saveNote.x, layout.saveNote.y, palette.muted, BODY, false, layout.saveNote.width);
+    const tooltip = `Collect (Enter): rewards already saved. ${data.gold.toLocaleString('en-US')} gold, ${data.xp.toLocaleString('en-US')} XP per hero, ${data.chests} chests, ${data.clears.toLocaleString('en-US')} clears.`;
+    this.button(ctx, 'welcome-collect', 'Collect', { ...layout.collect, x: x + layout.collect.x }, () => this.collect(), { icon: 'gold', primary: true, bold: true, disabled: closing, tooltip });
     void state;
   }
   private syncControls(): void {

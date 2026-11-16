@@ -4,6 +4,9 @@ import { chest, grantXp } from './economy';
 import { emit, goldChange } from './events';
 import { cloneState, gearSchema, gearTemplateId, gearV1Schema, itemId, parseState, stateSchema } from './model';
 import type { GameState, Gear } from './model';
+import { partyWaveKinds } from './party-enemies';
+import { partyKillReward, stageClearReward } from './rewards';
+import { offlineFarmContext } from './farm-proof';
 
 /** What a SaveStore persists: the game state plus the wall-clock bookkeeping for offline catch-up. */
 export interface SaveData { savedAtMs: number; remainderMs: number; state: GameState }
@@ -60,51 +63,95 @@ export function makeSave(state: GameState, savedAtMs: number, remainderMs = 0): 
 }
 export function expectedFarmRewards(stageNumber: number) {
   const stage = stageConfig(stageNumber);
-  let gold = Math.round(CONFIG.rewards.clearGold * CONFIG.rewards.clearScaling ** (stageNumber - 1));
-  let xp = Math.round(CONFIG.rewards.clearXp * CONFIG.rewards.clearScaling ** (stageNumber - 1));
-  const killMult = CONFIG.rewards.killScaling ** (stageNumber - 1);
-  for (const wave of stage.waves) {
-    const kinds = 'enemies' in wave ? wave.enemies : [wave.boss, ...wave.adds];
-    for (const kind of kinds) { gold += Math.round(CONFIG.enemies[kind].gold * killMult); xp += Math.round(CONFIG.enemies[kind].xp * killMult); }
+  const clear = stageClearReward(stageNumber);
+  let gold = clear.gold, xp = clear.xp;
+  for (const [index, wave] of stage.waves.entries()) {
+    const original = 'enemies' in wave ? wave.enemies : [wave.boss, ...wave.adds];
+    for (const sourceId of partyWaveKinds(stage.index, index + 1, original, stage.isBoss)) {
+      const reward = partyKillReward(sourceId, stageNumber); gold += reward.gold; xp += reward.xp;
+    }
   }
   return { gold, xp };
 }
+
+const FRACTION_EPSILON = 1e-10;
+/** Stable integer/remainder split for sums of many small saved contributions. */
+function splitWhole(value: number): { whole: number; fraction: number } {
+  let whole = Math.floor(value), fraction = value - whole;
+  if (fraction < FRACTION_EPSILON) fraction = 0;
+  else if (1 - fraction < FRACTION_EPSILON) { whole += 1; fraction = 0; }
+  return { whole, fraction };
+}
+const accrual = (state: GameState) => state.offlineAccrual ?? {
+  goldFraction: 0, xpFraction: 0, clearFraction: 0, normalChestFraction: 0, expeditionChestFraction: 0, secondsFraction: 0,
+};
+export interface OfflineProjection {
+  stage: number; stageId: string; clearSeconds: number; goldPerHour: number; xpPerHour: number;
+  wallClearSeconds: number; earned: boolean; reason: 'no-earned-clear' | 'formation-or-combat-changed' | null;
+  chestKind: 'chest' | 'expedition'; secondsUntilNextChest: number; capHours: number; partialRewards: boolean;
+}
+/** Read-only current rates and chest threshold for Settings; uses the same rates as applyOffline. */
+export function offlineProjection(state: GameState): OfflineProjection {
+  const farm = offlineFarmContext(state), stage = farm.stage, rewards = expectedFarmRewards(stage), seconds = farm.nativeSeconds;
+  const expedition = CONFIG.v14.offline.expeditionChestsPerHour > 0;
+  const fraction = expedition ? accrual(state).expeditionChestFraction : accrual(state).normalChestFraction;
+  const unitsPerSecond = expedition ? CONFIG.v14.offline.expeditionChestsPerHour / 3600 : 1 / (CONFIG.idle.offlineChestEveryHours * 3600);
+  const bank = accrual(state);
+  return { stage, stageId: stageConfig(stage).id, clearSeconds: seconds,
+    goldPerHour: rewards.gold / seconds * 3600 * CONFIG.idle.offlineEfficiency,
+    xpPerHour: rewards.xp / seconds * 3600 * CONFIG.idle.offlineEfficiency,
+    wallClearSeconds: farm.wallSeconds, earned: farm.earned, reason: farm.reason,
+    chestKind: expedition ? 'expedition' : 'chest', secondsUntilNextChest: (1 - fraction) / unitsPerSecond,
+    capHours: CONFIG.idle.offlineCapHours, partialRewards: bank.goldFraction > 0 || bank.xpFraction > 0 || bank.clearFraction > 0 || bank.normalChestFraction > 0 || bank.expeditionChestFraction > 0,
+  };
+}
 export function applyOffline(state: GameState, elapsedMs: number) {
   if (!Number.isFinite(elapsedMs)) throw new Error('Invalid elapsed time');
+  const farm = offlineFarmContext(state);
   const rawSeconds = Math.max(0, elapsedMs / 1000);
   const seconds = Math.min(rawSeconds, CONFIG.idle.offlineCapHours * 3600);
-  const samples = state.metrics.nativeFarmClearSeconds ?? state.metrics.farmClearSeconds;
-  const average = samples.length ? samples.reduce((a, b) => a + b, 0) / samples.length : CONFIG.idle.avgFarmClearSecDefault;
-  const clears = Math.floor(seconds / average);
-  const stage = Math.max(1, state.highestCleared);
-  const rewards = expectedFarmRewards(stage);
-  const gold = Math.floor(rewards.gold * clears * CONFIG.idle.offlineEfficiency);
-  const xp = Math.floor(rewards.xp * clears * CONFIG.idle.offlineEfficiency);
   const away = CONFIG.v14.offline, expedition = away.expeditionChestsPerHour > 0;
-  // CR-14-04: floor(min(t, cap) × 2 per hour), max 16, replaces 1 per 2 h (max 4).
-  const chests = expedition ? Math.min(away.expeditionChestMax, Math.floor(seconds / 3600 * away.expeditionChestsPerHour))
-    : Math.min(CONFIG.idle.offlineChestMax, Math.floor(seconds / (CONFIG.idle.offlineChestEveryHours * 3600)));
+  const extra = { ...(expedition ? { expeditionChests: 0 } : {}), ...(away.ticketRateVsOnline > 0 ? { tickets: 0 } : {}) };
+  if (seconds <= 0) return { seconds, rawSeconds, clears: 0, gold: 0, xp: 0, chests: 0,
+    heroes: state.partyIds.map(id => { const level = state.roster.find(hero => hero.id === id)?.level ?? 1; return { id, levelBefore: level, levelAfter: level }; }),
+    stage: farm.stage, earned: farm.earned, farmReason: farm.reason, partialClears: accrual(state).clearFraction, ...extra,
+    capped: elapsedMs > CONFIG.idle.offlineCapHours * 3_600_000 };
+  const average = farm.nativeSeconds;
+  const stage = farm.stage;
+  const rewards = expectedFarmRewards(stage);
+  const clearWork = seconds / average, bank = accrual(state);
+  const goldSplit = splitWhole(bank.goldFraction + clearWork * rewards.gold * CONFIG.idle.offlineEfficiency);
+  const xpSplit = splitWhole(bank.xpFraction + clearWork * rewards.xp * CONFIG.idle.offlineEfficiency);
+  const clearSplit = splitWhole(bank.clearFraction + clearWork);
+  const gold = goldSplit.whole, xp = xpSplit.whole, clears = clearSplit.whole;
+  const chestKey = expedition ? 'expeditionChestFraction' : 'normalChestFraction';
+  const chestUnits = expedition ? seconds / 3600 * away.expeditionChestsPerHour : seconds / (CONFIG.idle.offlineChestEveryHours * 3600);
+  const chestSplit = splitWhole(bank[chestKey] + chestUnits);
+  const chestMax = expedition ? away.expeditionChestMax : CONFIG.idle.offlineChestMax;
+  const chests = Math.min(chestMax, chestSplit.whole);
+  state.offlineAccrual = { ...bank, goldFraction: goldSplit.fraction, xpFraction: xpSplit.fraction, clearFraction: clearSplit.fraction,
+    [chestKey]: chestSplit.fraction, secondsFraction: splitWhole(bank.secondsFraction + seconds).fraction };
   goldChange(state, gold, 'offline');
   const heroes = xp ? grantXp(state, xp, state.partyIds) : state.partyIds.map(id => { const level = state.roster.find(hero => hero.id === id)?.level ?? 1; return { id, levelBefore: level, levelAfter: level }; });
   for (let index = 0; index < chests; index += 1) chest(state, stage, expedition ? 'expedition' : 'chest');
-  const tickets = away.ticketRateVsOnline > 0 ? offlineTickets(state, seconds, away.ticketRateVsOnline) : null;
-  state.stats.offlineClears += clears; state.stats.offlineSeconds += Math.floor(seconds);
+  const tickets = away.ticketRateVsOnline > 0 ? offlineTickets(state, seconds, away.ticketRateVsOnline, farm.wallSeconds) : null;
+  state.stats.offlineClears += clears;
+  state.stats.offlineSeconds += splitWhole(bank.secondsFraction + seconds).whole;
   // Offline does not advance open ticks, progression, retry deadlines, or summon tickets.
-  const extra = { ...(expedition ? { expeditionChests: chests } : {}), ...(tickets === null ? {} : { tickets }) };
-  if (seconds) emit(state, { type: 'offline', seconds, rawSeconds, clears, gold, xp, chests, heroes, ...extra });
-  return { seconds, rawSeconds, clears, gold, xp, chests, heroes, ...extra, capped: elapsedMs > CONFIG.idle.offlineCapHours * 3_600_000 };
+  const grantExtra = { ...(expedition ? { expeditionChests: chests } : {}), ...(tickets === null ? {} : { tickets }) };
+  if (seconds) emit(state, { type: 'offline', seconds, rawSeconds, clears, gold, xp, chests, heroes, ...grantExtra });
+  return { seconds, rawSeconds, clears, gold, xp, chests, heroes, stage, earned: farm.earned, farmReason: farm.reason, partialClears: clearSplit.fraction, ...grantExtra, capped: elapsedMs > CONFIG.idle.offlineCapHours * 3_600_000 };
 }
 /** Wall-clock seconds per repeat farm clear (the online ticket clock), over the same sample window as offline clears. */
 export function avgWallFarmClearSec(state: GameState): number {
-  const samples = state.metrics.farmClearSeconds;
-  return samples.length ? samples.reduce((a, b) => a + b, 0) / samples.length : CONFIG.idle.avgFarmClearSecDefault;
+  return offlineFarmContext(state).wallSeconds;
 }
 /**
  * CR-14-05: owed = t / avgWallFarmClearSec × farmTicketChance × rate + carried fraction; grants floor(owed) and keeps the
  * rest in offlineTicketFrac. Only a whole amount above 0 emits a tickets event. No RNG.
  */
-export function offlineTickets(state: GameState, seconds: number, rate: number): number {
-  const owed = seconds / avgWallFarmClearSec(state) * CONFIG.rewards.farmTicketChance * rate + (state.offlineTicketFrac ?? 0);
+export function offlineTickets(state: GameState, seconds: number, rate: number, wallClearSeconds = avgWallFarmClearSec(state)): number {
+  const owed = seconds / wallClearSeconds * CONFIG.rewards.farmTicketChance * rate + (state.offlineTicketFrac ?? 0);
   const whole = Math.floor(owed);
   state.offlineTicketFrac = Math.min(owed - whole, 1 - Number.EPSILON);
   if (whole > 0) { state.tickets += whole; state.economyRevision += 1; emit(state, { type: 'tickets', amount: whole, total: state.tickets }); }

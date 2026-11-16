@@ -5,6 +5,7 @@ import { chestRarity, fortuneRoll } from '../src/core/economy';
 import { createState, load, snapshot, step } from '../src/core/game';
 import type { GameState } from '../src/core/model';
 import { applyOffline, makeSave, restoreSave } from '../src/core/save';
+import { setFarmProofFixture } from './helpers/farm-proof-fixture';
 
 afterEach(() => { setV14Rules([]); });
 const HOUR = 3_600_000;
@@ -44,6 +45,7 @@ describe('CR-14-04 Expedition Chests', () => {
     setV14Rules(['expeditionChests', 'chestChoice']);
     const state = farmer();
     state.highestCleared = Math.max(state.highestCleared, CONFIG.v14.chestChoice.fromStage);
+    setFarmProofFixture(state, CONFIG.v14.chestChoice.fromStage, 30, 30);
     const kept = state.stats.chests, seq = state.eventSeq, queued = state.pendingChoice?.length ?? 0;
     applyOffline(state, 8 * HOUR);
     expect(state.stats.chests - kept).toBe(28);
@@ -71,7 +73,7 @@ describe('CR-14-05 offline tickets', () => {
   const withChance = <T>(chance: number, run: () => T): T => { const old = CONFIG.rewards.farmTicketChance; CONFIG.rewards.farmTicketChance = chance; try { return run(); } finally { CONFIG.rewards.farmTicketChance = old; } };
   it('8 h at 20.6 s and 0.0042 → 2.93: grants 2, carries 0.93; the next absence adds the fraction', () => withChance(0.0042, () => {
     setV14Rules(['offlineTickets']);
-    const state = farmer(); state.metrics.farmClearSeconds = [20.6]; const tickets = state.tickets;
+    const state = farmer(); state.metrics.farmClearSeconds = [20.6]; setFarmProofFixture(state, 1, 30, 20.6); const tickets = state.tickets;
     const result = applyOffline(state, 8 * HOUR);
     expect(result.tickets).toBe(2); expect(state.tickets).toBe(tickets + 2);
     expect(state.offlineTicketFrac).toBeCloseTo(28_800 / 20.6 * 0.0042 * 0.5 - 2, 9);

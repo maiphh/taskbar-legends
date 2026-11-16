@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COMPACT_DEFAULTS, acceptsGeometryPoll, clientRectToFrameRect, clientWorkArea, constrainCompactRect, geometryGenerationCurrent, gestureGeneration, normalizedCompactPrefs, parseCompactPrefs, restoreCompactGeometry, settleClientGeometry, snapCompactBottom } from '../src/platform/desktop/compact-geometry';
+import { COMPACT_DEFAULTS, acceptsGeometryPoll, clientRectToFrameRect, clientWorkArea, constrainCompactRect, geometryGenerationCurrent, gestureGeneration, normalizedCompactPrefs, parseCompactPrefs, presentationClientBounds, restoreCompactGeometry, settleClientGeometry, snapCompactBottom } from '../src/platform/desktop/compact-geometry';
 import type { DesktopMonitor } from '../src/platform/desktop/math';
 
 function monitor(key: string, x: number, y: number, width: number, height: number, scaleFactor = 1): DesktopMonitor {
@@ -10,6 +10,19 @@ describe('compact placement geometry', () => {
     expect(parseCompactPrefs(null)).toEqual(COMPACT_DEFAULTS);
     expect(parseCompactPrefs({ ...COMPACT_DEFAULTS, zoom: 3 })).toEqual(COMPACT_DEFAULTS);
     expect(restoreCompactGeometry(COMPACT_DEFAULTS, monitor('left', -1920, 40, 1920, 1040)).rect).toEqual({ x: -640, y: 920, width: 640, height: 160 });
+  });
+  it('computes a transient welcome height without changing the saved compact dimensions or anchor', () => {
+    const prefs = { ...COMPACT_DEFAULTS, anchorX: 0.4, anchorY: 0.8 };
+    const display = monitor('welcome', 0, 0, 1920, 1080, 1.5), insets = { left: 8, top: 30, right: 8, bottom: 8 };
+    const normal = restoreCompactGeometry(prefs, clientWorkArea(display, insets)).rect;
+    const welcome = presentationClientBounds(prefs, display, insets, 488);
+    expect(welcome.rect).toMatchObject({ x: normal.x, width: normal.width, height: 488 });
+    expect(welcome.constrained).toBe(false);
+    expect(prefs).toMatchObject({ sourceWidth: 640, sourceHeight: 160, anchorX: 0.4, anchorY: 0.8 });
+    const zoomed = presentationClientBounds({ ...prefs, zoom: 2 }, display, insets, 488);
+    expect(zoomed.rect.height).toBe(976);
+    const short = presentationClientBounds({ ...prefs, zoom: 2 }, monitor('short', 0, 0, 1920, 600, 1), { left: 0, top: 0, right: 0, bottom: 0 }, 488);
+    expect(short.rect.height).toBe(600); expect(short.constrained).toBe(true);
   });
   it('restores normalized anchors with negative origins and snapped bottom placement', () => {
     const work = monitor('neg', -1280, -100, 1280, 900, 1.5);

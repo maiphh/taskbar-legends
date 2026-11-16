@@ -6,6 +6,8 @@ import { emit, goldChange } from './events';
 import { cloneState, gearTemplateId, itemId, parseState } from './model';
 import type { Action, GameState } from './model';
 import { normalizeSeed, random } from './rng';
+import { stageClearReward } from './rewards';
+import { recordSettledFarmClear } from './farm-proof';
 
 export function stageName(stage: number): string { return stageConfig(stage).id; }
 export function isBoss(stage: number): boolean { return stageConfig(stage).isBoss; }
@@ -77,14 +79,18 @@ function lose(state: GameState): void {
       retryAtTick: state.tick + ticksForSeconds(backoff), failTick: state.tick, failedPower: state.attemptPower, failures: state.retryFailures };
   }
   delete state.farmClock;
+  delete state.encounterFarmContext;
   rest(state, 'encounter');
 }
 function awardClear(state: GameState, duration: number, nativeDuration = duration): void {
   const stage = stageConfig(state.progress.stage);
+  // At this point the full encounter is settled (including farmPad); record immutable
+  // entry stats before XP, drops, or progression mutate the current account.
+  recordSettledFarmClear(state, stage.index, duration, nativeDuration);
   const first = state.progress.kind === 'PUSHING' || state.progress.kind === 'BOSS_FIGHT';
-  const mult = CONFIG.rewards.clearScaling ** (stage.index - 1);
-  goldChange(state, Math.round(CONFIG.rewards.clearGold * mult), 'clear');
-  grantXp(state, Math.round(CONFIG.rewards.clearXp * mult));
+  const reward = stageClearReward(stage.index);
+  goldChange(state, reward.gold, 'clear');
+  grantXp(state, reward.xp);
   state.stats.clears += 1;
   emit(state, { type: 'clear', stage: stage.index, first, durationSeconds: duration });
   if (first) {

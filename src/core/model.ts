@@ -6,6 +6,18 @@ const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const positive = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 const stageNumber = positive.max(CONFIG.stages.length);
 const finite = z.number().finite();
+const farmHeroStatsSchema = z.object({ id: z.string().min(1), maxHp: positive, atk: positive, def: natural, attackTicks: positive }).strict();
+const farmHeroesSchema = z.array(farmHeroStatsSchema).length(CONFIG.sim.partySize).superRefine((heroes, context) => {
+  if (new Set(heroes.map(hero => hero.id)).size !== heroes.length || heroes.some(hero => !CONFIG.heroes.some(definition => definition.id === hero.id)))
+    context.addIssue({ code: 'custom', message: 'Farm formation hero ids must be known and distinct' });
+});
+const farmRulesSignatureSchema = z.string().min(1).max(128);
+const encounterFarmContextSchema = z.object({ encounter: positive, stage: stageNumber, startedTick: natural,
+  rulesSignature: farmRulesSignatureSchema, heroes: farmHeroesSchema }).strict();
+const farmProofSchema = z.object({ stage: stageNumber, rulesSignature: farmRulesSignatureSchema, heroes: farmHeroesSchema,
+  nativeSeconds: z.array(finite.positive()).min(1).max(CONFIG.idle.avgFarmClearSecWindow),
+  wallSeconds: z.array(finite.positive()).min(1).max(CONFIG.idle.avgFarmClearSecWindow) }).strict()
+  .refine(proof => proof.nativeSeconds.length === proof.wallSeconds.length, 'Farm proof duration windows must match');
 const statsSchema = z.object({ hp: natural, atk: natural, def: natural, atkPct: finite.nonnegative(), hpPct: finite.nonnegative(), speedPct: finite.nonnegative() }).strict();
 /** Stable item id: itm_<seed namespace>_<serial>, both 8 hex digits, so ids sort in acquisition order. */
 export const itemIdSchema = z.string().regex(/^itm_[0-9a-f]{8}_[0-9a-f]{8}$/).brand<'ItemId'>();
@@ -157,6 +169,12 @@ export const stateSchema = z.object({
   gearLegendaryFound: z.boolean().optional(),
   // v1.4 CR-14-05, optional: the owed fraction of an offline ticket carried to the next absence (0 ≤ x < 1).
   offlineTicketFrac: finite.nonnegative().lt(1).optional(),
+  // Earned offline-rate evidence is absent on older saves and is never inferred from historical metrics.
+  encounterFarmContext: encounterFarmContextSchema.optional(),
+  farmProofs: z.array(farmProofSchema).max(CONFIG.stages.length).optional(),
+  // Continuous idle production survives short visits. Absent is treated as all-zero for prior saves.
+  offlineAccrual: z.object({ goldFraction: finite.nonnegative().lt(1), xpFraction: finite.nonnegative().lt(1), clearFraction: finite.nonnegative().lt(1),
+    normalChestFraction: finite.nonnegative().lt(1), expeditionChestFraction: finite.nonnegative().lt(1), secondsFraction: finite.nonnegative().lt(1) }).strict().optional(),
   eventSeq: natural, eventCounts: z.record(z.string(), natural), events: z.array(eventSchema).max(CONFIG.runtime.eventLogLimit),
 }).strict().superRefine((state, context) => {
   const invalid = (message: string): void => context.addIssue({ code: 'custom', message });
@@ -193,6 +211,10 @@ export const stateSchema = z.object({
   if (progress.kind === 'COMPLETE' && state.highestCleared !== CONFIG.stages.length) invalid('Campaign incomplete');
   if (progress.kind === 'FARMING' && progress.failTick !== undefined && progress.failTick > state.tick) invalid('Failure tick cannot be in the future');
   if (state.phase.kind === 'farmPad' && !state.farmClock) invalid('Padding needs a native encounter clock');
+  if (state.encounterFarmContext && (state.encounterFarmContext.encounter !== state.encounter
+    || state.encounterFarmContext.startedTick > state.tick)) invalid('Pending farm context does not match the current encounter');
+  const proofStages = (state.farmProofs ?? []).map(proof => proof.stage);
+  if (new Set(proofStages).size !== proofStages.length || proofStages.some((stage, index) => stage > state.highestCleared || (index > 0 && stage <= proofStages[index - 1]!))) invalid('Invalid farm proof stages');
   if (state.farmClock && (!(progress.kind === 'FARMING' || progress.kind === 'BOSS_READY' || progress.kind === 'COMPLETE') || progress.stage > state.highestCleared
     || (stageConfig(progress.stage).isBoss && !(progress.kind === 'COMPLETE' && state.farmClock.scale === 1)))) invalid('Tempo clock is only valid for cleared non-boss repeats (or a scale-1 COMPLETE boss repeat, §20)');
   for (const hero of state.roster) heroConfig(hero.id);

@@ -4,6 +4,7 @@ import { emit } from './events';
 import { captureFarmClock, combatTime } from './clock';
 import { partyCombatTick, partyUnitFields } from './party-combat';
 import { getPartyEnemyDefinition, partyWaveKinds } from './party-enemies';
+import { captureEncounterFarmContext } from './farm-proof';
 import type { GameState, Unit } from './model';
 
 export function damage(atk: number, def: number): number { return Math.max(1, Math.round(atk * 100 / (100 + def))); }
@@ -52,6 +53,7 @@ export function beginEncounter(state: GameState): void {
   state.attemptPower = partyPower(state);
   if (!(String(state.progress.stage) in state.metrics.firstAttemptTicks)) state.metrics.firstAttemptTicks[String(state.progress.stage)] = state.tick;
   spawnParty(state);
+  state.encounterFarmContext = captureEncounterFarmContext(state);
   emit(state, { type: 'stage', stage: state.progress.stage, mode: state.progress.kind });
   spawnWave(state);
 }

@@ -1,7 +1,8 @@
 import { isTauri } from '@tauri-apps/api/core';
 import { startCompactDesktop } from './compact-runtime';
+import type { CompactPresentationState } from './compact-runtime';
 
-export interface DesktopHooks { flushSave(): void; setQuit(handler: (() => void) | null): void }
+export interface DesktopHooks { flushSave(): void; setQuit(handler: (() => void) | null): void; presentationState?(): CompactPresentationState }
 export interface DesktopOptions { setEditing(value: boolean): void }
 
 /** Start the current compact native shell. The legacy expanded shell is no longer selectable. */

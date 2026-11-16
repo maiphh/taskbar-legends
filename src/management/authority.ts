@@ -2,12 +2,15 @@ import { z } from 'zod';
 import { activeSalvageRules, CONFIG } from '../config';
 import { heroStats, partyBasicDpsForStats, partyGearUtilityGain, upgradeCost } from '../core/economy';
 import { input } from '../core/game';
+import { offlineProjection } from '../core/save';
+import type { OfflineProjection } from '../core/save';
 import { cloneState, parseAction, parseState } from '../core/model';
 import type { Action, GameState } from '../core/model';
 
 const requestSchema = z.object({ clientId: z.string().min(1).max(80), requestId: z.string().min(1).max(120), expectedRevision: z.number().int().nonnegative(), action: z.unknown() }).strict();
 export interface ManagementSnapshot {
   revision: number; paused: boolean; tick: number; gold: number; tickets: number; pity: number; lockMax: number; combatRules: GameState['combatRules']; progress: GameState['progress']; phase: GameState['phase'];
+  offline: OfflineProjection;
   highestCleared: number; roster: GameState['roster']; partyIds: string[]; partyPreset?: GameState['partyPreset']; inventory: GameState['inventory']; pendingChoice?: GameState['pendingChoice'];
   heroStats: Record<string, ReturnType<typeof heroStats>>; stats: GameState['stats']; balance: string; pityLegendary?: number; pityNewHero?: number;
   recruit: { cost: number; rates: Record<string, number>; epicPlusRemaining: number; legendaryRemaining: number | null; newHeroRemaining: number | null };
@@ -20,10 +23,12 @@ interface CachedReply { fingerprint: string; reply: ManagementReply }
 /** One authority for all compact management actions. Ordinary simulation ticks do not invalidate selections. */
 export class ManagementAuthority {
   private revision = 0;
+  private available = true;
   private readonly replay = new Map<string, CachedReply>();
   constructor(private state: GameState, private paused = false, private readonly onCommit?: (state: GameState) => void) {}
   getState(): GameState { return this.state; }
   isPaused(): boolean { return this.paused; }
+  setAvailable(available: boolean): void { this.available = available; }
   setPaused(paused: boolean): void { if (this.paused !== paused) { this.paused = paused; this.revision += 1; } }
   replaceState(next: GameState): void { this.state = parseState(cloneState(next)); this.revision += 1; this.onCommit?.(this.state); }
   snapshot(): ManagementSnapshot {
@@ -34,7 +39,7 @@ export class ManagementAuthority {
       newHeroRemaining: CONFIG.v14.recruit.newHeroGuaranteeEvery && roster.length < CONFIG.heroes.length ? CONFIG.v14.recruit.newHeroGuaranteeEvery - (pityNewHero ?? 0) : null };
     const recentPulls = this.state.events.filter(event => event.data.type === 'pull').slice(-10).map(event => event.data.type === 'pull' ? ({ seq: event.seq, heroId: event.data.heroId,
       rarity: event.data.rarity, duplicate: event.data.duplicate, pity: event.data.pity }) : null).filter((value): value is NonNullable<typeof value> => value !== null);
-    return structuredClone({ revision: this.revision, paused: this.paused, tick, gold, tickets, pity, lockMax: activeSalvageRules().lockMax, combatRules, ...(partyPreset ? { partyPreset } : {}), progress, phase, highestCleared, roster, partyIds, inventory,
+    return structuredClone({ revision: this.revision, paused: this.paused, tick, gold, tickets, pity, lockMax: activeSalvageRules().lockMax, combatRules, offline: offlineProjection(this.state), ...(partyPreset ? { partyPreset } : {}), progress, phase, highestCleared, roster, partyIds, inventory,
       heroStats: derivedStats, recruit, recentPulls, ...(pendingChoice ? { pendingChoice } : {}), stats, balance, ...(pityLegendary === undefined ? {} : { pityLegendary }), ...(pityNewHero === undefined ? {} : { pityNewHero }) });
   }
   compareGear(heroId: string, gearId: string): HeroGearComparison | null {
@@ -53,6 +58,7 @@ export class ManagementAuthority {
     let raw: z.infer<typeof requestSchema>, action: Action;
     try { raw = requestSchema.parse(value); action = parseAction(raw.action); }
     catch (error) { return this.reply(false, typeof partial.requestId === 'string' ? partial.requestId.slice(0, 120) : '', `Invalid management request: ${error instanceof Error ? error.message : String(error)}`); }
+    if (!this.available) return this.reply(false, raw.requestId, 'Game commands are paused while the game is hidden or save restoration is in progress.');
     const fingerprint = JSON.stringify(action), key = `${raw.clientId}:${raw.requestId}`;
     const prior = this.replay.get(key);
     if (prior) return prior.fingerprint === fingerprint ? structuredClone(prior.reply) : this.reply(false, raw.requestId, 'Request id was already used for a different action.');
@@ -78,6 +84,7 @@ export class ManagementAuthority {
     let raw: z.infer<typeof requestSchema>;
     try { raw = requestSchema.parse({ clientId: request.clientId, requestId: request.requestId, expectedRevision: request.expectedRevision, action: { type: 'pull' } }); }
     catch (error) { return this.reply(false, typeof request.requestId === 'string' ? request.requestId.slice(0, 120) : '', `Invalid management request: ${error instanceof Error ? error.message : String(error)}`); }
+    if (!this.available) return this.reply(false, raw.requestId, 'Game commands are paused while the game is hidden or save restoration is in progress.');
     const fingerprint = JSON.stringify({ type: 'pullMany', count: request.count }), key = `${raw.clientId}:${raw.requestId}`;
     const prior = this.replay.get(key);
     if (prior) return prior.fingerprint === fingerprint ? structuredClone(prior.reply) : this.reply(false, raw.requestId, 'Request id was already used for a different action.');

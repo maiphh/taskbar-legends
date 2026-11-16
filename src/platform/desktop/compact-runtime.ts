@@ -4,7 +4,7 @@ import { availableMonitors, currentMonitor, getCurrentWindow, primaryMonitor } f
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow';
 import type { Monitor } from '@tauri-apps/api/window';
 import { readCompactPrefs, writeCompactPrefs } from '../compact-prefs';
-import { clientRectToFrameRect, clientWorkArea, constrainCompactRect, geometryGenerationCurrent, gestureGeneration, restoreCompactGeometry, settleClientGeometry } from './compact-geometry';
+import { clientRectToFrameRect, clientWorkArea, constrainCompactRect, geometryGenerationCurrent, gestureGeneration, presentationClientBounds, restoreCompactGeometry, settleClientGeometry } from './compact-geometry';
 import type { CompactPrefs, FrameInsets, GestureState } from './compact-geometry';
 import { monitorSchema } from './math';
 import type { DesktopMonitor, PhysicalRect } from './math';
@@ -28,14 +28,17 @@ export function shouldIgnoreCursor(passive: boolean, recoveryVisible: boolean, e
 function safePrefs(): CompactPrefs { return readCompactPrefs(); }
 
 /** Party-preview native placement. Geometry in this module is always physical client-area geometry. */
-export interface CompactRuntimeHooks { flushSave(): void; setQuit(handler: (() => void) | null): void; setEditing(value: boolean): void }
+export interface CompactPresentationState { welcomeOpen: boolean; sourceHeight: number }
+export interface CompactRuntimeHooks { flushSave(): void; setQuit(handler: (() => void) | null): void; setEditing(value: boolean): void; presentationState?(): CompactPresentationState }
 export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<() => void> {
   const win = getCurrentWindow(), views = await getAllWebviewWindows(), controls = views.find(value => value.label === 'controls');
   if (!controls) throw new Error('Native compact control surface is not configured.');
   let prefs = safePrefs(), gesture: GestureState = 'idle', generation = 0, stopped = false, settleTimer = 0, pollTimer = 0, pendingNativeResize = false;
+  let presentation: CompactPresentationState = hooks.presentationState?.() ?? { welcomeOpen: false, sourceHeight: prefs.sourceHeight };
   let currentMonitorValue: DesktopMonitor | undefined;
   let acceptedSize: { width: number; height: number } | undefined, acceptedEnvironment = '';
-  let programmaticSize: { width: number; height: number } | undefined;
+  let programmaticSize: { width: number; height: number } | undefined, presentationBoundsTarget: PhysicalRect | null = null;
+  let boundsQueue: Promise<void> = Promise.resolve(), boundsPending = 0;
   const cleanups: (() => void)[] = [];
   const monitors = async (): Promise<DesktopMonitor[]> => (await availableMonitors()).map(describe);
   const frameInsets = async (): Promise<FrameInsets> => {
@@ -73,11 +76,20 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
   };
   const applyClientBounds = async (rect: PhysicalRect, monitor: DesktopMonitor, observed: number): Promise<void> => {
     if (!isCurrent(observed)) return;
-    programmaticSize = { width: rect.width, height: rect.height };
-    await invoke('set_overlay_bounds', { bounds: rect });
-    if (!isCurrent(observed)) return;
-    rememberAccepted(rect, monitor);
+    boundsPending += 1;
+    const request = boundsQueue.then(async () => {
+      if (!isCurrent(observed)) return;
+      presentationBoundsTarget = { ...rect };
+      programmaticSize = { width: rect.width, height: rect.height };
+      await invoke('set_overlay_bounds', { bounds: rect });
+      if (isCurrent(observed)) rememberAccepted(rect, monitor);
+    });
+    boundsQueue = request.catch(() => undefined);
+    try { await request; } finally { boundsPending = Math.max(0, boundsPending - 1); }
   };
+  const targetBounds = (source: CompactPrefs, monitor: DesktopMonitor, insets: FrameInsets): { rect: PhysicalRect; constrained: boolean } => presentation.welcomeOpen
+    ? presentationClientBounds(source, monitor, insets, presentation.sourceHeight)
+    : { rect: restoreCompactGeometry(source, clientWorkArea(monitor, insets)).rect, constrained: false };
   const applyPreferences = async (next: CompactPrefs, save: boolean): Promise<void> => {
     const observed = ++generation;
     clearTimeout(settleTimer); pendingNativeResize = false; gesture = 'idle'; prefs = next;
@@ -86,11 +98,14 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
     const insets = await frameInsets(); if (!isCurrent(observed)) return;
     const active = currentMonitorValue ?? await chooseMonitor(clientRectToFrameRect(initialBounds, insets)); if (!isCurrent(observed)) return;
     currentMonitorValue = active;
-    const target = restoreCompactGeometry(prefs, clientWorkArea(active, insets)).rect;
+    const targetState = targetBounds(prefs, active, insets), target = targetState.rect;
+    document.body.classList.toggle('native-welcome-scroll', presentation.welcomeOpen && targetState.constrained);
+    if (presentation.welcomeOpen) await controls.hide();
     if (!await placeControl(target, observed) || !isCurrent(observed)) return;
     await applyClientBounds(target, active, observed);
   };
   const settle = (): void => {
+    if (presentation.welcomeOpen) { void applyPresentationState(presentation).catch(() => undefined); return; }
     const observed = ++generation; clearTimeout(settleTimer);
     settleTimer = window.setTimeout(() => { void (async () => {
       if (!isCurrent(observed)) return;
@@ -98,6 +113,9 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
       const insets = await frameInsets(); if (!isCurrent(observed)) return;
       const active = await chooseMonitor(clientRectToFrameRect(rect, insets)); if (!isCurrent(observed)) return;
       currentMonitorValue = active;
+      if (presentationBoundsTarget && rect.x === presentationBoundsTarget.x && rect.y === presentationBoundsTarget.y && rect.width === presentationBoundsTarget.width && rect.height === presentationBoundsTarget.height) {
+        presentationBoundsTarget = null; programmaticSize = undefined; rememberAccepted(rect, active); pendingNativeResize = false; return;
+      }
       const changedFromAccepted = !acceptedSize || rect.width !== acceptedSize.width || rect.height !== acceptedSize.height;
       const expectedProgrammaticSize = programmaticSize?.width === rect.width && programmaticSize.height === rect.height;
       const environmentChanged = acceptedEnvironment !== '' && acceptedEnvironment !== environmentKey(active);
@@ -119,10 +137,33 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
   const exit = createExit(() => hooks.flushSave(), command => invoke(command));
   const recovery = document.getElementById('save-recovery'), legacyNotice = document.getElementById('legacy-save-notice'), editOverlay = document.getElementById('edit-overlay');
   const updateInputPolicy = async (editing = !(editOverlay?.hidden ?? true)): Promise<void> => {
-    await setIgnore(shouldIgnoreCursor(passive, !(recovery?.hidden ?? true) || !(legacyNotice?.hidden ?? true), editing));
+    await setIgnore(shouldIgnoreCursor(passive, presentation.welcomeOpen || !(recovery?.hidden ?? true) || !(legacyNotice?.hidden ?? true), editing));
   };
   const setIgnore = (ignore: boolean): Promise<void> => passive ? win.setIgnoreCursorEvents(ignore) : Promise.resolve();
-  const showEdit = async (): Promise<void> => { await setIgnore(shouldIgnoreCursor(passive, !(recovery?.hidden ?? true), true)); hooks.setEditing(true); gesture = 'idle'; };
+  const applyPresentationState = async (next: CompactPresentationState): Promise<void> => {
+    const observed = ++generation; clearTimeout(settleTimer); pendingNativeResize = false; gesture = 'idle';
+    presentation = { welcomeOpen: next.welcomeOpen, sourceHeight: Math.max(CONFIG.ui.closed.height, Math.floor(next.sourceHeight)) };
+    if (presentation.welcomeOpen && !(editOverlay?.hidden ?? true)) hooks.setEditing(false);
+    const initial = await bounds(); if (!isCurrent(observed)) return;
+    const insets = await frameInsets(); if (!isCurrent(observed)) return;
+    const active = currentMonitorValue ?? await chooseMonitor(clientRectToFrameRect(initial, insets)); if (!isCurrent(observed)) return;
+    currentMonitorValue = active;
+    const target = targetBounds(prefs, active, insets);
+    document.body.classList.toggle('native-welcome-scroll', presentation.welcomeOpen && target.constrained);
+    if (presentation.welcomeOpen) await controls.hide();
+    else if (!await placeControl(target.rect, observed) || !isCurrent(observed)) return;
+    const sameBounds = initial.x === target.rect.x && initial.y === target.rect.y && initial.width === target.rect.width && initial.height === target.rect.height;
+    if (!sameBounds || (!presentation.welcomeOpen && boundsPending > 0)) await applyClientBounds(target.rect, active, observed);
+    else presentationBoundsTarget = null;
+    if (!presentation.welcomeOpen) await controls.show();
+    await updateInputPolicy();
+  };
+  const onPresentationChange = (event: Event): void => {
+    const next = (event as CustomEvent<CompactPresentationState>).detail;
+    if (next) void applyPresentationState(next).catch(() => undefined);
+  };
+  window.addEventListener('compact-presentation-change', onPresentationChange); cleanups.push(() => window.removeEventListener('compact-presentation-change', onPresentationChange));
+  const showEdit = async (): Promise<void> => { if (presentation.welcomeOpen) return; await setIgnore(shouldIgnoreCursor(passive, !(recovery?.hidden ?? true), true)); hooks.setEditing(true); gesture = 'idle'; };
   const exitEdit = async (): Promise<void> => { hooks.setEditing(false); await updateInputPolicy(false); gesture = 'idle'; };
 
   const drag = document.getElementById('drag-handle'), resize = document.getElementById('resize-handle'), done = document.getElementById('edit-done');
@@ -132,15 +173,16 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
   const onKey = (event: KeyboardEvent): void => { if (event.key === 'Escape' && !document.getElementById('edit-overlay')?.hidden) { event.preventDefault(); void exitEdit(); } };
   window.addEventListener('keydown', onKey);
   cleanups.push(() => window.removeEventListener('keydown', onKey));
-  const onMoved = await win.onMoved(() => settle()), onResized = await win.onResized(() => { pendingNativeResize = true; settle(); }), onScale = await win.onScaleChanged(() => {
+  const onMoved = await win.onMoved(() => settle()), onResized = await win.onResized(() => { if (presentation.welcomeOpen) { void applyPresentationState(presentation).catch(() => undefined); return; } pendingNativeResize = true; settle(); }), onScale = await win.onScaleChanged(() => {
     if (gesture !== 'idle') return;
+    if (presentation.welcomeOpen) { void applyPresentationState(presentation).catch(() => undefined); return; }
     const observed = ++generation; clearTimeout(settleTimer); pendingNativeResize = false;
     void (async () => {
       const rect = await bounds(); if (!isCurrent(observed)) return;
       const insets = await frameInsets(); if (!isCurrent(observed)) return;
       const active = await chooseMonitor(clientRectToFrameRect(rect, insets)); if (!isCurrent(observed)) return;
       currentMonitorValue = active;
-      const target = restoreCompactGeometry(prefs, clientWorkArea(active, insets)).rect;
+      const target = targetBounds(prefs, active, insets).rect;
       if (!await placeControl(target, observed) || !isCurrent(observed)) return;
       await applyClientBounds(target, active, observed);
     })().catch(() => undefined);
@@ -169,7 +211,8 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
   const savedMonitor = allMonitors.find(monitor => monitor.key === prefs.monitorKey);
   if (savedMonitor) currentMonitorValue = savedMonitor;
   await applyPreferences(prefs, false);
-  await win.show(); await controls.show();
+  if (presentation.welcomeOpen) await applyPresentationState(presentation);
+  await win.show(); if (!presentation.welcomeOpen) await controls.show();
   async function poll(): Promise<void> {
     if (stopped) return;
     const observed = generation;
@@ -180,6 +223,9 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
       const frameRect = clientRectToFrameRect(rect, insets), active = await chooseMonitor(frameRect);
       if (!isCurrent(observed) || gesture !== 'idle') return schedulePoll();
       currentMonitorValue = active;
+      if (presentation.welcomeOpen && acceptedEnvironment !== environmentKey(active)) {
+        void applyPresentationState(presentation).catch(() => undefined); return schedulePoll();
+      }
       const area = clientWorkArea(active, insets);
       if (!isContained(frameRect, active.workArea)) {
         const constrained = constrainCompactRect(rect, area);

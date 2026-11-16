@@ -1,0 +1,349 @@
+{
+  "results": [
+    {
+      "width": 480,
+      "rules": [],
+      "slots": 4,
+      "zoom": 1,
+      "dpr": 1,
+      "collect": {
+        "x": 336,
+        "y": 392,
+        "width": 120,
+        "height": 28,
+        "right": 456,
+        "bottom": 420
+      },
+      "close": {
+        "x": 428,
+        "y": 8,
+        "width": 28,
+        "height": 24,
+        "right": 456,
+        "bottom": 32
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-480-4-z1-dpr1.png",
+      "errors": []
+    },
+    {
+      "width": 480,
+      "rules": [
+        "expeditionChests"
+      ],
+      "slots": 28,
+      "zoom": 1,
+      "dpr": 1,
+      "collect": {
+        "x": 336,
+        "y": 392,
+        "width": 120,
+        "height": 28,
+        "right": 456,
+        "bottom": 420
+      },
+      "close": {
+        "x": 428,
+        "y": 8,
+        "width": 28,
+        "height": 24,
+        "right": 456,
+        "bottom": 32
+      },
+      "chestSlots": 28,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-480-28-z1-dpr1.png",
+      "errors": []
+    },
+    {
+      "width": 640,
+      "rules": [],
+      "slots": 4,
+      "zoom": 1,
+      "dpr": 1,
+      "collect": {
+        "x": 496,
+        "y": 392,
+        "width": 120,
+        "height": 28,
+        "right": 616,
+        "bottom": 420
+      },
+      "close": {
+        "x": 588,
+        "y": 8,
+        "width": 28,
+        "height": 24,
+        "right": 616,
+        "bottom": 32
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-640-4-z1-dpr1.png",
+      "errors": []
+    },
+    {
+      "width": 640,
+      "rules": [
+        "expeditionChests"
+      ],
+      "slots": 28,
+      "zoom": 1,
+      "dpr": 1,
+      "collect": {
+        "x": 496,
+        "y": 392,
+        "width": 120,
+        "height": 28,
+        "right": 616,
+        "bottom": 420
+      },
+      "close": {
+        "x": 588,
+        "y": 8,
+        "width": 28,
+        "height": 24,
+        "right": 616,
+        "bottom": 32
+      },
+      "chestSlots": 28,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-640-28-z1-dpr1.png",
+      "errors": []
+    },
+    {
+      "width": 960,
+      "rules": [],
+      "slots": 4,
+      "zoom": 1,
+      "dpr": 1,
+      "collect": {
+        "x": 768,
+        "y": 364,
+        "width": 168,
+        "height": 28,
+        "right": 936,
+        "bottom": 392
+      },
+      "close": {
+        "x": 912,
+        "y": 8,
+        "width": 28,
+        "height": 24,
+        "right": 940,
+        "bottom": 32
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-960-4-z1-dpr1.png",
+      "errors": []
+    },
+    {
+      "width": 640,
+      "dpr": 1.25,
+      "zoom": 1,
+      "rules": [],
+      "slots": 4,
+      "collect": {
+        "x": 396.796875,
+        "y": 313.59375,
+        "width": 96,
+        "height": 22.390625,
+        "right": 492.796875,
+        "bottom": 335.984375
+      },
+      "close": {
+        "x": 470.390625,
+        "y": 6.390625,
+        "width": 22.390625,
+        "height": 19.1875,
+        "right": 492.78125,
+        "bottom": 25.578125
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-640-4-z1-dpr1.25.png",
+      "errors": []
+    },
+    {
+      "width": 640,
+      "dpr": 2,
+      "zoom": 1,
+      "rules": [],
+      "slots": 4,
+      "collect": {
+        "x": 248,
+        "y": 196,
+        "width": 60,
+        "height": 14,
+        "right": 308,
+        "bottom": 210
+      },
+      "close": {
+        "x": 294,
+        "y": 4,
+        "width": 14,
+        "height": 12,
+        "right": 308,
+        "bottom": 16
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-640-4-z1-dpr2.png",
+      "errors": []
+    },
+    {
+      "width": 640,
+      "dpr": 1,
+      "zoom": 2,
+      "rules": [],
+      "slots": 4,
+      "collect": {
+        "x": 992,
+        "y": 784,
+        "width": 240,
+        "height": 56,
+        "right": 1232,
+        "bottom": 840
+      },
+      "close": {
+        "x": 1176,
+        "y": 16,
+        "width": 56,
+        "height": 48,
+        "right": 1232,
+        "bottom": 64
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-640-4-z2-dpr1.png",
+      "errors": []
+    },
+    {
+      "width": 640,
+      "dpr": 1.25,
+      "zoom": 2,
+      "rules": [],
+      "slots": 4,
+      "collect": {
+        "x": 793.59375,
+        "y": 627.1875,
+        "width": 192,
+        "height": 44.796875,
+        "right": 985.59375,
+        "bottom": 671.984375
+      },
+      "close": {
+        "x": 940.796875,
+        "y": 12.796875,
+        "width": 44.796875,
+        "height": 38.390625,
+        "right": 985.59375,
+        "bottom": 51.1875
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-640-4-z2-dpr1.25.png",
+      "errors": []
+    },
+    {
+      "width": 640,
+      "dpr": 2,
+      "zoom": 2,
+      "rules": [],
+      "slots": 4,
+      "collect": {
+        "x": 496,
+        "y": 392,
+        "width": 120,
+        "height": 28,
+        "right": 616,
+        "bottom": 420
+      },
+      "close": {
+        "x": 588,
+        "y": 8,
+        "width": 28,
+        "height": 24,
+        "right": 616,
+        "bottom": 32
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-640-4-z2-dpr2.png",
+      "errors": []
+    },
+    {
+      "width": 480,
+      "dpr": 1,
+      "zoom": 2,
+      "rules": [],
+      "slots": 4,
+      "collect": {
+        "x": 672,
+        "y": 784,
+        "width": 240,
+        "height": 56,
+        "right": 912,
+        "bottom": 840
+      },
+      "close": {
+        "x": 856,
+        "y": 16,
+        "width": 56,
+        "height": 48,
+        "right": 912,
+        "bottom": 64
+      },
+      "chestSlots": 4,
+      "fonts": {
+        "regular": true,
+        "semibold": true
+      },
+      "screenshot": "artifacts/idle-return-layout-480-4-z2-dpr1.png",
+      "errors": []
+    },
+    {
+      "earlyCollectHoldMs": 240,
+      "stateUnchanged": true,
+      "collapsedHeight": 160
+    },
+    {
+      "constrainedNativeScroll": true,
+      "scrollHeight": 488,
+      "collectReachable": true,
+      "stateUnchanged": true
+    }
+  ]
+}
