@@ -33,6 +33,10 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential pkg-config libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf
       - run: npm ci
       - run: npm run typecheck && npm run lint && npm run test && npm run build
+        env:
+          VITE_ONLINE_ENABLED: ${{ vars.VITE_ONLINE_ENABLED }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
       - run: npm run native:check && npm run native:test
   windows-build:
@@ -50,6 +54,10 @@ jobs:
           workspaces: src-tauri -> target
       - run: npm ci
       - run: npm run typecheck && npm run lint && npm run test && npm run build
+        env:
+          VITE_ONLINE_ENABLED: ${{ vars.VITE_ONLINE_ENABLED }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - run: npm run native:check
       - run: npm run native:test
       - name: Cache verified Tauri bundler downloads
@@ -106,6 +114,10 @@ jobs:
           workspaces: src-tauri -> target
       - run: npm ci
       - run: npm run typecheck && npm run lint && npm run test && npm run build
+        env:
+          VITE_ONLINE_ENABLED: ${{ vars.VITE_ONLINE_ENABLED }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
       - run: npm run native:check && npm run native:test
       - name: Build universal test app and DMG (ad-hoc only, no Apple identity)
