@@ -11,7 +11,7 @@ const requestSchema = z.object({ clientId: z.string().min(1).max(80), requestId:
 export interface ManagementSnapshot {
   revision: number; paused: boolean; tick: number; gold: number; tickets: number; pity: number; lockMax: number; combatRules: GameState['combatRules']; progress: GameState['progress']; phase: GameState['phase'];
   offline: OfflineProjection;
-  highestCleared: number; roster: GameState['roster']; partyIds: string[]; partyPreset?: GameState['partyPreset']; inventory: GameState['inventory']; pendingChoice?: GameState['pendingChoice'];
+  highestCleared: number; roster: GameState['roster']; partyIds: string[]; deployedPartyIds: string[]; partyPreset?: GameState['partyPreset']; inventory: GameState['inventory']; pendingChoice?: GameState['pendingChoice'];
   heroStats: Record<string, ReturnType<typeof heroStats>>; stats: GameState['stats']; balance: string; pityLegendary?: number; pityNewHero?: number;
   recruit: { cost: number; rates: Record<string, number>; epicPlusRemaining: number; legendaryRemaining: number | null; newHeroRemaining: number | null };
   recentPulls: { seq: number; heroId: string; rarity: string; duplicate: boolean; pity: string | boolean | null }[];
@@ -39,7 +39,7 @@ export class ManagementAuthority {
       newHeroRemaining: CONFIG.v14.recruit.newHeroGuaranteeEvery && roster.length < CONFIG.heroes.length ? CONFIG.v14.recruit.newHeroGuaranteeEvery - (pityNewHero ?? 0) : null };
     const recentPulls = this.state.events.filter(event => event.data.type === 'pull').slice(-10).map(event => event.data.type === 'pull' ? ({ seq: event.seq, heroId: event.data.heroId,
       rarity: event.data.rarity, duplicate: event.data.duplicate, pity: event.data.pity }) : null).filter((value): value is NonNullable<typeof value> => value !== null);
-    return structuredClone({ revision: this.revision, paused: this.paused, tick, gold, tickets, pity, lockMax: activeSalvageRules().lockMax, combatRules, offline: offlineProjection(this.state), ...(partyPreset ? { partyPreset } : {}), progress, phase, highestCleared, roster, partyIds, inventory,
+    return structuredClone({ revision: this.revision, paused: this.paused, tick, gold, tickets, pity, lockMax: activeSalvageRules().lockMax, combatRules, offline: offlineProjection(this.state), ...(partyPreset ? { partyPreset } : {}), progress, phase, highestCleared, roster, partyIds, deployedPartyIds: this.state.party.map(hero => hero.sourceId), inventory,
       heroStats: derivedStats, recruit, recentPulls, ...(pendingChoice ? { pendingChoice } : {}), stats, balance, ...(pityLegendary === undefined ? {} : { pityLegendary }), ...(pityNewHero === undefined ? {} : { pityNewHero }) });
   }
   compareGear(heroId: string, gearId: string): HeroGearComparison | null {

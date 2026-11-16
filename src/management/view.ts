@@ -9,6 +9,8 @@ import { getPartyHeroDefinition } from '../core/party-definitions';
 import type { Action, GameState } from '../core/model';
 import type { HeroGearComparison, ManagementReply, ManagementSnapshot } from './authority';
 import type { CompactPrefs } from '../platform/desktop/compact-geometry';
+import { formationDrop } from './formation';
+import { ManagementTooltip } from './tooltip';
 
 export interface ManagementClient {
   snapshot(): Promise<ManagementSnapshot>;
@@ -64,6 +66,7 @@ const BUS_DEFAULTS = audioManifest.defaultVolumes;
 type Choice = { value: string; label: string; rarity?: string };
 type AudioValue = { muted: boolean; volume: number; buses?: { music: number; sfx: number; ui: number } };
 export type ManagementVariant = 'browser' | 'native';
+type FormationGesture = { pointerId: number; heroId: string; sourceSlot: string | null; startX: number; startY: number; revision: number; partyIds: string[]; started: boolean; target: HTMLElement | null };
 const asset = (path: string): string => new URL(`${import.meta.env.BASE_URL}${path}`, window.location.href).href;
 const icon = (name: string): string => `<img class="px-icon" src="${asset(`ui/icon-${name}.png`)}" alt="" width="16" height="16">`;
 const control = (id: string): string => `data-control="${esc(id)}"`;
@@ -146,6 +149,10 @@ export class ManagementView {
   private audioValue: AudioValue = { muted: false, volume: 0.5 };
   private compactPrefs: CompactPrefs | null = null;
   private dragging: { name: string; pointerId: number } | null = null;
+  private formationGesture: FormationGesture | null = null;
+  private formationPending = false;
+  private suppressFormationClick: { pointerId: number; heroId: string; sourceSlot: string | null; timer: number } | null = null;
+  private deferredFormationRender = false;
   private readonly header: HTMLElement;
   private readonly nav: HTMLElement;
   private readonly status: HTMLElement;
@@ -161,12 +168,14 @@ export class ManagementView {
   private readonly portraits = new Map<string, string>();
   private readonly variant: ManagementVariant;
   private readonly abort = new AbortController();
+  private readonly tooltip: ManagementTooltip;
   constructor(private readonly root: HTMLElement, private readonly client: ManagementClient, private readonly onClose: () => void, private readonly options: ManagementViewOptions = {}) {
     void loadFonts().then(() => { this.contentKey = ''; this.renderContent(); }).catch(error => {
       this.message = `Local font could not load; using system text: ${String(error)}`; this.renderStatus();
     });
     this.variant = options.variant ?? 'browser'; this.atlas = options.atlas ?? null;
     this.root.classList.add('px-menu'); this.root.dataset.variant = this.variant;
+    this.tooltip = new ManagementTooltip(this.root);
     for (const [key, value] of Object.entries(CONFIG.ui.palette)) this.root.style.setProperty(`--px-${key}`, value);
     for (const tier of raritySchema.options) this.root.style.setProperty(`--px-rarity-${tier}`, CONFIG.ui.rarity[tier].label);
     for (const [name, file] of [['panel', 'panel-9slice'], ['button', 'button-9slice'], ['hover', 'button-hover-9slice'], ['pressed', 'button-pressed-9slice'], ['disabled', 'button-disabled-9slice']] as const) {
@@ -182,7 +191,7 @@ export class ManagementView {
     this.nav.addEventListener('click', event => {
       if (this.closed) return; const target = event.target instanceof Element ? event.target.closest<HTMLButtonElement>('button[data-tab]') : null; if (!target?.dataset.tab) return;
       // Any tab click (including Recruit itself) leaves the reveal and shows that tab's body.
-      this.stopReveal(); if (this.tab !== target.dataset.tab) this.client.cue?.('ui_click');
+      this.cancelFormationGesture(); this.tooltip.hide(); this.stopReveal(); if (this.tab !== target.dataset.tab) this.client.cue?.('ui_click');
       this.tab = target.dataset.tab as Tab; this.openDropdown = null; this.contentKey = ''; this.renderContent(); this.renderNav();
     }, { signal: this.abort.signal });
     this.header.querySelector('[data-close]')?.addEventListener('click', () => this.close(), { signal: this.abort.signal });
@@ -192,9 +201,14 @@ export class ManagementView {
     this.root.addEventListener('pointermove', event => this.onPointer(event), { signal: this.abort.signal });
     this.root.addEventListener('pointerup', event => this.onPointer(event), { signal: this.abort.signal });
     this.root.addEventListener('pointercancel', event => this.onPointer(event), { signal: this.abort.signal });
+    this.root.addEventListener('lostpointercapture', event => { if (event.target === this.root && this.formationGesture?.pointerId === (event as PointerEvent).pointerId && !this.root.hasPointerCapture((event as PointerEvent).pointerId)) this.cancelFormationGesture(); }, { signal: this.abort.signal });
+    this.root.addEventListener('dragstart', event => { if (event.target instanceof Element && event.target.closest('.px-formation-view')) event.preventDefault(); }, { signal: this.abort.signal });
+    document.addEventListener('pointerup', event => { if (this.formationGesture && !this.root.contains(event.target as Node)) this.cancelFormationGesture(); }, { signal: this.abort.signal });
+    window.addEventListener('blur', () => this.cancelFormationGesture(), { signal: this.abort.signal });
     document.addEventListener('pointerdown', event => { if (this.openDropdown && !(event.target instanceof Node && this.root.contains(event.target))) { this.openDropdown = null; this.contentKey = ''; this.renderContent(); } }, { signal: this.abort.signal });
   }
   async open(tab: Tab = this.tab): Promise<void> {
+    this.cancelFormationGesture();
     this.tab = tab;
     if (!this.closed) return;
     this.closed = false; const generation = ++this.generation; this.clientId = crypto.randomUUID(); this.sequence = 0; this.root.hidden = false;
@@ -211,10 +225,10 @@ export class ManagementView {
   close(): void {
     this.generation += 1; window.clearInterval(this.timer); this.timer = 0;
     if (this.closed) return;
-    this.stopReveal(); this.openDropdown = null;
+    this.cancelFormationGesture(); this.tooltip.hide(); this.stopReveal(); this.openDropdown = null;
     this.closed = true; this.client.cue?.('ui_close'); this.client.close(); this.onClose();
   }
-  dispose(): void { this.close(); this.generation += 1; this.abort.abort(); this.root.replaceChildren(); }
+  dispose(): void { this.close(); this.generation += 1; this.tooltip.dispose(); this.abort.abort(); this.root.replaceChildren(); }
   /** Debug/shot hook: the reveal in this menu, or null. */
   revealState(): ReturnType<PixelUI['revealState']> { return this.revealHost.hidden ? null : this.revealUi?.revealState() ?? null; }
   private isLive(generation: number): boolean { return !this.closed && this.generation === generation; }
@@ -271,10 +285,10 @@ export class ManagementView {
     try { await operation; }
     catch (error) { if (this.isLive(generation)) { this.message = `Setting could not be saved: ${String(error)}`; this.renderStatus(); } }
   }
-  private async command(action: Action | { type: 'pullMany'; count: 1 | 10 }): Promise<ManagementReply | null> {
+  private async command(action: Action | { type: 'pullMany'; count: 1 | 10 }, expectedRevision?: number): Promise<ManagementReply | null> {
     const generation = this.generation, current = this.snapshotValue; if (!current || !this.isLive(generation)) return null;
     try {
-      const reply = await this.client.execute(action, current.revision, `${this.clientId}:${++this.sequence}`);
+      const reply = await this.client.execute(action, expectedRevision ?? current.revision, `${this.clientId}:${++this.sequence}`);
       if (!this.isLive(generation)) return null;
       if (this.isNewer(reply.snapshot, this.snapshotValue)) this.snapshotValue = reply.snapshot;
       else await this.refresh(generation);
@@ -341,13 +355,15 @@ export class ManagementView {
     let entry = this.portraits.get(key);
     if (entry === undefined) { const canvas = this.atlas.portrait(key); entry = canvas ? `${canvas.toDataURL()}|${canvas.width}|${canvas.height}` : ''; if (canvas) this.portraits.set(key, entry); }
     const [url, w, h] = entry.split('|');
-    return url ? `<img class="px-portrait" src="${url}" alt="" width="${Number(w) * scale}" height="${Number(h) * scale}">` : '<span class="px-portrait px-portrait-empty"></span>';
+    return url ? `<img class="px-portrait" src="${url}" alt="" draggable="false" width="${Number(w) * scale}" height="${Number(h) * scale}">` : '<span class="px-portrait px-portrait-empty"></span>';
   }
   private onKey(event: KeyboardEvent): void {
     if (this.closed) return;
     const target = event.target instanceof HTMLElement ? event.target : null;
     if (event.key === 'Escape') {
       event.preventDefault(); event.stopPropagation();
+      if (this.formationGesture) { this.cancelFormationGesture(); return; }
+      if (this.tooltip.dismissEscape()) return;
       if (this.openDropdown) { const name = this.openDropdown; this.openDropdown = null; this.contentKey = ''; this.renderContent(); this.root.querySelector<HTMLElement>(`[data-dd-toggle="${CSS.escape(name)}"]`)?.focus(); return; }
       if (!this.revealHost.hidden) return; // PixelUI handles keys during a reveal; Esc after it is the sheet close below.
       this.close(); return;
@@ -375,6 +391,7 @@ export class ManagementView {
   }
   private onPointer(event: PointerEvent): void {
     if (this.closed) return;
+    if (this.handleFormationPointer(event)) return;
     const node = event.type === 'pointerdown' ? (event.target instanceof Element ? event.target.closest<HTMLElement>('[data-slider]') : null) : this.dragging ? this.root.querySelector<HTMLElement>(`[data-slider="${CSS.escape(this.dragging.name)}"]`) : null;
     if (!node?.dataset.slider) return;
     if (event.type === 'pointerdown') { event.preventDefault(); node.focus(); this.dragging = { name: node.dataset.slider, pointerId: event.pointerId }; try { node.setPointerCapture(event.pointerId); } catch { /* synthetic pointers */ } }
@@ -382,6 +399,80 @@ export class ManagementView {
     const box = node.getBoundingClientRect(), value = (event.clientX - box.left - SLIDER.thumb[0]! / 2) / Math.max(1, box.width - SLIDER.thumb[0]!);
     if (event.type !== 'pointercancel') this.setSlider(node.dataset.slider, value, false);
     if (event.type === 'pointerup' || event.type === 'pointercancel') { this.dragging = null; this.contentKey = ''; this.renderContent(); }
+  }
+  private handleFormationPointer(event: PointerEvent): boolean {
+    if (event.type === 'pointerdown') {
+      if (this.tab !== 'party' || this.partyWorkspace !== 'formation' || this.formationPending || !event.isPrimary || event.button !== 0) return false;
+      const target = event.target instanceof Element ? event.target : null;
+      const touchGrip = event.pointerType === 'touch' ? document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-drag-grip]') : null;
+      const source = (touchGrip ?? target)?.closest<HTMLElement>('[data-drag-hero]');
+      if (!source) return false;
+      if (event.pointerType === 'touch' && !touchGrip) return false;
+      const state = this.snapshotValue; if (!state || !state.roster.some(hero => hero.id === source.dataset.dragHero)) return false;
+      this.formationGesture = { pointerId: event.pointerId, heroId: source.dataset.dragHero!, sourceSlot: source.dataset.partySlot ?? null, startX: event.clientX, startY: event.clientY,
+        revision: state.revision, partyIds: [...state.partyIds], started: false, target: null };
+      return false;
+    }
+    const gesture = this.formationGesture; if (!gesture || gesture.pointerId !== event.pointerId) return false;
+    if (event.type === 'pointercancel') { this.cancelFormationGesture(); return true; }
+    if (event.type === 'pointermove') {
+      if (!gesture.started && Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY) >= 7) {
+        gesture.started = true; this.tooltip.hide(); this.root.querySelector('.px-formation-view')?.classList.add('is-dragging');
+        this.root.querySelector<HTMLElement>(`[data-drag-hero="${CSS.escape(gesture.heroId)}"]`)?.setAttribute('data-dragging', 'true');
+        try { this.root.setPointerCapture(event.pointerId); } catch { /* synthetic event environments */ }
+      }
+      if (gesture.started) {
+        event.preventDefault();
+        const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-party-slot]') ?? null;
+        gesture.target = hit && this.root.contains(hit) ? hit : null;
+        this.root.querySelectorAll('[data-party-slot]').forEach(node => node.removeAttribute('data-drop-target'));
+        gesture.target?.setAttribute('data-drop-target', 'true');
+      }
+      return gesture.started;
+    }
+    if (event.type === 'pointerup') {
+      if (!gesture.started) { this.cancelFormationGesture(); return false; }
+      event.preventDefault();
+      const current = this.snapshotValue, slot = gesture.target?.dataset.partySlot;
+      const targetSlot = slot === undefined ? -1 : Number(slot);
+      const valid = current && this.tab === 'party' && this.partyWorkspace === 'formation' && !this.closed
+        && current.revision === gesture.revision && current.partyIds.length === gesture.partyIds.length && current.partyIds.every((id, i) => id === gesture.partyIds[i]);
+      const next = valid && targetSlot >= 0 ? formationDrop(gesture.partyIds, current.roster.map(hero => hero.id), gesture.heroId, targetSlot) : null;
+      this.armFormationClickSuppression(gesture);
+      this.cancelFormationGesture();
+      if (next && current) void this.submitFormation(next, gesture.revision);
+      else if (!valid) { this.message = 'Formation changed while dragging. Try again.'; this.renderStatus(); }
+      return true;
+    }
+    return false;
+  }
+  private cancelFormationGesture(): void {
+    const gesture = this.formationGesture; if (!gesture) return;
+    if (gesture.started) this.armFormationClickSuppression(gesture);
+    this.formationGesture = null;
+    this.root.querySelector('.px-formation-view')?.classList.remove('is-dragging');
+    this.root.querySelectorAll('[data-dragging], [data-drop-target]').forEach(node => { node.removeAttribute('data-dragging'); node.removeAttribute('data-drop-target'); });
+    try { if (this.root.hasPointerCapture(gesture.pointerId)) this.root.releasePointerCapture(gesture.pointerId); } catch { /* capture may already be gone */ }
+    this.tooltip.hide();
+    if (this.deferredFormationRender) { this.deferredFormationRender = false; this.contentKey = ''; this.renderContent(); }
+  }
+  private armFormationClickSuppression(gesture: FormationGesture): void {
+    if (this.suppressFormationClick) window.clearTimeout(this.suppressFormationClick.timer);
+    const suppression = { pointerId: gesture.pointerId, heroId: gesture.heroId, sourceSlot: gesture.sourceSlot, timer: 0 };
+    suppression.timer = window.setTimeout(() => { if (this.suppressFormationClick === suppression) this.suppressFormationClick = null; }, 0);
+    this.suppressFormationClick = suppression;
+  }
+  private async submitFormation(ids: string[], revision: number): Promise<void> {
+    if (this.formationPending) return;
+    this.formationPending = true; this.message = 'Formation update pending…'; this.renderStatus();
+    try {
+      const reply = await this.command({ type: 'party', heroIds: ids }, revision);
+      if (reply?.accepted && !this.closed) this.message = 'Formation updated for the next encounter.';
+      else if (reply && !this.closed) this.message = reply.reason ?? 'Formation was not changed.';
+    } finally {
+      this.formationPending = false;
+      if (!this.closed) { this.contentKey = ''; this.renderContent(); this.renderStatus(); }
+    }
   }
   private sliderValue(name: string): number {
     if (name === 'master') return this.audioValue.volume;
@@ -410,10 +501,17 @@ export class ManagementView {
   private onClick(event: Event): void {
     if (this.closed) return;
     const target = event.target; if (!(target instanceof Element)) return;
+    const pointerClick = event instanceof PointerEvent ? event : null, suppressed = this.suppressFormationClick;
+    if (pointerClick && suppressed && pointerClick.pointerId === suppressed.pointerId && pointerClick.detail > 0
+      && (target.closest('[data-drag-hero]')?.getAttribute('data-drag-hero') === suppressed.heroId
+        || suppressed.sourceSlot !== null && target.closest('[data-party-slot]')?.getAttribute('data-party-slot') === suppressed.sourceSlot)) {
+      window.clearTimeout(suppressed.timer); this.suppressFormationClick = null; event.preventDefault(); event.stopPropagation(); return;
+    }
     const button = target.closest<HTMLButtonElement>('button');
     if (this.openDropdown && !target.closest('.px-dd')) { this.openDropdown = null; this.contentKey = ''; this.renderContent(); }
     if (!button || !this.snapshotValue || button.disabled) return;
     const action = button.dataset.action, state = this.snapshotValue;
+    if (button.dataset.helpToggle !== undefined) { this.tooltip.toggle(button); return; }
     if (button.dataset.detailsOpen !== undefined) { this.detailsOpen = true; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.detailsClose !== undefined) { this.detailsOpen = false; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.loadoutClose !== undefined) { this.loadoutItemOpen = false; this.contentKey = ''; this.renderContent(); return; }
@@ -428,10 +526,10 @@ export class ManagementView {
     if (button.dataset.ddToggle) { this.toggleDropdown(button.dataset.ddToggle, (event as MouseEvent).detail === 0); return; }
     if (button.dataset.ddOption) { const name = button.dataset.ddOption; this.openDropdown = null; this.choose(name, button.dataset.value ?? ''); this.root.querySelector<HTMLElement>(`[data-dd-toggle="${CSS.escape(name)}"]`)?.focus(); return; }
     if (button.dataset.hero) { this.selectedHero = button.dataset.hero; this.loadoutItemOpen = false; this.contentKey = ''; this.renderContent(); return; }
-    if (button.dataset.partyWorkspace === 'heroes' || button.dataset.partyWorkspace === 'formation') { this.partyWorkspace = button.dataset.partyWorkspace; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.partyWorkspace === 'heroes' || button.dataset.partyWorkspace === 'formation') { this.cancelFormationGesture(); this.partyWorkspace = button.dataset.partyWorkspace; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.heroDetail === 'ability' || button.dataset.heroDetail === 'stats' || button.dataset.heroDetail === 'items') { this.heroDetailTab = button.dataset.heroDetail; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.partySlot !== undefined) { const index = Number(button.dataset.partySlot); this.selectedPartySlot = index === 1 || index === 2 ? index : 0; this.contentKey = ''; this.renderContent(); return; }
-    if (button.dataset.assign) { const ids = [...state.partyIds], current = ids.indexOf(button.dataset.assign); if (current >= 0 && current !== this.selectedPartySlot) [ids[current], ids[this.selectedPartySlot]] = [ids[this.selectedPartySlot]!, ids[current]!]; else ids[this.selectedPartySlot] = button.dataset.assign; if (ids.every(Boolean) && new Set(ids).size === 3 && state.roster.some(hero => hero.id === button.dataset.assign)) void this.command({ type: 'party', heroIds: ids }); else { this.message = 'Each formation slot needs a different owned hero.'; this.renderStatus(); } return; }
+    if (button.dataset.assign) { if (this.formationPending) return; const ids = formationDrop(state.partyIds, state.roster.map(hero => hero.id), button.dataset.assign, this.selectedPartySlot); if (ids) void this.submitFormation(ids, state.revision); else { this.message = 'Choose a different owned hero for that slot.'; this.renderStatus(); } return; }
     if (button.dataset.lockHero) { void this.command({ type: 'lockHero', heroId: button.dataset.lockHero, locked: button.dataset.locked !== 'true' }); return; }
     if (button.dataset.gearLock && this.selectedGear) { void this.command({ type: 'lock', gearId: this.selectedGear as GameState['inventory'][number]['id'], locked: button.dataset.gearLock !== 'true' }); return; }
     if (button.dataset.gear) { this.selectedGear = button.dataset.gear; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return; }
@@ -475,6 +573,8 @@ export class ManagementView {
     const state = this.snapshotValue; if (!state || this.closed) return;
     const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.detailsOpen}:${this.loadoutItemOpen}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
     if (signature === this.contentKey) return;
+    if (this.formationGesture) { this.deferredFormationRender = true; return; }
+    this.tooltip.hide();
     const active = document.activeElement, focusId = active instanceof HTMLElement && (this.main.contains(active) || this.footer.contains(active)) ? active.dataset.control : undefined;
     const scroll = [...this.main.querySelectorAll<HTMLElement>('[data-scroll]')].map(node => [node.dataset.scroll, node.scrollTop, node.scrollLeft] as const);
     this.contentKey = signature; this.main.dataset.view = this.tab; this.root.dataset.view = this.tab;
@@ -519,11 +619,11 @@ export class ManagementView {
       : [!definitions.some(value => value.role === 'tank') && 'tank', !definitions.some(value => value.role === 'dps') && 'damage', !definitions.some(value => value.role === 'support') && 'support'];
     const coverage = missing.filter((value): value is string => !!value);
     const selectedDef = selected ? getPartyHeroDefinition(selected.id) : undefined;
-    const workspace = `<div class="px-at px-party-workspaces" style="left:422px;top:20px" role="group" aria-label="Party workspace">${button('workspace-heroes', 'Heroes', 'data-party-workspace="heroes"', { selected: this.partyWorkspace === 'heroes' })}${button('workspace-formation', 'Formation', 'data-party-workspace="formation"', { selected: this.partyWorkspace === 'formation' })}</div>`;
     if (this.partyWorkspace === 'formation') {
-      const owned = state.roster.map(hero => `<button type="button" class="px-card${hero.id === selected?.id ? ' px-sel' : ''}" ${control(`hero-${hero.id}`)} data-hero="${esc(hero.id)}" aria-pressed="${hero.id === selected?.id}">${this.portrait(hero.id)}<span class="px-name">${esc(shortName(hero.id))}</span><span class="px-card-lv">Lv${hero.level}</span></button>`).join('');
-      const formationSlots = state.partyIds.map((id, index) => `<button type="button" class="px-formation px-wide-formation${this.selectedPartySlot === index ? ' px-sel' : ''}" ${control(`party-slot-${index}`)} data-party-slot="${index}" aria-pressed="${this.selectedPartySlot === index}"><span class="px-index">${['FRONT', 'MIDDLE', 'REAR'][index]}</span>${this.portrait(id)}<span>${esc(heroName(id))}</span>${state.roster.find(hero => hero.id === id)?.partyLocked ? '<i class="px-lock" title="Protected from presets"></i>' : ''}</button>`).join('');
-      return [`<h2 class="px-sr">Formation</h2>${workspace}<p class="px-hint" style="top:0">Enemy direction → · Front is closest. Select a slot and hero, then assign.</p><div class="px-at" style="left:16px;top:20px">${this.dropdown('party-preset', 'Preset', PRESETS, preset, 150, 'data-setting="party-preset"')}</div><div class="px-at" style="left:176px;top:20px">${button('auto-party', 'Apply preset', 'data-action="auto-party"', { primary: true })}</div><div class="px-at" style="left:286px;top:20px">${button('auto-equip', 'Auto-equip', 'data-action="auto-equip"')}</div><div class="px-formations px-formations-large">${formationSlots}</div><div class="px-formation-roster" data-scroll="formation-roster">${owned}</div><div class="px-formation-assign">${button(`assign-${selected?.id ?? ''}`, `Assign ${selected ? shortName(selected.id) : 'hero'} to ${['Front', 'Middle', 'Rear'][this.selectedPartySlot]}`, `data-assign="${esc(selected?.id ?? '')}"`, { primary: true, disabled: !selected })}${selected ? button(`formation-lock-${selected.id}`, selected.partyLocked ? 'Unlock preset slot' : 'Lock preset slot', `data-lock-hero="${esc(selected.id)}" data-locked="${selected.partyLocked === true}"`, { selected: selected.partyLocked === true }) : ''}<p class="px-muted">${coverage.length ? `Missing: ${coverage.join(', ')}.` : 'Coverage complete.'}</p><p class="px-muted">Manual assignment overrides preset locks.</p></div>`, '<p class="px-muted">Changes apply at the next stage or encounter rebuild.</p>'];
+      const owned = state.roster.map(hero => `<button type="button" class="px-card px-dnd-source${hero.id === selected?.id ? ' px-sel' : ''}" ${control(`hero-${hero.id}`)} data-hero="${esc(hero.id)}" data-drag-hero="${esc(hero.id)}" aria-label="${esc(`${heroName(hero.id)}, level ${hero.level}${state.partyIds.includes(hero.id) ? `, deployed ${['Front', 'Middle', 'Rear'][state.partyIds.indexOf(hero.id)]}` : ', on bench'}. Select or drag to a slot.`)}" aria-pressed="${hero.id === selected?.id}" data-help="${esc(`${heroName(hero.id)} · level ${hero.level} · ${state.partyIds.includes(hero.id) ? `deployed ${['Front', 'Middle', 'Rear'][state.partyIds.indexOf(hero.id)]}` : 'bench'} · drag to a slot or select and Assign.`)}">${this.portrait(hero.id)}<span class="px-name">${esc(shortName(hero.id))}</span><span class="px-card-lv">Lv${hero.level}</span><span class="px-drag-grip" data-drag-grip="${esc(hero.id)}" aria-hidden="true"></span></button>`).join('');
+      const formationSlots = state.partyIds.map((id, index) => `<button type="button" class="px-formation px-wide-formation px-dnd-target${this.selectedPartySlot === index ? ' px-sel' : ''}" ${control(`party-slot-${index}`)} data-party-slot="${index}" data-drag-hero="${esc(id)}" aria-label="${['Front', 'Middle', 'Rear'][index]} slot, ${esc(heroName(id))}${state.roster.find(hero => hero.id === id)?.partyLocked ? ', preset locked' : ''}. Drag to another slot to swap." aria-pressed="${this.selectedPartySlot === index}" data-help="${esc(`${['Front', 'Middle', 'Rear'][index]} · enemy approaches from the front · manual assignment overrides preset locks · changes apply at the next encounter.`)}"><span class="px-index">${['FRONT', 'MIDDLE', 'REAR'][index]}</span>${this.portrait(id)}<span class="px-slot-name">${esc(shortName(id))}</span>${state.roster.find(hero => hero.id === id)?.partyLocked ? '<i class="px-lock" aria-label="Preset locked"></i>' : ''}<span class="px-drag-grip" data-drag-grip="${esc(id)}" aria-hidden="true"></span></button>`).join('');
+      const changed = state.partyIds.some((id, i) => state.deployedPartyIds?.[i] !== id);
+      return [`<h2 class="px-sr">Formation</h2><section class="px-formation-view" aria-label="Party formation"><div class="px-formation-toolbar"><div class="px-formation-tools">${this.dropdown('party-preset', 'Preset', PRESETS, preset, 142, 'data-setting="party-preset"')}${button('auto-party', 'Apply preset', 'data-action="auto-party"', { primary: true })}${button('auto-equip', 'Auto-equip', 'data-action="auto-equip"')}</div><div class="px-formation-tools">${button('workspace-heroes', 'Heroes', 'data-party-workspace="heroes"', { selected: false })}${button('formation-help', '?', 'data-help-toggle data-help="Front is nearest the enemy. Drag heroes between slots to swap or from the roster to replace. Manual assignments override preset locks and apply at the next encounter."', { aria: 'Formation help' })}</div></div><div class="px-formation-help-row"><span class="px-coverage ${coverage.length ? 'px-warn' : ''}" ${coverage.length ? `data-help="${esc(`Coverage missing: ${coverage.join(', ')}. Choose a different preset or assign heroes manually.`)}"` : 'data-help="Role coverage is complete for this preset."'}>${coverage.length ? `Missing: ${coverage.join(', ')}` : 'Coverage complete'}</span><span>${changed ? 'Formation applies at the next encounter.' : 'Drag a hero to a slot, or select and Assign.'}</span></div><div class="px-formations px-formations-large">${formationSlots}</div><div class="px-formation-roster" data-scroll="formation-roster" aria-label="Owned heroes">${owned}</div><div class="px-formation-assign">${button(`assign-${selected?.id ?? ''}`, `Assign to ${['Front', 'Middle', 'Rear'][this.selectedPartySlot]}`, `data-assign="${esc(selected?.id ?? '')}"`, { primary: true, disabled: !selected || this.formationPending, aria: `Assign ${selected ? heroName(selected.id) : 'selected hero'} to ${['Front', 'Middle', 'Rear'][this.selectedPartySlot]}` })}${selected ? button(`formation-lock-${selected.id}`, selected.partyLocked ? 'Unlock preset slot' : 'Lock preset slot', `data-lock-hero="${esc(selected.id)}" data-locked="${selected.partyLocked === true}"`, { selected: selected.partyLocked === true, disabled: this.formationPending }) : ''}<span class="px-muted">${selected ? esc(heroName(selected.id)) : 'Select a hero'}</span></div></section>`, '<span></span>'];
     }
     return this.heroLoadout(state, selected, selectedDef, stats);
   }
@@ -542,7 +642,7 @@ export class ManagementView {
     };
     const gearSlots = selected ? (['weapon', 'armor', 'charm'] as const).map(part => {
       const item = state.inventory.find(value => value.id === selected.equipment[part]), label = part[0]!.toUpperCase() + part.slice(1);
-      return `<button type="button" class="px-loadout-equip${item ? '' : ' is-empty'}" ${control(`loadout-slot-${part}`)} data-loadout-slot="${part}" data-rarity="${item?.rarity ?? 'common'}" aria-label="${label}: ${esc(gearLine(part))}. Choose to filter stash items." title="${esc(gearLine(part))}">`
+      return `<button type="button" class="px-loadout-equip${item ? '' : ' is-empty'}" ${control(`loadout-slot-${part}`)} data-loadout-slot="${part}" data-rarity="${item?.rarity ?? 'common'}" aria-label="${label}: ${esc(gearLine(part))}. Choose to filter stash items." data-help="${esc(gearLine(part))}">`
         + `${item ? shape(item.rarity) : ''}${icon(SLOT_ICON[part] ?? 'chest')}<span>${label}</span>${item ? `<small>Lv${item.level}${item.locked ? ' · LOCK' : ''}</small>` : '<small>Empty</small>'}</button>`;
     }).join('') : '';
     const owned = state.roster.map(hero => {
@@ -569,7 +669,7 @@ export class ManagementView {
       + `<section class="px-loadout-strip-section"><div class="px-loadout-strip-title"><b>ITEM STASH</b><span>${state.inventory.length} / ${CONFIG.gear.inventoryCap}${this.slotFilter !== 'all' ? ` · ${this.slotFilter}` : ''}</span></div><div class="px-loadout-strip" data-scroll="loadout-stash" aria-label="Item stash">${items || '<span class="px-loadout-empty">Earn items from battles</span>'}</div></section>`
       + `<section class="px-loadout-strip-section px-loadout-heroes-section"><div class="px-loadout-strip-title"><b>HEROES</b><span>${rosterCount} OWNED</span></div><div class="px-loadout-strip" data-scroll="loadout-roster" aria-label="Hero selection">${owned || '<span class="px-loadout-empty">Recruit heroes to begin</span>'}</div></section>`
       + `${details}${itemDrawer}</section>`;
-    return [body, `<p class="px-muted">Select a hero, then choose gear to inspect or equip it.</p>`];
+    return [body, '<span></span>'];
   }
 
   private gearInspector(state: ManagementSnapshot, item: ManagementSnapshot['inventory'][number] | undefined, withCompare: boolean): string {
@@ -616,18 +716,18 @@ export class ManagementView {
     const dot = `<span style="color:${meters.colors.middot}"> · </span>`;
     // All three meters always show (compact-menu.md §7.3). With the v1.4 recruit pity rule off there is no Legend / New hero
     // guarantee to count down, so the meter reads "–" (muted) instead of an invented number.
-    const off = (text: string) => `<span class="px-muted" title="Not active in this ruleset">${text} –</span>`;
+    const off = (text: string) => `<span class="px-muted" data-help="This guarantee is inactive in the current ruleset.">${text} –</span>`;
     const pity = `<span style="color:${meters.colors.epicSegment}">Epic+ in ${epic}</span>${dot}${legend === null ? off('Legend in') : `<span style="color:${meters.colors.legendSegment}">Legend in ${legend}</span>`}`;
     const owned = new Set(state.roster.map(hero => hero.id)), heroesByRarity = (rarity: string) => CONFIG.heroes.filter(hero => hero.rarity === rarity).map(hero => hero.id);
     const featured = heroesByRarity('legendary').find(id => !owned.has(id)) ?? heroesByRarity('legendary')[0] ?? CONFIG.heroes[0]!.id;
     const pityHero = heroesByRarity('epic').find(id => !owned.has(id)) ?? heroesByRarity('epic')[0] ?? featured;
     const pityTotal = EPIC_PITY_PULLS, pityFill = Math.max(0, Math.min(1, (pityTotal - epic) / Math.max(1, pityTotal)));
-    const odds = Object.entries(state.recruit.rates).map(([rarity, value]) => `<li>${shape(rarity)}${rarityText(rarity)}<span>${Number((value * 100).toFixed(2))}%</span></li>`).join('');
+    const odds = Object.entries(state.recruit.rates).map(([rarity, value]) => `${rarity}: ${Number((value * 100).toFixed(2))}%`).join(' · ');
     const history = [...state.recentPulls].reverse().map(result => `<li data-rarity="${esc(result.rarity)}">${shape(result.rarity)}${esc(heroName(result.heroId))}${result.duplicate ? ' <span class="px-badge">+1★</span>' : ' <span class="px-badge px-green">NEW</span>'}${result.pity ? ' <span class="px-badge px-gold">PITY</span>' : ''}</li>`).join('') || '<li class="px-muted">No pulls yet.</li>';
     const cost = state.recruit.cost;
     return [`<h2 class="px-sr">Recruit</h2><div class="px-banners"><section class="px-banner" aria-label="All heroes banner"><h3>ALL HEROES</h3><span class="px-pview">${this.portrait(featured, 2)}</span><p class="px-gold px-b">${cost} TICKET${cost === 1 ? '' : 'S'}</p><p class="px-muted">${state.tickets} tickets · ${state.roster.length}/${CONFIG.heroes.length} owned</p></section>`
       + `<section class="px-banner" aria-label="Epic plus pity banner"><h3>EPIC+ PITY</h3><span class="px-pview">${this.portrait(pityHero, 2)}</span><div class="px-hp px-pity"><i style="width:${Math.round(pityFill * 100)}%"></i></div><p class="px-b" style="color:${meters.colors.epicSegment}">${pityTotal - epic} / ${pityTotal}</p><p class="px-muted">Same hero pool</p></section>`
-      + `<section class="px-odds" aria-label="Recruit odds"><h3>ACTUAL ODDS</h3><ul>${odds}</ul><p class="px-b">${pity}</p><p class="px-b">${fresh === null ? off('New hero in') : `<span style="color:${meters.colors.newSegment}">New hero in ${fresh}</span>`}</p><p class="px-muted">Duplicates: +1 star (max ${CONFIG.growth.starMax}), then gold.</p><p class="px-muted">Earned tickets only.</p></section></div>`
+      + `<section class="px-odds" aria-label="Recruit odds"><h3>RECRUIT INFO</h3><p class="px-b">${pity}</p><p class="px-b">${fresh === null ? off('New hero in') : `<span style="color:${meters.colors.newSegment}">New hero in ${fresh}</span>`}</p>${button('recruit-help', 'Odds & pity', `data-help-toggle data-help="${esc(`Actual rates: ${odds}. Epic+ pity is guaranteed after ${EPIC_PITY_PULLS} pulls; legendary and new-hero guarantees are ${legend === null ? 'inactive' : `${legend} pulls and`} ${fresh === null ? 'inactive' : `${fresh} pulls`}. Duplicates add 1 star up to ${CONFIG.growth.starMax}, then grant gold. Pulls spend earned tickets.`)}"`, { aria: 'Show actual recruit odds and duplicate rules' })}</section></div>`
       + `<section class="px-history"><div class="px-heading px-heading-left"><h3>HISTORY</h3><span class="px-muted">${state.stats.pulls} PULLS</span></div><ol class="px-list" data-scroll="history">${history}</ol></section>`,
       `<span></span><div class="px-row">${button('pull-one', 'Recruit x1', 'data-action="pull-one" style="width:132px"', { disabled: state.tickets < cost, primary: true })}${button('pull-ten', 'Recruit x10', 'data-action="pull-ten" style="width:140px"', { disabled: state.tickets < cost * 10 })}</div>`];
   }
@@ -648,16 +748,14 @@ export class ManagementView {
     const nextChest = Math.max(0, Math.ceil(state.offline.secondsUntilNextChest)), chestTime = nextChest >= 3600
       ? `${Math.floor(nextChest / 3600)}h ${Math.ceil(nextChest % 3600 / 60)}m` : `${Math.ceil(nextChest / 60)}m`;
     return [`<h2 class="px-sr">Settings</h2><div class="px-settings">`
-      + `<section class="px-offline-summary" aria-label="Offline progress"><h3>Offline progress</h3><p>Farm ${esc(state.offline.stageId)} · ~${fmt(state.offline.goldPerHour)} gold/h · ~${fmt(state.offline.xpPerHour)} XP/h per hero</p><p>${state.offline.earned ? 'Earned by this formation · last measured clear' : 'Starting estimate — clear a stage with this formation to improve it'}</p><p>Next ${state.offline.chestKind === 'expedition' ? 'expedition chest' : 'chest'} after ${chestTime} away</p><p>Partial rewards carry between visits · ${state.offline.capHours}h cap per absence</p></section>`
+      + `<section class="px-offline-summary" aria-label="Offline progress"><div class="px-offline-rate"><h3>Offline progress</h3><span class="px-badge ${state.offline.earned ? 'px-green' : ''}">${state.offline.earned ? 'Earned' : 'Estimate'}</span></div><p>Farm ${esc(state.offline.stageId)} · ~${fmt(state.offline.goldPerHour)} gold/h · ~${fmt(state.offline.xpPerHour)} XP/h per hero</p>${button('offline-help', '?', `data-help-toggle data-help="${esc(`${state.offline.earned ? 'Rates earned by the current formation from its last measured clear.' : 'Starting estimate; a successful stage clear with a proven formation replaces it with earned rates.'} Next ${state.offline.chestKind === 'expedition' ? 'expedition chest' : 'chest'} after ${chestTime}. Partial gold, XP, tickets, and chest progress carry across visits. Offline rewards are capped at ${state.offline.capHours} hours per absence.`)}"`, { aria: 'Explain offline progress rates and carry' })}</section>`
       // Toggles follow the mockup: the pause switch is "running" (off while paused), the label names the action it takes.
       + `<div class="px-srow">${toggle('pause', 'pause', !state.paused, state.paused ? 'Resume simulation' : 'Pause simulation', 'Simulation running')}</div>`
       + `<div class="px-srow">${toggle('mute', 'mute', this.audioValue.muted, this.audioValue.muted ? 'Unmute audio' : 'Mute audio', 'Audio muted')}</div>`
-      + slider('master', 'Volume', this.audioValue.volume, width) + slider('music', 'Music', this.sliderValue('music'), width) + slider('sfx', 'SFX', this.sliderValue('sfx'), width) + slider('ui', 'UI', this.sliderValue('ui'), width)
+      + slider('master', 'Volume', this.audioValue.volume, width) + `<details class="px-mixer"><summary>Mixer</summary>${slider('music', 'Music', this.sliderValue('music'), width)}${slider('sfx', 'SFX', this.sliderValue('sfx'), width)}${slider('ui', 'UI', this.sliderValue('ui'), width)}</details>`
       + `<div class="px-srow px-zoomrow"><span class="px-slider-label">Zoom</span><span class="px-pair" role="group" aria-label="Zoom">${['1', '2'].map(value => button(`zoom-${value}`, `${value}×`, `data-zoom="${value}"`, { selected: zoom === value, className: 'px-zoom' })).join('')}</span>`
       + `${this.dropdown('placement', 'Placement', [{ value: 'free', label: 'Free' }, { value: 'snapped', label: 'Snap to bottom' }], prefs?.placement ?? 'free', 160, 'data-setting="placement"')}${button('reset-size', 'Reset size', 'data-action="reset-size"')}</div>`
-      + '<div class="px-notes"><p class="px-muted">Campaign status and its available action stay above on every tab.</p>'
-      + (import.meta.env.DEV ? '<p class="px-muted" data-dev-note>Dev: party v2 is active; the legacy account stays untouched.</p>' : '')
-      + '<p class="px-muted">If a save cannot be loaded, use the game window recovery panel to export it or discard it.</p></div></div>',
+      + `<div class="px-notes">${button('recovery-help', 'Recovery help', 'data-help-toggle data-help="If a save cannot be loaded, use the game window recovery panel to export it or discard it."', { aria: 'Explain save recovery' })}</div></div>`,
       '<p class="px-muted">Esc closes the menu.</p>'];
   }
 }
