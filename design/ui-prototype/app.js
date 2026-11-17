@@ -924,8 +924,10 @@
         </span>
         <span class="equip-row-body">
           <strong>${title(it.rarity)} ${title(it.slot)}  Lv ${it.level}</strong>
-          <span class="equip-stats">${itemStatsHtml(it)}</span>
-          ${wearer ? `<span class="worn-by">${mine ? 'Equipped' : 'Worn by ' + wearer.short}</span>` : ''}
+          <span class="equip-row-sub">
+            <span class="equip-stats">${itemStatsHtml(it)}</span>
+            ${wearer ? `<span class="worn-by">${mine ? 'Equipped' : 'Worn by ' + wearer.short}</span>` : ''}
+          </span>
         </span>
         ${it.locked ? '<img class="lock-ico" src="assets/ui/icon-lock.png" width="16" height="16" alt="Locked">' : ''}
       </button>`;
@@ -1001,6 +1003,9 @@
         <div class="equip-list">
           <h3>${title(slot)}</h3>
           <div class="equip-rows">${rows}</div>
+          <div class="equip-scroll-cue" aria-hidden="true">
+            <img src="assets/ui/icon-scroll-more.png" width="11" height="7" alt="" style="width:22px;height:14px" draggable="false">
+          </div>
         </div>
         <div class="equip-compare">
           ${compare}
@@ -1015,6 +1020,19 @@
     const list = document.querySelector('#equip-root .equip-list');
     const rows = list && list.querySelector('.equip-rows');
     if (!list || !rows) return;
+    // 1280: snap the scrollport to whole 48 px rows so Compare never mid-cuts a card.
+    rows.style.maxHeight = '';
+    if (state.size === 1280) {
+      const row = rows.querySelector('.equip-row');
+      if (row) {
+        const gap = 6;
+        const stride = row.offsetHeight + gap;
+        if (rows.scrollHeight > rows.clientHeight + 1 && stride > 0) {
+          const n = Math.max(1, Math.floor((rows.clientHeight + gap) / stride));
+          rows.style.maxHeight = (n * row.offsetHeight + (n - 1) * gap) + 'px';
+        }
+      }
+    }
     const update = () => {
       const more = rows.scrollHeight > rows.clientHeight + 1;
       const atEnd = rows.scrollTop + rows.clientHeight >= rows.scrollHeight - 2;

@@ -1170,10 +1170,24 @@ img.is-sil { filter: brightness(0.2) contrast(1.2); }
 .equip-row.is-on { box-shadow: inset 0 0 0 2px var(--gold); background: #354a59; }
 .equip-row-ico { position: relative; width: 36px; height: 36px; flex: none; display: grid; place-items: center; }
 .equip-row-ico .shape-cue { position: absolute; right: -4px; top: -2px; }
-.equip-row-body { display: flex; flex-direction: column; gap: 0; min-width: 0; flex: 1; }
+.equip-row-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
 .equip-row-body strong {
   font: 700 12px/16px Galmuri11, monospace;
   white-space: nowrap; overflow: visible; text-overflow: clip;
+}
+.equip-row-sub {
+  display: block;
+  font: 10px/16px Galmuri9, monospace;
+  white-space: nowrap;
+  overflow: visible;
 }
 .equip-row .equip-stats,
 .equip-row .worn-by { display: inline; font: 10px/16px Galmuri9, monospace; }
@@ -1245,6 +1259,20 @@ img.is-sil { filter: brightness(0.2) contrast(1.2); }
 }
 [data-size="1280"] .equip-list.has-more::after { opacity: 1; }
 [data-size="1280"] .equip-list.has-prev::before { opacity: 1; }
+.equip-scroll-cue { display: none; }
+[data-size="1280"] .equip-scroll-cue {
+  position: absolute;
+  left: 0;
+  right: 12px;
+  bottom: 0;
+  height: 20px;
+  pointer-events: none;
+  z-index: 3;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(24, 36, 49, 0) 0%, #182431 55%, #182431 100%);
+}
+[data-size="1280"] .equip-list.has-more .equip-scroll-cue { display: flex; }
 .delta-row {
   display: grid;
   grid-template-columns: 72px auto 48px;
