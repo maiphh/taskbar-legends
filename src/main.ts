@@ -317,6 +317,7 @@ if (import.meta.env.DEV) window.__management = {
   snapshot: () => managementAuthority.snapshot(),
   execute: (value: unknown) => managementAuthority.execute(value),
   compare: (heroId: string, gearId: string) => managementAuthority.compareGear(heroId, gearId),
+  freezeAnimation: (frozen: boolean) => managementView?.freezeAnimation(frozen),
 };
 void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler),
   presentationState: () => ({ welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() }) }, {
@@ -335,4 +336,4 @@ function frame(now: number): void {
 }
 requestAnimationFrame(frame);
 
-declare global { interface Window { __management?: { snapshot(): ReturnType<typeof managementAuthority.snapshot>; execute(value: unknown): ReturnType<typeof managementAuthority.execute>; compare(heroId: string, gearId: string): ReturnType<typeof managementAuthority.compareGear> } } }
+declare global { interface Window { __management?: { snapshot(): ReturnType<typeof managementAuthority.snapshot>; execute(value: unknown): ReturnType<typeof managementAuthority.execute>; compare(heroId: string, gearId: string): ReturnType<typeof managementAuthority.compareGear>; freezeAnimation(frozen: boolean): void } } }

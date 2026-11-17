@@ -11,6 +11,7 @@ import { campaignPresentation } from './core/selectors';
 import { getPartyHeroDefinition } from './core/party-definitions';
 import { welcomeLayout } from './welcome-layout';
 import { ellipsize } from './text-fit';
+import { roleIconName } from './management/role-icons';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -109,10 +110,18 @@ export class PixelUI {
   private async load(): Promise<void> {
     try {
       await loadFonts();
-      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png'];
+      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'icon-role-tank.png', 'icon-role-dps.png', 'icon-role-support.png'];
       await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
     } catch (error) { this.errors.push(String(error)); }
+  }
+  private drawManagementRole(ctx: CanvasRenderingContext2D, role: string, x: number, y: number): void {
+    const mapped = roleIconName(role), image = this.images.get(`icon-role-${mapped}.png`);
+    const colors = { tank: '#8dbfe3', dps: '#de7c80', support: '#90c99b' };
+    const left = Math.round(x), top = Math.round(y);
+    ctx.fillStyle = colors[mapped]; ctx.fillRect(left, top, 18, 18);
+    ctx.fillStyle = '#101820'; ctx.fillRect(left + 1, top + 1, 16, 16);
+    if (image) { ctx.imageSmoothingEnabled = false; ctx.drawImage(image, left + 1, top + 1, 16, 16); }
   }
   setPanel(tab: PanelTab | null): void {
     if (tab) { this.onPanelRequest(tab); return; }
@@ -400,8 +409,8 @@ export class PixelUI {
     if (key && face === 'silhouette') {
       const mask = document.createElement('canvas'); mask.width = rect.width; mask.height = artHeight;
       const m = mask.getContext('2d');
-      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
-    } else if (key) this.atlas.draw(ctx, key, 'idle', 0, cx, floorY, false, 1);
+      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', this.managementReveal ? Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())) : 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
+    } else if (key) this.atlas.draw(ctx, key, 'idle', this.managementReveal ? Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())) : 0, cx, floorY, false, 1);
     ctx.restore();
   }
   private drawRim(ctx: CanvasRenderingContext2D, rect: Rect, color: string, alpha: number): void {
@@ -453,7 +462,7 @@ export class PixelUI {
     const name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
     if (frame.showName) this.text(ctx, name, x + sx + Math.floor((sw - this.measureText(name, BODY, true)) / 2), spec.nameY, palette.text, BODY, true);
     if (frame.showRarity) { const label = pull.rarity.toUpperCase(); this.text(ctx, label, x + sx + Math.floor((sw - this.measureText(label, BODY, true)) / 2), spec.rarityY, tier.label, BODY, true); }
-    if (this.managementReveal && frame.done) this.text(ctx, getPartyHeroDefinition(pull.heroId).role.toUpperCase(), x + sx + 8, sy + sh - 16, palette.text, 10, true);
+    if (this.managementReveal && frame.done) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, x + sx + 8, sy + sh - 18);
     ctx.restore();
   }
   private drawTen(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number, compact = false): void {
@@ -482,7 +491,7 @@ export class PixelUI {
       else { name = ellipsize(name, 124, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY); }
       const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
       this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
-      if (this.managementReveal) { const role = getPartyHeroDefinition(pull.heroId).role.toUpperCase(); this.text(ctx, role, rect.x + 4, rect.y + 70, palette.text, 10, true); }
+      if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + 66);
       if (frame.badges) {
         this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
         if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
@@ -508,7 +517,7 @@ export class PixelUI {
     else { name = ellipsize(name, small.nameMaxPx, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY); }
     const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
     this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
-    if (this.managementReveal) { const role = getPartyHeroDefinition(pull.heroId).role.toUpperCase(); this.text(ctx, role, rect.x + 4, rect.y + artH - 14, palette.text, 10, true); }
+    if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + artH - 16);
     if (frame.badges) {
       this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
       if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);

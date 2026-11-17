@@ -38,6 +38,7 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 | books | https://merchant-shade.itch.io/16x16-mixed-rpg-icons | CC0-1.0 |
 | chests | https://merchant-shade.itch.io/16x16-mixed-rpg-icons | CC0-1.0 |
 | iron-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |
+| icon-role-tank, icon-role-dps, icon-role-support | original pixel art made for Taskbar Legends, CC0 1.0 |
 | steel-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |
 | bronze-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |
 | gold-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |

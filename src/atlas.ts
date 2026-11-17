@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CONFIG } from './config';
+import { idleFrameAt } from './management/animation';
 const rect = z.object({ x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive(), durationMs: z.number().positive() });
 const animation = z.object({ frames: z.array(z.number().int().nonnegative()).nonempty(), durationMs: z.number().positive(), loop: z.boolean(), aliasOf: z.string().optional() });
 const atlasSchema = z.object({ image: z.string(), anchor: z.object({ x: z.number(), y: z.number() }), frames: z.array(rect), animations: z.record(z.string(), animation) });
@@ -49,7 +50,18 @@ export class AtlasLibrary {
    * 1 px pad. Native 1×; callers scale by whole numbers only (CSS pixelated). Null until the atlas has loaded.
    */
   portrait(key: string): HTMLCanvasElement | null {
-    const loaded = this.loaded.get(key), index = loaded?.atlas.animations.idle?.frames[0], frame = index === undefined ? undefined : loaded?.atlas.frames[index];
+    const loaded = this.loaded.get(key), index = loaded?.atlas.animations.idle?.frames[0];
+    return index === undefined ? null : this.portraitFrame(key, index);
+  }
+  idleFrameCount(key: string): number { return this.loaded.get(key)?.atlas.animations.idle?.frames.length ?? 0; }
+  idleFrameDuration(key: string): number { return Math.max(125, this.loaded.get(key)?.atlas.animations.idle?.durationMs ?? 125); }
+  idleFrameIndex(key: string, elapsedMs: number): number {
+    const idle = this.loaded.get(key)?.atlas.animations.idle;
+    if (!idle?.frames.length) return 0;
+    return idle.frames[idleFrameAt(elapsedMs, idle.durationMs, idle.frames.length)] ?? idle.frames[0] ?? 0;
+  }
+  portraitFrame(key: string, index: number): HTMLCanvasElement | null {
+    const loaded = this.loaded.get(key), frame = loaded?.atlas.frames[index];
     if (!loaded || !frame) return null;
     const source = document.createElement('canvas'); source.width = frame.w; source.height = frame.h;
     const sctx = source.getContext('2d'); if (!sctx) return null;

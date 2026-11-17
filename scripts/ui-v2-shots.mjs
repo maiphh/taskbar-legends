@@ -12,6 +12,7 @@ try {
     await page.goto(base, { waitUntil: 'networkidle' });
     await page.evaluate(async () => {
       window.__game.pause();
+      window.__management?.freezeAnimation(true);
       await window.__game.whenReady();
       window.__game.setSeed(4721);
       window.__game.step(10000);
@@ -39,6 +40,7 @@ try {
       window.__game.load(state);
       window.__uiShotItems = equippedFixtures;
       window.__game.openPanel('home');
+      window.__management?.freezeAnimation(true);
     });
     await page.waitForSelector('#management:not([hidden]) [data-view="home"]');
     for (const screen of ['home', 'heroes', 'formation', 'gear', 'recruit', 'stages', 'settings']) {
