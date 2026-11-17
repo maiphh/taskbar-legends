@@ -866,7 +866,6 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .px-equip-prev { left:0; }
 .px-menu[data-layout="v2"] .px-equip-next { right:0; }
 .px-menu[data-layout="v2"] .px-equip-hero-meta { top:auto; bottom:0; }
-.px-menu[data-layout="v2"] .px-equip-drawer { height:224px; }
 .px-menu[data-layout="v2"] .px-equip-actions>.px-btn { min-height:40px; height:40px; font:12px/18px var(--game-font); }
 .px-menu[data-layout="v2"] .px-equip-actions>.px-equip-primary { min-height:48px; height:48px; }
 .px-menu[data-layout="v2"][data-preset="960"] .px-equip-drawer,
