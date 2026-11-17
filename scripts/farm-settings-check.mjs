@@ -27,7 +27,7 @@ const readText = async page => page.locator('#management .px-offline-summary').i
 try {
   await mkdir('artifacts', { recursive: true });
   const results = [];
-  for (const width of [480, 640, 960]) {
+  for (const width of [960, 1280]) {
     const context = await browser.newContext({ viewport: { width, height: 900 } });
     await context.addInitScript(sourceWidth => localStorage.setItem('taskbar-legends:compact-window:v1', JSON.stringify({ version: 1, sourceWidth, sourceHeight: 240, zoom: 1, placement: 'free', anchorX: 1, anchorY: 1 })), width);
     const page = await context.newPage(), errors = [];
@@ -49,8 +49,8 @@ try {
     assert.match(earnedText, /Earned by this formation/);
     await page.screenshot({ path: `artifacts/farm-settings-earned-${width}.png` });
 
-    if (width === 640) {
-      await page.locator('#management [data-tab="party"]').click();
+    if (width === 960) {
+      await page.locator('#management [data-tab="formation"]').click();
       await page.locator('[data-party-workspace="formation"]').click();
       await page.locator('[data-party-slot="0"]').click();
       await page.locator('[data-hero="mw2"]').click();
@@ -68,14 +68,15 @@ try {
         state.roster.find(hero => hero.id === 'hk1').equipment.weapon = id; window.__game.load(state); return id;
       });
       await page.waitForTimeout(250); // Let the real management snapshot poll adopt the loaded proof revision.
-      await page.locator('#management [data-tab="party"]').click();
+      await page.locator('#management [data-tab="formation"]').click();
       await page.locator('[data-party-slot="0"]').click(); await page.locator('[data-hero="hk1"]').click(); await page.locator('[data-assign="hk1"]').click();
       await page.waitForTimeout(400);
       const restoredFormation = await page.evaluate(() => ({ partyIds: window.__management.snapshot().partyIds,
         earned: window.__management.snapshot().offline.earned, status: document.querySelector('#management .management-status')?.textContent }));
       console.log(JSON.stringify({ width, restoredFormation }));
       assert.deepEqual(restoredFormation.partyIds, ['hk1', 'wiz', 'priest']); assert.equal(restoredFormation.earned, true);
-      await page.locator('#management [data-tab="upgrades"]').click();
+      await page.locator('#management [data-tab="gear"]').click();
+      await page.locator('[data-action="gear-upgrades"]').click();
       await page.locator(`#management [data-gear="${gearId}"]`).click();
       await page.locator('[data-action="upgrade"]').click();
       await page.waitForFunction(id => window.__management.snapshot().inventory.some(item => item.id === id && item.level === 1), gearId);

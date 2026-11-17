@@ -345,9 +345,114 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .px-offline-summary p { color: #b0bcc8; font: 11px/16px var(--game-font); white-space: normal; }
 .px-boss .px-btn-label { color: #de7c80; }
 
+/* UI layout v2 management window. Canvas lane styles above remain untouched. */
+body.management-window { min-width: 0; min-height: 0; width: 100vw; height: 100vh; overflow: hidden; background: #17212d; }
+body.management-window #management-app.px-menu[data-layout="v2"], #management.px-menu[data-layout="v2"] {
+  --px-panel-w: 1280px; --px-body-h: 588px; --px-v2-scale: 1;
+  position: fixed; inset: 0 auto auto 0; width: 1280px; height: 720px; margin: 0; overflow: hidden;
+  transform: scale(var(--px-v2-scale, 1)); transform-origin: top left; background: #17212d; color: #f2e9cf;
+}
+.px-menu[data-layout="v2"]::before { border: 2px solid #536276; }
+.px-menu[data-layout="v2"] { --game-font:"GamePixel", "GameSymbols", monospace; }
+.px-menu[data-layout="v2"] h1 { left: 24px; top: 14px; font: 700 24px/28px var(--game-font); }
+.px-menu[data-layout="v2"] .management-header { position:absolute; inset:0 0 auto; height:56px; border-bottom:1px solid #536276; }
+.px-menu[data-layout="v2"] .px-wallet { position:absolute; right:64px; top:18px; gap:14px; font:12px/20px var(--game-font); }
+.px-menu[data-layout="v2"] .px-run { display:none; }
+.px-menu[data-layout="v2"] .px-close { left:auto; right:16px; top:8px; width:40px; height:40px; }
+.px-menu[data-layout="v2"] nav { position:absolute; left:0; top:56px; bottom:0; width:80px; height:auto; padding:16px 8px; display:flex; flex-direction:column; gap:8px; background:#111923; border-right:1px solid #536276; }
+.px-menu[data-layout="v2"] nav .px-nav { position:relative; inset:auto; width:64px; min-height:64px; height:64px; padding:4px 0; flex-direction:column; gap:0; border:0; border-image:none; color:#b0bcc8; background:transparent; font:10px/14px var(--game-font); }
+.px-menu[data-layout="v2"] nav .px-nav.is-selected { background:#354a59; box-shadow:inset 3px 0 #e9bd68; color:#fff0ac; }
+.px-menu[data-layout="v2"] .nav-icon { height:32px; display:grid; place-items:center; font:24px/30px var(--game-font); color:#e9bd68; }
+.px-menu[data-layout="v2"] .nav-icon .px-icon, .px-menu[data-layout="v2"] .nav-icon .px-portrait { width:32px; height:32px; object-fit:contain; image-rendering:pixelated; }
+.px-menu[data-layout="v2"] .campaign-row, .px-menu[data-layout="v2"] .management-status, .px-menu[data-layout="v2"] .px-divider { display:none; }
+.px-menu[data-layout="v2"] main { position:absolute; left:96px; top:64px; width:1168px; height:600px; overflow:auto; padding:16px 8px 12px; }
+.px-menu[data-layout="v2"] main > h2:not(.px-sr) { position:static; clip:auto; width:auto; height:32px; margin:0 0 8px; color:#e9bd68; font:700 24px/32px var(--game-font); }
+.px-menu[data-layout="v2"] .px-footer { position:absolute; left:96px; right:16px; bottom:8px; top:auto; height:48px; }
+.px-menu[data-layout="v2"] .px-footer:empty { display:none; }
+.px-menu[data-layout="v2"] .px-footer .px-btn { min-height:40px; }
+.px-menu[data-layout="v2"] .px-btn { min-height:40px; height:40px; font:12px/18px var(--game-font); }
+.px-menu[data-layout="v2"] .px-large-action { min-width:180px; height:48px; }
+.px-menu[data-layout="v2"] .px-home-layout { display:grid; grid-template-columns: 1.2fr .8fr; grid-template-rows:160px 1fr; gap:16px; height:520px; }
+.px-menu[data-layout="v2"] .px-home-layout section, .px-menu[data-layout="v2"] .px-stage-detail { padding:16px; background:#202c39; border:1px solid #7a7568; }
+.px-menu[data-layout="v2"] .px-home-layout h3 { color:#f2e9cf; }
+.px-menu[data-layout="v2"] .px-home-campaign { grid-row:1; }
+.px-menu[data-layout="v2"] .px-home-campaign strong { display:block; margin:4px 0; color:#e9bd68; font:700 28px/34px var(--game-font); }
+.px-menu[data-layout="v2"] .px-home-actions { display:flex; gap:8px; margin-top:12px; }
+.px-menu[data-layout="v2"] .px-home-offline { grid-column:2; grid-row:1; }
+.px-menu[data-layout="v2"] .px-home-formation { grid-column:1; grid-row:2; }
+.px-menu[data-layout="v2"] .px-home-roster { grid-column:2; grid-row:2; }
+.px-menu[data-layout="v2"] .px-home-party { display:flex; gap:12px; margin:12px 0; }
+.px-menu[data-layout="v2"] .px-home-hero { width:31%; min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; border:1px solid #7a7568; background:#202c39; color:#f2e9cf; cursor:pointer; }
+.px-menu[data-layout="v2"] .px-home-hero img { width:96px; height:150px; object-fit:contain; image-rendering:pixelated; }
+.px-menu[data-layout="v2"] .px-home-hero span, .px-menu[data-layout="v2"] .px-home-hero small { color:#b0bcc8; font:10px/14px var(--game-font); }
+.px-menu[data-layout="v2"] .px-chapter-rail { display:flex; gap:8px; margin-bottom:8px; }
+.px-menu[data-layout="v2"] .px-chapter { width:64px; height:40px; border:1px solid #536276; background:#202c39; color:#b0bcc8; font:12px var(--game-font); }
+.px-menu[data-layout="v2"] .px-chapter.active { color:#e9bd68; box-shadow:inset 0 -2px #e9bd68; }
+.px-menu[data-layout="v2"] .px-stage-grid { display:grid; grid-template-columns:repeat(5, minmax(80px,1fr)); grid-template-rows:repeat(2,64px); gap:8px; margin-bottom:12px; }
+.px-menu[data-layout="v2"] .px-stage-node { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#293948; border:2px solid #536276; color:#b0bcc8; font:12px/16px var(--game-font); }
+.px-menu[data-layout="v2"] .px-stage-node small { font:10px/12px var(--game-font); }
+.px-menu[data-layout="v2"] .px-stage-node.is-cleared { border-color:#90c99b; }
+.px-menu[data-layout="v2"] .px-stage-node.is-current { border-color:#e9bd68; color:#fff0ac; }
+.px-menu[data-layout="v2"] .px-stage-node.is-boss { border-color:#de7c80; }
+.px-menu[data-layout="v2"] .px-stage-detail { min-height:220px; }
+.px-menu[data-layout="v2"] .px-stage-detail > b { color:#f2e9cf; }
+.px-menu[data-layout="v2"] .px-stage-detail > div { display:flex; gap:8px; margin:12px 0; }
+.px-menu[data-layout="v2"] .px-stage-detail small { color:#b0bcc8; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banners { position:static; width:100%; height:220px; grid-template-columns:1fr 1fr 1.4fr; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-history { position:static; width:100%; height:220px; margin-top:12px; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-list { overflow:auto; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner { background:#202c39; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner .px-pview { max-height:120px; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-settings { position:static; width:100%; height:auto; display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; overflow:visible; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-offline-summary { grid-column:1/-1; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-srow { min-height:48px; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-filters { position:static; margin-bottom:8px; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-left { position:static; width:calc(100% - 300px); height:430px; overflow:auto; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector { left:auto; right:0; top:48px; width:280px; height:430px; }
+.px-menu[data-layout="v2"] main[data-view="heroes"] .px-loadout { padding:0 12px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] { --px-panel-w:960px; --px-body-h:500px; width:960px; height:640px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] nav { top:auto; left:0; right:0; bottom:0; width:auto; height:64px; padding:0 12px; flex-direction:row; justify-content:space-around; border-right:0; border-top:1px solid #536276; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] nav .px-nav { flex:1; height:60px; min-height:60px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] nav .px-nav.is-selected { box-shadow:inset 0 -3px #e9bd68; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] main { left:16px; top:64px; width:928px; height:500px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-footer { left:16px; right:16px; bottom:72px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-home-layout { grid-template-columns:1fr 1fr; height:440px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { min-height:200px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-stage-grid { grid-template-columns:repeat(5, minmax(52px,1fr)); }
+@media (max-width: 959px), (max-height: 639px) {
+  #management.px-menu[data-layout="v2"] { left:calc((100vw - 960px)/2); top:calc((100vh - 640px)/2); }
+}
+.px-menu[data-layout="v2"] .px-push-heading { display:flex; align-items:center; gap:12px; height:48px; margin:0 0 12px; }
+.px-menu[data-layout="v2"] .px-push-heading h2 { position:static; width:auto; height:auto; color:#e9bd68; font:700 24px/32px var(--game-font); }
+.px-menu[data-layout="v2"] .px-howto-card { width:320px; min-height:400px; margin:24px auto; padding:20px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; background:#202c39; border:2px solid #536276; }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="rare"] { border-color:var(--px-rarity-rare); }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="epic"] { border-color:var(--px-rarity-epic); }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="legendary"] { border-color:var(--px-rarity-legendary); }
+.px-menu[data-layout="v2"] .px-howto-portrait { width:128px; height:160px; display:grid; place-items:center; background:#17212d; }
+.px-menu[data-layout="v2"] .px-howto-portrait img { max-width:100%; max-height:100%; image-rendering:pixelated; }
+.px-menu[data-layout="v2"] .px-howto-card h3 { color:#f2e9cf; font:700 20px/28px var(--game-font); }
+.px-menu[data-layout="v2"] .px-howto-odds { display:flex; flex-direction:column; gap:2px; margin:8px 0; }
+.px-menu[data-layout="v2"] .px-howto-odds strong { color:#e9bd68; font:700 24px/32px var(--game-font); }
+.px-menu[data-layout="v2"] .px-howto-odds small { color:#b0bcc8; font:10px/14px var(--game-font); }
+.px-menu[data-layout="v2"] .px-locked-hero .px-locked-art { filter:grayscale(1) brightness(.36); }
+@media (max-width: 1199px) {
+  .px-menu[data-layout="v2"], #management.px-menu[data-layout="v2"], #management-app.px-menu[data-layout="v2"][data-preset="960"] { --px-panel-w:960px; --px-body-h:500px; width:960px; height:640px; }
+  .px-menu[data-layout="v2"] .px-home-layout { height:440px; }
+}
+@media (max-width: 1199px) {
+  body.management-window #management-app.px-menu[data-layout="v2"] { --px-panel-w:960px; --px-body-h:500px; width:960px; height:640px; }
+  .px-menu[data-layout="v2"] nav { top:auto; left:0; right:0; bottom:0; width:auto; height:64px; padding:0 12px; flex-direction:row; justify-content:space-around; border-right:0; border-top:1px solid #536276; }
+  .px-menu[data-layout="v2"] nav .px-nav { flex:1; height:60px; min-height:60px; }
+  .px-menu[data-layout="v2"] nav .px-nav.is-selected { box-shadow:inset 0 -3px #e9bd68; }
+  .px-menu[data-layout="v2"] main { left:16px; top:64px; width:928px; height:500px; }
+  .px-menu[data-layout="v2"] .px-footer { left:16px; right:16px; bottom:72px; }
+  .px-menu[data-layout="v2"] .px-home-layout { grid-template-columns:1fr 1fr; }
+  .px-menu[data-layout="v2"] .px-home-hero { min-height:200px; }
+  .px-menu[data-layout="v2"] .px-stage-grid { grid-template-columns:repeat(5, minmax(52px,1fr)); }
+}
+
 /* Native management window (compactMenu.native, Game Lead answer 3): integer scale, letterbox, internal scroll. */
-body.management-window { margin: 0; min-width: 0; min-height: 100vh; background: #0d121b; overflow: auto; }
-body.management-window #management-app.px-menu { position: relative; margin: 0 auto; transform: scale(var(--px-scale, 1)); transform-origin: top center; top: max(0px, calc((100vh - 560px * var(--px-scale, 1)) / 2)); }
+body.management-window { margin: 0; min-width: 0; min-height: 100vh; background: #0d121b; overflow: hidden; }
 
 /* Centered hero loadout: stage, item strip, then hero strip. Scoped to Heroes only. */
 .px-menu main[data-view="party"] .px-loadout { position: relative; display: grid; height: 100%; min-width: 0; padding: 0 12px 4px; grid-template-rows: 24px 112px 56px 56px; gap: 4px; overflow: hidden; }

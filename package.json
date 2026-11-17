@@ -20,7 +20,8 @@
     "measure:aac": "tsx scripts/measure-aac-offset.ts",
     "sim:v14": "tsx scripts/v14-targets.ts",
     "sim:v14:off": "tsx scripts/v14-targets.ts --rules none",
-    "shot:lock": "tsx scripts/shot-lock.ts"
+    "shot:lock": "tsx scripts/shot-lock.ts",
+    "shot:ui-v2": "node scripts/ui-v2-shots.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",

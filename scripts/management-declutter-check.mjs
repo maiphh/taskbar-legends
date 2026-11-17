@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 const baseUrl = process.env.MANAGEMENT_BASE_URL ?? 'http://127.0.0.1:5173/';
 const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const browser = await chromium.launch({ executablePath, headless: true });
-const page = await browser.newPage({ viewport: { width: 480, height: 480 } });
+const page = await browser.newPage({ viewport: { width: 960, height: 640 } });
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 try {
@@ -20,7 +20,7 @@ try {
   await page.locator('#compact-menu-button').click();
   await page.locator('#management').waitFor({ state: 'visible' });
   await page.locator('[data-party-workspace="formation"]').click();
-  await page.locator('#management').screenshot({ path: 'artifacts/management-formation-480.png' });
+  await page.locator('#management').screenshot({ path: 'artifacts/management-formation-960.png' });
   const bounds = await page.evaluate(() => {
     const root = document.querySelector('#management'), view = root.querySelector('.px-formation-view');
     const actions = root.querySelector('.px-formation-assign'); return { viewport: innerWidth, scrollWidth: root.scrollWidth, clientWidth: root.clientWidth, view: view.getBoundingClientRect().toJSON(), slots: [...root.querySelectorAll('[data-party-slot]')].map(node => node.getBoundingClientRect().toJSON()), roster: root.querySelector('[data-scroll="formation-roster"]').getBoundingClientRect().toJSON(), actions: { text: actions.innerText, bounds: actions.getBoundingClientRect().toJSON(), position: getComputedStyle(actions).position } };
@@ -35,7 +35,7 @@ try {
   await page.mouse.move(transitionBox.x + transitionBox.width / 2 + 12, transitionBox.y + transitionBox.height / 2);
   await page.locator('[data-tab="recruit"]').focus(); await page.keyboard.press('Enter'); await page.mouse.up();
   assert.deepEqual(await page.evaluate(() => window.__management.snapshot().partyIds), transitionBefore, 'tab change cancels an active drag');
-  await page.locator('[data-tab="party"]').click();
+  await page.locator('[data-tab="formation"]').click();
   transitionBox = await page.locator('[data-party-slot="0"]').boundingBox();
   await page.mouse.move(transitionBox.x + transitionBox.width / 2, transitionBox.y + transitionBox.height / 2); await page.mouse.down();
   await page.mouse.move(transitionBox.x + transitionBox.width / 2 + 12, transitionBox.y + transitionBox.height / 2);
@@ -105,7 +105,7 @@ try {
   const help = page.locator('#px-management-tooltip');
   await help.waitFor({ state: 'visible' });
   const tooltipBox = await help.boundingBox();
-  assert.ok(tooltipBox.x >= 0 && tooltipBox.y >= 0 && tooltipBox.x + tooltipBox.width <= 480 && tooltipBox.y + tooltipBox.height <= 480, `tooltip outside viewport: ${JSON.stringify(tooltipBox)}`);
+  assert.ok(tooltipBox.x >= 0 && tooltipBox.y >= 0 && tooltipBox.x + tooltipBox.width <= 960 && tooltipBox.y + tooltipBox.height <= 960, `tooltip outside viewport: ${JSON.stringify(tooltipBox)}`);
   await page.keyboard.press('Escape'); await help.waitFor({ state: 'hidden' });
   assert.equal(await page.locator('[data-help-toggle]').getAttribute('aria-describedby'), null, 'Escape removes aria-describedby');
   const formationHelpToggle = page.locator('[data-help-toggle]').first();
@@ -117,17 +117,17 @@ try {
   await page.mouse.click(476, 180); await help.waitFor({ state: 'hidden' });
   assert.equal(await formationHelpToggle.getAttribute('aria-describedby'), null, 'document outside click clears pinned tooltip description');
   await formationHelpToggle.click(); await help.waitFor({ state: 'visible' });
-  await page.locator('[data-tab="party"]').click();
+  await page.locator('[data-tab="formation"]').click();
   await page.waitForFunction(() => document.querySelector('#px-management-tooltip')?.hidden === true);
   assert.equal(await formationHelpToggle.getAttribute('aria-describedby'), null, 'tab change clears pinned tooltip description');
-  await page.locator('#management').screenshot({ path: 'artifacts/management-formation-480-after.png' });
+  await page.locator('#management').screenshot({ path: 'artifacts/management-formation-960-after.png' });
   const viewportChecks = [];
-  for (const width of [640, 960]) {
-    await page.setViewportSize({ width, height: 480 });
+  for (const width of [960, 1280]) {
+    await page.setViewportSize({ width, height: width === 1280 ? 720 : 640 });
     await page.locator('#management').screenshot({ path: `artifacts/management-formation-${width}.png` });
     viewportChecks.push(await page.evaluate(() => ({ width: innerWidth, root: document.querySelector('#management').getBoundingClientRect().toJSON(), scrollWidth: document.querySelector('#management').scrollWidth })));
   }
-  const touchContext = await browser.newContext({ viewport: { width: 640, height: 640 }, hasTouch: true, isMobile: true });
+  const touchContext = await browser.newContext({ viewport: { width: 960, height: 640 }, hasTouch: true, isMobile: true });
   try {
     const touchPage = await touchContext.newPage(); await touchPage.goto(baseUrl);
     await touchPage.waitForFunction(() => !!window.__game && !!window.__management);
@@ -172,15 +172,15 @@ try {
     await touchPage.waitForFunction(() => window.__management.snapshot().partyIds[1] === 'fw', undefined, { timeout: 3000 }).catch(async () => { console.log('touch result', await touchPage.evaluate(() => ({ party: window.__management.snapshot().partyIds, status: document.querySelector('.management-status').textContent, scrollTop: document.querySelector('[data-scroll="formation-roster"]').scrollTop, log: window.__touchLog }))); throw new Error('touch grip did not assign'); });
     assert.notEqual((await touchPage.evaluate(() => window.__management.snapshot().partyIds))[1], beforeTouch[1], 'explicit touch grip replaces a slot');
   } finally { await touchContext.close(); }
-  await page.setViewportSize({ width: 480, height: 480 });
+  await page.setViewportSize({ width: 960, height: 640 });
   await page.locator('[data-tab="recruit"]').click();
-  await page.screenshot({ path: 'artifacts/management-recruit-480.png' });
+  await page.screenshot({ path: 'artifacts/management-recruit-960.png' });
   await page.locator('[data-control="recruit-help"]').focus();
   await help.waitFor({ state: 'visible' });
   assert.match(await help.innerText(), /Actual rates:/);
   await page.keyboard.press('Escape');
   await page.locator('[data-tab="settings"]').click();
-  await page.screenshot({ path: 'artifacts/management-settings-480.png' });
+  await page.screenshot({ path: 'artifacts/management-settings-960.png' });
   assert.equal(await page.locator('.px-offline-summary p').count(), 1, 'offline summary keeps rates concise');
   assert.equal(await page.locator('[data-slider="music"]').isVisible(), false, 'secondary audio sliders start in the mixer disclosure');
   await page.locator('.px-mixer summary').click();
@@ -193,10 +193,10 @@ try {
   await page.locator('#management [data-close]').click();
   assert.equal(await recoveryHelp.getAttribute('aria-describedby'), null, 'closing management clears tooltip description');
   await help.waitFor({ state: 'hidden' });
-  await page.setViewportSize({ width: 760, height: 560 });
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.evaluate(async () => {
     const { ManagementView } = await import('/src/management/view.ts');
-    const root = document.createElement('div'); root.id = 'management-native-standin'; document.body.append(root);
+    const root = document.createElement('div'); root.id = 'management-app'; document.body.classList.add('management-window'); document.body.append(root);
     const client = {
       snapshot: async () => window.__management.snapshot(),
       execute: async (action, revision, requestId) => { const reply = await window.__management.execute({ clientId: 'native-standin', requestId, expectedRevision: revision, action }); return { ...reply, requestId }; },
@@ -208,7 +208,7 @@ try {
       setCompactPrefs: async () => undefined,
       close: () => undefined,
     };
-    const view = new ManagementView(root, client, () => undefined, { variant: 'native' }); window.__nativeStandin = { root, view }; await view.open('party');
+    const view = new ManagementView(root, client, () => undefined, { variant: 'native' }); window.__nativeStandin = { root, view }; await view.open('formation');
   });
   await page.locator('#management-native-standin [data-party-workspace="formation"]').click();
   await page.locator('#management-native-standin .px-formation-view').waitFor();
@@ -216,9 +216,9 @@ try {
   await page.locator('body > .px-tooltip:visible').last().waitFor({ state: 'visible' });
   const nativeTooltip = await page.locator('#management-native-standin [data-drag-hero="ew3"]').getAttribute('aria-describedby');
   const nativeTooltipBounds = await page.locator('body > .px-tooltip:visible').last().boundingBox();
-  assert.ok(nativeTooltipBounds.x >= 0 && nativeTooltipBounds.y >= 0 && nativeTooltipBounds.x + nativeTooltipBounds.width <= 760 && nativeTooltipBounds.y + nativeTooltipBounds.height <= 560, `native tooltip outside viewport: ${JSON.stringify(nativeTooltipBounds)}`);
-  await page.locator('#management-native-standin').screenshot({ path: 'artifacts/management-formation-native-760x560.png' });
-  await page.evaluate(() => window.__nativeStandin.view.dispose());
+  assert.ok(nativeTooltipBounds.x >= 0 && nativeTooltipBounds.y >= 0 && nativeTooltipBounds.x + nativeTooltipBounds.width <= 1280 && nativeTooltipBounds.y + nativeTooltipBounds.height <= 720, `native tooltip outside viewport: ${JSON.stringify(nativeTooltipBounds)}`);
+  await page.locator('#management-native-standin').screenshot({ path: 'artifacts/management-formation-native-1280x720.png' });
+  await page.evaluate(() => { window.__nativeStandin.view.dispose(); document.body.classList.remove('management-window'); });
   assert.deepEqual(errors, [], `browser errors: ${errors.join('; ')}`);
   console.log(JSON.stringify({ passed: true, bounds, before, afterSlotSwap, afterReplace: await page.evaluate(() => window.__management.snapshot().partyIds), staleExternal: external, tickBefore, tickDuringDrag, tooltip: tooltipBox, nativeTooltip, nativeTooltipBounds, viewportChecks }));
 } finally { await browser.close(); }

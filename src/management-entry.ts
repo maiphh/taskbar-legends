@@ -8,7 +8,6 @@ import type { HeroGearComparison } from './management/authority';
 import type { CompactPrefs } from './platform/desktop/compact-geometry';
 import type { Action } from './core/model';
 import { NativeRpc } from './management/native-rpc';
-import { CONFIG } from './config';
 
 type AudioValue = Awaited<ReturnType<ManagementClient['getAudio']>>;
 interface ReplyEnvelope { requestId: string; accepted: boolean; snapshot?: unknown; result?: unknown; reason?: string }
@@ -60,9 +59,15 @@ const root = document.getElementById('management-app');
 if (!root) throw new Error('Management root is missing');
 const client = new NativeManagementClient();
 const view = new ManagementView(root, client, () => { root.hidden = true; }, { variant: 'native' });
-// Native resize (Game Lead answer 3): the 760×560 panel scales by whole integers and letterboxes; below 760×560 it scrolls.
-const [panelWidth = 760, panelHeight = 560] = CONFIG.ui.compactMenu.native.client;
-const fit = (): void => { root.style.setProperty('--px-scale', String(Math.max(1, Math.floor(Math.min(window.innerWidth / panelWidth, window.innerHeight / panelHeight))))); };
+// UI v2 uses only the two approved presets and whole-number zoom.
+const fit = (): void => {
+  const wide = window.innerWidth >= 1280 && window.innerHeight >= 720, width = wide ? 1280 : 960, height = wide ? 720 : 640;
+  const scale = window.innerWidth >= width * 2 && window.innerHeight >= height * 2 ? 2 : 1;
+  root.style.setProperty('--px-v2-scale', String(scale));
+  root.dataset.preset = wide ? '1280' : '960';
+  root.style.left = `${Math.floor((window.innerWidth - width * scale) / 2)}px`;
+  root.style.top = `${Math.floor((window.innerHeight - height * scale) / 2)}px`;
+};
 window.addEventListener('resize', fit); fit();
 let stopOpen: (() => void) | undefined, stopClose: (() => void) | undefined;
 const onVisibility = (): void => { if (document.hidden) view.close(); else void view.open(); };

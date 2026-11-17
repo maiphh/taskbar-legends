@@ -87,48 +87,13 @@ function managementClient(): ManagementClient {
     cue: key => { audio.play(key); },
   };
 }
-const MENU_TOKENS = CONFIG.ui.compactMenu.browser;
-/**
- * Browser dock (compact-menu.md §5): the PARTY CAMP panel sits 8 px above the lane when the viewport has room for
- * lane + gap + panel (the lane is then bottom-anchored, like the native window at the taskbar), otherwise directly below
- * it. Width is W-16 (624 at W=640), 720 once W ≥ 736; it never overlaps the lane.
- */
 function dockManagement(): void {
   if ('__TAURI_INTERNALS__' in window) return;
-  if (nativeMenuShot) { managementRoot.style.left = '0px'; managementRoot.style.top = '0px'; return; }
-  const app = element('app'), laneHeight = app.getBoundingClientRect().height, [, , , panelHeight = 400] = MENU_TOKENS.panel, gap = MENU_TOKENS.gapPx;
-  // The side is chosen once per open (§5: the window resizes once; switching tabs or the one-shot growth never re-docks).
-  const above = openDock?.above ?? window.innerHeight >= laneHeight + gap + panelHeight;
-  document.body.classList.toggle('compact-dock-above', above);
-  // W is the page viewport (the browser stand-in for the compact window): 624 at 640, 720 from 736 up.
-  const lane = app.getBoundingClientRect(), width = window.innerWidth >= 736 ? 720 : Math.max(320, Math.min(MENU_TOKENS.panelSize[0] ?? 624, window.innerWidth - 16));
-  // Below keeps the 8 px gap (window 640×568, top edge fixed, bottom grows — see growForDock); never collapse the gap.
-  const top = above ? lane.top - gap - panelHeight : lane.bottom + gap;
-  managementRoot.style.setProperty('--px-panel-w', `${width}px`);
-  // Document coordinates (the panel lives on <body>): a viewport too short for lane + panel scrolls instead of overlapping.
-  managementRoot.style.left = `${Math.round(window.scrollX + Math.max(0, Math.min(lane.left + 8, window.innerWidth - width - 8)))}px`; managementRoot.style.top = `${Math.round(window.scrollY + top)}px`;
-  managementRoot.dataset.dock = above ? 'above' : 'below';
+  managementRoot.style.left = '0px'; managementRoot.style.top = '0px';
+  managementRoot.dataset.dock = 'overlay';
 }
-/** Dock side and one-shot window growth for the open panel; null while the panel is closed. */
-let openDock: { above: boolean; grewBy: number } | null = null;
-/**
- * Window on open is lane + 8 + panel (640×568, compact-menu.md §5). Docked below, the top edge stays fixed and the bottom
- * grows once by the shortfall, so the page never scrolls; close restores it once. `resizeBy` is honoured by standalone /
- * script-opened windows; `data-window-height` publishes the requested client height for hosts (and the shot harness)
- * that size the window themselves.
- */
-function growForDock(): void {
-  if ('__TAURI_INTERNALS__' in window || nativeMenuShot || openDock) return;
-  const laneHeight = element('app').getBoundingClientRect().height, [, , , panelHeight = 400] = MENU_TOKENS.panel, need = Math.ceil(laneHeight + MENU_TOKENS.gapPx + panelHeight);
-  const above = window.innerHeight >= need, grewBy = above ? 0 : Math.max(0, need - window.innerHeight);
-  openDock = { above, grewBy };
-  if (grewBy > 0) { try { window.resizeBy(0, grewBy); } catch { /* not resizable from script */ } managementRoot.dataset.windowHeight = String(need); }
-}
-function shrinkAfterDock(): void {
-  if (!openDock) return;
-  const { grewBy } = openDock; openDock = null; delete managementRoot.dataset.windowHeight;
-  if (grewBy > 0) { try { window.resizeBy(0, -grewBy); } catch { /* not resizable from script */ } }
-}
+function growForDock(): void { /* Management overlays the browser viewport without resizing the lane. */ }
+function shrinkAfterDock(): void { /* The browser overlay does not resize its viewport. */ }
 /** Compact HUD buttons follow the lane's source-pixel scale (zoom / devicePixelRatio). */
 function syncCompactScale(): void {
   const z = (compactPrefs?.zoom ?? 1) / (window.devicePixelRatio || 1);
@@ -142,12 +107,13 @@ function domHitRegions(): HitRegion[] {
   if (!managementRoot.hidden) add(managementRoot, 'panel', 'management');
   return regions;
 }
-function openManagement(tab: 'party' | 'stash' | 'recruit' | 'upgrades' | 'settings' = 'party'): void {
+function openManagement(tab: 'home' | 'heroes' | 'formation' | 'gear' | 'recruit' | 'stages' | 'settings' | 'party' | 'stash' | 'upgrades' = 'home'): void {
   if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; shrinkAfterDock(); element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
   if (managementRoot.hidden) growForDock();
-  dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open(tab);
+  const destination = tab === 'party' ? 'heroes' : tab === 'stash' || tab === 'upgrades' ? 'gear' : tab;
+  dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open(destination);
 }
-renderer.ui.onPanelRequest = tab => openManagement(tab === 'heroes' ? 'party' : tab === 'gear' ? 'stash' : 'recruit');
+renderer.ui.onPanelRequest = tab => openManagement(tab === 'heroes' ? 'heroes' : tab === 'gear' ? 'gear' : tab === 'recruit' ? 'recruit' : 'home');
 function setEditing(value: boolean): void {
   const overlay = document.getElementById('edit-overlay'); if (overlay) overlay.toggleAttribute('hidden', !value);
   // Done takes Edit's rect while editing (compact-menu.md §2.3); the lane draws the gold/ink HUD-band frame.
@@ -325,7 +291,7 @@ const debug: GameDebug = {
   },
   getEvents: () => structuredClone(state.events), getHitRegions: () => [...renderer.getHitRegions(), ...domHitRegions()], getManagementReveal: () => managementView?.revealState() ?? null, getLayout: () => renderer.getLayout(),
   getCombatProjection: (source = state) => renderer.getCombatProjection(source),
-  openPanel: tab => { if (tab) openManagement(tab === 'heroes' ? 'party' : tab === 'gear' ? 'stash' : 'recruit'); else managementView?.close(); },
+  openPanel: tab => { if (tab) openManagement(tab === 'heroes' ? 'heroes' : tab === 'gear' ? 'gear' : tab === 'recruit' ? 'recruit' : tab === 'formation' ? 'formation' : tab === 'stages' ? 'stages' : tab === 'settings' ? 'settings' : 'home'); else managementView?.close(); },
   whenReady: () => Promise.all([renderer.atlases.ready, renderer.ui.ready]).then(() => { render(); }),
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
   setV14Rules: rules => { setV14Rules(rules); render(); return activeV14Rules(); }, getV14Rules: () => activeV14Rules(),

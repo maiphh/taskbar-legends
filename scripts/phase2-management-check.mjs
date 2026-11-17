@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 
 const baseUrl = process.env.PHASE2_BASE_URL ?? 'http://127.0.0.1:5173/';
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_EXECUTABLE_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
-const context = await browser.newContext({ viewport: { width: 960, height: 360 } });
+const context = await browser.newContext({ viewport: { width: 960, height: 640 } });
 const errors = [];
 // PixelUI dropdowns (ui/compact-menu.md §4) replace native <select>: open the 9-slice button, click the 20 px option row.
 const pick = async (page, name, value) => {
@@ -51,12 +51,12 @@ try {
   await page.locator('#compact-menu-button').click();
   await page.locator('#management').waitFor({ state: 'visible' });
   assert.equal(await page.evaluate(() => window.__managementTimerCount), 1, 'open starts one management poll timer');
-  for (const tab of ['party', 'stash', 'recruit', 'upgrades', 'settings']) {
+  for (const tab of ['home', 'heroes', 'formation', 'gear', 'recruit', 'stages', 'settings']) {
     await page.locator(`[data-tab="${tab}"]`).click();
-    await page.locator('main h2').getByText(tab[0].toUpperCase() + tab.slice(1)).waitFor();
+    await page.waitForFunction(name => document.querySelector(`#management [data-view="${name}"]`), tab);
   }
 
-  await page.locator('[data-tab="party"]').click();
+  await page.locator('[data-tab="formation"]').click();
   await pick(page, 'party-preset', 'fastFarm');
   await page.waitForFunction(() => window.__management.snapshot().partyPreset === 'fastFarm');
   let partySnapshot = await page.evaluate(() => window.__management.snapshot());
@@ -121,7 +121,7 @@ try {
   await page.locator('[data-tab="recruit"]').click();
   await page.locator('#management main ol li').first().waitFor();
 
-  await page.locator('[data-tab="stash"]').click();
+  await page.locator('[data-tab="gear"]').click();
   await pick(page, 'slot', 'weapon');
   const filter = page.locator('[data-dd-toggle="slot"]');
   await filter.focus();
@@ -146,7 +146,8 @@ try {
   await page.waitForFunction(id => window.__game.getState().roster.find(hero => hero.id === 'mw2').equipment.weapon === id, gearId);
   await page.locator('[data-action="upgrade"]').click();
   await page.waitForFunction(id => window.__game.getState().inventory.find(item => item.id === id).level === 1, gearId);
-  await page.locator('[data-tab="upgrades"]').click();
+  await page.locator('[data-tab="gear"]').click();
+  await page.locator('[data-action="gear-upgrades"]').click();
   await page.locator(`[data-gear="${gearId}"]`).click();
   await page.locator('[data-action="upgrade"]').click();
   await page.waitForFunction(id => window.__management.snapshot().inventory.find(item => item.id === id).level === 2, gearId);
@@ -187,7 +188,7 @@ try {
   await page.waitForFunction(tickets => window.__management.snapshot().tickets === tickets - 1, ticketsBeforeSecondAction);
   assert.equal(await page.evaluate(() => window.__management.snapshot().revision), revisionBeforeSecondAction + 1, 'reopened view has one active click handler');
 
-  await page.locator('[data-tab="stash"]').click();
+  await page.locator('[data-tab="gear"]').click();
   await pick(page, 'owner', 'mw1');
   assert.equal(await picked(page, 'owner'), 'mw1', 'owner filter retains its own selected value');
   assert.equal(await picked(page, 'hero'), 'mw2', 'comparison target remains independent from the owner filter');
@@ -232,8 +233,8 @@ try {
   assert.equal(keys.preview.format, 'taskbar-legends-save-v2');
   assert.equal(keys.preview.state.combatRules, 'party-v2');
   const screenshots = [];
-  for (const width of [480, 640, 960]) {
-    const captureContext = await browser.newContext({ viewport: { width, height: 360 } });
+  for (const width of [960, 1280]) {
+    const captureContext = await browser.newContext({ viewport: { width, height: 640 } });
     try {
       await captureContext.addInitScript(prefs => localStorage.setItem('taskbar-legends:compact-window:v1', JSON.stringify(prefs)), {
         version: 1, sourceWidth: width, sourceHeight: 160, zoom: 1, placement: 'free', anchorX: 1, anchorY: 1,
@@ -249,19 +250,20 @@ try {
       await capture.locator('#management').waitFor({ state: 'visible' });
       screenshots.push(`shots/phase2-compact-${width}-management.png`);
       await capture.screenshot({ path: screenshots.at(-1) });
-      if (width === 480) {
-        await capture.locator('[data-hero-detail="ability"]').click();
-        screenshots.push('shots/phase2-hero-ability-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+      if (width === 960) {
+        await capture.locator('[data-tab="heroes"]').click();
+        await capture.locator('[data-details-open]').click();
+        screenshots.push('shots/phase2-hero-detail-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
         await capture.locator('[data-hero-detail="stats"]').click();
-        screenshots.push('shots/phase2-hero-stats-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+        screenshots.push('shots/phase2-hero-stats-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
         await capture.locator('[data-hero-detail="items"]').click();
-        screenshots.push('shots/phase2-hero-items-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+        screenshots.push('shots/phase2-hero-items-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
         await capture.locator('[data-party-workspace="formation"]').click();
-        screenshots.push('shots/phase2-formation-480.png'); await capture.screenshot({ path: screenshots.at(-1) });
+        screenshots.push('shots/phase2-formation-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
       }
     } finally { await captureContext.close(); }
   }
-  const zoomContext = await browser.newContext({ viewport: { width: 960, height: 360 } });
+  const zoomContext = await browser.newContext({ viewport: { width: 960, height: 640 } });
   try {
     await zoomContext.addInitScript(prefs => localStorage.setItem('taskbar-legends:compact-window:v1', JSON.stringify(prefs)), {
       version: 1, sourceWidth: 480, sourceHeight: 160, zoom: 2, placement: 'free', anchorX: 1, anchorY: 1,
@@ -279,8 +281,8 @@ try {
   await page.close();
 
   // Repeated menu operations and resize are presentation-only for an identical paused seed.
-  const leftContext = await browser.newContext({ viewport: { width: 960, height: 360 } });
-  const rightContext = await browser.newContext({ viewport: { width: 960, height: 360 } });
+  const leftContext = await browser.newContext({ viewport: { width: 960, height: 640 } });
+  const rightContext = await browser.newContext({ viewport: { width: 960, height: 640 } });
   try {
     const [left, right] = await Promise.all([leftContext.newPage(), rightContext.newPage()]);
     await Promise.all([left.goto(baseUrl), right.goto(baseUrl)]);
@@ -297,7 +299,7 @@ try {
     assert.equal(await left.evaluate(() => window.__game.snapshot()), await right.evaluate(() => window.__game.snapshot()), 'menu and resize operations do not alter deterministic combat');
   } finally { await leftContext.close(); await rightContext.close(); }
 
-  const defaultContext = await browser.newContext({ viewport: { width: 960, height: 360 } });
+  const defaultContext = await browser.newContext({ viewport: { width: 960, height: 640 } });
   try {
     const defaultPage = await defaultContext.newPage();
     await defaultPage.goto(new URL('/', baseUrl).href);

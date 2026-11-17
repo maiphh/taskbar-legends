@@ -4,6 +4,9 @@ import { CONFIG } from './config';
 export const FONT_FILES = [
   ['GameSans', 'NotoSans-Regular.ttf', '400'],
   ['GameSans', 'NotoSans-SemiBold.ttf', '600'],
+  ['GamePixel', 'Galmuri11.ttf', '400'],
+  ['GamePixel', 'Galmuri11-Bold.ttf', '700'],
+  ['GameMeta', 'Galmuri9.ttf', '400'],
   ['GameSymbols', 'Galmuri11.ttf', '400'],
 ] as const;
 export type FontName = string;
