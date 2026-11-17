@@ -634,7 +634,7 @@ mod tests {
                 // Off-screen: keep the requested 1280x720 client (it fits the work area) and clamp the frame into the monitor.
                 frame: super::PixelRect {
                     x: -656,
-                    y: 200,
+                    y: 320,
                     width: 1296,
                     height: 760
                 },
