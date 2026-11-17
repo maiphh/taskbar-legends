@@ -31,7 +31,7 @@ function element(id: string): HTMLElement {
 const query = new URLSearchParams(location.search);
 setV14Rules(parseV14Flag(query.get('v14')));
 setSalvageRules(query.get('salvage') === 'off' ? 'default' : 'design');
-/** Shot harness only (`?shot&menu=native`): render the 760×560 native-window variant in the page to compare it with its mockups. */
+/** Shot harness only (`?shot&menu=native`): exercise the native management presentation inside the browser. */
 const nativeMenuShot = query.has('shot') && query.get('menu') === 'native';
 const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing canvas');
 const notice = element('notice'), liveStatus = element('live-status');
@@ -89,11 +89,22 @@ function managementClient(): ManagementClient {
 }
 function dockManagement(): void {
   if ('__TAURI_INTERNALS__' in window) return;
-  managementRoot.style.left = '0px'; managementRoot.style.top = '0px';
   managementRoot.dataset.dock = 'overlay';
+  fitManagementOverlay();
 }
-function growForDock(): void { /* Management overlays the browser viewport without resizing the lane. */ }
-function shrinkAfterDock(): void { /* The browser overlay does not resize its viewport. */ }
+function fitManagementOverlay(): void {
+  if ('__TAURI_INTERNALS__' in window) return;
+  const wide = window.innerWidth >= 1280 && window.innerHeight >= 720;
+  const width = wide ? 1280 : 960, height = wide ? 720 : Math.min(640, Math.max(600, window.innerHeight));
+  const scale = window.innerWidth >= width * 2 && window.innerHeight >= height * 2 ? 2 : 1;
+  managementRoot.dataset.preset = wide ? '1280' : '960';
+  managementRoot.style.setProperty('--px-v2-scale', String(scale));
+  managementRoot.style.setProperty('--px-v2-height', `${height}px`);
+  managementRoot.style.left = `${Math.floor((window.innerWidth - width * scale) / 2)}px`;
+  managementRoot.style.top = `${Math.floor((window.innerHeight - height * scale) / 2)}px`;
+}
+window.addEventListener('resize', fitManagementOverlay);
+fitManagementOverlay();
 /** Compact HUD buttons follow the lane's source-pixel scale (zoom / devicePixelRatio). */
 function syncCompactScale(): void {
   const z = (compactPrefs?.zoom ?? 1) / (window.devicePixelRatio || 1);
@@ -108,8 +119,7 @@ function domHitRegions(): HitRegion[] {
   return regions;
 }
 function openManagement(tab: 'home' | 'heroes' | 'formation' | 'gear' | 'recruit' | 'stages' | 'settings' | 'party' | 'stash' | 'upgrades' = 'home'): void {
-  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; shrinkAfterDock(); element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
-  if (managementRoot.hidden) growForDock();
+  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
   const destination = tab === 'party' ? 'heroes' : tab === 'stash' || tab === 'upgrades' ? 'gear' : tab;
   dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open(destination);
 }

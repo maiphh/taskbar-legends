@@ -22,16 +22,22 @@ try {
       const namespace = ns.toString(16).padStart(8, '0');
       const slots = ['weapon', 'armor', 'charm'];
       const rarities = ['common', 'rare', 'epic', 'legendary'];
-      for (let i = 0; i < 15 && state.inventory.length < 30; i++) {
+      const equippedFixtures = {};
+      for (let i = 0; i < 50 && state.inventory.length < 50; i++) {
         const serial = state.nextGearId++, slot = slots[i % slots.length], rarity = rarities[(i * 3 + 1) % rarities.length];
-        state.inventory.push({ id: `itm_${namespace}_${serial.toString(16).padStart(8, '0')}`, templateId: `gear.${slot}.${rarity}`, tradeable: false,
+        const itemId = `itm_${namespace}_${serial.toString(16).padStart(8, '0')}`;
+        state.inventory.push({ id: itemId, templateId: `gear.${slot}.${rarity}`, tradeable: false,
           acquiredAt: { tick: state.tick, source: 'drop' }, slot, rarity, dropStage: 4, level: i % 7, spent: 0,
           stats: { hp: slot === 'armor' ? 28 + i * 3 : 0, atk: slot === 'weapon' ? 9 + i * 2 : 0, def: slot === 'armor' ? 4 + i : 0,
-            atkPct: slot === 'charm' && i % 2 ? 0.04 : 0, hpPct: slot === 'charm' && i % 2 === 0 ? 0.04 : 0, speedPct: 0 }, ...(i === 5 ? { locked: true } : {}) });
+            atkPct: slot === 'charm' && i % 2 ? 0.04 : 0, hpPct: slot === 'charm' && i % 2 === 0 ? 0.04 : 0, speedPct: slot === 'charm' ? (i % 2 ? 0.02 : 0.1) : 0 }, ...(i === 5 ? { locked: true } : {}) });
+        const wearer = i < 1 || i === 26 || i === 28 ? 'mw1' : i === 25 ? 'priest' : '';
+        if (wearer) { const hero = state.roster.find(value => value.id === wearer); if (hero) hero.equipment[slot] = itemId; equippedFixtures[wearer + slot[0].toUpperCase() + slot.slice(1)] = itemId; }
+        if (i === 5) equippedFixtures.weakerCharm = itemId;
       }
       state.gearSinceLegendary = 14;
       state.gold = Math.max(state.gold, 4280); state.tickets = Math.max(state.tickets, 16);
       window.__game.load(state);
+      window.__uiShotItems = equippedFixtures;
       window.__game.openPanel('home');
     });
     await page.waitForSelector('#management:not([hidden]) [data-view="home"]');
@@ -44,28 +50,36 @@ try {
     }
     await page.evaluate(() => window.__game.openPanel('heroes'));
     await page.waitForSelector('#management [data-view="heroes"] [data-details-open]');
-    await page.locator('#management [data-view="heroes"] [data-details-open]').first().click();
+    await page.locator('#management [data-view="heroes"] [data-hero="mw1"]').click();
     await page.waitForSelector('#management .px-v2-detail');
     await page.screenshot({ path: `artifacts/ui-v2/hero-detail-${width}.png` });
-    await page.locator('#management .px-v2-detail [data-loadout-slot="weapon"]').first().click();
+    await page.locator('#management .px-v2-detail [data-loadout-slot="armor"]').first().click();
     await page.waitForSelector('#management [data-view="equip"] .px-equip-screen');
     await page.screenshot({ path: `artifacts/ui-v2/equip-${width}.png` });
-    await page.locator('#management [data-view="equip"] .px-equip-row').first().click();
+    const swapArmor = await page.evaluate(() => window.__uiShotItems.priestArmor);
+    await page.locator(`#management [data-view="equip"] [data-equip-item="${swapArmor}"]`).click();
     await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-deltas')?.innerText.includes('ATK'));
     await page.screenshot({ path: `artifacts/ui-v2/equip-compare-${width}.png` });
     await page.locator('#management [data-view="equip"] [data-equip-back]').click();
     await page.locator('#management [data-details-close]').click();
     await page.evaluate(() => {
-      const state = window.__game.getState(), heroId = document.querySelector('#management [data-view="heroes"] [data-details-open]')?.getAttribute('data-hero'), hero = state.roster.find(value => value.id === heroId);
-      if (hero) hero.equipment.charm = null;
+      const state = window.__game.getState(), hero = state.roster.find(value => value.id === 'mw1');
+      if (hero) hero.equipment.weapon = null;
       window.__game.load(state); window.__game.openPanel('heroes');
     });
     await page.waitForSelector('#management [data-view="heroes"] [data-details-open]');
-    await page.locator('#management [data-view="heroes"] [data-details-open]').first().click();
+    await page.locator('#management [data-view="heroes"] [data-hero="mw1"]').click();
     await page.waitForSelector('#management .px-v2-detail');
-    await page.locator('#management .px-v2-detail [data-loadout-slot="charm"]').first().click();
+    await page.locator('#management .px-v2-detail [data-loadout-slot="weapon"]').first().click();
     await page.waitForSelector('#management [data-view="equip"] .px-equip-screen');
     await page.screenshot({ path: `artifacts/ui-v2/equip-empty-slot-${width}.png` });
+    await page.locator('#management [data-view="equip"] [data-equip-back]').click();
+    await page.locator('#management [data-details-close]').click();
+    await page.locator('#management [data-view="heroes"] [data-hero="mw1"]').click();
+    await page.locator('#management .px-v2-detail [data-loadout-slot="charm"]').click();
+    await page.locator(`#management [data-view="equip"] [data-equip-item="${await page.evaluate(() => window.__uiShotItems.weakerCharm)}"]`).click();
+    await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-deltas')?.innerText.includes('SPD'));
+    await page.screenshot({ path: `artifacts/ui-v2/equip-speed-loss-${width}.png` });
     await page.locator('#management [data-view="equip"] [data-equip-back]').click();
     await page.locator('#management [data-details-close]').click();
     await page.locator('#management [data-locked-hero]').first().click();
@@ -82,6 +96,36 @@ try {
     });
     await page.waitForFunction(() => document.querySelector('#management [data-view="home"]') && document.querySelector('#management').innerText.includes('Boss ready'));
     await page.screenshot({ path: `artifacts/ui-v2/home-boss-ready-${width}.png` });
+    await page.evaluate(() => window.__game.openPanel('recruit'));
+    await page.locator('[data-action="pull-one"]').click();
+    await page.locator('.reveal-stage:not([hidden])').waitFor();
+    await page.screenshot({ path: `artifacts/ui-v2/recruit-result-x1-${width}.png` });
+    const finishReveal = page.locator('[data-control="reveal-ok"]');
+    await finishReveal.waitFor(); await finishReveal.click();
+    await page.waitForFunction(() => document.querySelector('.reveal-stage')?.hidden === true);
+    await page.locator('[data-action="pull-ten"]').click();
+    await page.locator('.reveal-stage:not([hidden])').waitFor();
+    await page.screenshot({ path: `artifacts/ui-v2/recruit-result-x10-${width}.png` });
+    if (width === 960) {
+      const activeReveal = page.locator('.reveal-stage:not([hidden])');
+      if (await activeReveal.count()) {
+        const revealOk = page.locator('[data-control="reveal-ok"]');
+        await revealOk.waitFor(); await revealOk.click();
+        await page.waitForFunction(() => document.querySelector('.reveal-stage')?.hidden === true);
+      }
+      await page.setViewportSize({ width: 960, height: 600 });
+      await page.waitForTimeout(100);
+      await page.evaluate(() => window.__game.openPanel('home'));
+      await page.waitForFunction(() => document.querySelector('#management')?.dataset.preset === '960');
+      await page.screenshot({ path: 'artifacts/ui-v2/home-min-960.png' });
+      const minBounds = await page.locator('#management [data-close]').boundingBox();
+      if (!minBounds || minBounds.y < 0 || minBounds.y + minBounds.height > 600) throw new Error(`close control clipped at 960x600: ${JSON.stringify(minBounds)}`);
+      for (const viewport of [{ width: 1200, height: 720 }, { width: 1280, height: 640 }, { width: 2560, height: 1440 }]) {
+        await page.setViewportSize(viewport); await page.waitForTimeout(50);
+        const box = await page.locator('#management').boundingBox();
+        if (!box || box.x < 0 || box.y < 0 || box.x + box.width > viewport.width || box.y + box.height > viewport.height) throw new Error(`preset clipped at ${viewport.width}x${viewport.height}: ${JSON.stringify(box)}`);
+      }
+    }
     await page.close();
   }
 } finally { await browser.close(); }

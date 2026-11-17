@@ -61,9 +61,10 @@ const client = new NativeManagementClient();
 const view = new ManagementView(root, client, () => { root.hidden = true; }, { variant: 'native' });
 // UI v2 uses only the two approved presets and whole-number zoom.
 const fit = (): void => {
-  const wide = window.innerWidth >= 1280 && window.innerHeight >= 720, width = wide ? 1280 : 960, height = wide ? 720 : 640;
+  const wide = window.innerWidth >= 1280 && window.innerHeight >= 720, width = wide ? 1280 : 960, height = wide ? 720 : Math.min(640, Math.max(600, window.innerHeight));
   const scale = window.innerWidth >= width * 2 && window.innerHeight >= height * 2 ? 2 : 1;
   root.style.setProperty('--px-v2-scale', String(scale));
+  root.style.setProperty('--px-v2-height', `${height}px`);
   root.dataset.preset = wide ? '1280' : '960';
   root.style.left = `${Math.floor((window.innerWidth - width * scale) / 2)}px`;
   root.style.top = `${Math.floor((window.innerHeight - height * scale) / 2)}px`;

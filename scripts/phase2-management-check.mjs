@@ -52,11 +52,11 @@ try {
   await page.locator('#management').waitFor({ state: 'visible' });
   assert.equal(await page.evaluate(() => window.__managementTimerCount), 1, 'open starts one management poll timer');
   for (const tab of ['home', 'heroes', 'formation', 'gear', 'recruit', 'stages', 'settings']) {
-    await page.locator(`[data-tab="${tab}"]`).click();
+    await page.locator(`nav [data-tab="${tab}"]`).click();
     await page.waitForFunction(name => document.querySelector(`#management [data-view="${name}"]`), tab);
   }
 
-  await page.locator('[data-tab="formation"]').click();
+  await page.locator('nav [data-tab="formation"]').click();
   await pick(page, 'party-preset', 'fastFarm');
   await page.waitForFunction(() => window.__management.snapshot().partyPreset === 'fastFarm');
   let partySnapshot = await page.evaluate(() => window.__management.snapshot());
@@ -75,28 +75,23 @@ try {
     window.__game.load(state);
   });
   await page.waitForFunction(() => ['hk1', 'fw', 'mk1', 'ew3'].every(id => window.__management.snapshot().roster.some(hero => hero.id === id)));
+  await page.locator('nav [data-tab="heroes"]').click();
   await page.locator('[data-hero="priest"]').click();
   assert.match(await page.locator('#management main').innerText(), /Restoration/);
   assert.match(await page.locator('#management main').innerText(), /Heal 180% ATK/);
-  assert.match(await page.locator('#management main').innerText(), /Auto-casts on its next turn when ready/);
-  await page.locator('[data-hero-detail="stats"]').click();
+  assert.match(await page.locator('#management main').innerText(), /Automatically casts when mana is ready/);
   assert.match(await page.locator('#management main').innerText(), /Turn SPD/);
-  await page.locator('[data-hero-detail="items"]').click();
-  assert.equal(await page.locator('#management [data-hero="priest"]').getAttribute('aria-pressed'), 'true', 'hero selection persists while switching detail tabs');
-  assert.match(await page.locator('#management main').innerText(), /WEAPON/);
-  assert.match(await page.locator('#management main').innerText(), /Inspect \/ Change in Stash/);
-  await page.locator('[data-hero-detail="ability"]').click();
-  await page.locator('[data-party-workspace="formation"]').click();
+  assert.match(await page.locator('#management main').innerText(), /Weapon/);
+  assert.match(await page.locator('#management main').innerText(), /Heal Guard/);
+  await page.locator('nav [data-tab="formation"]').click();
   const beforeSwap = await page.evaluate(() => window.__management.snapshot().partyIds);
-  const secondStarter = beforeSwap[1];
-  await page.locator(`[data-hero="${secondStarter}"]`).click();
   await page.locator('[data-party-slot="0"]').click();
-  await page.locator('[data-assign]').click();
-  await page.waitForFunction(([front, middle]) => { const ids = window.__management.snapshot().partyIds; return ids[0] === middle && ids[1] === front; }, [beforeSwap[0], secondStarter]);
-  await page.locator('[data-party-workspace="heroes"]').click();
+  await page.locator('[data-hero="fw"]').click();
+  await page.waitForFunction(([, middle]) => { const ids = window.__management.snapshot().partyIds; return ids[0] === 'fw' && ids[1] === middle; }, [beforeSwap[0], beforeSwap[1]], { timeout: 3000 }).catch(async () => { console.log('click swap debug', await page.evaluate(() => ({ ids: window.__management.snapshot().partyIds, status: document.querySelector('.management-status')?.textContent, selected: document.querySelector('[data-drag-hero="fw"]')?.getAttribute('aria-pressed') }))); throw new Error('Formation click-to-swap failed'); });
+  await page.locator('nav [data-tab="heroes"]').click();
   await page.locator('[data-hero="mw2"]').click();
 
-  await page.locator('[data-tab="recruit"]').click();
+  await page.locator('nav [data-tab="recruit"]').click();
   const beforeRevision = await page.evaluate(() => window.__management.snapshot().revision);
   await page.locator('[data-action="pull-one"]').click();
   await page.waitForFunction(tickets => window.__management.snapshot().tickets === tickets - 1, initialTickets);
@@ -111,17 +106,17 @@ try {
   await page.evaluate(() => window.__game.step(20));
   assert.equal(await page.evaluate(() => window.__management.snapshot().tick), beforeTick + 20, 'later simulation steps continue on the same owner');
 
-  await page.locator('[data-tab="recruit"]').click();
+  await page.locator('nav [data-tab="recruit"]').click();
   const ticketsBeforeTen = await page.evaluate(() => window.__management.snapshot().tickets);
   const pullsBeforeTen = await page.evaluate(() => window.__management.snapshot().stats.pulls);
   await page.locator('[data-action="pull-ten"]').click();
   await page.waitForFunction(value => window.__management.snapshot().tickets === value - 10, ticketsBeforeTen);
   assert.equal(await page.evaluate(() => window.__management.snapshot().stats.pulls), pullsBeforeTen + 10, 'x10 recruitment commits ten real pulls');
   await page.locator('#management main ol li').first().waitFor({ state: 'attached' });
-  await page.locator('[data-tab="recruit"]').click();
+  await page.locator('nav [data-tab="recruit"]').click();
   await page.locator('#management main ol li').first().waitFor();
 
-  await page.locator('[data-tab="gear"]').click();
+  await page.locator('nav [data-tab="gear"]').click();
   await pick(page, 'slot', 'weapon');
   const filter = page.locator('[data-dd-toggle="slot"]');
   await filter.focus();
@@ -146,13 +141,13 @@ try {
   await page.waitForFunction(id => window.__game.getState().roster.find(hero => hero.id === 'mw2').equipment.weapon === id, gearId);
   await page.locator('[data-action="upgrade"]').click();
   await page.waitForFunction(id => window.__game.getState().inventory.find(item => item.id === id).level === 1, gearId);
-  await page.locator('[data-tab="gear"]').click();
+  await page.locator('nav [data-tab="gear"]').click();
   await page.locator('[data-action="gear-upgrades"]').click();
   await page.locator(`[data-gear="${gearId}"]`).click();
   await page.locator('[data-action="upgrade"]').click();
   await page.waitForFunction(id => window.__management.snapshot().inventory.find(item => item.id === id).level === 2, gearId);
 
-  await page.locator('[data-tab="settings"]').click();
+  await page.locator('nav [data-tab="settings"]').click();
   assert.match(await page.locator('#management main').innerText(), /use the game window recovery panel to export it or discard it/i, 'save recovery instructions tell players what to do');
   await page.locator('[data-action="pause"]').click();
   await page.waitForFunction(() => window.__management.snapshot().paused === false);
@@ -170,8 +165,9 @@ try {
   await root.locator('[data-close]').click();
   await root.waitFor({ state: 'hidden' });
   assert.equal(await page.evaluate(() => window.__managementTimerCount), 0, 'close stops management polling immediately');
+  await page.locator('#compact-menu-button').click(); await root.waitFor({ state: 'visible' }); await root.locator('[data-close]').click(); await root.waitFor({ state: 'hidden' });
   const shellNodeCount = await root.locator('*').count();
-  for (let i = 0; i < 100; i += 1) {
+  for (let i = 0; i < 99; i += 1) {
     await page.locator('#compact-menu-button').click();
     await root.waitFor({ state: 'visible' });
     await root.locator('[data-close]').click();
@@ -181,14 +177,15 @@ try {
   assert.equal(await page.evaluate(() => window.__managementTimerCount), 0, '100 completed close cycles leave no poll timer');
   assert.deepEqual(await canvasSize(), initialCanvas, 'opening and closing management does not change canvas source size');
   await page.locator('#compact-menu-button').click();
-  await page.locator('[data-tab="recruit"]').click();
+  await page.locator('nav [data-tab="recruit"]').click();
   const ticketsBeforeSecondAction = await page.evaluate(() => window.__management.snapshot().tickets);
   const revisionBeforeSecondAction = await page.evaluate(() => window.__management.snapshot().revision);
   await page.locator('[data-action="pull-one"]').click();
   await page.waitForFunction(tickets => window.__management.snapshot().tickets === tickets - 1, ticketsBeforeSecondAction);
   assert.equal(await page.evaluate(() => window.__management.snapshot().revision), revisionBeforeSecondAction + 1, 'reopened view has one active click handler');
 
-  await page.locator('[data-tab="gear"]').click();
+  await page.locator('nav [data-tab="gear"]').click();
+  if (!(await page.locator('[data-dd-toggle="owner"]').count())) await page.locator('[data-action="gear-upgrades"]').click();
   await pick(page, 'owner', 'mw1');
   assert.equal(await picked(page, 'owner'), 'mw1', 'owner filter retains its own selected value');
   assert.equal(await picked(page, 'hero'), 'mw2', 'comparison target remains independent from the owner filter');
@@ -234,7 +231,7 @@ try {
   assert.equal(keys.preview.state.combatRules, 'party-v2');
   const screenshots = [];
   for (const width of [960, 1280]) {
-    const captureContext = await browser.newContext({ viewport: { width, height: 640 } });
+    const captureContext = await browser.newContext({ viewport: { width, height: width === 1280 ? 720 : 640 } });
     try {
       await captureContext.addInitScript(prefs => localStorage.setItem('taskbar-legends:compact-window:v1', JSON.stringify(prefs)), {
         version: 1, sourceWidth: width, sourceHeight: 160, zoom: 1, placement: 'free', anchorX: 1, anchorY: 1,
@@ -251,14 +248,14 @@ try {
       screenshots.push(`shots/phase2-compact-${width}-management.png`);
       await capture.screenshot({ path: screenshots.at(-1) });
       if (width === 960) {
-        await capture.locator('[data-tab="heroes"]').click();
-        await capture.locator('[data-details-open]').click();
+        await capture.locator('nav [data-tab="heroes"]').click();
+        await capture.locator('[data-details-open]').first().click();
         screenshots.push('shots/phase2-hero-detail-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
-        await capture.locator('[data-hero-detail="stats"]').click();
-        screenshots.push('shots/phase2-hero-stats-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
-        await capture.locator('[data-hero-detail="items"]').click();
+        await capture.locator('[data-loadout-slot="weapon"]').first().click();
         screenshots.push('shots/phase2-hero-items-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
-        await capture.locator('[data-party-workspace="formation"]').click();
+        await capture.locator('[data-equip-back]').click();
+        await capture.locator('[data-details-close]').click();
+        await capture.locator('nav [data-tab="formation"]').click();
         screenshots.push('shots/phase2-formation-960.png'); await capture.screenshot({ path: screenshots.at(-1) });
       }
     } finally { await captureContext.close(); }

@@ -38,6 +38,8 @@ const rootUrl = (): URL => new URL(`${import.meta.env.BASE_URL}ui/`, window.loca
 /** Round half to even, as the designer's rect tables do (e.g. banner x 894.5 -> 894, 887.5 -> 888). */
 export function roundHalfEven(value: number): number { const floor = Math.floor(value); return value - floor !== 0.5 ? Math.round(value) : floor % 2 === 0 ? floor : floor + 1; }
 export class PixelUI {
+  /** Management-only reveal typography; the taskbar lane keeps its original catalog-name layout. */
+  managementReveal = false;
   panel: PanelTab | null = null;
   onPanelRequest: (tab: PanelTab) => void = () => undefined;
   private coreY = 0;
@@ -472,9 +474,9 @@ export class PixelUI {
       ctx.fillStyle = tier.fill; ctx.fillRect(rect.x + 1, rect.y + 85, rect.width - 2, 35); ctx.fillStyle = tier.frame; ctx.fillRect(rect.x, rect.y + 84, rect.width, 1);
       if (rect.width < 128) return;
       if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + 64 + dot.x, rect.y + 42 + dot.y, dot.size, dot.size); }
-      let name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-      name = ellipsize(name, 124, value => this.measureText(value));
-      this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY);
+      let name = this.managementReveal ? shortHeroName(pull.heroId) : heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
+      if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + 84, 128);
+      else { name = ellipsize(name, 124, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY); }
       const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
       this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
       if (frame.badges) {
@@ -498,14 +500,20 @@ export class PixelUI {
     if (!full) return;
     if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + rw / 2 + dot.x, rect.y + artH / 2 + dot.y, dot.size, dot.size); }
     let name = shortHeroName(pull.heroId);
-    name = ellipsize(name, small.nameMaxPx, value => this.measureText(value));
-    this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY);
+    if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + small.nameYInCard, rw);
+    else { name = ellipsize(name, small.nameMaxPx, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY); }
     const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
     this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
     if (frame.badges) {
       this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
       if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
     }
+  }
+  private drawManagementRevealName(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, width: number): void {
+    ctx.save(); ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = palette.text;
+    ctx.font = '12px GamePixel, GameSymbols, monospace';
+    if (ctx.measureText(name).width > width - 8) ctx.font = '10px GameMeta, GameSymbols, monospace';
+    ctx.fillText(name, Math.round(x + width / 2), Math.round(y)); ctx.restore();
   }
   /** Welcome back (ui/offline-rewards.md): rewards are already in the save; Collect acknowledges. */
   drawWelcome(ctx: CanvasRenderingContext2D, state: GameState, data: WelcomeData): void {

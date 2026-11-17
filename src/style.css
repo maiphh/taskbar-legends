@@ -352,6 +352,7 @@ body.management-window #management-app.px-menu[data-layout="v2"], #management.px
   position: fixed; inset: 0 auto auto 0; width: 1280px; height: 720px; margin: 0; overflow: hidden;
   transform: scale(var(--px-v2-scale, 1)); transform-origin: top left; background: #17212d; color: #f2e9cf;
 }
+#management.px-menu[data-layout="v2"][data-preset="960"], body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] { --px-panel-w:960px; --px-body-h:calc(var(--px-v2-height,640px) - 132px); width:960px; height:var(--px-v2-height,640px); }
 .px-menu[data-layout="v2"]::before { border: 2px solid #536276; }
 .px-menu[data-layout="v2"] { --game-font:"GamePixel", "GameSymbols", monospace; }
 .px-menu[data-layout="v2"] h1 { left: 24px; top: 14px; font: 700 24px/28px var(--game-font); }
@@ -569,3 +570,208 @@ body.management-window { margin: 0; min-width: 0; min-height: 100vh; background:
  .px-equip-hero-meta { top:calc(55% + 78px); flex-direction:row; justify-content:center; flex-wrap:wrap; gap:4px 8px; }.px-equip-hero-meta>b { font:700 16px/20px var(--game-font); }.px-equip-hero-meta p { margin:0; font-size:10px; }
  .px-equip-drawer { left:0; right:0; top:auto; bottom:0; width:auto; height:196px; padding:8px; grid-template-columns:1fr 1fr; grid-template-rows:1fr; gap:12px; }.px-equip-list { min-width:0; }.px-equip-rows { gap:4px; }.px-equip-row { height:48px; min-height:48px; }.px-equip-compare { min-height:0; overflow:auto; padding-top:0; border:0; }.px-equip-actions { margin-top:4px; gap:4px; }.px-equip-actions>.px-btn { min-height:32px; height:32px; }.px-equip-actions .px-equip-primary { height:40px; }
 }
+
+/* Round 1 fixes: viewport-driven integer presets, accessible feedback and v2 sizing. */
+.px-menu[data-layout="v2"] { width:1280px; height:720px; }
+.px-menu[data-layout="v2"][data-preset="1280"] { width:1280px; height:720px; }
+.px-menu[data-layout="v2"][data-preset="960"] { width:960px; height:var(--px-v2-height,640px); }
+.px-menu[data-layout="v2"][data-preset="960"] nav { top:auto; bottom:0; height:64px; }
+.px-menu[data-layout="v2"][data-preset="960"] nav .px-nav { height:56px; min-height:56px; }
+.px-menu[data-layout="v2"][data-preset="960"] main { left:16px; top:64px; width:928px; height:calc(var(--px-v2-height,640px) - 144px); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-footer { left:16px; right:16px; bottom:72px; }
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] { width:960px; height:var(--px-v2-height,640px); }
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] nav { top:auto; bottom:0; height:64px; }
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] main { left:16px; top:64px; width:928px; height:calc(var(--px-v2-height,640px) - 144px); }
+.px-menu[data-layout="v2"] .management-status { display:block; position:absolute; z-index:12; left:96px; right:16px; bottom:4px; min-height:20px; padding:2px 8px; color:#f2ce83; font:10px/14px var(--game-font); background:#17212d; }
+.px-menu[data-layout="v2"][data-preset="960"] .management-status { left:16px; right:16px; bottom:66px; }
+.px-menu[data-layout="v2"] .px-btn.px-primary, .px-menu[data-layout="v2"] button.px-primary { color:#20170b; background-color:#e9bd68; border-color:#f2ce83; }
+.px-menu[data-layout="v2"] button.px-primary .px-btn-label { color:#20170b; }
+.px-menu[data-layout="v2"] .px-home-layout section, .px-menu[data-layout="v2"] .px-stage-detail,
+.px-menu[data-layout="v2"] .px-v2-hero-card, .px-menu[data-layout="v2"] .px-v2-hero-summary,
+.px-menu[data-layout="v2"] .px-v2-stats, .px-menu[data-layout="v2"] .px-v2-skill,
+.px-menu[data-layout="v2"] .px-equip-drawer, .px-menu[data-layout="v2"] .px-howto-card {
+  border:0; border-image-source:var(--px-panel-9slice); border-image-slice:4 fill; border-image-width:8px; border-image-repeat:stretch;
+}
+.px-menu[data-layout="v2"] .px-equip-actions .px-equip-primary { height:48px; min-height:48px; }
+.px-menu[data-layout="v2"] .px-equip-prev,.px-menu[data-layout="v2"] .px-equip-next { width:48px; min-width:48px; height:48px; }
+.px-menu[data-layout="v2"] .px-equip-slot { min-height:72px; }
+.px-menu[data-layout="v2"] .px-equip-slot > span:last-child { min-width:0; }
+.px-menu[data-layout="v2"] .px-equip-slot small { white-space:normal; font:10px/12px var(--game-meta,"GameMeta",monospace); }
+.px-menu[data-layout="v2"] .px-equip-rows { padding-bottom:0; }
+.px-menu[data-layout="v2"] .px-equip-list { min-height:0; }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue { position:static; width:100%; height:18px; flex:none; background:#202c39; }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue img { width:22px; height:14px; }
+.px-menu[data-layout="v2"] .px-v2-roster-head > span,.px-menu[data-layout="v2"] .px-v2-role,
+.px-menu[data-layout="v2"] .px-v2-stars,.px-menu[data-layout="v2"] .px-v2-detail-head small,
+.px-menu[data-layout="v2"] .px-v2-detail-art + h3 + small,.px-menu[data-layout="v2"] nav .px-nav > span:last-of-type,
+.px-menu[data-layout="v2"] .px-equip-hero-meta > small,
+.px-menu[data-layout="v2"] .px-equip-slot small,
+.px-menu[data-layout="v2"] .px-equip-row-text small { font-family:var(--game-meta,"GameMeta",monospace); font-size:10px; }
+.px-menu[data-layout="v2"] .px-dd-option { min-height:32px; height:auto; }
+.px-menu[data-layout="v2"] .px-toggle { min-height:40px; }
+.px-menu[data-layout="v2"] .px-slider { min-height:32px; }
+.px-menu[data-layout="v2"] .px-mixer summary { min-height:32px; display:flex; align-items:center; }
+.px-menu[data-layout="v2"] .px-equip-plate { border-radius:0; background-color:#202c39; background-image:var(--equip-plate); }
+.px-menu[data-layout="v2"] .px-equip-plate { background-size:100% 100%; image-rendering:pixelated; }
+.px-menu[data-layout="v2"] .px-equip-slot-position { z-index:4; }
+.px-menu[data-layout="v2"] .px-equip-stage::before { content:""; position:absolute; left:50%; top:50%; width:320px; height:320px; transform:translate(-50%,-50%); pointer-events:none; background:linear-gradient(#e9bd6840,#e9bd6840) center/2px 36px no-repeat,linear-gradient(#e9bd6840,#e9bd6840) 18% 51%/34% 1px no-repeat,linear-gradient(#e9bd6840,#e9bd6840) 82% 51%/34% 1px no-repeat; }
+.px-menu[data-layout="v2"] .px-howto-card { width:280px; min-height:0; height:360px; margin:12px auto; padding:12px; }
+.px-menu[data-layout="v2"] .px-howto-portrait { width:96px; height:112px; }
+.px-menu[data-layout="v2"] .px-howto-portrait img { filter:grayscale(1) brightness(.3); }
+.px-menu[data-layout="v2"] .px-v2-art img,.px-menu[data-layout="v2"] .px-v2-detail-art img,.px-menu[data-layout="v2"] .px-home-hero img { object-fit:initial; }
+.px-menu[data-layout="v2"] .px-home-hero { min-height:260px; }
+.px-menu[data-layout="v2"] .px-home-hero .px-v2-role { display:block; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-settings > details.px-mixer { display:contents; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-settings > details.px-mixer > summary { display:none; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-settings > details.px-mixer:not([open]) > .px-slider-row { display:flex; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-settings > details.px-mixer > .px-slider-row { min-height:48px; }
+.px-menu[data-layout="v2"] { --game-meta:"GameMeta", "GameSymbols", monospace; }
+.px-menu[data-layout="v2"] .px-run[data-paused="true"] { display:block; position:absolute; left:340px; top:18px; color:#de7c80; font:10px/20px var(--game-meta); }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-help-row { display:flex; flex:none; min-height:32px; align-items:center; gap:16px; color:#b0bcc8; font:10px/14px var(--game-meta); }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-view { padding-bottom:36px; }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-wide-formation { position:relative; padding:4px; }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-slot-select { min-width:0; flex:1; width:100%; height:auto; padding:2px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:0; color:#f2e9cf; background:transparent; cursor:pointer; }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-slot-actions { display:flex; width:100%; gap:4px; }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-v2-slot-equip,.px-menu[data-layout="v2"] main[data-view="formation"] .px-v2-slot-detail { flex:1; min-width:0; min-height:40px; height:40px; padding:4px; font:10px/14px var(--game-meta); }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-wide-formation .px-portrait { max-width:none; width:auto; height:auto; image-rendering:pixelated; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-grid { grid-auto-rows:48px; row-gap:8px; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-slot .px-icon { width:32px; height:32px; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector { display:flex; flex-direction:column; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-insp-scroll { flex:1; min-height:0; overflow:auto; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-insp-foot { flex:none; }
+.px-menu[data-layout="v2"] .px-v2-art img,.px-menu[data-layout="v2"] .px-v2-detail-art img,.px-menu[data-layout="v2"] .px-home-hero img { flex:none; max-width:none; max-height:none; width:auto; height:auto; object-fit:initial; image-rendering:pixelated; }
+.px-menu[data-layout="v2"] .px-v2-art { overflow:hidden; }
+.px-menu[data-layout="v2"] .px-home-hero { position:relative; }
+.px-menu[data-layout="v2"] .px-home-hero .px-v2-role { margin-bottom:6px; }
+.px-menu[data-layout="v2"] .px-home-hero small { white-space:normal; text-align:center; }
+.px-menu[data-layout="v2"] .px-howto-card { position:relative; z-index:10; }
+.px-menu[data-layout="v2"] .px-pity-meters { display:grid; grid-template-columns:1fr; gap:5px; }
+.px-menu[data-layout="v2"] .px-pity-meter { min-height:32px; display:grid; grid-template-columns:1fr auto; gap:3px 8px; color:#b0bcc8; font:10px/12px var(--game-meta); }
+.px-menu[data-layout="v2"] .px-pity-meter b { color:#f2e9cf; font-weight:400; }
+.px-menu[data-layout="v2"] .px-pity-meter i { grid-column:1/-1; height:7px; background:#0d121b; border:1px solid #536276; }
+.px-menu[data-layout="v2"] .px-pity-meter em { display:block; height:100%; }
+.px-menu[data-layout="v2"] .px-recruit-rates,.px-menu[data-layout="v2"] .px-recruit-rules { font:10px/14px var(--game-meta); white-space:normal; }
+.px-menu[data-layout="v2"] .px-large-action,.px-menu[data-layout="v2"] .px-primary { min-height:48px; height:48px; }
+.px-menu[data-layout="v2"] .px-equip-slot small { display:block; white-space:normal; overflow-wrap:anywhere; }
+.px-menu[data-layout="v2"] .px-equip-row-text { overflow:hidden; }
+.px-menu[data-layout="v2"] .px-equip-row-text small { white-space:normal; line-height:12px; }
+.px-menu[data-layout="v2"] .px-equip-list h3 { height:18px; margin-bottom:4px; }
+.px-menu[data-layout="v2"] .px-equip-compare { min-height:0; }
+.px-menu[data-layout="v2"] .px-locked-backdrop { position:absolute; inset:0; opacity:.45; pointer-events:none; }
+.px-menu[data-layout="v2"] .px-howto-overlay { position:absolute; z-index:8; inset:0; display:grid; place-items:center; background:#0d121b55; }
+.px-menu[data-layout="v2"] .px-howto-overlay .px-howto-card { margin:0; }
+.px-menu[data-layout="v2"] .px-howto-portrait img { filter:grayscale(1) brightness(.3); }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-v2-settings { display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:min-content; align-content:start; gap:10px 16px; }
+.px-menu[data-layout="v2"] .px-setting-group { min-width:0; padding:10px 12px; background:#202c39; border-image-source:var(--px-panel-9slice); border-image-slice:4 fill; border-image-width:8px; }
+.px-menu[data-layout="v2"] .px-setting-group > h3 { margin:0 0 6px; color:#e9bd68; font:12px/16px var(--game-font); }
+.px-menu[data-layout="v2"] .px-setting-group .px-slider-row { min-height:40px; }
+.px-menu[data-layout="v2"] .px-setting-group .px-srow { min-height:40px; }
+.px-menu[data-layout="v2"] .px-setting-group .px-slider { min-height:32px; }
+.px-menu[data-layout="v2"] .px-setting-group .px-toggle { min-height:40px; }
+.px-menu[data-layout="v2"] .px-offline-summary { grid-column:1/-1; }
+.px-menu[data-layout="v2"] .px-equip-drawer { grid-template-rows:minmax(0,1fr) auto; }
+.px-menu[data-layout="v2"] .px-equip-rows { flex:none; overflow-y:auto; }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue { border-top:1px solid #536276; }
+.px-menu[data-layout="v2"] .px-equip-actions .px-equip-primary { border-image-source:var(--px-gold-9slice); }
+.px-menu[data-layout="v2"] .px-howto-card { border-image-source:var(--px-panel-9slice); }
+.px-menu[data-layout="v2"] .px-equip-row-text b { white-space:nowrap; }
+.px-menu[data-layout="v2"] .px-equip-row-text small { overflow-wrap:anywhere; }
+.px-menu[data-layout="v2"] .px-equip-compare .px-equip-deltas p { margin:0; }
+.px-menu[data-layout="v2"] .px-home-hero { gap:4px; }
+.px-menu[data-layout="v2"] .px-home-hero .px-portrait { display:block; max-width:none; max-height:none; }
+.px-menu[data-layout="v2"] .px-home-hero > span:first-child { align-self:stretch; }
+.px-menu[data-layout="v2"] .px-home-hero .px-v2-role { min-height:16px; }
+.px-menu[data-layout="v2"] .px-v2-hero-card > b { font-family:var(--game-meta); font-size:10px; }
+.px-menu[data-layout="v2"] .px-v2-hero-card > span:last-child { font-family:var(--game-meta); }
+.px-menu[data-layout="v2"] .px-v2-slot-equip,.px-menu[data-layout="v2"] .px-v2-slot-detail { min-width:0; }
+.px-menu[data-layout="v2"] .management-status { pointer-events:none; }
+.px-menu[data-layout="v2"] main { height:632px; }
+.px-menu[data-layout="v2"][data-preset="960"] main { height:calc(var(--px-v2-height,640px) - 160px); }
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] main { height:calc(var(--px-v2-height,640px) - 160px); }
+.px-menu[data-layout="v2"] .px-setting-group .px-slider-row { min-height:32px; }
+.px-menu[data-layout="v2"] .px-setting-group { padding:8px 10px; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-v2-settings .px-offline-summary { grid-row:1; grid-column:1/-1; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-v2-settings > .px-setting-group[aria-label="Simulation and audio"] { grid-row:2; grid-column:1; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-v2-settings > .px-setting-group[aria-label="Window"] { grid-row:2; grid-column:2; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-v2-settings > .px-setting-group[aria-label="Recovery"] { grid-row:3; grid-column:2; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-offline-summary > button { display:none; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-offline-summary { padding:8px 12px; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-left,.px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector { height:440px; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-left,.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-inspector { height:calc(var(--px-v2-height,640px) - 348px); }
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-left,
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-inspector { height:calc(var(--px-v2-height,640px) - 348px); }
+.px-menu[data-layout="v2"] .px-equip-plate,.px-menu[data-layout="v2"] .px-equip-plate[data-rarity="rare"],.px-menu[data-layout="v2"] .px-equip-plate[data-rarity="epic"],.px-menu[data-layout="v2"] .px-equip-plate[data-rarity="legendary"] { box-shadow:none; }
+.px-menu[data-layout="v2"] .px-equip-slot-position.left { left:calc(50% - 352px); }
+.px-menu[data-layout="v2"] .px-equip-slot-position.right { right:calc(50% - 352px); }
+@media (max-width:1199px) {
+ .px-menu[data-layout="v2"] .px-equip-slot-position.left { left:calc(50% - 236px); }
+ .px-menu[data-layout="v2"] .px-equip-slot-position.right { right:calc(50% - 236px); }
+}
+.px-menu[data-layout="v2"] main { height:656px; }
+.px-menu[data-layout="v2"][data-preset="960"] main { height:calc(var(--px-v2-height,640px) - 128px); }
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] main { height:calc(var(--px-v2-height,640px) - 128px); }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"],
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="recruit"] { height:calc(var(--px-v2-height,640px) - 184px); }
+.px-menu[data-layout="v2"] .management-status:empty { display:none; }
+.px-menu[data-layout="v2"] .management-status:not(:empty) { display:block; position:absolute; z-index:30; left:96px; right:16px; top:auto; bottom:64px; width:auto; height:auto; min-height:32px; padding:8px 12px; overflow:visible; white-space:normal; background:#202c39; border:1px solid #536276; pointer-events:none; }
+.px-menu[data-layout="v2"] .management-status[data-quiet="true"] { position:absolute; width:1px; height:1px; min-height:0; left:-10000px; right:auto; bottom:auto; padding:0; border:0; clip:rect(0,0,0,0); overflow:hidden; white-space:nowrap; }
+.px-menu[data-layout="v2"][data-preset="960"] .management-status:not(:empty) { left:16px; right:16px; bottom:128px; }
+.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-help-row { display:flex; min-height:20px; font-size:11px; }
+.px-menu[data-layout="v2"] .px-equip-plate { background-color:transparent; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-left,
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-inspector { height:calc(var(--px-v2-height,640px) - 328px); }
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-left,
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-inspector { height:calc(var(--px-v2-height,640px) - 328px); }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-setting-group { padding:6px 10px; }
+.px-menu[data-layout="v2"] main[data-view="settings"] .px-setting-group[aria-label="Recovery"] .px-btn { height:32px; min-height:32px; }
+.px-menu[data-layout="v2"] .px-equip-plate img { max-width:220px; max-height:268px; }
+/* Preset-specific component geometry is keyed to the same viewport decision as root sizing. */
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-layout { height:440px; grid-template-columns:1fr 1fr; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { min-height:200px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-stage-grid { grid-template-columns:repeat(5,minmax(52px,1fr)); }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="heroes"] { padding:8px 0; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-v2-roster { grid-template-columns:repeat(5,minmax(0,1fr)); grid-auto-rows:180px; gap:8px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail { height:426px; grid-template-columns:200px minmax(0,1fr); grid-template-rows:1fr auto; gap:8px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail-art { width:112px; height:112px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-v2-hero-summary { padding:8px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-v2-gear { grid-column:1/-1; flex-direction:row; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail-slot { flex:1; min-height:48px; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="formation"] .px-formations-large { height:184px; min-height:184px; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="formation"] .px-wide-formation { height:184px; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="formation"] .px-wide-formation .px-portrait { max-height:none; width:auto; height:auto; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="formation"] .px-formation-roster { grid-template-columns:repeat(5,minmax(0,1fr)); grid-auto-rows:84px; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="gear"] .px-grid { grid-template-columns:repeat(6,48px); }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="equip"] { left:16px; top:64px; width:928px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-stage { left:0; right:0; top:44px; bottom:208px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-plate { width:160px; height:160px; top:56%; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-plate img { max-width:none; max-height:none; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-prev { left:calc(50% - 272px); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-next { right:calc(50% - 272px); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-slot { width:136px; min-height:64px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-slot-position.top { top:0; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-slot-position.left { left:calc(50% - 236px); top:42%; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-slot-position.right { right:calc(50% - 236px); top:42%; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-hero-meta { top:calc(55% + 78px); flex-direction:row; justify-content:center; flex-wrap:wrap; gap:4px 8px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-hero-meta>b { font:700 16px/20px var(--game-font); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-drawer { left:0; right:0; top:auto; bottom:0; width:auto; height:196px; padding:8px; grid-template-columns:1fr 1fr; grid-template-rows:1fr; gap:12px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-rows { gap:4px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare { min-height:0; overflow:auto; padding-top:0; border:0; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions { margin-top:4px; gap:4px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions>.px-btn { min-height:32px; height:32px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions .px-equip-primary { height:48px; min-height:48px; }
+#management.px-menu[data-layout="v2"][data-preset="960"] .px-home-layout,
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] .px-home-layout { height:calc(var(--px-v2-height,640px) - 184px); }
+#management.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail,
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail { height:calc(var(--px-v2-height,640px) - 214px); }
+#management.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero,
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { min-height:0; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] main[data-view="heroes"] { padding:8px 0; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-roster { grid-template-columns:repeat(5,minmax(0,1fr)); }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail { height:426px; grid-template-columns:200px minmax(0,1fr); grid-template-rows:1fr auto; gap:8px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-gear { grid-column:1/-1; flex-direction:row; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-equip-stage { left:0; right:0; top:44px; bottom:208px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-equip-plate { width:160px; height:160px; top:56%; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-equip-drawer { left:0; right:0; top:auto; bottom:0; width:auto; height:196px; }
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail { height:calc(var(--px-v2-height,640px) - 214px); }
+#management.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail-center,
+#management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail-center { min-height:0; overflow:auto; }
