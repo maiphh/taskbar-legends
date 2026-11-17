@@ -49,6 +49,7 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 - Kenney Pixel UI Pack, Kenney Vleugels with Lynn Evers — CC0. `public/ui/*-9slice.png` are supplied navy/brass recolors of `Ancient/grey.png`. Source: https://opengameart.org/content/pixel-ui-pack-750-assets ; author: https://kenney.nl/assets/pixel-ui-pack . License retained in `public/ui/KENNEY-LICENSE.txt`.
 - `public/ui/icon-sword.png`, armor, chest and potion are supplied 16px crops from the credited Merchant-Shade packs; gold mark is original UI-handoff geometry.
 - `public/ui/icon-scroll-more.png` is an original pixel down-caret by the project's graphic designer, released under CC0-1.0.
+- `public/ui/button-gold-9slice.png`, `public/ui/equip-plate-common.png`, `equip-plate-rare.png`, `equip-plate-epic.png`, `equip-plate-legendary.png`, and `icon-scroll-more.png` are original pixel art made for Taskbar Legends and released under CC0 1.0.
 - Research references, Steam/wiki art, mockups, previews, archives, Silkscreen and unused vendor font alternates are **not** shipped in `public/`.
 
 ## Redistribution verification

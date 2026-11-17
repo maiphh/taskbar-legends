@@ -99,12 +99,16 @@ try {
     await page.evaluate(() => window.__game.openPanel('recruit'));
     await page.locator('[data-action="pull-one"]').click();
     await page.locator('.reveal-stage:not([hidden])').waitFor();
+    await page.locator('[data-control="reveal-skip"]').click();
+    await page.locator('[data-control="reveal-ok"]').waitFor();
     await page.screenshot({ path: `artifacts/ui-v2/recruit-result-x1-${width}.png` });
     const finishReveal = page.locator('[data-control="reveal-ok"]');
     await finishReveal.waitFor(); await finishReveal.click();
     await page.waitForFunction(() => document.querySelector('.reveal-stage')?.hidden === true);
     await page.locator('[data-action="pull-ten"]').click();
     await page.locator('.reveal-stage:not([hidden])').waitFor();
+    await page.locator('[data-control="reveal-skip"]').click();
+    await page.locator('[data-control="reveal-ok"]').waitFor();
     await page.screenshot({ path: `artifacts/ui-v2/recruit-result-x10-${width}.png` });
     if (width === 960) {
       const activeReveal = page.locator('.reveal-stage:not([hidden])');
@@ -120,6 +124,13 @@ try {
       await page.screenshot({ path: 'artifacts/ui-v2/home-min-960.png' });
       const minBounds = await page.locator('#management [data-close]').boundingBox();
       if (!minBounds || minBounds.y < 0 || minBounds.y + minBounds.height > 600) throw new Error(`close control clipped at 960x600: ${JSON.stringify(minBounds)}`);
+      const minInterior = await page.evaluate(() => {
+        const main = document.querySelector('#management main'), campaign = document.querySelector('.px-home-campaign'), actions = document.querySelector('.px-home-actions');
+        if (!main || !campaign || !actions) return null;
+        const m = main.getBoundingClientRect(), c = campaign.getBoundingClientRect(), a = actions.getBoundingClientRect();
+        return { main: [m.top,m.bottom], campaign: [c.top,c.bottom], actions: [a.top,a.bottom] };
+      });
+      if (!minInterior || minInterior.campaign[1] > minInterior.main[1] || minInterior.actions[1] > minInterior.campaign[1]) throw new Error(`Home interior clips at 960x600: ${JSON.stringify(minInterior)}`);
       for (const viewport of [{ width: 1200, height: 720 }, { width: 1280, height: 640 }, { width: 2560, height: 1440 }]) {
         await page.setViewportSize(viewport); await page.waitForTimeout(50);
         const box = await page.locator('#management').boundingBox();

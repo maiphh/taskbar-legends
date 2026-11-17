@@ -775,3 +775,87 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 #management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail { height:calc(var(--px-v2-height,640px) - 214px); }
 #management.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail-center,
 #management-app.px-menu[data-layout="v2"][data-preset="960"] .px-v2-detail-center { min-height:0; overflow:auto; }
+
+/* UI v2 review fixes: shared primary treatment and preset-safe component geometry. */
+.px-menu[data-layout="v2"] .px-primary { border:8px solid transparent; border-image:var(--px-gold-9slice) 8 fill / 8px / 0 stretch; color:#20170b; }
+.px-menu[data-layout="v2"] .px-primary .px-btn-label { color:#20170b; }
+.px-menu[data-layout="v2"] .px-primary:hover:not(:disabled) { filter:brightness(1.08); }
+.px-menu[data-layout="v2"] .px-primary:active:not(:disabled) { filter:brightness(.88); }
+.px-menu[data-layout="v2"] .px-primary:disabled { filter:grayscale(.65); color:#b0bcc8; }
+.px-menu[data-layout="v2"] .px-v2-hero-card { border:2px solid var(--px-rarity-common); border-image:none; }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="rare"] { border-color:var(--px-rarity-rare); }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="epic"] { border-color:var(--px-rarity-epic); }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="legendary"] { border-color:var(--px-rarity-legendary); }
+.px-menu[data-layout="v2"] .px-howto-card { border:2px solid var(--px-rarity-common); border-image:none; }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="rare"] { border-color:var(--px-rarity-rare); }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="epic"] { border-color:var(--px-rarity-epic); }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="legendary"] { border-color:var(--px-rarity-legendary); }
+.px-menu[data-layout="v2"] .px-howto-portrait { box-shadow:inset 0 0 0 2px var(--px-rarity-common); }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="rare"] .px-howto-portrait { box-shadow:inset 0 0 0 2px var(--px-rarity-rare); }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="epic"] .px-howto-portrait { box-shadow:inset 0 0 0 2px var(--px-rarity-epic); }
+.px-menu[data-layout="v2"] .px-howto-card[data-rarity="legendary"] .px-howto-portrait { box-shadow:inset 0 0 0 2px var(--px-rarity-legendary); }
+.px-menu[data-layout="v2"] .px-v2-hero-card > b { font:12px/16px var(--game-font); }
+.px-menu[data-layout="v2"] .px-v2-hero-card > span:last-child { font:10px/14px var(--game-meta); }
+.px-menu[data-layout="v2"] .px-v2-skill small,.px-menu[data-layout="v2"] .px-v2-skill label,
+.px-menu[data-layout="v2"] .px-howto-odds small,.px-menu[data-layout="v2"] .px-recruit-rates,
+.px-menu[data-layout="v2"] .px-recruit-rules,.px-menu[data-layout="v2"] .px-home-hero small { font-family:var(--game-meta); }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue { background:linear-gradient(180deg,transparent 0%,#202c39 70%); }
+.px-menu[data-layout="v2"] .px-equip-slot-position { z-index:1; }
+.px-menu[data-layout="v2"] .px-equip-prev,.px-menu[data-layout="v2"] .px-equip-next { z-index:4; }
+.px-menu[data-layout="v2"] .px-equip-slot-position.left { left:calc(50% - 420px); }
+.px-menu[data-layout="v2"] .px-equip-slot-position.right { right:calc(50% - 420px); }
+.px-menu[data-layout="v2"] .px-equip-prev { left:calc(50% - 316px); }
+.px-menu[data-layout="v2"] .px-equip-next { right:calc(50% - 316px); }
+.px-menu[data-layout="v2"] .px-equip-actions>.px-btn { min-height:40px; height:40px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-drawer { height:224px; grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare { position:relative; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:20px auto; gap:2px 8px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare h3 { grid-column:1/-1; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare .px-equip-deltas { grid-row:2; grid-column:1; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare .px-equip-note { position:absolute; right:0; top:22px; width:50%; margin:0; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare .px-equip-actions { grid-column:2; grid-row:2; align-content:start; margin-top:16px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions>.px-btn { min-height:40px; height:40px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions .px-equip-primary { height:48px; min-height:48px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-slot-position.left { left:calc(50% - 224px); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-slot-position.right { right:calc(50% - 224px); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-prev { left:calc(50% - 288px); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-next { right:calc(50% - 288px); }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banners { height:184px; grid-template-columns: minmax(220px,.8fr) minmax(0,1.2fr); }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-recruit-pity { position:static; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:8px; padding:8px; background:#202c39; border:1px solid #536276; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-pity-meter { min-width:0; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-history { position:static; height:180px; margin-top:8px; }
+.px-menu[data-layout="v2"] main[data-view="home"] .px-home-layout { grid-template-rows:minmax(228px,auto) minmax(0,1fr); }
+.px-menu[data-layout="v2"] main[data-view="home"] .px-home-campaign { min-height:228px; }
+.px-menu[data-layout="v2"] main[data-view="home"] .px-home-actions { flex-wrap:wrap; margin-top:8px; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector { top:132px; height:calc(var(--px-v2-height,720px) - 216px); }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector .px-insp-foot { padding-bottom:4px; }
+@media (max-width:1199px) {
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-banners { height:148px; grid-template-columns:1fr 1fr; }
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-recruit-pity { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-history { height:156px; }
+ .px-menu[data-layout="v2"] main[data-view="home"] .px-home-layout { grid-template-rows:minmax(228px,auto) minmax(0,1fr); }
+ .px-menu[data-layout="v2"] main[data-view="home"] .px-home-campaign { min-height:228px; }
+ .px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector { top:108px; height:calc(var(--px-v2-height,640px) - 236px); }
+ .px-menu[data-layout="v2"] .px-equip-slot-position.left { left:calc(50% - 208px); }
+ .px-menu[data-layout="v2"] .px-equip-slot-position.right { right:calc(50% - 208px); }
+ .px-menu[data-layout="v2"] .px-equip-prev { left:calc(50% - 286px); }
+ .px-menu[data-layout="v2"] .px-equip-next { right:calc(50% - 286px); }
+}
+.px-menu[data-layout="v2"] .px-home-hero { min-height:220px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { min-height:188px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:4px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions>.px-equip-primary { grid-column:1/-1; width:100%; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions>.px-btn { min-width:0; padding-left:3px; padding-right:3px; white-space:normal; font-size:10px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare .px-equip-deltas p { display:grid; grid-template-columns:48px minmax(0,1fr); gap:2px; align-items:center; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare .px-equip-deltas p b { font:12px/16px var(--game-font); white-space:nowrap; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare .px-equip-note { top:22px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-compare .px-equip-actions { margin-top:32px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { min-height:132px; gap:2px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { gap:0; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { min-height:120px; }
+.px-menu[data-layout="v2"] .px-v2-hero-card,.px-menu[data-layout="v2"] .px-howto-card {
+ border:8px solid transparent; border-image:var(--px-panel-9slice) 8 fill / 8px / 0 stretch;
+ box-shadow:inset 0 0 0 2px var(--px-rarity-common);
+}
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="rare"],.px-menu[data-layout="v2"] .px-howto-card[data-rarity="rare"] { box-shadow:inset 0 0 0 2px var(--px-rarity-rare); }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="epic"],.px-menu[data-layout="v2"] .px-howto-card[data-rarity="epic"] { box-shadow:inset 0 0 0 2px var(--px-rarity-epic); }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="legendary"],.px-menu[data-layout="v2"] .px-howto-card[data-rarity="legendary"] { box-shadow:inset 0 0 0 2px var(--px-rarity-legendary); }

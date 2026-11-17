@@ -89,6 +89,12 @@ try {
   await page.locator('[data-hero="fw"]').click();
   await page.waitForFunction(([, middle]) => { const ids = window.__management.snapshot().partyIds; return ids[0] === 'fw' && ids[1] === middle; }, [beforeSwap[0], beforeSwap[1]], { timeout: 3000 }).catch(async () => { console.log('click swap debug', await page.evaluate(() => ({ ids: window.__management.snapshot().partyIds, status: document.querySelector('.management-status')?.textContent, selected: document.querySelector('[data-drag-hero="fw"]')?.getAttribute('aria-pressed') }))); throw new Error('Formation click-to-swap failed'); });
   await page.locator('nav [data-tab="heroes"]').click();
+  await page.locator('nav [data-tab="formation"]').click();
+  const swapBefore = await page.evaluate(() => window.__management.snapshot().partyIds.slice(0, 2));
+  await page.locator('[data-party-slot="0"]').click();
+  const deployedHero = page.locator(`[data-hero="${swapBefore[1]}"]`); await deployedHero.focus(); await page.keyboard.press('Enter');
+  await page.waitForFunction(([front, middle]) => { const ids = window.__management.snapshot().partyIds; return ids[0] === middle && ids[1] === front; }, swapBefore, { timeout: 3000 });
+  await page.locator('nav [data-tab="heroes"]').click();
   await page.locator('[data-hero="mw2"]').click();
 
   await page.locator('nav [data-tab="recruit"]').click();
