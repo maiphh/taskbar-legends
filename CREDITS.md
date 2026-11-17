@@ -48,6 +48,7 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 - Noto Sans Regular and SemiBold, The Noto Project Authors (Copyright 2018; upstream project at https://github.com/notofonts/noto-fonts) — SIL Open Font License 1.1, full notice in `public/fonts/OFL-1.1-Noto.txt` and `LICENSES/OFL-1.1-Noto.txt`. Unmodified static hinted TTFs from `https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf` (SHA-256 `b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5`) and `.../NotoSans-SemiBold.ttf` (SHA-256 `87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5`).
 - Kenney Pixel UI Pack, Kenney Vleugels with Lynn Evers — CC0. `public/ui/*-9slice.png` are supplied navy/brass recolors of `Ancient/grey.png`. Source: https://opengameart.org/content/pixel-ui-pack-750-assets ; author: https://kenney.nl/assets/pixel-ui-pack . License retained in `public/ui/KENNEY-LICENSE.txt`.
 - `public/ui/icon-sword.png`, armor, chest and potion are supplied 16px crops from the credited Merchant-Shade packs; gold mark is original UI-handoff geometry.
+- `public/ui/icon-scroll-more.png` is an original pixel down-caret by the project's graphic designer, released under CC0-1.0.
 - Research references, Steam/wiki art, mockups, previews, archives, Silkscreen and unused vendor font alternates are **not** shipped in `public/`.
 
 ## Redistribution verification

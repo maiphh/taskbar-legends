@@ -47,6 +47,26 @@ try {
     await page.locator('#management [data-view="heroes"] [data-details-open]').first().click();
     await page.waitForSelector('#management .px-v2-detail');
     await page.screenshot({ path: `artifacts/ui-v2/hero-detail-${width}.png` });
+    await page.locator('#management .px-v2-detail [data-loadout-slot="weapon"]').first().click();
+    await page.waitForSelector('#management [data-view="equip"] .px-equip-screen');
+    await page.screenshot({ path: `artifacts/ui-v2/equip-${width}.png` });
+    await page.locator('#management [data-view="equip"] .px-equip-row').first().click();
+    await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-deltas')?.innerText.includes('ATK'));
+    await page.screenshot({ path: `artifacts/ui-v2/equip-compare-${width}.png` });
+    await page.locator('#management [data-view="equip"] [data-equip-back]').click();
+    await page.locator('#management [data-details-close]').click();
+    await page.evaluate(() => {
+      const state = window.__game.getState(), heroId = document.querySelector('#management [data-view="heroes"] [data-details-open]')?.getAttribute('data-hero'), hero = state.roster.find(value => value.id === heroId);
+      if (hero) hero.equipment.charm = null;
+      window.__game.load(state); window.__game.openPanel('heroes');
+    });
+    await page.waitForSelector('#management [data-view="heroes"] [data-details-open]');
+    await page.locator('#management [data-view="heroes"] [data-details-open]').first().click();
+    await page.waitForSelector('#management .px-v2-detail');
+    await page.locator('#management .px-v2-detail [data-loadout-slot="charm"]').first().click();
+    await page.waitForSelector('#management [data-view="equip"] .px-equip-screen');
+    await page.screenshot({ path: `artifacts/ui-v2/equip-empty-slot-${width}.png` });
+    await page.locator('#management [data-view="equip"] [data-equip-back]').click();
     await page.locator('#management [data-details-close]').click();
     await page.locator('#management [data-locked-hero]').first().click();
     await page.waitForSelector('#management .px-howto-card');

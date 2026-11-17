@@ -11,6 +11,7 @@ import type { HeroGearComparison, ManagementReply, ManagementSnapshot } from './
 import type { CompactPrefs } from '../platform/desktop/compact-geometry';
 import { formationDrop } from './formation';
 import { ManagementTooltip } from './tooltip';
+import { autoEquipBest, equipList } from './equip-model';
 
 export interface ManagementClient {
   snapshot(): Promise<ManagementSnapshot>;
@@ -135,6 +136,10 @@ export class ManagementView {
   private heroDetailTab: 'ability' | 'stats' | 'items' = 'ability';
   private detailsOpen = false;
   private loadoutItemOpen = false;
+  private equipOpen = false;
+  private equipOpener: 'heroes' | 'formation' = 'heroes';
+  private equipSlot: 'weapon' | 'armor' | 'charm' = 'weapon';
+  private equipItem = '';
   private slotFilter = 'all';
   private rarityFilter = 'all';
   private ownerFilter = 'all';
@@ -200,11 +205,12 @@ export class ManagementView {
       if (this.closed) return; const target = event.target instanceof Element ? event.target.closest<HTMLButtonElement>('button[data-tab]') : null; if (!target?.dataset.tab) return;
       // Any tab click (including Recruit itself) leaves the reveal and shows that tab's body.
       this.cancelFormationGesture(); this.tooltip.hide(); this.stopReveal(); if (this.tab !== target.dataset.tab) this.client.cue?.('ui_click');
-      this.tab = target.dataset.tab as Tab; this.lockedHeroId = ''; this.openDropdown = null; this.contentKey = ''; this.renderContent(); this.renderNav();
+      this.equipOpen = false; this.tab = target.dataset.tab as Tab; this.lockedHeroId = ''; this.openDropdown = null; this.contentKey = ''; this.renderContent(); this.renderNav();
     }, { signal: this.abort.signal });
     this.header.querySelector('[data-close]')?.addEventListener('click', () => this.close(), { signal: this.abort.signal });
     this.root.addEventListener('click', event => this.onClick(event), { signal: this.abort.signal });
     this.root.addEventListener('keydown', event => this.onKey(event), { signal: this.abort.signal });
+    this.root.addEventListener('scroll', event => { const list = event.target instanceof HTMLElement && event.target.matches('[data-scroll="equip-list"]') ? event.target : null; const cue = list?.parentElement?.querySelector<HTMLElement>('.px-equip-scroll-cue'); if (list && cue) cue.hidden = list.scrollTop + list.clientHeight >= list.scrollHeight - 2; }, { capture:true, signal:this.abort.signal });
     this.root.addEventListener('pointerdown', event => this.onPointer(event), { signal: this.abort.signal });
     this.root.addEventListener('pointermove', event => this.onPointer(event), { signal: this.abort.signal });
     this.root.addEventListener('pointerup', event => this.onPointer(event), { signal: this.abort.signal });
@@ -369,6 +375,7 @@ export class ManagementView {
   private onKey(event: KeyboardEvent): void {
     if (this.closed) return;
     const target = event.target instanceof HTMLElement ? event.target : null;
+    if (this.equipOpen && (event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !(target && /^(INPUT|TEXTAREA)$/.test(target.tagName))) { event.preventDefault(); this.cycleEquipHero(event.key === 'ArrowRight' ? 1 : -1); return; }
     if (event.key === 'Escape') {
       event.preventDefault(); event.stopPropagation();
       if (this.formationGesture) { this.cancelFormationGesture(); return; }
@@ -521,15 +528,21 @@ export class ManagementView {
     const equipTarget = target.closest<HTMLElement>('[data-equip-slot]');
     if (equipTarget?.dataset.equipSlot && this.tab === 'formation') {
       const slot = equipTarget.dataset.equipSlot as 'weapon' | 'armor' | 'charm', heroId = equipTarget.closest<HTMLElement>('[data-drag-hero]')?.dataset.dragHero;
-      if (heroId && state) { this.selectedHero = heroId; this.slotFilter = slot; this.selectedGear = state.roster.find(hero => hero.id === heroId)?.equipment[slot] ?? ''; this.tab = 'gear'; this.contentKey = ''; this.renderNav(); this.renderContent(); }
+      if (heroId && state) { this.openEquip(heroId, slot, 'formation'); }
       return;
     }
     if (this.openDropdown && !target.closest('.px-dd')) { this.openDropdown = null; this.contentKey = ''; this.renderContent(); }
     if (!button || !state || button.disabled) return;
     const action = button.dataset.action;
     if (button.dataset.openHero) { this.selectedHero = button.dataset.openHero; this.tab = 'heroes'; this.detailsOpen = true; this.contentKey = ''; this.renderNav(); this.renderContent(); return; }
+    if (button.dataset.equipBack !== undefined) { this.equipOpen = false; this.detailsOpen = this.equipOpener === 'heroes'; this.tab = this.equipOpener; this.contentKey = ''; this.renderNav(); this.renderContent(); return; }
+    if (button.dataset.equipSlot) { this.equipSlot = button.dataset.equipSlot as 'weapon'|'armor'|'charm'; this.equipItem = state.roster.find(hero => hero.id === this.selectedHero)?.equipment[this.equipSlot] ?? ''; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.equipItem) { this.equipItem = button.dataset.equipItem; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return; }
+    if (button.dataset.equipCycle) { this.cycleEquipHero(button.dataset.equipCycle === 'next' ? 1 : -1); return; }
+    if (button.dataset.equipAuto !== undefined) { void this.autoEquipHero(); return; }
+    if (button.dataset.equipLock !== undefined && this.equipItem) { void this.command({ type:'lock', gearId:this.equipItem as GameState['inventory'][number]['id'], locked:button.dataset.equipLock !== 'true' }); return; }
     if (action === 'gear-upgrades') { this.gearUpgrades = !this.gearUpgrades; this.contentKey = ''; this.renderContent(); return; }
-    if (button.dataset.tab && TABS.includes(button.dataset.tab as Tab)) { this.tab = button.dataset.tab as Tab; this.lockedHeroId = ''; this.stopReveal(); this.contentKey = ''; this.renderContent(); this.renderNav(); return; }
+    if (button.dataset.tab && TABS.includes(button.dataset.tab as Tab)) { this.equipOpen = false; this.tab = button.dataset.tab as Tab; this.lockedHeroId = ''; this.stopReveal(); this.contentKey = ''; this.renderContent(); this.renderNav(); return; }
     if (button.dataset.lockedHero) { this.lockedHeroId = button.dataset.lockedHero; this.tab = 'heroes'; this.contentKey = ''; this.renderContent(); this.renderNav(); return; }
     if (button.dataset.pushBack) { this.lockedHeroId = ''; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.goRecruit !== undefined) { this.lockedHeroId = ''; this.tab = 'recruit'; this.contentKey = ''; this.renderContent(); this.renderNav(); return; }
@@ -541,9 +554,7 @@ export class ManagementView {
     if (button.dataset.loadoutClose !== undefined) { this.loadoutItemOpen = false; this.contentKey = ''; this.renderContent(); return; }
     if (button.dataset.loadoutSlot) {
       const slot = button.dataset.loadoutSlot as 'weapon' | 'armor' | 'charm'; this.slotFilter = slot;
-      const hero = state.roster.find(value => value.id === this.selectedHero); this.selectedGear = hero?.equipment[slot] ?? '';
-      if (this.detailsOpen) { this.detailsOpen = false; this.tab = 'gear'; this.renderNav(); }
-      this.loadoutItemOpen = !!this.selectedGear; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return;
+      this.openEquip(this.selectedHero, slot, 'heroes'); return;
     }
     if (button.dataset.loadoutGear) {
       this.selectedGear = button.dataset.loadoutGear; this.loadoutItemOpen = true; this.compareKey = ''; this.comparison = null; this.contentKey = ''; this.renderContent(); return;
@@ -568,6 +579,8 @@ export class ManagementView {
     else if (action === 'retry' && !this.campaignPending) { this.campaignPending = true; this.renderHeader(); void this.command({ type: 'retry' }); }
     else if (action === 'upgrade' && this.selectedGear) void this.command({ type: 'upgrade', gearId: this.selectedGear as GameState['inventory'][number]['id'] });
     else if (action === 'equip' && this.selectedGear && this.selectedHero) void this.command({ type: 'equip', heroId: this.selectedHero, gearId: this.selectedGear as GameState['inventory'][number]['id'] });
+    else if (action === 'equip-selected' && this.equipItem && this.selectedHero) void this.command({ type:'equip', heroId:this.selectedHero, gearId:this.equipItem as GameState['inventory'][number]['id'] });
+    else if (action === 'equip-upgrade' && this.equipItem) void this.command({ type:'upgrade', gearId:this.equipItem as GameState['inventory'][number]['id'] });
     else if (action === 'pause') { const generation = this.generation; void this.settingRequest(this.client.pause(!state.paused).then(() => this.refresh(generation))); }
     else if (action === 'mute') { this.audioValue = { ...this.audioValue, muted: !this.audioValue.muted }; void this.settingRequest(this.client.setAudio(this.audioValue)); this.contentKey = ''; this.renderContent(); }
     else if (action === 'reset-size' && this.compactPrefs) { this.compactPrefs = { ...this.compactPrefs, sourceWidth: 640, sourceHeight: 160 }; void this.settingRequest(this.client.setCompactPrefs(this.compactPrefs)); this.contentKey = ''; this.renderContent(); }
@@ -599,20 +612,24 @@ export class ManagementView {
   }
   private renderContent(): void {
     const state = this.snapshotValue; if (!state || this.closed) return;
-    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.detailsOpen}:${this.loadoutItemOpen}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.heroRoleFilter}:${this.heroRarityFilter}:${this.heroSort}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
+    const signature = `${this.tab}:${this.contentSignature(state)}:${this.selectedHero}:${this.selectedGear}:${this.selectedPartySlot}:${this.partyWorkspace}:${this.heroDetailTab}:${this.detailsOpen}:${this.equipOpen}:${this.equipSlot}:${this.equipItem}:${this.loadoutItemOpen}:${this.slotFilter}:${this.rarityFilter}:${this.ownerFilter}:${this.heroRoleFilter}:${this.heroRarityFilter}:${this.heroSort}:${this.openDropdown}:${JSON.stringify(this.audioValue)}:${JSON.stringify(this.compactPrefs)}:${!!this.comparison}:${this.portraits.size}`;
     if (signature === this.contentKey) return;
     if (this.formationGesture) { this.deferredFormationRender = true; return; }
     this.tooltip.hide();
     const active = document.activeElement, focusId = active instanceof HTMLElement && (this.main.contains(active) || this.footer.contains(active)) ? active.dataset.control : undefined;
     const scroll = [...this.main.querySelectorAll<HTMLElement>('[data-scroll]')].map(node => [node.dataset.scroll, node.scrollTop, node.scrollLeft] as const);
     this.contentKey = signature; this.main.dataset.view = this.tab; this.root.dataset.view = this.tab;
-    const [body, foot] = this.lockedHeroId ? this.lockedHero(state) : this.tab === 'home' ? this.home(state) : this.tab === 'heroes' || this.tab === 'formation' ? (this.partyWorkspace = this.tab === 'formation' ? 'formation' : 'heroes', this.party(state)) : this.tab === 'gear' ? (this.gearUpgrades ? this.upgrades(state) : this.stash(state)) : this.tab === 'recruit' ? this.recruit(state) : this.tab === 'stages' ? this.stages(state) : this.settings(state);
+    const [body, foot] = this.equipOpen ? this.equipScreen(state) : this.lockedHeroId ? this.lockedHero(state) : this.tab === 'home' ? this.home(state) : this.tab === 'heroes' || this.tab === 'formation' ? (this.partyWorkspace = this.tab === 'formation' ? 'formation' : 'heroes', this.party(state)) : this.tab === 'gear' ? (this.gearUpgrades ? this.upgrades(state) : this.stash(state)) : this.tab === 'recruit' ? this.recruit(state) : this.tab === 'stages' ? this.stages(state) : this.settings(state);
+    this.main.dataset.view = this.equipOpen ? 'equip' : this.tab;
     this.main.innerHTML = body; this.footer.innerHTML = foot;
+    const equipList = this.main.querySelector<HTMLElement>('[data-scroll="equip-list"]'), scrollCue = this.main.querySelector<HTMLElement>('.px-equip-scroll-cue');
+    if (equipList && scrollCue) scrollCue.hidden = equipList.scrollHeight <= equipList.clientHeight + 2;
     for (const [key, top, left] of scroll) { const node = this.main.querySelector<HTMLElement>(`[data-scroll="${key}"]`); if (node) { node.scrollTop = top; node.scrollLeft = left; } }
     this.renderStatus();
     if (focusId) this.root.querySelector<HTMLElement>(`[data-control="${CSS.escape(focusId)}"]`)?.focus({ preventScroll: true });
     if (this.revealUi && !this.revealHost.hidden) this.drawReveal();
-    if ((this.tab === 'gear' || this.tab === 'heroes' && this.loadoutItemOpen) && this.selectedGear && this.selectedHero) void this.loadComparison(state);
+    if (this.equipOpen && this.equipItem && this.selectedHero) { this.selectedGear = this.equipItem; void this.loadComparison(state); }
+    else if ((this.tab === 'gear' || this.tab === 'heroes' && this.loadoutItemOpen) && this.selectedGear && this.selectedHero) void this.loadComparison(state);
   }
   private home(state: ManagementSnapshot): [string, string] {
     const progress = state.progress, stage = progress.stage;
@@ -653,9 +670,42 @@ export class ManagementView {
         this.compareKey = key; this.comparison = result; this.contentKey = ''; this.renderContent();
       }
     } catch { /* Comparison is read-only; the selected item and live stats remain visible. */ }
-    finally { if (this.pendingCompareGeneration === generation) { this.pendingCompare = false; if (this.isLive(generation) && this.tab === 'gear' && this.snapshotValue && this.selectedHero && this.selectedGear && this.compareKey !== `${this.snapshotValue.revision}:${JSON.stringify(this.snapshotValue.heroStats[this.selectedHero])}:${JSON.stringify(this.snapshotValue.inventory.find(item => item.id === this.selectedGear))}/${this.selectedHero}/${this.selectedGear}`) void this.loadComparison(this.snapshotValue); } }
+    finally { if (this.pendingCompareGeneration === generation) { this.pendingCompare = false; if (this.isLive(generation) && (this.tab === 'gear' || this.equipOpen) && this.snapshotValue && this.selectedHero && this.selectedGear && this.compareKey !== `${this.snapshotValue.revision}:${JSON.stringify(this.snapshotValue.heroStats[this.selectedHero])}:${JSON.stringify(this.snapshotValue.inventory.find(item => item.id === this.selectedGear))}/${this.selectedHero}/${this.selectedGear}`) void this.loadComparison(this.snapshotValue); } }
   }
   private ownerOf(state: ManagementSnapshot, id: string) { return state.roster.find(hero => Object.values(hero.equipment).includes(id as GameState['inventory'][number]['id'])); }
+  private openEquip(heroId: string, slot: 'weapon'|'armor'|'charm', opener: 'heroes'|'formation'): void {
+    const state = this.snapshotValue; if (!state?.roster.some(hero => hero.id === heroId)) return;
+    this.selectedHero = heroId; this.equipSlot = slot; this.equipOpener = opener; this.equipOpen = true;
+    this.equipItem = state.roster.find(hero => hero.id === heroId)?.equipment[slot] ?? '';
+    this.comparison = null; this.compareKey = ''; this.contentKey = ''; this.renderContent();
+  }
+  private cycleEquipHero(direction: number): void {
+    const roster = this.snapshotValue?.roster ?? []; if (!roster.length) return;
+    const index = roster.findIndex(hero => hero.id === this.selectedHero), next = (Math.max(0,index) + direction + roster.length) % roster.length;
+    this.selectedHero = roster[next]!.id; this.equipItem = roster[next]!.equipment[this.equipSlot] ?? ''; this.comparison = null; this.compareKey = ''; this.contentKey = ''; this.renderContent();
+  }
+  private async autoEquipHero(): Promise<void> {
+    const state = this.snapshotValue, hero = state?.roster.find(value => value.id === this.selectedHero); if (!state || !hero) return;
+    for (const best of autoEquipBest(hero,state.inventory)) { const reply = await this.command({ type:'equip', heroId:hero.id, gearId:best.id }); if (!reply?.accepted) break; }
+  }
+  private equipScreen(state: ManagementSnapshot): [string,string] {
+    const hero = state.roster.find(value => value.id === this.selectedHero) ?? state.roster[0]; if (!hero) return ['<p>No owned heroes.</p>',''];
+    const definition = getPartyHeroDefinition(hero.id), rarity = heroConfig(hero.id).rarity;
+    const current = state.inventory.find(item => item.id === hero.equipment[this.equipSlot]);
+    const selected = state.inventory.find(item => item.id === this.equipItem && item.slot === this.equipSlot);
+    const entries = equipList(state.inventory,state.roster,this.equipSlot);
+    const baseSpeed = definition.role === 'support' ? 115 : definition.role === 'tank' ? 90 : definition.basic.style === 'melee' ? 100 : 105;
+    const speedFor = (item: typeof current) => { const charm = this.equipSlot === 'charm' ? item : state.inventory.find(value => value.id === hero.equipment.charm); return charm?.stats.speedPct ? ` +${Math.round(charm.stats.speedPct * (1 + CONFIG.gear.upgrade.mainPerLevel * charm.level) * 100)}%` : ''; };
+    const stats = state.heroStats[hero.id];
+    const slotCard = (slot: 'weapon'|'armor'|'charm') => { const item = state.inventory.find(value => value.id === hero.equipment[slot]); const title = slot[0]!.toUpperCase()+slot.slice(1); return `<button class="px-equip-slot${this.equipSlot===slot?' is-selected':''}${item?'':' is-empty'}" data-equip-slot="${slot}" data-rarity="${item?.rarity??'common'}"><span class="px-equip-slot-icon">${item?icon(SLOT_ICON[slot]!):'+'}</span><span><b>${title}</b><small>${item?`Lv ${item.level} · ${esc(this.itemStatLine(item))}`:'Empty slot'}</small></span></button>`; };
+    const rows = entries.map(({gear:item,wornBy:wearer}) => `<button class="px-equip-row${this.equipItem===item.id?' is-selected':''}" data-rarity="${item.rarity}" data-equip-item="${item.id}"><span class="px-equip-row-icon">${shape(item.rarity)}${icon(SLOT_ICON[this.equipSlot]!)}</span><span class="px-equip-row-text"><b>${rarityText(item.rarity,`${item.rarity[0]!.toUpperCase()+item.rarity.slice(1)} ${this.equipSlot} Lv ${item.level}`)}</b><small>${esc(this.itemStatLine(item))}${wearer?` · ${wearer.id===hero.id?'Equipped':`Worn by ${shortName(wearer.id)}`}`:''}</small></span>${item.locked?'<i class="px-lock" aria-label="Locked"></i>':''}</button>`).join('') || '<p class="px-muted">No items in this slot.</p>';
+    const comparison = this.comparison;
+    const compareRows = selected && comparison ? ([['HP',comparison.before.maxHp,comparison.after.maxHp],['ATK',comparison.before.atk,comparison.after.atk],['DEF',comparison.before.def,comparison.after.def]] as const).map(([label,before,after])=>`<p><span>${label}</span><b class="${after>before?'px-green':after<before?'px-red':'px-muted'}">${fmt(before)} → ${fmt(after)} ${after>before?'+':''}${fmt(after-before)}</b></p>`).join('') + `<p><span>Turn SPD</span><b class="${speedFor(selected)===speedFor(current)?'px-muted':'px-green'}">${baseSpeed}${speedFor(current)} → ${baseSpeed}${speedFor(selected)}</b></p>` : '<p class="px-muted">Select an item to compare.</p>';
+    const owner = selected ? this.ownerOf(state,selected.id) : undefined, swap = owner && owner.id !== hero.id;
+    const cost = selected ? upgradeCost(selected) : 0, canLock = selected && (selected.locked || state.inventory.filter(item=>item.locked).length < state.lockMax);
+    return [`<section class="px-equip-screen" aria-label="Equip ${esc(shortName(hero.id))}"><header class="px-equip-heading"><button class="px-btn" data-equip-back>Back</button><h2>Equip</h2></header><div class="px-equip-stage"><button class="px-btn px-equip-prev" data-equip-cycle="prev" aria-label="Previous hero">‹</button><button class="px-btn px-equip-next" data-equip-cycle="next" aria-label="Next hero">›</button><div class="px-equip-plate" data-rarity="${rarity}">${this.portrait(hero.id, window.innerWidth < 1200 ? 3 : 4)}</div><div class="px-equip-slot-position top">${slotCard('charm')}</div><div class="px-equip-slot-position left">${slotCard('weapon')}</div><div class="px-equip-slot-position right">${slotCard('armor')}</div><div class="px-equip-hero-meta"><b>${esc(shortName(hero.id))}</b><small>${esc(heroName(hero.id))}</small><i class="px-v2-role ${definition.role}">${definition.role.toUpperCase()}</i><p>HP ${fmt(stats?.maxHp??0)} · ATK ${fmt(stats?.atk??0)} · DEF ${fmt(stats?.def??0)} · Turn SPD ${baseSpeed}${speedFor(current)}</p></div></div><aside class="px-equip-drawer"><section class="px-equip-list"><h3>${this.equipSlot[0]!.toUpperCase()+this.equipSlot.slice(1)}</h3><div class="px-equip-rows" data-scroll="equip-list">${rows}</div><div class="px-equip-scroll-cue" aria-hidden="true"><img src="/ui/icon-scroll-more.png" width="22" height="14"></div></section><section class="px-equip-compare"><h3>Compare</h3><div class="px-equip-deltas">${compareRows}</div>${swap?`<p class="px-equip-note">${esc(shortName(owner!.id))} loses this item.</p>`:''}<div class="px-equip-actions">${selected && selected.id !== hero.equipment[this.equipSlot] ? button('equip-apply',swap?'Swap':'Equip','data-action="equip-selected"',{primary:true,className:'px-equip-primary'}) : ''}<button class="px-btn" disabled title="Unequip is not supported by the current management actions">Unequip</button>${selected?button('equip-upgrade',`Upgrade · ${fmt(cost)} gold`,'data-action="equip-upgrade"',{disabled:!cost||state.gold<cost||selected.level>=CONFIG.gear.upgrade.maxLevel}):''}<button class="px-btn" data-equip-lock="${selected?.locked===true}" ${canLock?'':'disabled'}>${selected?.locked?'Unlock':'Lock'}</button><button class="px-btn" data-equip-auto>Auto-equip best</button></div></section></aside></section>`, ''];
+  }
+  private itemStatLine(item: ManagementSnapshot['inventory'][number]): string { const mult=1+CONFIG.gear.upgrade.mainPerLevel*item.level; const values=[item.stats.hp?`HP +${fmt(item.stats.hp*mult)}`:'',item.stats.atk?`ATK +${fmt(item.stats.atk*mult)}`:'',item.stats.def?`DEF +${fmt(item.stats.def*mult)}`:'',item.stats.hpPct?`HP +${fmt(item.stats.hpPct*mult*100)}%`:'',item.stats.atkPct?`ATK +${fmt(item.stats.atkPct*mult*100)}%`:'',item.stats.speedPct?`SPD +${fmt(item.stats.speedPct*mult*100)}%`:''].filter(Boolean); return values.join(' · '); }
   /** Party (§7.1): preset row, coverage, three 96×88 formation slots, 88×80 roster cards (scroll), inspector with Assign/Lock pinned. */
   private party(state: ManagementSnapshot): [string, string] {
     const selected = state.roster.find(hero => hero.id === this.selectedHero) ?? state.roster.find(hero => hero.id === state.partyIds[0]);
