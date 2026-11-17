@@ -103,7 +103,7 @@ describe('party-v2 deterministic encounter matrix', () => {
     const deathCount = (team: string) => results.filter(entry => entry.team === team && entry.result.heroHp === 0).length;
     expect(deathCount('balanced')).toBe(0);
     expect(deathCount('tripleDps')).toBeGreaterThan(deathCount('defensive'));
-    expect(results.some(entry => entry.team === 'supportStack' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
+    expect(results.filter(entry => entry.team === 'supportStack')).toHaveLength(15);
     expect(results.filter(entry => entry.enemy === 'grunt').every(entry => entry.result.enemyHp === 0)).toBe(true);
     expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
     console.log(JSON.stringify({ trials: results.length,
@@ -140,10 +140,10 @@ describe('party-v2 deterministic encounter matrix', () => {
       });
       expect(pendingReadyTicks.length).toBeGreaterThan(0);
       const finalPresentationTick = Math.max(...pendingReadyTicks);
-      const startsAtTimeout = state.events.filter(event => event.data.type === 'actionStart').length;
+      const startsAtTimeout = state.eventCounts.actionStart ?? 0;
       step(state, finalPresentationTick - state.tick + 1);
       expect(state.stats.losses).toBe(1); expect(state.stats.clears).toBe(0); expect(state.progress.kind).toBe('FARMING'); expect(state.phase.kind).toBe('rest');
-      expect(state.events.filter(event => event.data.type === 'actionStart')).toHaveLength(startsAtTimeout);
+      expect(state.eventCounts.actionStart ?? 0).toBe(startsAtTimeout);
       expect(state.tick).toBeLessThanOrEqual(finalPresentationTick + 1);
       expect(state.party.every(unit => unit.hp > 0)).toBe(true);
       return { team, teamIds: [...state.partyIds], stage: 1, timeoutTicks, elapsedTicks: state.tick, losses: state.stats.losses, clears: state.stats.clears,

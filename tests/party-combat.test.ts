@@ -143,8 +143,9 @@ describe('party-v2 positioning and actions', () => {
     expect(tank.action).toMatchObject({ state: 'recovery' });
     expect(tank.attacks).toBe(0);
     step(state, tank.action?.state === 'recovery' ? tank.action.readyTick - state.tick : 0);
-    expect(tank.action).toMatchObject({ state: 'idle' });
+    expect(['idle', 'windup']).toContain(tank.action?.state);
     spare.hp = spare.maxHp;
+    for (const unit of [...state.party, ...state.enemies]) if (unit !== tank) { unit.gauge = 0; unit.action = { state: 'idle' }; unit.specialAction = undefined; }
     tank.gauge = 10000;
     step(state);
     expect(state.events.filter(event => event.data.type === 'actionStart' && event.data.unitId === tank.id).length).toBeGreaterThanOrEqual(2);

@@ -402,7 +402,7 @@ describe('party-v2 common impact resolution', () => {
     state.enemies = [target]; target.x = weakener.x; target.hp = 10000; target.maxHp = 10000; hold(target);
     const cast = (): void => {
       weakener.mana = 60; weakener.partyCooldowns = { weaken: 0 }; weakener.action = { state: 'idle' }; weakener.statuses = []; weakener.gauge = 10000;
-      step(state); for (let i = 0; i < 100 && weakener.action?.state !== 'idle'; i += 1) step(state);
+      step(state); for (let i = 0; i < 100 && !state.partyEffects?.some(effect => effect.targetId === target.id && effect.group === 'enemy-atk-weaken'); i += 1) step(state);
     };
     cast();
     expect(state.partyEffects?.some(effect => effect.targetId === target.id && effect.group === 'enemy-atk-weaken')).toBe(true);

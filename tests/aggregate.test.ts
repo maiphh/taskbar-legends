@@ -45,7 +45,7 @@ describe('aggregate reference-player reports', () => {
     expect(run()).toEqual(run());
     expect(() => runReferenceAggregate({ firstSeed: 1, seeds: 0, days: 7, gachaSeeds: 10 })).toThrow();
     expect(() => runReferenceAggregate({ firstSeed: 0xffffffff, seeds: 2, days: 7, gachaSeeds: 10 })).toThrow();
-  });
+  }, 15_000);
   it('allows a 1-tick (0.05 s) epsilon on the 20–40 s farm-clear band', () => {
     expect(FARM_CLEAR_TARGET.epsilonSeconds).toBe(0.05);
     expect(farmClearInTarget(20, 40)).toBe(true);

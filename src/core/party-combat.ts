@@ -6,8 +6,8 @@ import { applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveD
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
 import { partyKillReward } from './rewards';
-import { fillGauges, nextActor, spendTurn, type GaugeUnit } from './turn/action-bar';
-import { canAct, onTurnStart, type RunningStatus } from './turn/statuses';
+import { spendTurn, type GaugeUnit } from './turn/action-bar';
+import { canAct, fillMultiplier, onTurnStart, statusDef, type RunningStatus } from './turn/statuses';
 import { actionBoundaries, createActionTimeline, hasUnfinishedPresentation } from './turn/animation-timing';
 import type { GameEvent, GameState, PartyProjectile, Unit } from './model';
 
@@ -588,17 +588,23 @@ export function partyCombatTick(state: GameState, allowNewActions = true): void 
   const specials = advanceEnemySpecials(state, now);
   resolveDueImpacts(state, startUnits, now, specials.damage);
 
-  if (living([...state.party, ...state.enemies]).some(presentationBusy)) {
-    if (state.party.every(hero => hero.hp <= 0)) cancelPartyEncounterEffects(state);
-    return;
-  }
+  if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); return; }
+
   if (!allowNewActions) return;
 
-  const wrappers = living([...state.party, ...state.enemies]).map(toGaugeUnit);
-  fillGauges(wrappers);
-  for (const wrapper of wrappers) syncGauge(wrapper);
-  const actor = nextActor(wrappers);
-  if (actor) beginActorTurn(state, actor.ref, now);
+  let actor: Unit | undefined;
+  for (const unit of startUnits) {
+    if (unit.hp <= 0) continue;
+    const statuses = unitStatuses(unit);
+    if (!statuses.some(status => statusDef(status.id)?.locksGauge)) {
+      unit.gauge = (unit.gauge ?? 0) + Math.round(turnSpd(unit) * 7 * fillMultiplier(statuses));
+    }
+    if (presentationBusy(unit) || (unit.gauge ?? 0) < 10000) continue;
+    if (!actor || (unit.gauge ?? 0) > (actor.gauge ?? 0)
+      || ((unit.gauge ?? 0) === (actor.gauge ?? 0) && unit.side === 'hero' && actor.side === 'enemy')
+      || ((unit.gauge ?? 0) === (actor.gauge ?? 0) && unit.side === actor.side && unit.slot < actor.slot)) actor = unit;
+  }
+  if (actor) beginActorTurn(state, actor, now);
 
   if (state.party.every(hero => hero.hp <= 0)) cancelPartyEncounterEffects(state);
 }

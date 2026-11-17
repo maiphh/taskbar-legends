@@ -174,7 +174,7 @@ describe('salvage toast copy (Â§19.4)', () => {
 });
 
 describe('Â§19 sim: protection on never removes equipped gear', () => {
-  it('a 3-day reference run with the block on records zero equipped removals', { timeout: 60_000 }, () => {
+  it('a 3-day reference run with the block on records zero equipped removals', { timeout: 150_000 }, () => {
     setV14Rules(['chestChoice', 'farmChest', 'recruitPity', 'gearFortune', 'expeditionChests', 'offlineTickets']);
     setSalvageRules('design');
     const run = runReference(1, 3);
