@@ -720,6 +720,7 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .management-status:empty { display:none; }
 .px-menu[data-layout="v2"] .management-status:not(:empty) { display:block; position:absolute; z-index:30; left:96px; right:16px; top:auto; bottom:64px; width:auto; height:auto; min-height:32px; padding:8px 12px; overflow:visible; white-space:normal; background:#202c39; border:1px solid #536276; pointer-events:none; }
 .px-menu[data-layout="v2"] .management-status[data-quiet="true"] { position:absolute; width:1px; height:1px; min-height:0; left:-10000px; right:auto; bottom:auto; padding:0; border:0; clip:rect(0,0,0,0); overflow:hidden; white-space:nowrap; }
+.px-menu[data-layout="v2"] .px-legendary-toast:not([hidden]) { position:absolute; z-index:40; top:64px; right:16px; max-width:360px; padding:8px 12px; color:#ffe38c; background:#202c39; border:2px solid var(--px-gold,#e9bd68); box-shadow:2px 2px 0 #101820; font:12px/18px var(--game-font); pointer-events:none; }
 .px-menu[data-layout="v2"][data-preset="960"] .management-status:not(:empty) { left:16px; right:16px; bottom:128px; }
 .px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-help-row { display:flex; min-height:20px; font-size:11px; }
 .px-menu[data-layout="v2"] .px-equip-plate { background-color:transparent; }

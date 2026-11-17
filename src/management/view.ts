@@ -156,7 +156,8 @@ export class ManagementView {
   private generation = 0;
   private timer = 0;
   private animationTimer = 0;
-  private animationStarted = 0;
+  private animationClockOrigin = 0;
+  private frozenAnimationElapsed = 0;
   private animationFrozen = false;
   private sequence = 0;
   private clientId = crypto.randomUUID();
@@ -186,6 +187,7 @@ export class ManagementView {
   private revealFrame = 0;
   private pulling = false;
   private campaignPending = false;
+  private lastLegendaryDropSeq = 0;
   private atlas: AtlasLibrary | null;
   private readonly portraits = new Map<string, string>();
   private readonly variant: ManagementVariant;
@@ -205,8 +207,8 @@ export class ManagementView {
       this.root.style.setProperty(`--px-${name}-9slice`, `url("${asset(`ui/${file}.png`)}")`);
     }
     this.root.innerHTML = `<header class="management-header"><h1>TASKBAR LEGENDS</h1><span class="px-run" data-run></span><span class="px-wallet" data-wallet></span>${button('menu-close', 'X', 'data-close', { aria: 'Close management', className: 'px-close' })}</header>`
-      + `<nav aria-label="Management tabs"></nav><div class="campaign-row"><span class="campaign-status" data-campaign></span><span data-campaign-action></span></div><div class="management-status" role="status" aria-live="polite"></div><main></main><div class="px-divider"></div><footer class="px-footer"></footer>`
-      + `<section class="reveal-stage" aria-label="Recruit reveal" hidden><canvas width="${REVEAL_STAGE.width}" height="${REVEAL_STAGE.height}" role="img" aria-label="Recruit results"></canvas><div class="reveal-controls"></div></section>`;
+      + `<nav aria-label="Management tabs"></nav><div class="campaign-row"><span class="campaign-status" data-campaign></span><span data-campaign-action></span></div><div class="management-status" role="status" aria-live="polite"></div><div class="px-legendary-toast" role="status" aria-live="polite" hidden></div><main></main><div class="px-divider"></div><footer class="px-footer"></footer>`
+      + `<section class="reveal-stage" aria-label="Recruit reveal" hidden><canvas width="${REVEAL_STAGE.width}" height="${REVEAL_STAGE.height}" role="img" aria-label="Recruit results" aria-describedby="recruit-result-description"></canvas><ul id="recruit-result-description" class="px-sr" aria-label="Recruit results"></ul><div class="reveal-controls"></div></section>`;
     this.header = this.root.querySelector('.management-header')!; this.nav = this.root.querySelector('nav')!;
     this.status = this.root.querySelector('.management-status')!; this.main = this.root.querySelector('main')!; this.footer = this.root.querySelector('footer')!;
     this.revealHost = this.root.querySelector('.reveal-stage')!; this.revealCanvas = this.revealHost.querySelector('canvas')!;
@@ -265,23 +267,37 @@ export class ManagementView {
     this.closed = true; this.stopAnimationClock(); this.client.cue?.('ui_close'); this.client.close(); this.onClose();
   }
   dispose(): void { this.close(); this.stopAnimationClock(); this.generation += 1; this.tooltip.dispose(); this.abort.abort(); this.root.replaceChildren(); }
-  freezeAnimation(frozen: boolean): void { this.animationFrozen = frozen; this.syncAnimationClock(); this.updateAnimatedPortraits(); }
+  freezeAnimation(frozen: boolean): void {
+    if (frozen === this.animationFrozen) return;
+    if (frozen) this.frozenAnimationElapsed = this.animationElapsed();
+    else this.animationClockOrigin = this.animationNow() - this.frozenAnimationElapsed;
+    this.animationFrozen = frozen; this.syncAnimationClock(); this.updateAnimatedPortraits();
+  }
   private startAnimationClock(): void {
-    this.animationStarted = performance.now();
+    this.animationClockOrigin = this.animationNow(); this.frozenAnimationElapsed = 0;
     this.syncAnimationClock();
   }
+  private animationNow(): number { return this.options.clock?.() ?? performance.now(); }
+  private animationElapsed(): number { return this.animationFrozen ? this.frozenAnimationElapsed : Math.max(0, this.animationNow() - this.animationClockOrigin); }
   private stopAnimationClock(): void { window.clearInterval(this.animationTimer); this.animationTimer = 0; }
   private syncAnimationClock(): void {
     if (!shouldRunManagementAnimation(this.closed, document.hidden, matchMedia('(prefers-reduced-motion: reduce)').matches, this.animationFrozen)) this.stopAnimationClock();
-    else if (!this.animationTimer) { this.animationStarted = performance.now(); this.animationTimer = window.setInterval(() => this.updateAnimatedPortraits(), 125); }
+    else if (!this.animationTimer) { this.animationTimer = window.setInterval(() => this.updateAnimatedPortraits(), 125); }
   }
   private updateAnimatedPortraits(): void {
     if (this.closed || document.hidden || this.animationFrozen || matchMedia('(prefers-reduced-motion: reduce)').matches || !this.atlas) return;
-    const elapsed = performance.now() - this.animationStarted;
+    const elapsed = this.animationElapsed();
     for (const img of this.root.querySelectorAll<HTMLImageElement>('img.px-portrait[data-atlas-key]')) {
       const key = img.dataset.atlasKey!; const index = this.atlas.idleFrameIndex(key, elapsed); const frame = this.atlas.portraitFrame(key, index);
       if (frame) img.src = frame.toDataURL();
     }
+  }
+  presentLegendaryDrop(seq: number, message: string): void {
+    if (this.closed || seq <= this.lastLegendaryDropSeq) return;
+    this.lastLegendaryDropSeq = seq;
+    const toast = this.root.querySelector<HTMLElement>('.px-legendary-toast'); if (!toast) return;
+    toast.textContent = message; toast.hidden = false;
+    window.setTimeout(() => { toast.hidden = true; }, 4000);
   }
   /** Debug/shot hook: the reveal in this menu, or null. */
   revealState(): ReturnType<PixelUI['revealState']> { return this.revealHost.hidden ? null : this.revealUi?.revealState() ?? null; }
@@ -381,6 +397,7 @@ export class ManagementView {
     const ui = new PixelUI(this.atlas, this.revealHost.querySelector<HTMLElement>('.reveal-controls')!);
     ui.managementReveal = true;
     if (this.options.clock) { const clock = this.options.clock; ui.clock = () => clock(); }
+    ui.managementIdleClock = () => this.animationElapsed();
     ui.onCue = key => this.client.cue?.(key);
     ui.onRedraw = () => this.drawReveal();
     ui.onRevealAgain = count => { void this.recruitPull(count); };
@@ -393,8 +410,17 @@ export class ManagementView {
     ctx.imageSmoothingEnabled = false;
     const width = this.stageWidth(); this.revealHost.dataset.compact = String(width < REVEAL_STAGE.width);
     ui.drawRevealStage(ctx, this.snapshotValue?.tickets ?? 0, 1, width);
+    this.updateRevealDescription(ui.revealState());
     window.cancelAnimationFrame(this.revealFrame);
     if (ui.revealState()) this.revealFrame = window.requestAnimationFrame(() => this.drawReveal());
+  }
+  private updateRevealDescription(reveal: ReturnType<PixelUI['revealState']>): void {
+    const list = this.revealHost.querySelector<HTMLUListElement>('#recruit-result-description'); if (!list) return;
+    if (!reveal) { list.replaceChildren(); return; }
+    list.innerHTML = reveal.pulls.map(pull => {
+      const hero = CONFIG.heroes.find(value => value.id === pull.heroId), role = hero ? getPartyHeroDefinition(hero.id).role : 'unknown';
+      return `<li>${esc(shortName(pull.heroId))}, ${esc(pull.rarity)}, ${esc(role)}</li>`;
+    }).join('');
   }
   /** 624-wide docked panel → compactMenu.tenPullCompact; 720 panels and the native window keep the 720 gacha layout. */
   private stageWidth(): number { return this.variant === 'browser' && this.root.getBoundingClientRect().width < REVEAL_STAGE.width ? MENU.tenPullCompact.panelW : REVEAL_STAGE.width; }

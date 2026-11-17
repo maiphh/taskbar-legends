@@ -106,7 +106,14 @@ try {
     await page.locator('.reveal-stage:not([hidden])').waitFor();
     await page.locator('[data-control="reveal-skip"]').click();
     await page.locator('[data-control="reveal-ok"]').waitFor();
+    const x1Descriptions = await page.locator('#recruit-result-description li').allTextContents();
+    if (x1Descriptions.length !== 1 || x1Descriptions[0].split(',').length < 3) throw new Error(`x1 recruit result lacks accessible name, rarity, and role: ${JSON.stringify(x1Descriptions)}`);
+    await page.evaluate(() => window.__game.freezeClock(123456));
+    const resultX1 = await page.locator('.reveal-stage canvas').evaluate(canvas => canvas.toDataURL());
+    await page.waitForTimeout(130);
+    if (await page.locator('.reveal-stage canvas').evaluate(canvas => canvas.toDataURL()) !== resultX1) throw new Error('Reduced-motion x1 result canvas changed while its shared animation clock was frozen');
     await page.screenshot({ path: `artifacts/ui-v2/recruit-result-x1-${width}.png` });
+    await page.evaluate(() => window.__game.freezeClock(null));
     const finishReveal = page.locator('[data-control="reveal-ok"]');
     await finishReveal.waitFor(); await finishReveal.click();
     await page.waitForFunction(() => document.querySelector('.reveal-stage')?.hidden === true);
@@ -114,7 +121,14 @@ try {
     await page.locator('.reveal-stage:not([hidden])').waitFor();
     await page.locator('[data-control="reveal-skip"]').click();
     await page.locator('[data-control="reveal-ok"]').waitFor();
+    const x10Descriptions = await page.locator('#recruit-result-description li').allTextContents();
+    if (x10Descriptions.length !== 10 || x10Descriptions.some(description => description.split(',').length < 3)) throw new Error(`x10 recruit results lack accessible name, rarity, and role: ${JSON.stringify(x10Descriptions)}`);
+    await page.evaluate(() => window.__game.freezeClock(123456));
+    const resultX10 = await page.locator('.reveal-stage canvas').evaluate(canvas => canvas.toDataURL());
+    await page.waitForTimeout(130);
+    if (await page.locator('.reveal-stage canvas').evaluate(canvas => canvas.toDataURL()) !== resultX10) throw new Error('Reduced-motion x10 result canvas changed while its shared animation clock was frozen');
     await page.screenshot({ path: `artifacts/ui-v2/recruit-result-x10-${width}.png` });
+    await page.evaluate(() => window.__game.freezeClock(null));
     if (width === 960) {
       const activeReveal = page.locator('.reveal-stage:not([hidden])');
       if (await activeReveal.count()) {
@@ -168,4 +182,16 @@ try {
     }
     await page.close();
   }
+  const animationPage = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, reducedMotion: 'no-preference' });
+  await animationPage.goto(base, { waitUntil: 'networkidle' });
+  await animationPage.evaluate(async () => { await window.__game.whenReady(); window.__game.pause(); window.__game.openPanel('heroes'); });
+  const animatedPortrait = animationPage.locator('#management [data-view="heroes"] [data-hero="mw1"] img.px-portrait[data-atlas-key]');
+  await animatedPortrait.waitFor();
+  const portraitFrames = [];
+  for (let i = 0; i < 12; i += 1) {
+    portraitFrames.push(await animatedPortrait.evaluate(img => ({ src: img.src, width: img.naturalWidth, height: img.naturalHeight })));
+    await animationPage.waitForTimeout(125);
+  }
+  if (new Set(portraitFrames.map(frame => `${frame.width}x${frame.height}`)).size !== 1 || new Set(portraitFrames.map(frame => frame.src)).size < 2) throw new Error(`Idle portrait frames changed dimensions or did not animate: ${JSON.stringify(portraitFrames.map(({width,height}) => [width,height]))}`);
+  await animationPage.close();
 } finally { await browser.close(); }

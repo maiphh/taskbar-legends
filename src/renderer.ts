@@ -4,6 +4,7 @@ import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
 import { BODY } from './font';
 import { bannerFrame, popupFrame } from './motion';
+import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { stageCue, upgradePopups } from './core/selectors';
 import { combatEventAge, enemyFormationX, presentationCombatTime } from './core/party-combat';
@@ -16,6 +17,7 @@ import { gaugeRatio } from './core/turn/action-bar';
 import { stepCombatCamera, type CombatCameraInput } from './party-camera';
 import { compactLaneLayout } from './compact-lane-layout';
 import { LegendaryEffects } from './legendary-effects';
+import { consumeNewEvents, triggerLegendaryEvent } from './legendary-events';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -42,7 +44,15 @@ export class Renderer {
     this.ctx = ctx; this.ui = new PixelUI(this.atlases, controls);
     this.holySheet = this.loadVfx('holy-smite'); this.treasureSheet = this.loadVfx('treasure-glint'); this.dropBurstSheet = this.loadVfx('cs5475-explosion-gold-48');
   }
-  private loadVfx(name: string): HTMLImageElement { const image = new Image(); image.src = `/assets/vfx/${name.startsWith('cs5475-') ? name : `pvfx-${name}`}/sprites.png`; image.onerror = () => { image.dataset.unavailable = 'true'; }; return image; }
+  private loadVfx(name: string): HTMLImageElement { const image = new Image(); image.src = new URL(`${import.meta.env.BASE_URL}assets/vfx/${name.startsWith('cs5475-') ? name : `pvfx-${name}`}/sprites.png`, window.location.href).href; image.onerror = () => { image.dataset.unavailable = 'true'; }; return image; }
+  /** Debug capture uses the same caster resolver as retained combat events without touching sim state. */
+  debugLegendaryShowcase(kind: 'skill' | 'drop', state: GameState): void {
+    const event: GameEvent = kind === 'skill'
+      ? { seq: state.eventSeq, tick: state.tick, data: { type: 'skill', unitId: 'hero-mh3', skill: 'heavy-single-burst' } }
+      : { seq: state.eventSeq, tick: state.tick, data: { type: 'gear', gearId: itemId(state.seed, 0), slot: 'weapon', rarity: 'legendary' } };
+    const caster = state.party[0] ? { ...state.party[0], id: 'hero-mh3', sourceId: 'mh3', side: 'hero' as const } : undefined;
+    triggerLegendaryEvent(event, caster ? [caster] : state.party, state.enemies, (effectKind, label) => this.legendaryEffects.trigger(effectKind, performance.now(), label));
+  }
   getHitRegions(): HitRegion[] {
     const origin = this.canvas.getBoundingClientRect();
     return this.ui.sourceRegions().map(rect => ({ ...rect, x: origin.left + rect.x * this.zoom / this.dpr, y: origin.top + rect.y * this.zoom / this.dpr, width: rect.width * this.zoom / this.dpr, height: rect.height * this.zoom / this.dpr }));
@@ -206,14 +216,9 @@ export class Renderer {
     this.frameCamera = null;
     const ctx = this.ctx, view = CONFIG.view, palette = CONFIG.ui.palette, height = this.ui.height();
     if (!this.effectEventsInitialized) { this.effectEventSeq = state.eventSeq; this.effectEventsInitialized = true; }
-    for (const event of state.events) if (event.seq > this.effectEventSeq) {
-      const data = event.data;
-      if (data.type === 'skill') {
-        const caster = state.roster.find(hero => hero.id === data.unitId);
-        if (caster && heroConfig(caster.id).rarity === 'legendary') this.legendaryEffects.trigger('skill', performance.now(), data.skill.replaceAll('-', ' ').toUpperCase());
-      } else if (data.type === 'gear' && data.rarity === 'legendary') this.legendaryEffects.trigger('drop', performance.now(), `LEGENDARY ${data.slot.toUpperCase()}`);
-      this.effectEventSeq = Math.max(this.effectEventSeq, event.seq);
-    }
+    this.effectEventSeq = consumeNewEvents(state.eventSeq, this.effectEventSeq, state.events, event => {
+      triggerLegendaryEvent(event, state.party, state.enemies, (kind, label) => this.legendaryEffects.trigger(kind, performance.now(), label));
+    });
     const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.zoom, 0, 0, this.zoom, 0, 0);
@@ -365,10 +370,17 @@ export class Renderer {
   }
   private drawLegendaryEffect(ctx: CanvasRenderingContext2D, field: { x: number; width: number }, coreY: number): void {
     const effect = this.legendaryEffects.current(performance.now()); if (!effect) return;
+    const reducedMotion = this.ui.reducedMotion;
     const cx = field.x + Math.floor(field.width / 2), cy = coreY + 30, progress = effect.age / (effect.kind === 'skill' ? 1100 : 1000);
     const gold = CONFIG.ui.rarity.legendary.frame;
     ctx.save(); ctx.imageSmoothingEnabled = false;
-    if (effect.kind === 'skill') {
+    if (reducedMotion) {
+      const alpha = Math.max(0, 1 - effect.age / 450);
+      ctx.globalAlpha = alpha; ctx.fillStyle = '#101c27'; ctx.fillRect(cx - 112, cy - 37, 224, 24);
+      ctx.strokeStyle = gold; ctx.strokeRect(cx - 112.5, cy - 37.5, 225, 25);
+      ctx.fillStyle = gold; ctx.fillRect(cx - 4, cy - 4, 9, 9);
+      this.ui.text(ctx, effect.label, cx - Math.min(104, effect.label.length * 3.5), cy - 31, '#ffe38c', 16, true);
+    } else if (effect.kind === 'skill') {
       const radius = 10 + Math.floor(progress * 42), alpha = Math.max(0, 1 - progress);
       if (!this.ui.reducedMotion && !this.compact) { ctx.globalAlpha = alpha * 0.22; ctx.fillStyle = gold; ctx.fillRect(field.x, 0, field.width, coreY + 54); }
       ctx.globalAlpha = alpha;

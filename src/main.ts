@@ -24,6 +24,8 @@ import { readCompactPrefs, writeCompactPrefs } from './platform/compact-prefs';
 import { parseCompactPrefs } from './platform/desktop/compact-geometry';
 import type { CompactPrefs } from './platform/desktop/compact-geometry';
 import { startManagementBridge } from './platform/desktop/management-bridge';
+import { emit } from '@tauri-apps/api/event';
+import { consumeNewEvents } from './legendary-events';
 
 function element(id: string): HTMLElement {
   const value = document.getElementById(id); if (!value) throw new Error(`Missing UI element ${id}`); return value;
@@ -62,6 +64,7 @@ const managementRoot = element('management'), compactMenu = element('compact-men
 let managementView: ManagementView | null = null, internalRequest = 0;
 let lastFrame = performance.now(), lastSave = lastFrame, noticeUntil = 0;
 let legendaryNoticeSeq = 0;
+let legendaryNotificationSeq = 0;
 const showNotice = (message: string): void => { notice.textContent = message; noticeUntil = performance.now() + 7000; };
 export const canonicalSaveKey = `${CONFIG.runtime.saveKey}:party-v2`;
 const store = localSaveStore(canonicalSaveKey);
@@ -241,16 +244,18 @@ function render(): void {
   if (rendering) return;
   rendering = true;
   try {
-  for (const event of state.events) if (event.seq > legendaryNoticeSeq) {
+  legendaryNoticeSeq = consumeNewEvents(state.eventSeq, legendaryNoticeSeq, state.events, event => {
     const data = event.data;
     if (data.type === 'gear' && data.rarity === 'legendary') {
       const item = state.inventory.find(value => value.id === data.gearId);
       const name = item ? `Legendary ${item.slot}` : `Legendary ${data.slot}`;
+      const notificationSeq = ++legendaryNotificationSeq;
       showNotice(`Legendary drop: ${name}`); noticeUntil = performance.now() + 4000; notice.classList.add('legendary-notice'); audio.play('gacha_legendary_sting');
       showLegendaryToast(`Legendary drop: ${name}`);
+      managementView?.presentLegendaryDrop(notificationSeq, `Legendary drop: ${name}`);
+      if ('__TAURI_INTERNALS__' in window) void emit('management://legendary-drop', { seq: notificationSeq, message: `Legendary drop: ${name}` }).catch(() => undefined);
     }
-    legendaryNoticeSeq = Math.max(legendaryNoticeSeq, event.seq);
-  }
+  });
   if (performance.now() > noticeUntil) notice.classList.remove('legendary-notice');
   renderer.render(state, paused);
   const status = statusText(state); if (liveStatus.textContent !== status) liveStatus.textContent = status;
@@ -327,7 +332,7 @@ const debug: GameDebug = {
   setSalvageRules: rules => { const next = setSalvageRules(rules); render(); return next; }, getSalvageRules: () => activeSalvageRules(),
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
-  debugShowcase: kind => { renderer.legendaryEffects.trigger(kind, performance.now(), kind === 'skill' ? 'HOLY SMITE' : 'LEGENDARY WEAPON'); if (kind === 'drop') { showNotice('Legendary drop: Legendary Weapon'); showLegendaryToast('Legendary drop: Legendary Weapon'); audio.play('gacha_legendary_sting'); } render(); },
+  debugShowcase: kind => { renderer.debugLegendaryShowcase(kind, state); if (kind === 'drop') { const message = 'Legendary drop: Legendary Weapon'; showNotice(message); showLegendaryToast(message); managementView?.presentLegendaryDrop(++legendaryNotificationSeq, message); audio.play('gacha_legendary_sting'); } render(); },
   getAudio: () => audio.debug(),
   away: ms => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };

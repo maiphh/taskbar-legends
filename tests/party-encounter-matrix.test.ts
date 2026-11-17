@@ -103,7 +103,9 @@ describe('party-v2 deterministic encounter matrix', () => {
     const deathCount = (team: string) => results.filter(entry => entry.team === team && entry.result.heroHp === 0).length;
     expect(deathCount('balanced')).toBe(0);
     expect(deathCount('tripleDps')).toBeGreaterThan(deathCount('defensive'));
-    expect(results.filter(entry => entry.team === 'supportStack')).toHaveLength(15);
+    const supportStack = results.filter(entry => entry.team === 'supportStack');
+    expect(supportStack).toHaveLength(15);
+    expect(supportStack.every(entry => entry.result.damage > 0 && entry.result.ticks <= STRESS_TICKS)).toBe(true);
     expect(results.filter(entry => entry.enemy === 'grunt').every(entry => entry.result.enemyHp === 0)).toBe(true);
     expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
     console.log(JSON.stringify({ trials: results.length,
@@ -176,5 +178,22 @@ describe('party-v2 deterministic encounter matrix', () => {
       censoredStressCase: { teamIds: sustainState.partyIds, inputLimitTicks: STRESS_TICKS, result: sustain, interpretation: 'A helper-capped stress run only; not an engine timeout.' },
       engineTimeoutCases: timeoutCases, clusteredFrontlineComparison: clusterCases, debufferBruiserComparison: debuffCases,
     }, null, 2), 'utf8');
+  });
+
+  it('fills a recovering unit gauge during another turn without restarting before its ready tick', () => {
+    const state = buildFixture(1, bands[0]!, 'balanced', 'grunt', 9137);
+    const recovering = state.party[0]!, acting = state.party[1]!, enemy = state.enemies[0]!;
+    state.enemies.forEach(unit => { unit.moving = false; unit.gauge = 0; });
+    recovering.gauge = 1000;
+    recovering.action = { state: 'recovery', kind: 'attack', targetId: enemy.id, targetSide: 'enemy', startTick: 0, impactTick: 0, readyTick: 8 };
+    acting.gauge = 9999;
+    const initialGauge = recovering.gauge;
+    for (let tick = 1; tick < recovering.action.readyTick; tick += 1) {
+      state.tick = tick;
+      combatTick(state);
+      expect(recovering.gauge).toBeGreaterThan(initialGauge);
+      expect(recovering.action?.state).toBe('recovery');
+      expect(['windup', 'recovery']).toContain(acting.action?.state);
+    }
   });
 });

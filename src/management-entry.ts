@@ -72,10 +72,14 @@ const fit = (): void => {
 };
 window.addEventListener('resize', fit); fit();
 let stopOpen: (() => void) | undefined, stopClose: (() => void) | undefined;
+let stopLegendary: (() => void) | undefined;
 const onVisibility = (): void => { if (document.hidden) view.close(); else void view.open(); };
 document.addEventListener('visibilitychange', onVisibility);
 void Promise.all([
   listen('management://open', () => { void view.open(); }),
   listen('management://native-close', () => view.close()),
-]).then(([open, close]) => { stopOpen = open; stopClose = close; });
-window.addEventListener('pagehide', () => { document.removeEventListener('visibilitychange', onVisibility); stopOpen?.(); stopClose?.(); view.dispose(); client.dispose(); }, { once: true });
+  listen<{ seq: number; message: string }>('management://legendary-drop', event => {
+    const value = event.payload; if (Number.isSafeInteger(value?.seq) && typeof value.message === 'string') view.presentLegendaryDrop(value.seq, value.message);
+  }),
+]).then(([open, close, legendary]) => { stopOpen = open; stopClose = close; stopLegendary = legendary; });
+window.addEventListener('pagehide', () => { document.removeEventListener('visibilitychange', onVisibility); stopOpen?.(); stopClose?.(); stopLegendary?.(); view.dispose(); client.dispose(); }, { once: true });

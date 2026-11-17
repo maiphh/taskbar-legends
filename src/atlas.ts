@@ -16,6 +16,7 @@ async function json(url: URL): Promise<unknown> {
 }
 export class AtlasLibrary {
   private readonly loaded = new Map<string, LoadedAtlas>();
+  private readonly portraitCache = new Map<string, Map<number, HTMLCanvasElement | null>>();
   readonly errors: string[] = [];
   readonly ready: Promise<void>;
   constructor() { this.ready = this.load(); }
@@ -53,6 +54,35 @@ export class AtlasLibrary {
     const loaded = this.loaded.get(key), index = loaded?.atlas.animations.idle?.frames[0];
     return index === undefined ? null : this.portraitFrame(key, index);
   }
+  private idlePortraits(key: string): Map<number, HTMLCanvasElement | null> {
+    const cached = this.portraitCache.get(key); if (cached) return cached;
+    const loaded = this.loaded.get(key), idle = loaded?.atlas.animations.idle;
+    const result = new Map<number, HTMLCanvasElement | null>();
+    if (!loaded || !idle?.frames.length) { this.portraitCache.set(key, result); return result; }
+    const boxes = idle.frames.map(index => {
+      const frame = loaded.atlas.frames[index]; if (!frame) return null;
+      const ctx = document.createElement('canvas').getContext('2d'); if (!ctx) return null;
+      ctx.canvas.width = frame.w; ctx.canvas.height = frame.h;
+      ctx.drawImage(loaded.image, frame.x, frame.y, frame.w, frame.h, 0, 0, frame.w, frame.h);
+      const data = ctx.getImageData(0, 0, frame.w, frame.h).data; let left = frame.w, top = frame.h, right = -1, bottom = -1;
+      for (let y = 0; y < frame.h; y += 1) for (let x = 0; x < frame.w; x += 1) if ((data[(y * frame.w + x) * 4 + 3] ?? 0) >= 128) { left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y); bottom = Math.max(bottom, y); }
+      return right < 0 ? null : { index, frame, left, top, right, bottom };
+    }).filter((box): box is NonNullable<typeof box> => box !== null);
+    if (!boxes.length) { this.portraitCache.set(key, result); return result; }
+    const minX = Math.min(...boxes.map(box => box.left - loaded.atlas.anchor.x)), maxX = Math.max(...boxes.map(box => box.right - loaded.atlas.anchor.x));
+    const minY = Math.min(...boxes.map(box => box.top - loaded.atlas.anchor.y)), maxY = Math.max(...boxes.map(box => box.bottom - loaded.atlas.anchor.y));
+    for (const box of boxes) {
+      const out = document.createElement('canvas'); out.width = maxX - minX + 3; out.height = maxY - minY + 3;
+      const ctx = out.getContext('2d'); if (!ctx) { result.set(box.index, null); continue; }
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(loaded.image, box.frame.x + box.left, box.frame.y + box.top, box.right - box.left + 1, box.bottom - box.top + 1,
+        box.left - loaded.atlas.anchor.x - minX + 1, box.top - loaded.atlas.anchor.y - minY + 1, box.right - box.left + 1, box.bottom - box.top + 1);
+      const image = ctx.getImageData(0, 0, out.width, out.height);
+      for (let i = 3; i < image.data.length; i += 4) image.data[i] = (image.data[i] ?? 0) >= 128 ? 255 : 0;
+      ctx.putImageData(image, 0, 0); result.set(box.index, out);
+    }
+    this.portraitCache.set(key, result); return result;
+  }
   idleFrameCount(key: string): number { return this.loaded.get(key)?.atlas.animations.idle?.frames.length ?? 0; }
   idleFrameDuration(key: string): number { return Math.max(125, this.loaded.get(key)?.atlas.animations.idle?.durationMs ?? 125); }
   idleFrameIndex(key: string, elapsedMs: number): number {
@@ -61,7 +91,9 @@ export class AtlasLibrary {
     return idle.frames[idleFrameAt(elapsedMs, idle.durationMs, idle.frames.length)] ?? idle.frames[0] ?? 0;
   }
   portraitFrame(key: string, index: number): HTMLCanvasElement | null {
-    const loaded = this.loaded.get(key), frame = loaded?.atlas.frames[index];
+    const loaded = this.loaded.get(key), idle = loaded?.atlas.animations.idle;
+    if (idle?.frames.includes(index)) return this.idlePortraits(key).get(index) ?? null;
+    const frame = loaded?.atlas.frames[index];
     if (!loaded || !frame) return null;
     const source = document.createElement('canvas'); source.width = frame.w; source.height = frame.h;
     const sctx = source.getContext('2d'); if (!sctx) return null;

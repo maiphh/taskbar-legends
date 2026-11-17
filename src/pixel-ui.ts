@@ -42,6 +42,8 @@ export function roundHalfEven(value: number): number { const floor = Math.floor(
 export class PixelUI {
   /** Management-only reveal typography; the taskbar lane keeps its original catalog-name layout. */
   managementReveal = false;
+  /** Shared low-rate management idle clock; reveal transition timing continues on `clock`. */
+  managementIdleClock: (() => number) | null = null;
   panel: PanelTab | null = null;
   onPanelRequest: (tab: PanelTab) => void = () => undefined;
   private coreY = 0;
@@ -409,10 +411,11 @@ export class PixelUI {
     if (key && face === 'silhouette') {
       const mask = document.createElement('canvas'); mask.width = rect.width; mask.height = artHeight;
       const m = mask.getContext('2d');
-      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', this.managementReveal ? Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())) : 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
-    } else if (key) this.atlas.draw(ctx, key, 'idle', this.managementReveal ? Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())) : 0, cx, floorY, false, 1);
+      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
+    } else if (key) this.atlas.draw(ctx, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, cx, floorY, false, 1);
     ctx.restore();
   }
+  private managementIdleAge(): number { return this.reducedMotion ? 0 : this.managementIdleClock ? Math.max(0, this.managementIdleClock()) : Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())); }
   private drawRim(ctx: CanvasRenderingContext2D, rect: Rect, color: string, alpha: number): void {
     if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha = alpha / 255; ctx.fillStyle = color;
