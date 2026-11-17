@@ -8,6 +8,7 @@ import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
 import { campaignPresentation } from './core/selectors';
+import { getPartyHeroDefinition } from './core/party-definitions';
 import { welcomeLayout } from './welcome-layout';
 import { ellipsize } from './text-fit';
 
@@ -423,10 +424,11 @@ export class PixelUI {
     const cost = CONFIG.gacha.costTickets * reveal.count, short10 = tickets < cost;
     if (reveal.count === 1) this.text(ctx, 'Click a button or press Enter', x + 16, 368, palette.muted, BODY, false, 370);
     else this.text(ctx, `Tickets ${tickets}${short10 ? ` · Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
-    const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144, oh = 28] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
-    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: ay, width: aw, height: ah }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
+    const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
+    const actionY = this.managementReveal ? 348 : ay, actionH = this.managementReveal ? 40 : ah;
+    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: actionY, width: aw, height: actionH }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
       { icon: 'chest', disabled: short10, tooltip: short10 ? `Need ${cost} ticket${cost === 1 ? '' : 's'}` : `Recruit x${reveal.count} again: ${cost} ticket${cost === 1 ? '' : 's'}` });
-    this.button(ctx, 'reveal-ok', 'OK', { x: x + ox, y: oy, width: ow, height: oh }, () => this.finishReveal(true), { primary: true, bold: true, tooltip: 'Back to Recruit (Enter)' });
+    this.button(ctx, 'reveal-ok', 'OK', { x: x + ox, y: this.managementReveal ? actionY : oy, width: ow, height: actionH }, () => this.finishReveal(true), { primary: true, bold: true, tooltip: 'Back to Recruit (Enter)' });
   }
   private drawSingle(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number): void {
     const pull = reveal.pulls[0]; if (!pull) return;
@@ -451,6 +453,7 @@ export class PixelUI {
     const name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
     if (frame.showName) this.text(ctx, name, x + sx + Math.floor((sw - this.measureText(name, BODY, true)) / 2), spec.nameY, palette.text, BODY, true);
     if (frame.showRarity) { const label = pull.rarity.toUpperCase(); this.text(ctx, label, x + sx + Math.floor((sw - this.measureText(label, BODY, true)) / 2), spec.rarityY, tier.label, BODY, true); }
+    if (this.managementReveal && frame.done) this.text(ctx, getPartyHeroDefinition(pull.heroId).role.toUpperCase(), x + sx + 8, sy + sh - 16, palette.text, 10, true);
     ctx.restore();
   }
   private drawTen(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number, compact = false): void {
@@ -479,6 +482,7 @@ export class PixelUI {
       else { name = ellipsize(name, 124, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY); }
       const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
       this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
+      if (this.managementReveal) { const role = getPartyHeroDefinition(pull.heroId).role.toUpperCase(); this.text(ctx, role, rect.x + 4, rect.y + 70, palette.text, 10, true); }
       if (frame.badges) {
         this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
         if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
@@ -504,6 +508,7 @@ export class PixelUI {
     else { name = ellipsize(name, small.nameMaxPx, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY); }
     const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
     this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
+    if (this.managementReveal) { const role = getPartyHeroDefinition(pull.heroId).role.toUpperCase(); this.text(ctx, role, rect.x + 4, rect.y + artH - 14, palette.text, 10, true); }
     if (frame.badges) {
       this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
       if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);

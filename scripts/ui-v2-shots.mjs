@@ -72,6 +72,7 @@ try {
     await page.waitForSelector('#management .px-v2-detail');
     await page.locator('#management .px-v2-detail [data-loadout-slot="weapon"]').first().click();
     await page.waitForSelector('#management [data-view="equip"] .px-equip-screen');
+    await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-slot[data-equip-slot="weapon"]')?.classList.contains('is-empty'));
     await page.screenshot({ path: `artifacts/ui-v2/equip-empty-slot-${width}.png` });
     await page.locator('#management [data-view="equip"] [data-equip-back]').click();
     await page.locator('#management [data-details-close]').click();
@@ -131,11 +132,35 @@ try {
         return { main: [m.top,m.bottom], campaign: [c.top,c.bottom], actions: [a.top,a.bottom] };
       });
       if (!minInterior || minInterior.campaign[1] > minInterior.main[1] || minInterior.actions[1] > minInterior.campaign[1]) throw new Error(`Home interior clips at 960x600: ${JSON.stringify(minInterior)}`);
+      await page.evaluate(() => window.__game.openPanel('heroes'));
+      await page.waitForSelector('#management [data-view="heroes"] [data-details-open]');
+      await page.locator('#management [data-view="heroes"] [data-hero="mw1"]').click();
+      await page.waitForSelector('#management .px-v2-detail');
+      await page.locator('#management .px-v2-detail [data-loadout-slot="armor"]').first().click();
+      await page.waitForSelector('#management [data-view="equip"] .px-equip-screen');
+      await page.locator('#management [data-view="equip"] [data-equip-item]').first().click();
+      await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-deltas')?.innerText.includes('ATK'));
+      const minEquip = await page.evaluate(() => {
+        const rect = selector => { const el = document.querySelector(selector), r = el?.getBoundingClientRect(); return r ? [r.left,r.top,r.right,r.bottom] : null; };
+        return { drawer: rect('#management .px-equip-drawer'), meta: rect('#management .px-equip-hero-meta'), compare: rect('#management .px-equip-compare'), actions: [...document.querySelectorAll('#management .px-equip-actions > .px-btn')].map(el => { const r = el.getBoundingClientRect(); return [r.top,r.bottom,r.height]; }) };
+      });
+      if (!minEquip.drawer || !minEquip.meta || !minEquip.compare || minEquip.meta[3] > minEquip.drawer[1] + 1 || !minEquip.actions.length || minEquip.actions.some(([top,bottom,height]) => top < minEquip.compare[1] || bottom > minEquip.compare[3] || bottom > 600 || height < 40)) throw new Error(`Equip compare clipped at 960x600: ${JSON.stringify(minEquip)}`);
       for (const viewport of [{ width: 1200, height: 720 }, { width: 1280, height: 640 }, { width: 2560, height: 1440 }]) {
         await page.setViewportSize(viewport); await page.waitForTimeout(50);
         const box = await page.locator('#management').boundingBox();
         if (!box || box.x < 0 || box.y < 0 || box.x + box.width > viewport.width || box.y + box.height > viewport.height) throw new Error(`preset clipped at ${viewport.width}x${viewport.height}: ${JSON.stringify(box)}`);
       }
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await page.evaluate(() => window.__game.openPanel('heroes'));
+      await page.waitForSelector('#management [data-view="heroes"] [data-details-open]');
+      await page.locator('#management [data-view="heroes"] [data-hero="mw1"]').click();
+      await page.waitForSelector('#management .px-v2-detail-art img');
+      await page.setViewportSize({ width: 960, height: 640 }); await page.waitForTimeout(80);
+      const resizedSmall = await page.locator('#management .px-v2-detail-art img').boundingBox();
+      if (!resizedSmall || resizedSmall.width > 112 || resizedSmall.height > 112) throw new Error(`detail art stayed at wide preset after resize: ${JSON.stringify(resizedSmall)}`);
+      await page.setViewportSize({ width: 1280, height: 720 }); await page.waitForTimeout(80);
+      const resizedLarge = await page.locator('#management .px-v2-detail-art img').boundingBox();
+      if (!resizedLarge || resizedLarge.width > 240 || resizedLarge.height > 208) throw new Error(`detail art stayed at compact preset after resize: ${JSON.stringify(resizedLarge)}`);
     }
     await page.close();
   }

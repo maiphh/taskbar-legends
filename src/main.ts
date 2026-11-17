@@ -98,6 +98,7 @@ function fitManagementOverlay(): void {
   const width = wide ? 1280 : 960, height = wide ? 720 : Math.min(640, Math.max(600, window.innerHeight));
   const scale = window.innerWidth >= width * 2 && window.innerHeight >= height * 2 ? 2 : 1;
   managementRoot.dataset.preset = wide ? '1280' : '960';
+  managementView?.setLayoutPreset(managementRoot.dataset.preset);
   managementRoot.style.setProperty('--px-v2-scale', String(scale));
   managementRoot.style.setProperty('--px-v2-height', `${height}px`);
   managementRoot.style.left = `${Math.floor((window.innerWidth - width * scale) / 2)}px`;

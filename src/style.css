@@ -859,3 +859,57 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="rare"],.px-menu[data-layout="v2"] .px-howto-card[data-rarity="rare"] { box-shadow:inset 0 0 0 2px var(--px-rarity-rare); }
 .px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="epic"],.px-menu[data-layout="v2"] .px-howto-card[data-rarity="epic"] { box-shadow:inset 0 0 0 2px var(--px-rarity-epic); }
 .px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="legendary"],.px-menu[data-layout="v2"] .px-howto-card[data-rarity="legendary"] { box-shadow:inset 0 0 0 2px var(--px-rarity-legendary); }
+
+/* Final review geometry: keep Equip cards, navigation arrows, controls, and metadata in separate hit areas. */
+.px-menu[data-layout="v2"] .px-equip-slot-position.left { left:56px; }
+.px-menu[data-layout="v2"] .px-equip-slot-position.right { right:56px; }
+.px-menu[data-layout="v2"] .px-equip-prev { left:0; }
+.px-menu[data-layout="v2"] .px-equip-next { right:0; }
+.px-menu[data-layout="v2"] .px-equip-hero-meta { top:auto; bottom:0; }
+.px-menu[data-layout="v2"] .px-equip-drawer { height:224px; }
+.px-menu[data-layout="v2"] .px-equip-actions>.px-btn { min-height:40px; height:40px; font:12px/18px var(--game-font); }
+.px-menu[data-layout="v2"] .px-equip-actions>.px-equip-primary { min-height:48px; height:48px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-drawer,
+body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] .px-equip-drawer { height:224px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions>.px-btn { min-height:40px; height:40px; padding-inline:4px; white-space:nowrap; font:12px/18px var(--game-font); }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-actions>.px-equip-primary { min-height:48px; height:48px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-stage { bottom:224px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-equip-hero-meta { bottom:0; flex-wrap:wrap; }
+.px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector { top:152px; bottom:64px; height:auto; }
+@media (max-width:1199px) {
+ .px-menu[data-layout="v2"] main[data-view="gear"] .px-inspector { top:152px; bottom:120px; height:auto; }
+ .px-menu[data-layout="v2"] .px-equip-slot-position.left { left:56px; }
+ .px-menu[data-layout="v2"] .px-equip-slot-position.right { right:56px; }
+ .px-menu[data-layout="v2"] .px-equip-prev { left:0; }
+ .px-menu[data-layout="v2"] .px-equip-next { right:0; }
+}
+
+/* Approved 1280 Recruit: banner/odds on the left, independent pity panel on the right. */
+.px-menu[data-layout="v2"] main[data-view="recruit"] { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr); grid-template-rows:40px 220px 180px; gap:8px 12px; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] > h2 { grid-column:1/-1; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banners { grid-column:1; grid-row:2; height:220px; grid-template-columns:1fr 1fr; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-recruit-pity { grid-column:2; grid-row:2; align-content:start; grid-template-columns:1fr; margin:0; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-history { grid-column:1/-1; grid-row:3; height:180px; margin:0; }
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner .px-pview { height:140px; max-height:140px; }
+@media (max-width:1199px) {
+ .px-menu[data-layout="v2"] main[data-view="recruit"] { display:block; }
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-banners { height:160px; grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner { min-height:160px; }
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner .px-pview { height:112px; max-height:112px; overflow:visible; }
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-recruit-pity { margin-top:8px; }
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-history { height:140px; }
+}
+@media (max-height:620px) and (max-width:1199px) {
+ .px-menu[data-layout="v2"] main[data-view="recruit"] .px-history { height:100px; }
+}
+
+/* Rarity is a foreground rim, independent of the 9-slice panel texture. */
+.px-menu[data-layout="v2"] .px-v2-hero-card { box-sizing:border-box; height:180px; padding:4px; border:8px solid transparent; border-image:var(--px-panel-9slice) 8 fill / 8px / 0 stretch; position:relative; }
+.px-menu[data-layout="v2"] .px-v2-hero-card::after { content:""; position:absolute; inset:2px; border:2px solid var(--px-rarity-common); pointer-events:none; }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="rare"]::after { border-color:var(--px-rarity-rare); }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="epic"]::after { border-color:var(--px-rarity-epic); }
+.px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="legendary"]::after { border-color:var(--px-rarity-legendary); }
+.px-menu[data-layout="v2"] .px-v2-hero-card .px-v2-art { width:120px; height:120px; }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue { background:linear-gradient(180deg,transparent 0%,#293948 100%); }
+.px-menu[data-layout="v2"] .px-formation-roster .px-v2-role { position:absolute; left:2px; bottom:2px; z-index:1; }
+.px-menu[data-layout="v2"] .px-formation-roster .px-card { position:relative; padding-bottom:16px; }

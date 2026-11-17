@@ -66,6 +66,7 @@ const fit = (): void => {
   root.style.setProperty('--px-v2-scale', String(scale));
   root.style.setProperty('--px-v2-height', `${height}px`);
   root.dataset.preset = wide ? '1280' : '960';
+  view.setLayoutPreset(root.dataset.preset);
   root.style.left = `${Math.floor((window.innerWidth - width * scale) / 2)}px`;
   root.style.top = `${Math.floor((window.innerHeight - height * scale) / 2)}px`;
 };
