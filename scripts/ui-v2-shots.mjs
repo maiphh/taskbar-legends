@@ -94,6 +94,8 @@ try {
       state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
       delete state.farmClock;
       delete state.encounterFarmContext;
+      // Since live farming clears stages, the seeded run may be in a farm pad, which requires the clock just removed.
+      if (state.phase.kind === 'farmPad') state.phase = { kind: 'rest', remainingTicks: 20, next: 'encounter' };
       window.__game.load(state);
       window.__game.openPanel('home');
     });
