@@ -1,0 +1,209 @@
+{
+  "key": "cs5475-explosion-gold-48",
+  "image": "sprites.png",
+  "imageSize": [
+    576,
+    48
+  ],
+  "cellSize": [
+    48,
+    48
+  ],
+  "anchor": {
+    "x": 24,
+    "y": 24
+  },
+  "loop": false,
+  "blend": "lighter (additive)",
+  "frames": [
+    {
+      "name": "cs5475-explosion-gold-48/000",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        19,
+        18,
+        29,
+        29
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/001",
+      "index": 1,
+      "x": 48,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        14,
+        13,
+        34,
+        33
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/002",
+      "index": 2,
+      "x": 96,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        12,
+        10,
+        38,
+        38
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/003",
+      "index": 3,
+      "x": 144,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        7,
+        8,
+        44,
+        41
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/004",
+      "index": 4,
+      "x": 192,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        4,
+        5,
+        48,
+        44
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/005",
+      "index": 5,
+      "x": 240,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        2,
+        2,
+        48,
+        44
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/006",
+      "index": 6,
+      "x": 288,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        2,
+        1,
+        48,
+        43
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/007",
+      "index": 7,
+      "x": 336,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        1,
+        0,
+        48,
+        43
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/008",
+      "index": 8,
+      "x": 384,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        4,
+        0,
+        44,
+        42
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/009",
+      "index": 9,
+      "x": 432,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        6,
+        0,
+        43,
+        39
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/010",
+      "index": 10,
+      "x": 480,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        9,
+        0,
+        41,
+        36
+      ]
+    },
+    {
+      "name": "cs5475-explosion-gold-48/011",
+      "index": 11,
+      "x": 528,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 83,
+      "contentBounds": [
+        12,
+        3,
+        39,
+        32
+      ]
+    }
+  ],
+  "durationMs": 996,
+  "meta": {
+    "sourcePack": "cs5475-free-pixel-effects",
+    "source": "raw/vfx/cs5475-free-pixel-effects/unpacked/free-pixel-effects/free-pixel-effects/explosions/explosion-gold-48.png",
+    "licence": "CC0-1.0",
+    "modification": "none (re-packed as a one-row sheet)",
+    "sampling": "nearest",
+    "scale": 1
+  }
+}

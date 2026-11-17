@@ -61,6 +61,14 @@ Original game code is proprietary: Copyright (c) 2026 Mai Gia Phu. All rights re
 
 ## Audio (M3)
 
+## Legendary presentation VFX
+
+| Files | Source | Licence |
+|---|---|---|
+| `public/assets/vfx/pvfx-holy-smite/*`, `pvfx-treasure-glint/*` | PVFX Foundry 1.0.0, legacy sheets | CC0-1.0; licence retained at `public/assets/vfx/PVFX-Foundry-LICENSE.txt` |
+| `public/assets/vfx/cs5475-explosion-gold-48/*` | CS5475 Free Pixel Effects | CC0-1.0; licence retained at `public/assets/vfx/CS5475-LICENSE.txt` |
+
+
 All shipped clips in `public/audio/` come from the art handoff (`game-assets/idle-battler/audio/manifest.json`, sha256 in `src/audio-manifest.json`).
 
 | Clips | Source | Licence |

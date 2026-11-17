@@ -1,0 +1,234 @@
+{
+  "key": "pvfx-holy-smite",
+  "image": "sprites.png",
+  "imageSize": [
+    1120,
+    120
+  ],
+  "cellSize": [
+    80,
+    120
+  ],
+  "anchor": {
+    "x": 40,
+    "y": 108
+  },
+  "loop": false,
+  "blend": "lighter (additive)",
+  "frames": [
+    {
+      "name": "pvfx-holy-smite/000",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        33,
+        0,
+        48,
+        109
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/001",
+      "index": 1,
+      "x": 80,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        28,
+        0,
+        53,
+        109
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/002",
+      "index": 2,
+      "x": 160,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        12,
+        0,
+        71,
+        110
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/003",
+      "index": 3,
+      "x": 240,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        20,
+        0,
+        65,
+        114
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/004",
+      "index": 4,
+      "x": 320,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        15,
+        1,
+        68,
+        115
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/005",
+      "index": 5,
+      "x": 400,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        11,
+        0,
+        69,
+        116
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/006",
+      "index": 6,
+      "x": 480,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        8,
+        0,
+        72,
+        117
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/007",
+      "index": 7,
+      "x": 560,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        15,
+        5,
+        63,
+        117
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/008",
+      "index": 8,
+      "x": 640,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        13,
+        20,
+        65,
+        117
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/009",
+      "index": 9,
+      "x": 720,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        12,
+        14,
+        68,
+        111
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/010",
+      "index": 10,
+      "x": 800,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        12,
+        36,
+        69,
+        110
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/011",
+      "index": 11,
+      "x": 880,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        12,
+        51,
+        63,
+        81
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/012",
+      "index": 12,
+      "x": 960,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": [
+        32,
+        69,
+        33,
+        70
+      ]
+    },
+    {
+      "name": "pvfx-holy-smite/013",
+      "index": 13,
+      "x": 1040,
+      "y": 0,
+      "w": 80,
+      "h": 120,
+      "durationMs": 80.0,
+      "contentBounds": null
+    }
+  ],
+  "durationMs": 1120.0,
+  "meta": {
+    "sourcePack": "pvfx-foundry",
+    "source": "raw/vfx/pvfx-foundry/unpacked/PVFX-Foundry-1.0.0/effects/holy/holy-smite/strict/grid/sprite-sheet.png",
+    "licence": "CC0-1.0",
+    "modification": "pure white -> #fff6d8",
+    "sampling": "nearest",
+    "scale": 1
+  }
+}

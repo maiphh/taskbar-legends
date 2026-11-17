@@ -15,6 +15,7 @@ import { easeReturn } from './core/turn/presentation';
 import { gaugeRatio } from './core/turn/action-bar';
 import { stepCombatCamera, type CombatCameraInput } from './party-camera';
 import { compactLaneLayout } from './compact-lane-layout';
+import { LegendaryEffects } from './legendary-effects';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -28,11 +29,20 @@ export class Renderer {
   private rendering = false;
   readonly atlases = new AtlasLibrary();
   readonly ui: PixelUI;
+  readonly legendaryEffects = new LegendaryEffects();
+  private effectEventSeq = 0;
+  private effectEventsInitialized = false;
+  baselineLegendaryEvents(seq: number): void { this.effectEventSeq = seq; this.effectEventsInitialized = true; this.legendaryEffects.clear(); }
+  private holySheet: HTMLImageElement | null = null;
+  private treasureSheet: HTMLImageElement | null = null;
+  private dropBurstSheet: HTMLImageElement | null = null;
   constructor(private readonly canvas: HTMLCanvasElement, controls: HTMLElement) {
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Canvas 2D is unavailable');
     this.ctx = ctx; this.ui = new PixelUI(this.atlases, controls);
+    this.holySheet = this.loadVfx('holy-smite'); this.treasureSheet = this.loadVfx('treasure-glint'); this.dropBurstSheet = this.loadVfx('cs5475-explosion-gold-48');
   }
+  private loadVfx(name: string): HTMLImageElement { const image = new Image(); image.src = `/assets/vfx/${name.startsWith('cs5475-') ? name : `pvfx-${name}`}/sprites.png`; image.onerror = () => { image.dataset.unavailable = 'true'; }; return image; }
   getHitRegions(): HitRegion[] {
     const origin = this.canvas.getBoundingClientRect();
     return this.ui.sourceRegions().map(rect => ({ ...rect, x: origin.left + rect.x * this.zoom / this.dpr, y: origin.top + rect.y * this.zoom / this.dpr, width: rect.width * this.zoom / this.dpr, height: rect.height * this.zoom / this.dpr }));
@@ -195,6 +205,15 @@ export class Renderer {
     this.rendering = true;
     this.frameCamera = null;
     const ctx = this.ctx, view = CONFIG.view, palette = CONFIG.ui.palette, height = this.ui.height();
+    if (!this.effectEventsInitialized) { this.effectEventSeq = state.eventSeq; this.effectEventsInitialized = true; }
+    for (const event of state.events) if (event.seq > this.effectEventSeq) {
+      const data = event.data;
+      if (data.type === 'skill') {
+        const caster = state.roster.find(hero => hero.id === data.unitId);
+        if (caster && heroConfig(caster.id).rarity === 'legendary') this.legendaryEffects.trigger('skill', performance.now(), data.skill.replaceAll('-', ' ').toUpperCase());
+      } else if (data.type === 'gear' && data.rarity === 'legendary') this.legendaryEffects.trigger('drop', performance.now(), `LEGENDARY ${data.slot.toUpperCase()}`);
+      this.effectEventSeq = Math.max(this.effectEventSeq, event.seq);
+    }
     const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.zoom, 0, 0, this.zoom, 0, 0);
@@ -341,7 +360,40 @@ export class Renderer {
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
     this.drawFeedback(ctx, state, units, field, coreY);
+    this.drawLegendaryEffect(ctx, field, coreY);
     this.rendering = false;
+  }
+  private drawLegendaryEffect(ctx: CanvasRenderingContext2D, field: { x: number; width: number }, coreY: number): void {
+    const effect = this.legendaryEffects.current(performance.now()); if (!effect) return;
+    const cx = field.x + Math.floor(field.width / 2), cy = coreY + 30, progress = effect.age / (effect.kind === 'skill' ? 1100 : 1000);
+    const gold = CONFIG.ui.rarity.legendary.frame;
+    ctx.save(); ctx.imageSmoothingEnabled = false;
+    if (effect.kind === 'skill') {
+      const radius = 10 + Math.floor(progress * 42), alpha = Math.max(0, 1 - progress);
+      if (!this.ui.reducedMotion && !this.compact) { ctx.globalAlpha = alpha * 0.22; ctx.fillStyle = gold; ctx.fillRect(field.x, 0, field.width, coreY + 54); }
+      ctx.globalAlpha = alpha;
+      for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, x = Math.round(cx + Math.cos(a) * radius), y = Math.round(cy + Math.sin(a) * radius * 0.55); ctx.fillStyle = i % 2 ? '#fff4bf' : gold; ctx.fillRect(x, y, 3, 3); }
+      ctx.fillStyle = '#fff4bf'; ctx.fillRect(cx - 3, cy - 3, 7, 7);
+      if (this.holySheet?.complete && this.holySheet.naturalWidth) {
+        const frame = Math.min(13, Math.floor(effect.age / 80)); ctx.globalAlpha = alpha;
+        ctx.drawImage(this.holySheet, frame * 80, 0, 80, 120, cx - 24, cy - 50, 48, 72);
+      }
+      ctx.globalAlpha = alpha; ctx.fillStyle = '#101c27'; ctx.fillRect(cx - 112, cy - 37, 224, 24); ctx.strokeStyle = gold; ctx.strokeRect(cx - 112.5, cy - 37.5, 225, 25);
+      this.ui.text(ctx, effect.label, cx - Math.min(104, effect.label.length * 3.5), cy - 31, '#ffe38c', 16, true);
+    } else {
+      const alpha = Math.max(0, 1 - progress), radius = 12 + Math.floor(progress * 38);
+      ctx.globalAlpha = alpha * 0.7; ctx.strokeStyle = gold; ctx.lineWidth = 2;
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + progress * Math.PI / 2; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * 7, cy + Math.sin(a) * 7); ctx.lineTo(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius); ctx.stroke(); }
+      const size = 8 + Math.min(8, Math.floor(effect.age / 60)); ctx.globalAlpha = alpha; ctx.fillStyle = gold; ctx.fillRect(cx - size / 2, cy - size / 2, size, size); ctx.strokeRect(cx - size / 2 - 2, cy - size / 2 - 2, size + 4, size + 4);
+      if (this.treasureSheet?.complete && this.treasureSheet.naturalWidth) {
+        const frame = Math.min(15, Math.floor(effect.age / 62)); ctx.drawImage(this.treasureSheet, frame * 48, 0, 48, 48, cx - 24, cy - 24, 48, 48);
+      }
+      if (this.dropBurstSheet?.complete && this.dropBurstSheet.naturalWidth) {
+        const frame = Math.min(11, Math.floor(effect.age / 84)); ctx.globalAlpha = alpha;
+        ctx.drawImage(this.dropBurstSheet, frame * 48, 0, 48, 48, cx - 24, cy - 24, 48, 48);
+      }
+    }
+    ctx.restore();
   }
   /**
    * Upgrade popups and stage/boss banners (ui.md §10, ui-tokens coreLoopFeedback). Everything is derived from the event log and

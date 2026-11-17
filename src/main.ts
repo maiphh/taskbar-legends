@@ -35,6 +35,12 @@ setSalvageRules(query.get('salvage') === 'off' ? 'default' : 'design');
 const nativeMenuShot = query.has('shot') && query.get('menu') === 'native';
 const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing canvas');
 const notice = element('notice'), liveStatus = element('live-status');
+const legendaryToast = element('legendary-toast');
+let legendaryToastTimer = 0;
+function showLegendaryToast(message: string): void {
+  legendaryToast.textContent = message; legendaryToast.hidden = false;
+  window.clearTimeout(legendaryToastTimer); legendaryToastTimer = window.setTimeout(() => { legendaryToast.hidden = true; }, 4000);
+}
 const recovery = element('save-recovery'), exportFailed = element('export-failed-save') as HTMLButtonElement, discardFailed = element('discard-failed-save') as HTMLButtonElement;
 const recoveryTitle = element('save-recovery-title'), recoveryDescription = element('recovery-description'), recoveryStatus = element('recovery-status');
 const legacyNotice = element('legacy-save-notice'), exportLegacy = element('export-legacy-save') as HTMLButtonElement, legacyExportStatus = element('legacy-export-status');
@@ -46,7 +52,7 @@ let state = newSelectedState(), paused = false, accumulatorMs = 0, hidden = docu
 let restoring = false, failedSave = false, checkpointBlocked = false, rendering = false;
 const managementAuthority = new ManagementAuthority(state, paused, next => { state = next; render(); });
 managementAuthority.setAvailable(false);
-function replaceSelectedState(next: typeof state): void { managementAuthority.replaceState(next); }
+function replaceSelectedState(next: typeof state): void { renderer.baselineLegendaryEvents(next.eventSeq); legendaryNoticeSeq = next.eventSeq; legendaryToast.hidden = true; managementAuthority.replaceState(next); }
 function setCompactSettings(next: CompactPrefs): void {
   compactPrefs = parseCompactPrefs(next); writeCompactPrefs(compactPrefs);
   renderer.setCompactViewport(true, compactPrefs.zoom); resize();
@@ -55,6 +61,7 @@ function setCompactSettings(next: CompactPrefs): void {
 const managementRoot = element('management'), compactMenu = element('compact-menu-bar');
 let managementView: ManagementView | null = null, internalRequest = 0;
 let lastFrame = performance.now(), lastSave = lastFrame, noticeUntil = 0;
+let legendaryNoticeSeq = 0;
 const showNotice = (message: string): void => { notice.textContent = message; noticeUntil = performance.now() + 7000; };
 export const canonicalSaveKey = `${CONFIG.runtime.saveKey}:party-v2`;
 const store = localSaveStore(canonicalSaveKey);
@@ -234,6 +241,17 @@ function render(): void {
   if (rendering) return;
   rendering = true;
   try {
+  for (const event of state.events) if (event.seq > legendaryNoticeSeq) {
+    const data = event.data;
+    if (data.type === 'gear' && data.rarity === 'legendary') {
+      const item = state.inventory.find(value => value.id === data.gearId);
+      const name = item ? `Legendary ${item.slot}` : `Legendary ${data.slot}`;
+      showNotice(`Legendary drop: ${name}`); noticeUntil = performance.now() + 4000; notice.classList.add('legendary-notice'); audio.play('gacha_legendary_sting');
+      showLegendaryToast(`Legendary drop: ${name}`);
+    }
+    legendaryNoticeSeq = Math.max(legendaryNoticeSeq, event.seq);
+  }
+  if (performance.now() > noticeUntil) notice.classList.remove('legendary-notice');
   renderer.render(state, paused);
   const status = statusText(state); if (liveStatus.textContent !== status) liveStatus.textContent = status;
   if (performance.now() > noticeUntil) notice.textContent = '';
@@ -309,6 +327,7 @@ const debug: GameDebug = {
   setSalvageRules: rules => { const next = setSalvageRules(rules); render(); return next; }, getSalvageRules: () => activeSalvageRules(),
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
+  debugShowcase: kind => { renderer.legendaryEffects.trigger(kind, performance.now(), kind === 'skill' ? 'HOLY SMITE' : 'LEGENDARY WEAPON'); if (kind === 'drop') { showNotice('Legendary drop: Legendary Weapon'); showLegendaryToast('Legendary drop: Legendary Weapon'); audio.play('gacha_legendary_sting'); } render(); },
   getAudio: () => audio.debug(),
   away: ms => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };
