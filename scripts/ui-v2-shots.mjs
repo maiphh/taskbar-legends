@@ -15,6 +15,23 @@ try {
       await window.__game.whenReady();
       window.__game.setSeed(4721);
       window.__game.step(10000);
+      const state = window.__game.getState();
+      const template = state.roster[0];
+      if (template) { for (const id of ['mw1', 'priest', 'hu1', 'wiz', 'mh1']) if (!state.roster.some(hero => hero.id === id) && state.roster.length < 12) state.roster.push({ ...JSON.parse(JSON.stringify(template)), id, level: 8, stars: 1, xp: 0, equipment: { weapon: null, armor: null, charm: null } }); }
+      let ns = (state.seed ^ 0x9e3779b9) >>> 0; ns = Math.imul(ns ^ (ns >>> 16), 0x85ebca6b) >>> 0; ns = Math.imul(ns ^ (ns >>> 13), 0xc2b2ae35) >>> 0; ns = (ns ^ (ns >>> 16)) >>> 0;
+      const namespace = ns.toString(16).padStart(8, '0');
+      const slots = ['weapon', 'armor', 'charm'];
+      const rarities = ['common', 'rare', 'epic', 'legendary'];
+      for (let i = 0; i < 15 && state.inventory.length < 30; i++) {
+        const serial = state.nextGearId++, slot = slots[i % slots.length], rarity = rarities[(i * 3 + 1) % rarities.length];
+        state.inventory.push({ id: `itm_${namespace}_${serial.toString(16).padStart(8, '0')}`, templateId: `gear.${slot}.${rarity}`, tradeable: false,
+          acquiredAt: { tick: state.tick, source: 'drop' }, slot, rarity, dropStage: 4, level: i % 7, spent: 0,
+          stats: { hp: slot === 'armor' ? 28 + i * 3 : 0, atk: slot === 'weapon' ? 9 + i * 2 : 0, def: slot === 'armor' ? 4 + i : 0,
+            atkPct: slot === 'charm' && i % 2 ? 0.04 : 0, hpPct: slot === 'charm' && i % 2 === 0 ? 0.04 : 0, speedPct: 0 }, ...(i === 5 ? { locked: true } : {}) });
+      }
+      state.gearSinceLegendary = 14;
+      state.gold = Math.max(state.gold, 4280); state.tickets = Math.max(state.tickets, 16);
+      window.__game.load(state);
       window.__game.openPanel('home');
     });
     await page.waitForSelector('#management:not([hidden]) [data-view="home"]');
@@ -27,7 +44,8 @@ try {
     }
     await page.evaluate(() => window.__game.openPanel('heroes'));
     await page.waitForSelector('#management [data-view="heroes"] [data-details-open]');
-    await page.locator('#management [data-details-open]').click();
+    await page.locator('#management [data-view="heroes"] [data-details-open]').first().click();
+    await page.waitForSelector('#management .px-v2-detail');
     await page.screenshot({ path: `artifacts/ui-v2/hero-detail-${width}.png` });
     await page.locator('#management [data-details-close]').click();
     await page.locator('#management [data-locked-hero]').first().click();
