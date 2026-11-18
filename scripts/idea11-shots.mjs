@@ -1,4 +1,4 @@
-/* global window, document, localStorage, process, console */
+/* global window, document, localStorage, process, console, Buffer */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
@@ -86,7 +86,8 @@ async function shot(width) {
   await writeFile(bandPath, Buffer.from(info.bandDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64'));
   await context.close();
   if (errors.length) throw new Error(`page errors @${width}: ${errors.join('; ')}`);
-  const { bandDataUrl: _band, ...rest } = info;
+  const { bandDataUrl, ...rest } = info;
+  void bandDataUrl;
   return { width, path, bandPath, ...rest };
 }
 
