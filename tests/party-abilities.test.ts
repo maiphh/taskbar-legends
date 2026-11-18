@@ -477,10 +477,14 @@ describe('party-v2 common impact resolution', () => {
     expect(boss.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch1-cleave', radius: 56, centerX: tank.x });
     expect(boss.procCounters?.bossPattern).toBe(1);
     const priorHits = first.events.filter(event => event.data.type === 'hit' && event.data.attackerId === boss.id).length;
+    const tankHpBefore = tank.hp, priestHpBefore = priest.hp;
     hold(boss);
     step(first, PARTY_V2.timing.windupTicks * 5);
     const slamHits = first.events.filter(event => event.data.type === 'hit' && event.data.attackerId === boss.id).slice(priorHits);
+    expect(slamHits.some(event => event.data.type === 'hit' && event.data.targetId === tank.id)).toBe(true);
     expect(slamHits.some(event => event.data.type === 'hit' && event.data.targetId === priest.id)).toBe(false);
+    expect(tank.hp).toBeLessThan(tankHpBefore);
+    expect(priest.hp).toBe(priestHpBefore);
     expect(boss.procCounters?.basicSuccess).toBe(4);
   });
 

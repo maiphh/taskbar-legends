@@ -7,6 +7,7 @@ import { bannerFrame, popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { bossHpBar, stageCue, upgradePopups } from './core/selectors';
+import { ellipsize } from './text-fit';
 import { enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
@@ -279,22 +280,11 @@ export class Renderer {
     ctx.fillStyle = '#3f5542'; ctx.fillRect(field.x, coreY + 48, field.width, 2);
     for (let x = field.x + 5; x < field.x + field.width; x += 28) { ctx.fillStyle = x % 3 ? '#52664a' : '#223d32'; ctx.fillRect(x, coreY + 51, 2, 2); ctx.fillRect(x + 12, coreY + 65, 3, 1); }
     const bossBar = bossHpBar(state);
-    if (bossBar) {
-      const barX = Math.round(field.x + 24), barW = Math.max(120, Math.round(field.width - 48)), barY = coreY + 4, barH = 10;
-      ctx.fillStyle = palette.ink; ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
-      ctx.fillStyle = '#1a1014'; ctx.fillRect(barX, barY, barW, barH);
-      ctx.fillStyle = bossBar.enraged ? '#ff6b3d' : '#d44a4a';
-      ctx.fillRect(barX, barY, Math.max(0, Math.round(barW * bossBar.ratio)), barH);
-      ctx.fillStyle = '#3a2024'; ctx.fillRect(barX, barY + barH - 2, barW, 2);
-      const label = `${bossBar.name}  ${bossBar.hp}/${bossBar.maxHp}${bossBar.enraged ? '  ENRAGED' : ''}`;
-      this.ui.text(ctx, label, barX + Math.round(barW / 2), barY + 8, '#f2e9cf', BODY, true);
-      if (bossBar.telegraph) {
-        ctx.fillStyle = 'rgba(40,12,12,.85)';
-        const tw = Math.max(72, bossBar.telegraph.length * 7 + 16);
-        ctx.fillRect(barX + Math.round((barW - tw) / 2), barY + barH + 2, tw, 12);
-        this.ui.text(ctx, bossBar.telegraph, barX + Math.round(barW / 2), barY + barH + 11, '#ffd16e', BODY, true);
-      }
-    }
+    const bossBarX = Math.round(field.x + 24), bossBarW = Math.max(120, Math.round(field.width - 48)), bossBarY = coreY + 4, bossBarH = 10;
+    // Reserve the plate + telegraph row so scale-2 boss sprites cannot paint over the labels.
+    const bossPlateBottom = bossBar
+      ? bossBarY + Math.max(bossBarH, BODY) + (bossBar.telegraph ? BODY + BODY : 0)
+      : coreY;
     const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
     for (const unit of units) {
@@ -313,21 +303,29 @@ export class Renderer {
       const flash = lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
       const flip = anim.returning ? unit.side === 'hero' : unit.facing === -1;
       const bossScale = unit.boss && enemyDef?.scale ? Math.max(1, Math.round(enemyDef.scale)) : 1;
-      if (unit.boss && enemyDef?.outline) {
-        // Distinct boss footprint / outline ring under the larger sprite.
+      const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
+      if (isLaneBoss && enemyDef?.outline) {
+        // Ground mark only; tint/outline live on the sprite itself.
         ctx.fillStyle = enemyDef.outline;
         ctx.fillRect(Math.round(x - 18 * bossScale), unitBaseline - 2, Math.round(36 * bossScale), 3);
-        ctx.fillStyle = enemyDef.tint ?? color;
-        ctx.fillRect(Math.round(x - 16 * bossScale), unitBaseline - 1, Math.round(32 * bossScale), 1);
       }
-      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash)) {
+      if (isLaneBoss) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(field.x, bossPlateBottom, field.width, height - bossPlateBottom);
+        ctx.clip();
+      }
+      const tint = isLaneBoss ? enemyDef?.tint : undefined;
+      const outline = isLaneBoss ? enemyDef?.outline : undefined;
+      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline)) {
         const w = unit.boss ? view.bossWidth * bossScale : view.heroWidth, h = unit.boss ? view.bossHeight * bossScale : view.heroHeight;
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : (enemyDef?.tint ?? color);
         ctx.fillRect(x - w / 2, unitBaseline - h, w, h);
       }
+      if (isLaneBoss) ctx.restore();
       if (unit.hp <= 0) continue;
       // Boss uses the top-of-lane HP plate; skip the tiny per-unit bar.
-      if (unit.boss && isBossEnemyId(unit.sourceId)) continue;
+      if (isLaneBoss) continue;
       const hpWidth = unit.side === 'hero' ? 34 : 32, hpY = coreY + CONFIG.ui.unitHpBars.coreLocalY - depth;
       ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
       ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, hpWidth - 2, CONFIG.ui.unitHpBars.height - 2);
@@ -345,6 +343,31 @@ export class Renderer {
         }
       }
       if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
+    }
+    if (bossBar) {
+      const barX = bossBarX, barW = bossBarW, barY = bossBarY, barH = bossBarH;
+      const measure = (value: string): number => this.ui.measureText(value, BODY, true);
+      ctx.fillStyle = palette.ink; ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+      ctx.fillStyle = '#1a1014'; ctx.fillRect(barX, barY, barW, barH);
+      ctx.fillStyle = bossBar.enraged ? '#ff6b3d' : '#d44a4a';
+      ctx.fillRect(barX, barY, Math.max(0, Math.round(barW * bossBar.ratio)), barH);
+      ctx.fillStyle = '#3a2024'; ctx.fillRect(barX, barY + barH - 2, barW, 2);
+      const hpRaw = `${bossBar.hp}/${bossBar.maxHp}${bossBar.enraged ? '  ENRAGED' : ''}`;
+      const hpText = ellipsize(hpRaw, barW, measure);
+      const hpWidth = measure(hpText);
+      const nameMax = Math.max(0, barW - hpWidth - 8);
+      const nameText = ellipsize(bossBar.name, nameMax > 0 ? nameMax : barW, measure);
+      const textY = barY + Math.round((barH - BODY) / 2);
+      this.ui.text(ctx, nameText, barX, textY, '#f2e9cf', BODY, true);
+      this.ui.text(ctx, hpText, barX + barW - hpWidth, textY, '#f2e9cf', BODY, true);
+      if (bossBar.telegraph) {
+        const telegraphY = barY + barH + BODY;
+        const telegraphWidth = measure(bossBar.telegraph);
+        const telegraphX = barX + Math.round((barW - telegraphWidth) / 2);
+        ctx.fillStyle = 'rgba(40,12,12,.85)';
+        ctx.fillRect(Math.max(barX, telegraphX - 6), telegraphY, Math.min(barW, telegraphWidth + 12), BODY);
+        this.ui.text(ctx, bossBar.telegraph, telegraphX, telegraphY, '#ffd16e', BODY, true);
+      }
     }
     {
       const allUnits = [...state.party, ...state.enemies];

@@ -2107,7 +2107,7 @@
             "def": 12,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -2179,7 +2179,7 @@
             "def": 12,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -2251,7 +2251,7 @@
             "def": 12,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -2323,7 +2323,7 @@
             "def": 12,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -2395,7 +2395,7 @@
             "def": 12,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -2467,7 +2467,7 @@
             "def": 12,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -2539,7 +2539,7 @@
             "def": 12,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -4627,7 +4627,7 @@
             "def": 21,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -4699,7 +4699,7 @@
             "def": 21,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -4771,7 +4771,7 @@
             "def": 21,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -4843,7 +4843,7 @@
             "def": 21,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -4915,7 +4915,7 @@
             "def": 21,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -4987,7 +4987,7 @@
             "def": 21,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -5059,7 +5059,7 @@
             "def": 21,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -7147,7 +7147,7 @@
             "def": 34,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -7219,7 +7219,7 @@
             "def": 34,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -7291,7 +7291,7 @@
             "def": 34,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -7363,7 +7363,7 @@
             "def": 34,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -7435,7 +7435,7 @@
             "def": 34,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -7507,7 +7507,7 @@
             "def": 34,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
@@ -7579,7 +7579,7 @@
             "def": 34,
             "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],

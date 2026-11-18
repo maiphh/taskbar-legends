@@ -115,7 +115,7 @@ export class AtlasLibrary {
     const tag = this.animation(key, name);
     return tag ? tag.frames.length * tag.durationMs : undefined;
   }
-  draw(ctx: CanvasRenderingContext2D, key: string, name: AnimationName, ageMs: number, x: number, baseline: number, flip: boolean, zoom = 1, flash = false): boolean {
+  draw(ctx: CanvasRenderingContext2D, key: string, name: AnimationName, ageMs: number, x: number, baseline: number, flip: boolean, zoom = 1, flash = false, tint?: string, outline?: string): boolean {
     const loaded = this.loaded.get(key);
     if (!loaded) return false;
     const { atlas, image } = loaded;
@@ -125,10 +125,56 @@ export class AtlasLibrary {
     const index = tag.frames[tag.loop ? framePosition % tag.frames.length : Math.min(framePosition, tag.frames.length - 1)];
     const frame = index === undefined ? undefined : atlas.frames[index];
     if (!frame) return false;
+    const source = flash ? loaded.white : image;
     ctx.save(); ctx.translate(Math.round(x), Math.round(baseline));
     ctx.scale(flip ? -zoom : zoom, zoom);
     // Atlas has already been scaled to its documented 44..52px body. Never scale the image again.
-    ctx.drawImage(flash ? loaded.white : image, frame.x, frame.y, frame.w, frame.h, -atlas.anchor.x, -atlas.anchor.y, frame.w, frame.h);
+    if (!tint && !outline) {
+      ctx.drawImage(source, frame.x, frame.y, frame.w, frame.h, -atlas.anchor.x, -atlas.anchor.y, frame.w, frame.h);
+      ctx.restore();
+      return true;
+    }
+    const pad = outline ? 1 : 0;
+    const buffer = document.createElement('canvas');
+    buffer.width = frame.w + pad * 2;
+    buffer.height = frame.h + pad * 2;
+    const bctx = buffer.getContext('2d');
+    if (!bctx) { ctx.restore(); return false; }
+    bctx.imageSmoothingEnabled = false;
+    bctx.drawImage(source, frame.x, frame.y, frame.w, frame.h, pad, pad, frame.w, frame.h);
+    if (tint) {
+      bctx.globalCompositeOperation = 'source-atop';
+      bctx.fillStyle = tint;
+      bctx.globalAlpha = 0.45;
+      bctx.fillRect(0, 0, buffer.width, buffer.height);
+      bctx.globalAlpha = 1;
+      bctx.globalCompositeOperation = 'source-over';
+    }
+    if (outline) {
+      const tinted = bctx.getImageData(0, 0, buffer.width, buffer.height);
+      const out = bctx.createImageData(buffer.width, buffer.height);
+      const parse = /^#?([0-9a-f]{6})$/i.exec(outline.trim());
+      const cr = parse ? Number.parseInt(parse[1]!.slice(0, 2), 16) : 0;
+      const cg = parse ? Number.parseInt(parse[1]!.slice(2, 4), 16) : 0;
+      const cb = parse ? Number.parseInt(parse[1]!.slice(4, 6), 16) : 0;
+      const w = buffer.width, h = buffer.height, src = tinted.data, dst = out.data;
+      const alphaAt = (px: number, py: number): number => {
+        if (px < 0 || py < 0 || px >= w || py >= h) return 0;
+        return src[(py * w + px) * 4 + 3] ?? 0;
+      };
+      for (let py = 0; py < h; py += 1) for (let px = 0; px < w; px += 1) {
+        const i = (py * w + px) * 4;
+        const a = src[i + 3] ?? 0;
+        if (a >= 128) {
+          dst[i] = src[i]!; dst[i + 1] = src[i + 1]!; dst[i + 2] = src[i + 2]!; dst[i + 3] = a;
+          continue;
+        }
+        if (alphaAt(px - 1, py) < 128 && alphaAt(px + 1, py) < 128 && alphaAt(px, py - 1) < 128 && alphaAt(px, py + 1) < 128) continue;
+        dst[i] = cr; dst[i + 1] = cg; dst[i + 2] = cb; dst[i + 3] = 255;
+      }
+      bctx.putImageData(out, 0, 0);
+    }
+    ctx.drawImage(buffer, -atlas.anchor.x - pad, -atlas.anchor.y - pad);
     ctx.restore();
     return true;
   }

@@ -9,7 +9,12 @@ import { effectiveAttack } from '../src/core/party-effects';
 import { PARTY_V2 } from '../src/core/party-combat';
 
 function hold(unit: Unit): void {
-  unit.speed = 0; unit.gauge = 0; unit.action = { state: 'idle' }; unit.moving = false; delete unit.specialAction;
+  unit.speed = 0;
+  unit.gauge = 0;
+  unit.action = { state: 'idle' };
+  unit.moving = false;
+  unit.statuses = [{ id: 'petrification', sourceId: 'hold', targetId: unit.id, stacks: 1, magnitude: 1, turnsLeft: 9999 }];
+  unit.cooldown = Number.MAX_SAFE_INTEGER;
 }
 
 describe('stage-10 boss fight', () => {
@@ -49,6 +54,11 @@ describe('stage-10 boss fight', () => {
     expect(def.special).toMatchObject({ kind: 'bossLocal', abilityId: 'boss-ch1-cleave' });
     expect(def.enrage).toMatchObject({ kind: 'bossEnrage', abilityId: 'boss-ch1-enrage', hpPct: 0.3 });
     expect(def.fullName).toBe(ch1.name);
+    expect(def.range).toBe(ch1.rangePx);
+    expect(def.speed).toBe(ch1.speedPxPerSec);
+    const def2 = getPartyEnemyDefinition('boss_ch2');
+    expect(def2.range).toBe(ch2.rangePx);
+    expect(def2.speed).toBe(ch2.speedPxPerSec);
   });
 
   it('fires cleave then enrage deterministically under a fixed seed', () => {
@@ -57,6 +67,7 @@ describe('stage-10 boss fight', () => {
     beginEncounter(state);
     const boss = state.enemies.find(unit => unit.sourceId === 'boss_ch1')!;
     const tank = state.party.find(unit => unit.sourceId === 'mw2')!;
+    const priest = state.party.find(unit => unit.sourceId === 'priest')!;
     expect(boss).toBeDefined();
     state.enemies = [boss];
     for (const hero of state.party) { hero.speed = 0; hero.action = { state: 'idle' }; hero.gauge = 0; }
@@ -69,23 +80,44 @@ describe('stage-10 boss fight', () => {
     expect(bar?.telegraph).toBe('CLEAVE!');
     expect(bar?.name).toBe('Gorm, the Ashen Brute');
 
-    // Resolve the cleave, then force the enrage gate on the next turn.
+    // Resolve the cleave: tank in the radius takes damage, priest outside does not.
+    const tankHpBeforeCleave = tank.hp;
+    const priestHpBeforeCleave = priest.hp;
     const mark = boss.specialAction!;
     if (mark.state === 'areaMark') {
-      hold(boss);
+      for (const hero of state.party) hold(hero);
+      boss.speed = 0; boss.gauge = 0; boss.action = { state: 'idle' }; boss.moving = false;
       step(state, Math.max(1, mark.impactTick - state.tick + PARTY_V2.timing.windupTicks * 5));
     }
+    expect(tank.hp).toBeLessThan(tankHpBeforeCleave);
+    expect(priest.hp).toBe(priestHpBeforeCleave);
+
     delete boss.specialAction;
     boss.hp = Math.max(1, Math.floor(boss.maxHp * 0.25));
     boss.moving = false;
     boss.action = { state: 'idle' };
     boss.gauge = 10000;
+    const baseAtk = boss.atk;
     step(state);
     expect(boss.procCounters?.enraged).toBe(1);
     expect(boss.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch1-enrage', global: true });
     expect(bossHpBar(state)?.telegraph).toBe('ENRAGE!');
     expect(bossHpBar(state)?.enraged).toBe(true);
     expect(effectiveAttack(state, boss)).toBeCloseTo(boss.atk * 1.5);
+
+    // Resolve the enrage burst: every living hero loses HP; base atk stays put.
+    const hpBeforeEnrage = new Map(state.party.filter(unit => unit.hp > 0).map(unit => [unit.id, unit.hp]));
+    const enrage = boss.specialAction!;
+    if (enrage.state === 'areaMark') {
+      for (const hero of state.party) hold(hero);
+      boss.speed = 0; boss.gauge = 0; boss.action = { state: 'idle' }; boss.moving = false;
+      step(state, Math.max(1, enrage.impactTick - state.tick + PARTY_V2.timing.windupTicks * 5));
+    }
+    for (const [id, before] of hpBeforeEnrage) {
+      const hero = state.party.find(unit => unit.id === id)!;
+      expect(hero.hp).toBeLessThan(before);
+    }
+    expect(boss.atk).toBe(baseAtk);
   });
 
   it('exposes boss HP bar state from the living boss unit', () => {

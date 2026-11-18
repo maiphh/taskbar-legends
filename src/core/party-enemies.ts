@@ -54,7 +54,7 @@ export function getPartyEnemyDefinition(id: string): PartyEnemyDefinition {
     const enrage = boss.skills.enrage;
     return {
       id, hp: boss.hp, atk: boss.atk, def: boss.def, attackTicks: boss.attackIntervalTicks,
-      range: 12, speed: 70, basicStyle: 'melee', visualKind: parsed, rewardKind: parsed,
+      range: boss.rangePx, speed: boss.speedPxPerSec, basicStyle: 'melee', visualKind: parsed, rewardKind: parsed,
       special: {
         kind: 'bossLocal', abilityId: cleave.id, coefficient: cleave.coefficient, radius: cleave.radius,
         telegraphTicks: cleave.telegraphTicks, every: cleave.everyNthAttack, telegraphLabel: cleave.telegraphLabel,
