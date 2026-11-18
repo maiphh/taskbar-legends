@@ -233,8 +233,17 @@ function chooseTarget(state: GameState, source: Unit): PickedTarget | undefined 
     const active = chooseActive(state, source, target);
     if (active) return active;
     if (def.basic.style === 'heal') {
-      const hurt = hurtAlly(state, 0.9);
-      if (hurt) return { target: hurt, kind: 'heal', abilityId: def.basic.id };
+      // Prefer a wounded ally other than the caster. Self-only under 90% falls through to bolt
+      // when an enemy is in range, otherwise tops up self (seed-4 priest lock).
+      const hurtOther = living(state.party)
+        .filter(ally => ally.id !== source.id && ally.hp / ally.maxHp < 0.9)
+        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || compareId(a, b))[0];
+      if (hurtOther) return { target: hurtOther, kind: 'heal', abilityId: def.basic.id };
+      if (source.hp / source.maxHp < 0.9) {
+        const inBoltRange = living(targetPool(state, source, 'attack')).some(enemy => distance(source, enemy) <= def.basic.range);
+        if (inBoltRange && target) return { target, kind: 'attack', abilityId: def.basic.id };
+        return { target: source, kind: 'heal', abilityId: def.basic.id };
+      }
     }
     return target ? { target, kind: 'attack', abilityId: def.basic.id } : undefined;
   }

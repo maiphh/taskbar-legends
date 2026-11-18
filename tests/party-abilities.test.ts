@@ -74,6 +74,64 @@ describe('party-v2 common impact resolution', () => {
     expect(priest.mana).toBe(60);
     expect(state.events.some(event => event.data.type === 'skill' && event.data.unitId === priest.id && event.data.skill === 'priest-burst-heal')).toBe(false);
   });
+  it('bolts when the priest is the only wounded ally and an enemy is in bolt range (seed-4 1-9 shape)', () => {
+    const state = createState(25210);
+    state.roster.push({ id: 'mh2', level: 1, xp: 0, stars: 1, equipment: { weapon: null, armor: null, charm: null } });
+    state.partyIds = ['mw2', 'mh2', 'priest'];
+    spawnParty(state);
+    const tank = state.party.find(unit => unit.sourceId === 'mw2')!;
+    const melee = state.party.find(unit => unit.sourceId === 'mh2')!;
+    const priest = state.party.find(unit => unit.sourceId === 'priest')!;
+    tank.hp = 0; melee.hp = 0;
+    priest.hp = Math.floor(priest.maxHp * 0.72);
+    priest.x = 50; priest.statuses = []; priest.gauge = 10000; priest.mana = 0;
+    priest.partyCooldowns = { 'priest-burst-heal': Number.MAX_SAFE_INTEGER };
+    const template = state.enemies[0]!;
+    const brute: Unit = {
+      ...structuredClone(template), id: 'seed4-brute', sourceId: 'brute', slot: 0, x: 212,
+      hp: 500, maxHp: 500, atk: 1, def: 0, range: 12, speed: 0, moving: false, action: { state: 'idle' }, gauge: 0,
+    };
+    const archer: Unit = {
+      ...structuredClone(template), id: 'seed4-archer', sourceId: 'archer', slot: 1, x: 230,
+      hp: 400, maxHp: 400, atk: 1, def: 0, range: 260, speed: 0, moving: false, action: { state: 'idle' }, gauge: 0,
+    };
+    state.enemies = [brute, archer];
+    hold(brute); hold(archer);
+    brute.statuses = []; archer.statuses = [];
+    const archerHpBefore = archer.hp;
+    const bruteHpBefore = brute.hp;
+    for (let i = 0; i < 80 && !state.events.some(event => event.data.type === 'hit' && event.data.attackerId === priest.id); i += 1) {
+      state.tick += 1;
+      partyCombatTick(state);
+    }
+    expect(priest.action).toMatchObject({ kind: 'attack', abilityId: 'priest-heal-or-bolt' });
+    const hit = state.events.find(event => event.data.type === 'hit' && event.data.attackerId === priest.id);
+    expect(hit).toBeDefined();
+    expect(archer.hp < archerHpBefore || brute.hp < bruteHpBefore).toBe(true);
+  });
+  it('prefers a wounded ally heal at 1.2× over self-bolt when another ally is under 90%', () => {
+    const state = createState(25211);
+    const tank = state.party.find(unit => unit.sourceId === 'mw2')!;
+    const priest = state.party.find(unit => unit.sourceId === 'priest')!;
+    state.party.forEach(hold); state.enemies.forEach(hold);
+    tank.statuses = []; priest.statuses = [];
+    tank.hp = Math.floor(tank.maxHp * 0.5);
+    priest.hp = Math.floor(priest.maxHp * 0.5);
+    priest.gauge = 10000; priest.mana = 0;
+    priest.partyCooldowns = { 'priest-burst-heal': Number.MAX_SAFE_INTEGER };
+    const enemy = state.enemies[0]!;
+    enemy.x = 230; enemy.hp = enemy.maxHp = 10_000; enemy.def = 0;
+    const tankHpBefore = tank.hp;
+    const enemyHpBefore = enemy.hp;
+    step(state);
+    expect(priest.action).toMatchObject({ state: 'windup', kind: 'heal', abilityId: 'priest-heal-or-bolt', targetId: tank.id });
+    impactNow(state, priest);
+    const healEvent = state.events.find(event => event.data.type === 'heal' && event.data.sourceId === priest.id && event.data.targetId === tank.id);
+    expect(healEvent).toBeDefined();
+    expect(tank.hp).toBe(tankHpBefore + Math.round(priest.atk * 1.2));
+    expect(enemy.hp).toBe(enemyHpBefore);
+    expect(state.events.some(event => event.data.type === 'hit' && event.data.attackerId === priest.id)).toBe(false);
+  });
   it('round-trips empty, partial and full mana values through a save', () => {
     const state = createState(25202);
     state.party[0]!.mana = 0; state.party[1]!.mana = 23; state.party[2]!.mana = 60;
