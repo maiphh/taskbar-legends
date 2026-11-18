@@ -24,7 +24,7 @@ describe('party-v2 enemy registry and wave overrides', () => {
     for (let stage = 13; stage <= 19; stage += 1) {
       expect(waveAt(stage, 1)).toContain('assassin'); expect(waveAt(stage, 2)).toContain('bomber'); expect(waveAt(stage, 3)).toContain('bomber');
     }
-    for (const stage of CONFIG.stages) for (let wave = 1; wave <= stage.waves.length; wave += 1) {
+    for (const stage of CONFIG.stages.filter(value => !value.isBoss)) for (let wave = 1; wave <= stage.waves.length; wave += 1) {
       const result = waveAt(stage.index, wave);
       expect([3, 5]).toContain(result.length);
     }
@@ -36,7 +36,9 @@ describe('party-v2 enemy registry and wave overrides', () => {
       const original = 'enemies' in bossWave ? bossWave.enemies : [bossWave.boss, ...bossWave.adds];
       const result = partyWaveKinds(stage.index, waveIndex, original, true);
       expect(result.some(id => id.startsWith('boss'))).toBe(true);
-      expect([3, 5]).toContain(result.length);
+      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result.length).toBeLessThanOrEqual(3);
+      expect(result.filter(id => id.startsWith('boss'))).toHaveLength(1);
     }
   });
 

@@ -1,6 +1,7 @@
-import { CONFIG, slotSchema, stageConfig, ticksForSeconds } from '../config';
+import { CONFIG, isBossEnemyId, slotSchema, stageConfig, ticksForSeconds } from '../config';
 import { cheapestEquippedUpgrade, gearScore, getOwned, heroStats, upgradeCost } from './economy';
-import type { GameEvent, GameState, Gear, ItemId, Progress } from './model';
+import { getPartyEnemyDefinition } from './party-enemies';
+import type { GameEvent, GameState, Gear, ItemId, Progress, Unit } from './model';
 
 export interface CampaignPresentation { lane: string; management: string; tone: 'normal' | 'farm' | 'boss' | 'complete'; action: 'Push now' | 'Fight boss' | 'Retry boss' | null }
 /** Short, persistent, read-only explanation of the current campaign gate. */
@@ -13,7 +14,13 @@ export function campaignPresentation(progress: Progress, paused: boolean): Campa
       const boss = stageConfig(progress.bossStage).id, farm = stageConfig(progress.stage).id;
       result = { lane: `Boss ${boss} ready`, management: `Boss ${boss} ready · farming ${farm} until start${progress.bossLosses ? ` · ${progress.bossLosses} failed` : ''}`, tone: 'boss', action: progress.bossLosses ? 'Retry boss' : 'Fight boss' }; break;
     }
-    case 'BOSS_FIGHT': result = { lane: `Boss ${stageConfig(progress.stage).id} · Fighting`, management: `Boss ${stageConfig(progress.stage).id} · Fighting`, tone: 'boss', action: null }; break;
+    case 'BOSS_FIGHT': {
+      const stage = stageConfig(progress.stage);
+      const wave = stage.waves.find(entry => 'boss' in entry);
+      const bossId = wave && 'boss' in wave ? wave.boss : null;
+      const bossName = bossId && isBossEnemyId(bossId) ? CONFIG.enemies[bossId].name : `Boss ${stage.id}`;
+      result = { lane: `${bossName}`, management: `${bossName} · Fighting`, tone: 'boss', action: null }; break;
+    }
     case 'COMPLETE': result = { lane: 'Campaign complete', management: 'Campaign complete · farming the final stage continues.', tone: 'complete', action: null }; break;
   }
   return paused ? { ...result, lane: `Paused · ${result.lane}`, management: `Paused · ${result.management}` } : result;
@@ -93,4 +100,40 @@ export function stageCue(state: GameState): StageCue | null {
   }
   if (fresh(clear) && clear.data.type === 'clear') return { kind: 'clear', stage: clear.data.stage, age: (state.tick - clear.tick) / life };
   return null;
+}
+
+/** Top-of-lane boss HP plate. Pure read of the living boss unit. */
+export interface BossHpBarState {
+  unitId: string;
+  name: string;
+  hp: number;
+  maxHp: number;
+  ratio: number;
+  enraged: boolean;
+  telegraph: string | null;
+}
+export function bossHpBar(state: GameState): BossHpBarState | null {
+  const boss = state.enemies.find(unit => unit.boss && unit.hp > 0 && isBossEnemyId(unit.sourceId));
+  if (!boss) return null;
+  return bossHpBarFromUnit(boss);
+}
+export function bossHpBarFromUnit(boss: Unit): BossHpBarState {
+  const definition = getPartyEnemyDefinition(boss.sourceId);
+  let telegraph: string | null = null;
+  const special = boss.specialAction;
+  if (special && (special.state === 'areaMark' || special.state === 'areaImpact')) {
+    if (definition.enrage && special.abilityId === definition.enrage.abilityId) telegraph = definition.enrage.telegraphLabel;
+    else if (definition.special && (definition.special.kind === 'bossLocal' || definition.special.kind === 'bossGlobal')) {
+      telegraph = definition.special.telegraphLabel;
+    }
+  }
+  return {
+    unitId: boss.id,
+    name: definition.fullName ?? `${definition.displayName ?? boss.sourceId}, the ${definition.title ?? 'Boss'}`,
+    hp: boss.hp,
+    maxHp: boss.maxHp,
+    ratio: boss.maxHp > 0 ? boss.hp / boss.maxHp : 0,
+    enraged: (boss.procCounters?.enraged ?? 0) > 0,
+    telegraph,
+  };
 }

@@ -1,5 +1,4 @@
 import { combatTime } from './clock';
-import { ticksForSeconds } from '../config';
 import { getPartyEnemyDefinition } from './party-enemies';
 import type { GameState, PartyEffect, Unit } from './model';
 
@@ -39,9 +38,10 @@ export function effectiveAttack(state: GameState, unit: Unit): number {
   const bonus = Math.min(0.5, sum(state, unit, 'atkBonus'));
   const reduction = Math.min(0.5, sum(state, unit, 'atkReduction'));
   const enemy = unit.side === 'enemy' ? getPartyEnemyDefinition(unit.sourceId) : undefined;
-  const bossEnraged = Boolean(enemy?.special && ['bossLocal', 'bossGlobal'].includes(enemy.special.kind)
-    && combatTime(state) - (unit.nativeBornTick ?? unit.bornTick) >= ticksForSeconds(60));
-  return Math.max(0, unit.atk * (1 + bonus) * (1 - reduction) * (bossEnraged ? 1.5 : 1));
+  const enrage = enemy?.enrage;
+  const bossEnraged = Boolean(enrage && (unit.procCounters?.enraged ?? 0) > 0);
+  const enrageMult = bossEnraged && enrage ? enrage.atkMult : 1;
+  return Math.max(0, unit.atk * (1 + bonus) * (1 - reduction) * enrageMult);
 }
 export function effectiveDefense(state: GameState, unit: Unit): number {
   return Math.max(0, unit.def * (1 - Math.min(0.6, sum(state, unit, 'defReduction'))));

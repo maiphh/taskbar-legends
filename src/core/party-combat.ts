@@ -234,22 +234,38 @@ function aimDirection(source: Unit, target: Unit): -1 | 1 {
 }
 function startEnemySpecial(state: GameState, source: Unit, now: number): boolean {
   if (source.side !== 'enemy') return false;
-  const special = getPartyEnemyDefinition(source.sourceId).special;
+  const definition = getPartyEnemyDefinition(source.sourceId);
+  const enrage = definition.enrage;
+  const target = nearest(source, living(state.party));
+  // Signature enrage: once below the HP gate, telegraph a burst and lock the atk mult.
+  if (enrage && target && (source.procCounters?.enraged ?? 0) === 0 && source.hp <= source.maxHp * enrage.hpPct) {
+    source.procCounters ??= {}; source.procCounters.enraged = 1;
+    source.specialAction = {
+      state: 'areaMark', targetId: target.id, centerX: target.x, radius: enrage.burstGlobal ? 0 : 64,
+      startTick: now, impactTick: now + enrage.telegraphTicks, abilityId: enrage.abilityId,
+      ...(enrage.burstGlobal ? { global: true } : {}),
+    };
+    emit(state, { type: 'skill', unitId: source.id, skill: enrage.abilityId }, now);
+    return true;
+  }
+  const special = definition.special;
   if (!special) return false;
   if (special.kind === 'assassin') {
-    const target = rearmostHero(state); if (!target) return false;
-    source.specialAction = { state: 'assassinMark', targetId: target.id, startTick: now, impactTick: now + special.markTicks };
+    const rear = rearmostHero(state); if (!rear) return false;
+    source.specialAction = { state: 'assassinMark', targetId: rear.id, startTick: now, impactTick: now + special.markTicks };
     emit(state, { type: 'skill', unitId: source.id, skill: 'assassin-mark' }, now);
     return true;
   }
-  const target = nearest(source, living(state.party)); if (!target) return false;
+  if (!target) return false;
   if (special.kind === 'localArea') {
     if (!cooldownReady(source, special.abilityId, now)) return false;
     setCooldown(source, special.abilityId, now + special.cooldownTicks);
-  } else {
+  } else if (special.kind === 'bossLocal' || special.kind === 'bossGlobal') {
     const successful = source.procCounters?.basicSuccess ?? 0, used = source.procCounters?.bossPattern ?? 0;
     if (successful < (used + 1) * special.every) return false;
     source.procCounters ??= {}; source.procCounters.bossPattern = used + 1;
+  } else {
+    return false;
   }
   source.specialAction = { state: 'areaMark', targetId: target.id, centerX: target.x, radius: special.kind === 'bossGlobal' ? 0 : special.radius,
     startTick: now, impactTick: now + special.telegraphTicks, abilityId: special.abilityId, ...(special.kind === 'bossGlobal' ? { global: true } : {}) };
@@ -273,8 +289,12 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
     }
     if (action.state === 'areaImpact') {
       if (action.impactTick > now) continue;
-      const definition = getPartyEnemyDefinition(source.sourceId).special;
-      const coefficient = definition?.kind === 'localArea' || definition?.kind === 'bossLocal' || definition?.kind === 'bossGlobal' ? definition.coefficient : 1;
+      const enemy = getPartyEnemyDefinition(source.sourceId);
+      const special = enemy.special;
+      const enrage = enemy.enrage;
+      let coefficient = 1;
+      if (enrage && action.abilityId === enrage.abilityId) coefficient = enrage.burstCoefficient;
+      else if (special?.kind === 'localArea' || special?.kind === 'bossLocal' || special?.kind === 'bossGlobal') coefficient = special.coefficient;
       const targets = action.global ? living(state.party) : living(state.party).filter(target => Math.abs(target.x - action.centerX) <= action.radius + radius(target));
       for (const target of targets.sort(compareId)) damage.push({ source, target, coefficient, abilityId: action.abilityId, basic: false, interceptable: !action.global, primary: target.id === action.targetId });
       delete source.specialAction;

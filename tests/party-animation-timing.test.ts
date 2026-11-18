@@ -28,7 +28,7 @@ describe('party attack clip timing', () => {
     }
   });
 
-  it.each([['mw1', 4], ['hk1', 7], ['ew3', 13], ['boss_ch1', 16]] as const)('plays every frame for %s (%i frames) before return', (actor, frames) => {
+  it.each([['mw1', 4], ['hk1', 7], ['ew3', 13], ['boss_ch1', 7]] as const)('plays every frame for %s (%i frames) before return', (actor, frames) => {
     const timeline = createActionTimeline(actor, 'leap', 10), clip = clipFor(actor, 'leap');
     expect(timeline.contactTick).toBe(10 + APPROACH_TICKS);
     expect(timeline.impactTick).toBe(timeline.contactTick + Math.ceil(Math.floor(frames / 2) * PRESENTATION_FRAME_MS / ANIMATION_TICK_MS));

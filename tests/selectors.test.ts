@@ -41,7 +41,7 @@ describe('campaign presentation selector', () => {
     expect(campaignPresentation({ kind: 'FARMING', stage: 9, failedStage: 10, retryAtTick: 50, failedPower: 0, failures: 1 }, false)).toMatchObject({ lane: 'Farming 1-9', management: expect.stringContaining('auto retries toward 1-10'), action: 'Push now' });
     expect(campaignPresentation({ kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 }, false)).toMatchObject({ lane: 'Boss 1-10 ready', management: expect.stringContaining('farming 1-9'), action: 'Fight boss' });
     expect(campaignPresentation({ kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 2 }, false)).toMatchObject({ action: 'Retry boss', management: expect.stringContaining('2 failed') });
-    expect(campaignPresentation({ kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 1 }, false)).toMatchObject({ lane: 'Boss 1-10 · Fighting', action: null });
+    expect(campaignPresentation({ kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 1 }, false)).toMatchObject({ lane: 'Gorm, the Ashen Brute', action: null });
     expect(campaignPresentation({ kind: 'COMPLETE', stage: CONFIG.stages.length }, false)).toMatchObject({ lane: 'Campaign complete', management: expect.stringContaining('final stage'), action: null });
   });
   it('marks paused campaigns and does not mutate the supplied progress', () => {

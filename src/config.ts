@@ -15,9 +15,39 @@ const heroDefinition = z.object({
   mod: z.object({ hp: z.number().optional(), atk: z.number().optional(), def: z.number().optional(),
     attackIntervalTicks: z.number().optional(), splashRadiusPx: z.number().optional() }),
 });
+const mobEnemy = z.object({
+  hp: z.number().positive(), atk: z.number().positive(), def: z.number().nonnegative(),
+  attackIntervalTicks: z.number().int().positive(), rangePx: z.number().positive(),
+  speedPxPerSec: z.number().positive(), gold: z.number().nonnegative(), xp: z.number().nonnegative(),
+}).strict();
+const bossCleaveSkill = z.object({
+  id: z.string().min(1), everyNthAttack: z.number().int().positive(), coefficient: z.number().positive(),
+  radius: z.number().positive(), telegraphTicks: z.number().int().positive(), telegraphLabel: z.string().min(1),
+}).strict();
+const bossEnrageSkill = z.object({
+  id: z.string().min(1), hpPct: z.number().gt(0).lte(1), atkMult: z.number().positive(),
+  telegraphTicks: z.number().int().positive(), telegraphLabel: z.string().min(1),
+  burstCoefficient: z.number().positive(), burstGlobal: z.boolean(),
+}).strict();
+const bossEnemy = z.object({
+  name: z.string().min(1), displayName: z.string().min(1), title: z.string().min(1),
+  heroSprite: z.string().min(1), scale: z.number().int().min(1).max(4),
+  tint: z.string().min(1), outline: z.string().min(1),
+  hp: z.number().positive(), atk: z.number().positive(), def: z.number().nonnegative(),
+  attackIntervalTicks: z.number().int().positive(), rangePx: z.number().positive(),
+  speedPxPerSec: z.number().positive(),
+  skills: z.object({ cleave: bossCleaveSkill, enrage: bossEnrageSkill }).strict(),
+  gold: z.number().nonnegative(), xp: z.number().nonnegative(),
+}).strict();
+export type BossEnemyConfig = z.infer<typeof bossEnemy>;
+const enemiesConfig = z.object({
+  scalingPerStage: z.number().positive(), scalingFormula: z.string(),
+  grunt: mobEnemy, archer: mobEnemy, brute: mobEnemy,
+  boss_ch1: bossEnemy, boss_ch2: bossEnemy,
+}).strict();
 const wave = z.union([
   z.object({ enemies: z.array(enemyKindSchema).nonempty() }),
-  z.object({ boss: enemyKindSchema, adds: z.array(enemyKindSchema) }),
+  z.object({ boss: enemyKindSchema, adds: z.array(enemyKindSchema).max(2) }),
 ]);
 const stageCommon = { id: z.string(), index: z.number().int().positive(), chapter: z.number().int().positive(),
   firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() };
@@ -75,8 +105,10 @@ export function setSalvageRules(rules: SalvageRules | 'design' | 'default'): Sal
   return { ...CONFIG.gear.salvage };
 }
 export function activeSalvageRules(): SalvageRules { return { ...CONFIG.gear.salvage }; }
+const parsedEnemies = enemiesConfig.parse(design.enemies);
 export const CONFIG = {
   ...design,
+  enemies: parsedEnemies,
   gear: { ...design.gear, salvage: { ...SALVAGE_DEFAULTS } },
   v14: v14Defaults(),
   combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
@@ -103,11 +135,20 @@ export const CONFIG = {
     upgradePopupSeconds: 1.2, stageCueSeconds: 2,
     background: '#101c27', floor: '#253b43', line: '#355253', text: '#e8eee5', muted: '#8babb0', gold: '#f0cf7f',
     heroAssets: { mw2: 'medieval-warrior-pack-2', hu1: 'huntress', wiz: 'wizard-pack', mw1: 'medieval-warrior-pack', mw3: 'medieval-warrior-pack-3', mh1: 'martial-hero', hk1: 'hero-knight', mh2: 'martial-hero-2', hu2: 'huntress-2', ew1: 'evil-wizard', priest: 'priest', hk2: 'hero-knight-2', mk1: 'medieval-king-pack', fw: 'fantasy-warrior', ew2: 'evil-wizard-2', mk2: 'medieval-king-pack-2', mh3: 'martial-hero-3', ew3: 'evil-wizard-3' } satisfies Record<string, string>,
-    enemyAssets: { grunt: 'goblin', archer: 'skeleton', brute: 'mushroom', boss_ch1: 'fire-worm', boss_ch2: 'mimic' },
+    enemyAssets: {
+      grunt: 'goblin', archer: 'skeleton', brute: 'mushroom',
+      boss_ch1: parsedEnemies.boss_ch1.heroSprite, boss_ch2: parsedEnemies.boss_ch2.heroSprite,
+    },
     roleColors: { tank: '#74baf4', warrior: '#e9b678', ranger: '#9cdea5', mage: '#c3a0f0', support: '#83dccc' },
-    enemyColors: { grunt: '#e39a79', archer: '#e6b76e', brute: '#c97a91', boss_ch1: '#e0806c', boss_ch2: '#d383d4' },
+    enemyColors: { grunt: '#e39a79', archer: '#e6b76e', brute: '#c97a91', boss_ch1: parsedEnemies.boss_ch1.tint, boss_ch2: parsedEnemies.boss_ch2.tint },
   },
 };
+export function bossConfig(kind: 'boss_ch1' | 'boss_ch2'): BossEnemyConfig {
+  return CONFIG.enemies[kind];
+}
+export function isBossEnemyId(id: string): id is 'boss_ch1' | 'boss_ch2' {
+  return id === 'boss_ch1' || id === 'boss_ch2';
+}
 /** UI tokens (M3 adds rarity, badges, gacha, offlineRewards); typed from the JSON, no UI consumes the M3 blocks yet. */
 export type UiTokens = typeof uiTokens;
 export type RarityTokens = UiTokens['rarity'];

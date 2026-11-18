@@ -326,40 +326,74 @@
       "xp": 8
     },
     "boss_ch1": {
-      "name": "Chapter 1 Boss",
-      "hp": 1550,
-      "atk": 36,
-      "def": 20,
-      "attackIntervalTicks": 30,
+      "name": "Gorm, the Ashen Brute",
+      "displayName": "Gorm",
+      "title": "Ashen Brute",
+      "heroSprite": "fantasy-warrior",
+      "scale": 2,
+      "tint": "#c45a4a",
+      "outline": "#2a0c0c",
+      "hp": 300,
+      "atk": 26,
+      "def": 12,
+      "attackIntervalTicks": 28,
       "rangePx": 40,
-      "speedPxPerSec": 120,
-      "skill": {
-        "id": "slam",
-        "everyNthAttack": 5,
-        "hitsAllHeroes": true,
-        "mult": 1.0
+      "speedPxPerSec": 70,
+      "skills": {
+        "cleave": {
+          "id": "boss-ch1-cleave",
+          "everyNthAttack": 4,
+          "coefficient": 1.15,
+          "radius": 56,
+          "telegraphTicks": 20,
+          "telegraphLabel": "CLEAVE!"
+        },
+        "enrage": {
+          "id": "boss-ch1-enrage",
+          "hpPct": 0.3,
+          "atkMult": 1.5,
+          "telegraphTicks": 16,
+          "telegraphLabel": "ENRAGE!",
+          "burstCoefficient": 0.85,
+          "burstGlobal": true
+        }
       },
-      "enrageAfterSec": 60,
-      "enrageAtkMult": 1.5,
       "gold": 200,
       "xp": 200
     },
     "boss_ch2": {
-      "name": "Chapter 2 Boss",
-      "hp": 2150,
-      "atk": 48,
-      "def": 15,
-      "attackIntervalTicks": 30,
+      "name": "Nyx, the Hex Sovereign",
+      "displayName": "Nyx",
+      "title": "Hex Sovereign",
+      "heroSprite": "evil-wizard-2",
+      "scale": 2,
+      "tint": "#8a4ad4",
+      "outline": "#1a0828",
+      "hp": 420,
+      "atk": 32,
+      "def": 12,
+      "attackIntervalTicks": 28,
       "rangePx": 100,
-      "speedPxPerSec": 80,
-      "skill": {
-        "id": "hex_volley",
-        "everyNthAttack": 4,
-        "hitsAllHeroes": true,
-        "mult": 0.9
+      "speedPxPerSec": 65,
+      "skills": {
+        "cleave": {
+          "id": "boss-ch2-cleave",
+          "everyNthAttack": 4,
+          "coefficient": 1.05,
+          "radius": 64,
+          "telegraphTicks": 20,
+          "telegraphLabel": "CLEAVE!"
+        },
+        "enrage": {
+          "id": "boss-ch2-enrage",
+          "hpPct": 0.3,
+          "atkMult": 1.5,
+          "telegraphTicks": 16,
+          "telegraphLabel": "ENRAGE!",
+          "burstCoefficient": 0.9,
+          "burstGlobal": true
+        }
       },
-      "enrageAfterSec": 60,
-      "enrageAtkMult": 1.5,
       "gold": 400,
       "xp": 400
     }
@@ -686,23 +720,8 @@
       "firstClearTickets": 1,
       "waves": [
         {
-          "enemies": [
-            "grunt",
-            "grunt"
-          ]
-        },
-        {
-          "enemies": [
-            "grunt",
-            "grunt"
-          ]
-        },
-        {
           "boss": "boss_ch1",
-          "adds": [
-            "grunt",
-            "grunt"
-          ]
+          "adds": []
         }
       ]
     },
@@ -1039,24 +1058,14 @@
       "firstClearTickets": 1,
       "waves": [
         {
-          "enemies": [
-            "grunt"
-          ]
-        },
-        {
-          "enemies": [
-            "grunt"
-          ]
-        },
-        {
           "boss": "boss_ch2",
           "adds": [
-            "grunt",
             "grunt"
           ]
         }
       ]
     }
+
   ],
   "rewards": {
     "killScaling": 1.1,

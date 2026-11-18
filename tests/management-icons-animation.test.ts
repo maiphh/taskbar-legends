@@ -18,13 +18,14 @@ describe('management role icon mapping', () => {
     const canvas = { width: 32, height: 32 } as HTMLCanvasElement;
     // Node tests have no Canvas; assert the draw helper is callable with a stub that records fillRect calls.
     const fills: Array<{ x: number; y: number; w: number; h: number; style: string }> = [];
-    const ctx = {
+    const stub: { imageSmoothingEnabled: boolean; fillStyle: string; fillRect: (x: number, y: number, w: number, h: number) => void } = {
       imageSmoothingEnabled: true,
       fillStyle: '#000',
       fillRect(x: number, y: number, w: number, h: number) {
-        fills.push({ x, y, w, h, style: String(this.fillStyle) });
+        fills.push({ x, y, w, h, style: String(stub.fillStyle) });
       },
-    } as unknown as CanvasRenderingContext2D;
+    };
+    const ctx = stub as unknown as CanvasRenderingContext2D;
     drawRoleIcon(ctx, 'dps', 3.2, 4.8, 1);
     expect(ctx.imageSmoothingEnabled).toBe(false);
     expect(fills.length).toBeGreaterThan(10);

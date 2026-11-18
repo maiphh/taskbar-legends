@@ -33,8 +33,9 @@ export const PARTY_CLIPS: Readonly<Record<string, ClipTiming>> = Object.freeze({
   archer: { asset: 'skeleton', attackFrames: 8, castFrames: 8, frameMs: 90 },
   brute: { asset: 'mushroom', attackFrames: 8, castFrames: 8, frameMs: 90 },
   bomber: { asset: 'mushroom', attackFrames: 8, castFrames: 8, frameMs: 90 },
-  boss_ch1: { asset: 'fire-worm', attackFrames: 16, castFrames: 16, frameMs: 90 },
-  boss_ch2: { asset: 'mimic', attackFrames: 14, castFrames: 13, frameMs: 90 },
+  // Hero-as-boss: reuse menacing hero clip lengths (fantasy-warrior / evil-wizard-2).
+  boss_ch1: { asset: 'fantasy-warrior', attackFrames: 7, castFrames: 7, frameMs: 90 },
+  boss_ch2: { asset: 'evil-wizard-2', attackFrames: 8, castFrames: 8, frameMs: 90 },
 });
 
 export type ActionDelivery = 'leap' | 'cast';

@@ -107,7 +107,9 @@ describe('party-v2 deterministic encounter matrix', () => {
     expect(supportStack).toHaveLength(15);
     expect(supportStack.every(entry => entry.result.damage > 0 && entry.result.ticks <= STRESS_TICKS)).toBe(true);
     expect(results.filter(entry => entry.enemy === 'grunt').every(entry => entry.result.enemyHp === 0)).toBe(true);
-    expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
+    // Boss is tuned to be beatable; every boss trial still finishes inside the stress budget.
+    expect(results.filter(entry => entry.enemy === 'boss_ch1').every(entry => entry.result.ticks <= STRESS_TICKS)).toBe(true);
+    expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.enemyHp === 0)).toBe(true);
     console.log(JSON.stringify({ trials: results.length,
       clears: results.filter(entry => entry.result.enemyHp === 0).length,
       heroLosses: results.filter(entry => entry.result.heroHp === 0).length,
