@@ -286,11 +286,16 @@ export class Renderer {
     ctx.fillStyle = '#3f5542'; ctx.fillRect(field.x, coreY + 48, field.width, 2);
     for (let x = field.x + 5; x < field.x + field.width; x += 28) { ctx.fillStyle = x % 3 ? '#52664a' : '#223d32'; ctx.fillRect(x, coreY + 51, 2, 2); ctx.fillRect(x + 12, coreY + 65, 3, 1); }
     const bossBar = bossHpBar(state);
-    const bossBarX = Math.round(field.x + 24), bossBarW = Math.max(120, Math.round(field.width - 48)), bossBarY = coreY + 4, bossBarH = 10;
-    // Reserve the plate + telegraph row so scale-2 boss sprites cannot paint over the labels.
-    const bossPlateBottom = bossBar
-      ? bossBarY + Math.max(bossBarH, BODY) + (bossBar.telegraph ? BODY + BODY : 0)
-      : coreY;
+    // Boss plate sits at the top of the effects ceiling so scale-2 sprites keep the core strip
+    // and party HP / status rows (around coreY - 6) never collide with the name or telegraph.
+    const bossBarX = Math.round(field.x + 24), bossBarW = Math.max(120, Math.round(field.width - 48));
+    const bossBarH = Math.max(14, BODY + 2);
+    const bossTelegraphGap = 2;
+    const bossTelegraphH = bossBar?.telegraph ? BODY + 2 : 0;
+    const bossPlateBlock = bossBarH + (bossTelegraphH > 0 ? bossTelegraphGap + bossTelegraphH : 0);
+    const bossBarY = bossBar ? 8 : coreY;
+    const bossPlateBottom = bossBar ? bossBarY + bossPlateBlock : coreY;
+    const unitHpBaseY = coreY + CONFIG.ui.unitHpBars.coreLocalY;
     const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
     for (const unit of units) {
@@ -315,12 +320,7 @@ export class Renderer {
         ctx.fillStyle = enemyDef.outline;
         ctx.fillRect(Math.round(x - 18 * bossScale), unitBaseline - 2, Math.round(36 * bossScale), 3);
       }
-      if (isLaneBoss) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(field.x, bossPlateBottom, field.width, height - bossPlateBottom);
-        ctx.clip();
-      }
+      // Plate is painted after units, so scale-2 bosses stay unclipped and read as large.
       const tint = isLaneBoss ? enemyDef?.tint : undefined;
       const outline = isLaneBoss ? enemyDef?.outline : undefined;
       if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline)) {
@@ -328,9 +328,11 @@ export class Renderer {
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : (enemyDef?.tint ?? color);
         ctx.fillRect(x - w / 2, unitBaseline - h, w, h);
       }
-      if (isLaneBoss) ctx.restore();
       if (unit.hp <= 0) continue;
-      const hpWidth = unit.side === 'hero' ? 34 : 32, hpY = coreY + CONFIG.ui.unitHpBars.coreLocalY - depth;
+      const hpWidth = unit.side === 'hero' ? 34 : 32;
+      // Boss status icons hang just under the plate; party bars keep their usual ceiling slot.
+      const statusClearance = (statusEffectsConfig()?.display.rowOffsetAboveHpPx ?? 13) + 2;
+      const hpY = isLaneBoss ? bossPlateBottom + statusClearance : unitHpBaseY - depth;
       // Boss uses the top-of-lane HP plate; skip the tiny per-unit bar, but still draw status icons.
       if (!isLaneBoss) {
         ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
@@ -366,15 +368,15 @@ export class Renderer {
       const nameMax = Math.max(0, barW - hpWidth - 8);
       const nameText = ellipsize(bossBar.name, nameMax > 0 ? nameMax : barW, measure);
       const textY = barY + Math.round((barH - BODY) / 2);
-      this.ui.text(ctx, nameText, barX, textY, '#f2e9cf', BODY, true);
-      this.ui.text(ctx, hpText, barX + barW - hpWidth, textY, '#f2e9cf', BODY, true);
+      this.ui.text(ctx, nameText, barX + 2, textY, '#f2e9cf', BODY, true);
+      this.ui.text(ctx, hpText, barX + barW - hpWidth - 2, textY, '#f2e9cf', BODY, true);
       if (bossBar.telegraph) {
-        const telegraphY = barY + barH + BODY;
+        const telegraphY = barY + barH + bossTelegraphGap;
         const telegraphWidth = measure(bossBar.telegraph);
         const telegraphX = barX + Math.round((barW - telegraphWidth) / 2);
-        ctx.fillStyle = 'rgba(40,12,12,.85)';
-        ctx.fillRect(Math.max(barX, telegraphX - 6), telegraphY, Math.min(barW, telegraphWidth + 12), BODY);
-        this.ui.text(ctx, bossBar.telegraph, telegraphX, telegraphY, '#ffd16e', BODY, true);
+        ctx.fillStyle = 'rgba(40,12,12,.92)';
+        ctx.fillRect(Math.max(barX, telegraphX - 6), telegraphY, Math.min(barW, telegraphWidth + 12), bossTelegraphH);
+        this.ui.text(ctx, bossBar.telegraph, telegraphX, telegraphY + Math.round((bossTelegraphH - BODY) / 2), '#ffd16e', BODY, true);
       }
     }
     {
@@ -387,6 +389,7 @@ export class Renderer {
         if (special.state === 'areaMark') {
           ctx.save(); ctx.strokeStyle = special.global ? '#ff6b68' : '#ffbd59'; ctx.fillStyle = special.global ? 'rgba(255,75,72,.13)' : 'rgba(255,177,56,.16)'; ctx.lineWidth = 2;
           const enemyDef = getPartyEnemyDefinition(enemy.sourceId);
+          const plateOwnsTelegraph = !!(enemy.boss && isBossEnemyId(enemy.sourceId) && bossBar?.telegraph);
           let telegraphLabel = special.global ? 'GLOBAL' : null;
           if (enemyDef.enrage && special.abilityId === enemyDef.enrage.abilityId) telegraphLabel = enemyDef.enrage.telegraphLabel;
           else if (enemyDef.special && (enemyDef.special.kind === 'bossLocal' || enemyDef.special.kind === 'bossGlobal')) telegraphLabel = enemyDef.special.telegraphLabel;
@@ -395,9 +398,9 @@ export class Renderer {
           } else {
             ctx.beginPath(); ctx.arc(sx(special.centerX), baselineY - 18, special.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           }
-          if (telegraphLabel) {
+          // Boss plate already owns the telegraph label; skip the world cue so it cannot overlap the name.
+          if (telegraphLabel && !plateOwnsTelegraph) {
             const labelX = Math.max(field.x + 30, Math.min(field.x + field.width - 30, sx(special.centerX)));
-            // Prefer the boss HP plate telegraph; keep a local flash cue over the impact.
             this.ui.text(ctx, telegraphLabel, labelX, baselineY - 52, special.global ? '#ff7772' : '#ffd16e', BODY, true);
           }
           ctx.restore();
