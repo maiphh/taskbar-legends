@@ -52,7 +52,7 @@ Uniform hit feedback is renderer-owned: **`CONFIG.view.hitFlashMs=90`**, **`hitF
 
 ## Architecture
 
-`src/core/` contains only deterministic plain-JSON state transitions: fixed 20Hz movement/targeting, role skills, damage/DEF/shields/heals, seeded mulberry32 **only for drops/gear/gacha**, XP, stars, equipment, rewards, boss gates and retry backoff. No DOM, assets, clocks, global RNG or timers. HP carries between waves; the party fully heals and applies queued stats/formation at each new encounter. Three-wave stage timers cover gaps too.
+`src/core/` contains only deterministic plain-JSON state transitions: fixed 20Hz movement/targeting, role skills, damage/DEF/shields/heals, seeded mulberry32 **only for drops/gear/gacha**, XP, stars, equipment, rewards, boss gates and retry backoff. No DOM, assets, clocks, global RNG or timers. HP carries between waves; the party fully heals and applies queued stats/formation at each new encounter. Normal stages have no timer. Boss timers cover the whole fight, including wave gaps.
 
 Failures farm the highest clear. Non-boss retries use 120/240/480/600s backoff, or next encounter start after 5% power growth since the failed attempt. Timer retries land on the exact deadline, even if that interrupts farming. Bosses are gated before their *first* attempt and after losses. Stage 20 completion enters an explicit COMPLETE farming state rather than inventing stage 21.
 

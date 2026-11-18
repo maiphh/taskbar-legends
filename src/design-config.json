@@ -285,7 +285,7 @@
     "enemyTargeting": "front-most living hero (lowest slot index)",
     "enemyMeleeStopOffsetPx": 30,
     "firstAttackDelayTicks": 0,
-    "lossCondition": "all heroes dead OR stage timer >= timeoutSec",
+    "lossCondition": "all heroes dead; a boss also loses when the stage timer reaches timeoutSec",
     "hpCarriesBetweenWaves": true,
     "fullHealBetweenStages": true,
     "nonBossFarmTimeScale": 3,
@@ -370,7 +370,6 @@
       "index": 1,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -401,7 +400,6 @@
       "index": 2,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -432,7 +430,6 @@
       "index": 3,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -463,7 +460,6 @@
       "index": 4,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -497,7 +493,6 @@
       "index": 5,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -531,7 +526,6 @@
       "index": 6,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -568,7 +562,6 @@
       "index": 7,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -605,7 +598,6 @@
       "index": 8,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -648,7 +640,6 @@
       "index": 9,
       "chapter": 1,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 1,
       "waves": [
         {
@@ -720,7 +711,6 @@
       "index": 11,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -754,7 +744,6 @@
       "index": 12,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -788,7 +777,6 @@
       "index": 13,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -822,7 +810,6 @@
       "index": 14,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -859,7 +846,6 @@
       "index": 15,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -896,7 +882,6 @@
       "index": 16,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -933,7 +918,6 @@
       "index": 17,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -973,7 +957,6 @@
       "index": 18,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {
@@ -1013,7 +996,6 @@
       "index": 19,
       "chapter": 2,
       "isBoss": false,
-      "timeoutSec": 90,
       "firstClearTickets": 2,
       "waves": [
         {

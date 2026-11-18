@@ -7613,7 +7613,7 @@
     },
     "interpretation": "A helper-capped stress run only; not an engine timeout."
   },
-  "engineTimeoutCases": [
+  "normalStagePastOldTimer": [
     {
       "team": "supportStack",
       "teamIds": [
@@ -7622,14 +7622,13 @@
         "ew1"
       ],
       "stage": 1,
-      "timeoutTicks": 1800,
-      "elapsedTicks": 1807,
-      "losses": 1,
+      "elapsedTicks": 1900,
+      "losses": 0,
       "clears": 0,
       "survivingHeroes": [
         {
           "id": "priest",
-          "hp": 185,
+          "hp": 184,
           "maxHp": 193
         },
         {
@@ -7643,7 +7642,7 @@
           "maxHp": 193
         }
       ],
-      "enemyHp": 999999917
+      "enemyHp": 999999911
     },
     {
       "team": "defensive",
@@ -7653,9 +7652,8 @@
         "priest"
       ],
       "stage": 1,
-      "timeoutTicks": 1800,
-      "elapsedTicks": 1810,
-      "losses": 1,
+      "elapsedTicks": 1900,
+      "losses": 0,
       "clears": 0,
       "survivingHeroes": [
         {
@@ -7665,7 +7663,7 @@
         },
         {
           "id": "hk1",
-          "hp": 292,
+          "hp": 291,
           "maxHp": 319
         },
         {
@@ -7674,7 +7672,7 @@
           "maxHp": 193
         }
       ],
-      "enemyHp": 999999922
+      "enemyHp": 999999917
     }
   ],
   "clusteredFrontlineComparison": [

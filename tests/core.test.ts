@@ -1,8 +1,8 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { CONFIG, heroConfig, ticksForSeconds } from '../src/config';
+import { CONFIG, heroConfig, stageConfig, ticksForSeconds } from '../src/config';
 import { beginEncounter, damage } from '../src/core/combat';
 import { blankEquipment, chest, drawHero, grantXp, heroStats, partyPower, pull, upgrade, upgradeCost } from '../src/core/economy';
-import { createState, input, load, snapshot, step } from '../src/core/game';
+import { bossSecondsRemaining, createState, input, load, snapshot, step } from '../src/core/game';
 import { parseState } from '../src/core/model';
 import { getPartyHeroDefinition } from '../src/core/party-definitions';
 import type { GameState } from '../src/core/model';
@@ -95,9 +95,45 @@ describe('progression, retry and boss gates', () => {
     forceClear(state); expect(state.highestCleared).toBe(1); expect(state.progress).toEqual({ kind: 'PUSHING', stage: 2 });
     step(state, ticksForSeconds(CONFIG.sim.stageGapSec)); expect(state.party[0]?.hp).toBe(state.party[0]?.maxHp);
   });
-  it('uses the whole-stage timer, not an independent timer per wave', () => {
-    const state = fixtureState(); state.wave = 3; state.stageStartedTick = state.tick;
-    state.tick = ticksForSeconds(90) - 1; step(state); expect(state.stats.losses).toBe(1);
+  it('does not lose a normal stage while both sides are still alive past 90 seconds', () => {
+    const state = fixtureState();
+    expect(stageConfig(1).isBoss).toBe(false);
+    expect(stageConfig(8).isBoss).toBe(false);
+    expect(CONFIG.combat.lossCondition).toMatch(/boss also loses/);
+    for (const unit of [...state.party, ...state.enemies]) { unit.hp = unit.maxHp = 1_000_000; unit.atk = 1; }
+    step(state, ticksForSeconds(95));
+    expect(state.stats.losses).toBe(0);
+    expect(state.stats.clears).toBe(0);
+    expect(state.progress).toMatchObject({ kind: 'PUSHING', stage: 1 });
+    expect(state.phase.kind).toBe('battle');
+    expect(state.wave).toBe(1);
+    expect(bossSecondsRemaining(state)).toBeNull();
+    expect(state.party.some(unit => unit.hp > 0)).toBe(true);
+    expect(state.enemies.some(unit => unit.hp > 0)).toBe(true);
+    expect(state.party.some(unit => unit.hp < unit.maxHp) || state.enemies.some(unit => unit.hp < unit.maxHp)).toBe(true);
+  });
+  it('loses a boss on its own timer, counted from the stage start and not reset per wave', () => {
+    const chapterOne = stageConfig(10), chapterTwo = stageConfig(20);
+    if (!chapterOne.isBoss || !chapterTwo.isBoss) throw new Error('expected boss stages');
+    expect(chapterOne.timeoutSec).toBe(22);
+    expect(chapterTwo.timeoutSec).toBe(21);
+    const state = fixtureState();
+    state.highestCleared = 9;
+    state.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 };
+    beginEncounter(state);
+    for (const unit of [...state.party, ...state.enemies]) { unit.hp = unit.maxHp = 1_000_000; unit.atk = 1; }
+    state.wave = chapterOne.waves.length;
+    state.stageStartedTick = 0;
+    state.tick = ticksForSeconds(chapterOne.timeoutSec) - 2;
+    step(state);
+    expect(state.stats.losses).toBe(0);
+    expect(state.stats.bossFailures).toBe(0);
+    expect(bossSecondsRemaining(state)).toBe(1);
+    step(state);
+    expect(state.stats.losses).toBe(1);
+    expect(state.stats.bossFailures).toBe(1);
+    expect(state.progress.kind).toBe('BOSS_READY');
+    expect(bossSecondsRemaining(state)).toBeNull();
   });
   it('falls back to highest clear and retries at exactly +120 seconds', () => {
     const state = failedFrontier(); expect(state.progress.kind).toBe('FARMING');

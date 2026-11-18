@@ -192,7 +192,7 @@
       STAGES.push({
         id, chapter:c, index:(c-1)*10+i, isBoss,
         firstClearTickets: c === 1 ? 1 : (i === 10 ? 1 : 2),
-        timeoutSec: isBoss ? (c === 1 ? 22 : 21) : 90,
+        timeoutSec: isBoss ? (c === 1 ? 22 : 21) : null,
         waves: 3,
       });
     }
@@ -492,7 +492,7 @@
       <h3>Current stage</h3>
       <p class="gold" style="font:700 24px/24px Galmuri11,monospace;margin:8px 0;">Stage ${stage.id}</p>
       <p>${stageStatus(stage)}</p>
-      <p class="muted">${stage.waves} waves · ${stage.timeoutSec}s timer · first clear ${stage.firstClearTickets} ticket${stage.firstClearTickets>1?'s':''}. Chapter ${stage.chapter}.</p>
+      <p class="muted">${stage.waves} waves · ${stage.timeoutSec == null ? 'no stage timer' : stage.timeoutSec + 's timer'} · first clear ${stage.firstClearTickets} ticket${stage.firstClearTickets>1?'s':''}. Chapter ${stage.chapter}.</p>
       <div class="row home-actions${bossReady?' is-boss':''}" style="margin-top:12px;flex-wrap:wrap;">
         ${bossReady ? '<button type="button" class="btn cta" data-act="fight-boss"><img src="assets/ui/icon-skull.png" width="16" height="16" alt="">Fight boss</button>' : '<button type="button" class="btn lg primary" data-goto="stages">Open Stages</button>'}
         <button type="button" class="btn${bossReady?'':' lg'}" data-goto="formation">Edit formation</button>
@@ -782,7 +782,7 @@
       : [['goblin','Wave 1'], ['goblin','Wave 2'], ['skeleton','Wave 3']];
     $('#stage-detail').innerHTML = `
       <h3>Stage ${s.id}${s.isBoss?'  ·  Boss':''}</h3>
-      <p>Chapter ${s.chapter} · ${s.waves} waves · ${s.timeoutSec}s timer</p>
+      <p>Chapter ${s.chapter} · ${s.waves} waves · ${s.timeoutSec == null ? 'no stage timer' : s.timeoutSec + 's timer'}</p>
       <p>First clear ${s.firstClearTickets} ticket${s.firstClearTickets>1?'s':''}. Full heal between stages. HP carries between waves.</p>
       <div class="row" style="margin:12px 0;flex-wrap:wrap;">
         ${enemies.map(([id,label]) => {

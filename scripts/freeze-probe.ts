@@ -255,7 +255,8 @@ const stageSweep = [];
 for (const stage of [1, 10, 12, 13, 20]) {
   for (const seed of [1, 2, 7]) {
     const party = stage >= 12 ? ['mw2', 'ew3', 'priest'] : undefined;
-    const result = fightStage(seed, stage, stageConfig(stage).timeoutSec + 30, party);
+    const definition = stageConfig(stage);
+    const result = fightStage(seed, stage, (definition.isBoss ? definition.timeoutSec : 120) + 30, party);
     stageSweep.push({ seed, stage, findings: result.findings.length, first: result.findings[0], losses: result.losses, clears: result.clears, endKind: result.endKind, endStage: result.endStage, maxActionSec: result.maxActionSec, maxChainSec: result.maxChainSec, maxGaugeSec: result.maxGaugeSec, maxMovingSec: result.maxMovingSec, timeouts: result.timeouts });
     process.stderr.write(`stage ${stage} seed ${seed} findings ${result.findings.length} losses ${result.losses} clears ${result.clears} maxAction ${result.maxActionSec.toFixed(2)} gauge ${result.maxGaugeSec.toFixed(2)} moving ${result.maxMovingSec.toFixed(2)} timeouts ${result.timeouts.length}\n`);
   }

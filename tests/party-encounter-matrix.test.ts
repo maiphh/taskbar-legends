@@ -128,31 +128,17 @@ describe('party-v2 deterministic encounter matrix', () => {
     const sustain = run(sustainState, STRESS_TICKS);
     expect(sustain.ticks).toBe(STRESS_TICKS);
     expect(sustain.enemyHp).toBeGreaterThan(0);
-    // These two full-engine cases reach the configured stage deadline. They are true timeouts, unlike the capped stress rows above.
-    const timeoutCases = (['supportStack', 'defensive'] as const).map(team => {
+    // Normal stages have no timer. These full-engine fights stay up past the old 90s deadline with both sides alive.
+    const pastOldTimer = (['supportStack', 'defensive'] as const).map(team => {
       const state = buildFixture(1, bands[0]!, team, 'boss_ch1', team === 'supportStack' ? 9200 : 9201);
       const boss = state.enemies[0]!; boss.hp = 1_000_000_000; boss.maxHp = boss.hp; boss.atk = 1; boss.def = 10_000; boss.speed = 0; boss.range = 260;
       state.wave = stageConfig(1).waves.length;
-      const timeoutTicks = ticksForSeconds(stageConfig(1).timeoutSec);
-      step(state, timeoutTicks);
-      const pendingReadyTicks = [...state.party, ...state.enemies].flatMap(unit => {
-        const action = unit.action;
-        return action && (action.state === 'windup' || action.state === 'recovery') && action.readyTick !== undefined && action.readyTick > state.tick ? [action.readyTick] : [];
-      });
-      const startsAtTimeout = state.eventCounts.actionStart ?? 0;
-      if (pendingReadyTicks.length) {
-        expect(state.stats.losses).toBe(0); expect(state.stats.clears).toBe(0);
-        const finalPresentationTick = Math.max(...pendingReadyTicks);
-        step(state, finalPresentationTick - state.tick + 1);
-        expect(state.stats.losses).toBe(1); expect(state.stats.clears).toBe(0); expect(state.progress.kind).toBe('FARMING'); expect(state.phase.kind).toBe('rest');
-        expect(state.eventCounts.actionStart ?? 0).toBe(startsAtTimeout);
-        expect(state.tick).toBeLessThanOrEqual(finalPresentationTick + 1);
-      } else {
-        expect(state.stats.losses).toBe(1); expect(state.stats.clears).toBe(0); expect(state.progress.kind).toBe('FARMING'); expect(state.phase.kind).toBe('rest');
-        expect(state.eventCounts.actionStart ?? 0).toBe(startsAtTimeout);
-      }
-      expect(state.party.every(unit => unit.hp > 0)).toBe(true);
-      return { team, teamIds: [...state.partyIds], stage: 1, timeoutTicks, elapsedTicks: state.tick, losses: state.stats.losses, clears: state.stats.clears,
+      step(state, ticksForSeconds(95));
+      expect(state.stats.losses).toBe(0); expect(state.stats.clears).toBe(0);
+      expect(state.progress.kind).toBe('PUSHING'); expect(state.phase.kind).toBe('battle');
+      expect(state.party.some(unit => unit.hp > 0)).toBe(true);
+      expect(boss.hp).toBeGreaterThan(0);
+      return { team, teamIds: [...state.partyIds], stage: 1, elapsedTicks: state.tick, losses: state.stats.losses, clears: state.stats.clears,
         survivingHeroes: state.party.map(unit => ({ id: unit.sourceId, hp: unit.hp, maxHp: unit.maxHp })), enemyHp: boss.hp };
     });
     const clusterCases = (['balanced', 'fastFarm'] as const).map(team => {
@@ -180,7 +166,7 @@ describe('party-v2 deterministic encounter matrix', () => {
       bands, trialCount: results.length, aggregate: { clearCount, heroLosses: results.filter(entry => entry.result.heroHp === 0).length,
         censored120sStress: results.filter(entry => entry.outcome === 'censored-120s-stress').length }, cases: results,
       censoredStressCase: { teamIds: sustainState.partyIds, inputLimitTicks: STRESS_TICKS, result: sustain, interpretation: 'A helper-capped stress run only; not an engine timeout.' },
-      engineTimeoutCases: timeoutCases, clusteredFrontlineComparison: clusterCases, debufferBruiserComparison: debuffCases,
+      normalStagePastOldTimer: pastOldTimer, clusteredFrontlineComparison: clusterCases, debufferBruiserComparison: debuffCases,
     }, null, 2), 'utf8');
   });
 

@@ -154,13 +154,18 @@ describe('presentation lock cannot freeze a wave', () => {
     expect(state.stats.losses).toBe(0);
   });
 
-  it('lets an already-expired stage timer resolve within a couple of ticks once a stuck special is cleared', () => {
+  it('lets an already-expired boss timer resolve within a couple of ticks once a stuck special is cleared', () => {
     const state = createState(7110);
+    state.highestCleared = 9;
+    state.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 };
+    beginEncounter(state);
     const enemy = quiet(state);
     const hero = state.party[0]!;
+    const boss = stageConfig(state.progress.stage);
+    if (!boss.isBoss) throw new Error('expected a boss stage');
     enemy.hp = enemy.maxHp = 1_000_000;
     enemy.specialAction = { state: 'areaMark', targetId: hero.id, centerX: hero.x, radius: 48, startTick: combatTime(state), impactTick: combatTime(state) + ticksForSeconds(120), abilityId: 'bomber-blast' };
-    state.stageStartedTick = state.tick - ticksForSeconds(stageConfig(state.progress.stage).timeoutSec);
+    state.stageStartedTick = state.tick - ticksForSeconds(boss.timeoutSec);
     const start = state.tick;
     step(state, 3);
     expect(state.stats.losses).toBe(1);

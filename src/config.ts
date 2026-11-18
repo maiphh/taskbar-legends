@@ -19,8 +19,13 @@ const wave = z.union([
   z.object({ enemies: z.array(enemyKindSchema).nonempty() }),
   z.object({ boss: enemyKindSchema, adds: z.array(enemyKindSchema) }),
 ]);
-const stageDefinition = z.object({ id: z.string(), index: z.number().int().positive(), chapter: z.number().int().positive(),
-  isBoss: z.boolean(), timeoutSec: z.number().positive(), firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() });
+const stageCommon = { id: z.string(), index: z.number().int().positive(), chapter: z.number().int().positive(),
+  firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() };
+// Normal stages omit timeoutSec and end only on a wipe or a clear. Bosses require a positive timeoutSec.
+const stageDefinition = z.discriminatedUnion('isBoss', [
+  z.strictObject({ ...stageCommon, isBoss: z.literal(false) }),
+  z.strictObject({ ...stageCommon, isBoss: z.literal(true), timeoutSec: z.number().positive() }),
+]);
 // Replace design-config.json with the designer's next delivery; config.json wins over prose.
 // Only underspecified implementation/presentation constants are added here.
 export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0),
@@ -144,6 +149,11 @@ export function stageConfig(stage: number) {
   const value = CONFIG.stages[stage - 1];
   if (!value) throw new Error(`Unknown stage: ${stage}`);
   return value;
+}
+/** Boss countdown length. Normal stages have no timer. */
+export function stageTimeoutSec(stage: number): number | null {
+  const value = stageConfig(stage);
+  return value.isBoss ? value.timeoutSec : null;
 }
 export function heroConfig(id: string) {
   const value = CONFIG.heroes.find(hero => hero.id === id);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONFIG, stageConfig } from '../src/config';
+import { beginEncounter } from '../src/core/combat';
 import { createState, load, snapshot, step } from '../src/core/game';
 import { combatEventAge, edgeDistance, inEdgeReach, PARTY_V2, presentationCombatTime } from '../src/core/party-combat';
 import { getPartyHeroDefinition } from '../src/core/party-definitions';
@@ -27,9 +28,15 @@ function contactState(): { state: GameState; tank: Unit; melee: Unit; healer: Un
 function impactDamage(attacker: Unit, defender: Unit): number { return Math.max(1, Math.round(attacker.atk * 100 / (100 + defender.def))); }
 
 describe('party-v2 positioning and actions', () => {
-  it('finishes a pre-deadline lethal clip and return before clearing instead of timing out', () => {
-    const state = createState(917), attacker = state.party.find(unit => unit.sourceId === 'mw1')!, enemy = state.enemies[0]!;
-    state.wave = CONFIG.stages[0]!.waves.length;
+  it('finishes a pre-deadline lethal clip and return before clearing instead of timing the boss out', () => {
+    const state = createState(917);
+    state.highestCleared = 9;
+    state.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 };
+    beginEncounter(state);
+    const attacker = state.party.find(unit => unit.sourceId === 'mw1')!, enemy = state.enemies[0]!;
+    const boss = stageConfig(state.progress.stage);
+    if (!boss.isBoss) throw new Error('expected a boss stage');
+    state.wave = boss.waves.length;
     state.party.filter(unit => unit !== attacker).forEach(unit => { unit.hp = 0; idle(unit); });
     for (const other of state.enemies.slice(1)) other.hp = 0;
     state.enemies = [enemy]; enemy.hp = enemy.maxHp = 1; enemy.def = 0; enemy.x = attacker.x; enemy.moving = false;
@@ -37,7 +44,7 @@ describe('party-v2 positioning and actions', () => {
     const timeline = createActionTimeline(attacker.sourceId, 'leap', state.tick);
     attacker.action = { state: 'windup', kind: 'attack', targetId: enemy.id, targetSide: 'enemy', targetSlot: enemy.slot,
       targetCount: state.enemies.length, ...timeline, abilityId: 'melee-cleave-strike', delivery: 'leap' };
-    const timeout = stageConfig(state.progress.stage).timeoutSec * CONFIG.sim.ticksPerSecond;
+    const timeout = boss.timeoutSec * CONFIG.sim.ticksPerSecond;
     state.stageStartedTick = state.tick - timeout + timeline.impactTick + 2;
 
     step(state, timeline.impactTick);

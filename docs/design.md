@@ -10,7 +10,7 @@ The party of 3 fights waves automatically. Kills and clears pay gold and XP; cle
 - The lane is 1200 logical px wide. Hero slots sit at x = 140 (front), 95, 50. Enemies spawn at x = 400 and 50 px apart, then walk left.
 - A stage is 3 waves. The next wave spawns 1.5 s after the last enemy dies. The next stage starts 5 s after a clear. Reported farm duration includes both wave gaps and this stage gap.
 - HP carries between waves. The party fully heals between stages.
-- A stage is lost when every hero is dead or the stage timer reaches `timeoutSec` (90 s, or 120 s on bosses).
+- A normal stage is lost only when every hero is dead. It has no timer: the fight continues until the party wipes or every wave is cleared. A boss stage is also lost when its stage timer reaches `timeoutSec` (22 s on 1-10, 21 s on 2-10). The boss countdown is visible and counts from the start of the stage, including wave gaps.
 - **Test:** the same seed and inputs produce a byte-identical state JSON at every tick.
 
 ## 3. Heroes

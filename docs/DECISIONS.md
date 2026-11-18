@@ -99,3 +99,10 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Both config copies are byte-identical (`design/config.json` and `src/design-config.json`), SHA-256 `608614798cc81b4c4a44aa238b94cedf2a88b8d1b26fdd54a5f30dc5efd56c41`; the CI v14 smoke checks it.
 - The `balance` union accepts `'1.4.3'`, so 1.4.3 saves load under 1.4.4.
 - Goldens move because the gap is top-level and the snapshot carries `balance: '1.4.4'`: rules-off `7e9ee45a…` → `b70e3c56…`; protection-off 2-seed aggregate `85eee5f5…` → `04de8e49…`. The 1.4.3 hashes are kept and asserted as not-equal.
+
+## Normal stages have no timer (owner request, 2026-11-18)
+
+- Non-boss stages omit `timeoutSec`. A normal stage ends only when every hero is dead or every wave is cleared. The old hidden 90 s timer was sending a live push (both sides still up) back to farming the previous stage.
+- Boss stages keep `timeoutSec` (1-10 is 22 s, 2-10 is 21 s) and the visible countdown. The countdown is still wall time from `stageStartedTick`, hidden during the stage rest and the §20 boss-repeat pad.
+- `combat.lossCondition` matches that split. Balance version stays `1.4.4`; old saves still load.
+- Runtime `src/design-config.json` SHA-256 is `a21b75425011e8aa3255d1d82a5b8a0660ee5e51f6804f4dddf95c91e224c258`. The CI v1.4 smoke checks it. This copy is no longer byte-identical to the 1.4.4 designer file.

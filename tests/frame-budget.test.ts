@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG, stageConfig, TICK_MS, ticksForSeconds } from '../src/config';
+import { CONFIG, TICK_MS, ticksForSeconds } from '../src/config';
 import { createState } from '../src/core/game';
 import { resumeSave } from '../src/core/save';
 import { SaveTimestamp } from '../src/core/save-timestamp';
@@ -30,9 +30,7 @@ describe('visible frame budget', () => {
 describe('visible hitch stays payable', () => {
   it('advances a live wave by at most 0.25s and lets resumeSave grant the unsimulated remainder', () => {
     const state = createState(1);
-    const limit = ticksForSeconds(stageConfig(state.progress.stage).timeoutSec);
-    // One second remains on the stage clock, so an uncapped 90s frame would time this wave out.
-    state.tick = limit - ticksForSeconds(1);
+    // A live opening wave. An uncapped 90s frame must not be simulated; only the 0.25s cap runs.
     expect(state.phase.kind).toBe('battle');
     expect(state.wave).toBe(1);
     expect(state.stats.losses).toBe(0);
