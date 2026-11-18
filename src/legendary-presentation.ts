@@ -1,5 +1,16 @@
 export interface LaneClockSample { time: number; debtTicks: number; rate: number }
 
+/**
+ * A catch-up frame that already jumped past the hit-stop hold must not pin the
+ * lane. Realtime frames (jump shorter than the hold) still slow.
+ */
+export function presentationHitstop(hitstop: { holdMs: number; slowFactor: number } | null, simulationJumpTicks: number, tickMs: number): { holdMs: number; slowFactor: number } | null {
+  if (!hitstop || !Number.isFinite(hitstop.holdMs)) return null;
+  const jumpMs = (Number.isFinite(simulationJumpTicks) ? Math.max(0, simulationJumpTicks) : 0) * (Number.isFinite(tickMs) ? tickMs : 0);
+  if (!Number.isFinite(jumpMs) || jumpMs > hitstop.holdMs) return null;
+  return hitstop;
+}
+
 /** Monotonic render clock. Slowdown applies only to advancing simulation time. */
 export class PresentationLaneClock {
   private time: number | null = null;

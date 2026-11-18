@@ -19,7 +19,7 @@ import { compactLaneLayout } from './compact-lane-layout';
 import { LegendaryEffects } from './legendary-effects';
 import { consumeNewEvents, triggerLegendaryEvent } from './legendary-events';
 import { effectRandom } from './legendary-effects';
-import { dropCardSize, LanePositionCache, PresentationLaneClock } from './legendary-presentation';
+import { dropCardSize, LanePositionCache, presentationHitstop, PresentationLaneClock } from './legendary-presentation';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -35,6 +35,8 @@ export class Renderer {
   private readonly laneClock = new PresentationLaneClock();
   private framePaused = false;
   private frameLaneRate = 1;
+  private frameSimJump = 0;
+  private priorLaneSim: number | null = null;
   private readonly lanePositions = new LanePositionCache();
   private rendering = false;
   private pixelFontReady = false;
@@ -150,12 +152,15 @@ export class Renderer {
   }
   private cameraLeft(state: GameState, field: { x: number; width: number }): number {
     if (this.frameCamera !== null) return this.frameCamera;
+    if (this.frameLaneTime === null) this.lanePresentationTime(state);
     const input = this.cameraInput(state, field) ?? { fieldWidth: field.width, laneWidth: CONFIG.sim.laneWidthPx, partyXs: [], threats: [] };
     const next = stepCombatCamera(this.cameraTranslation, input);
     const effect = this.legendaryEffects.current(performance.now(), this.ui.reducedMotion);
     const hitstop = effect?.layers.find(layer => layer.type === 'hitstop');
-    if (hitstop && effect && effect.age < Number(hitstop.params.holdMs ?? 0)) { this.frameCamera = this.cameraTranslation; return this.cameraTranslation; }
-    const factor = hitstop ? Number(hitstop.params.slowFactor ?? 1) : 1;
+    const hold = Number(hitstop?.params.holdMs ?? 0), slow = Number(hitstop?.params.slowFactor ?? 1);
+    const applied = presentationHitstop(hitstop && effect ? { holdMs: hold, slowFactor: slow } : null, this.frameSimJump, TICK_MS);
+    if (applied && effect && effect.age < applied.holdMs) { this.frameCamera = this.cameraTranslation; return this.cameraTranslation; }
+    const factor = applied ? applied.slowFactor : 1;
     const interpolated = this.cameraTranslation + (next - this.cameraTranslation) * Math.max(0, Math.min(1, factor));
     this.cameraTranslation = interpolated;
     this.frameCamera = interpolated;
@@ -164,9 +169,13 @@ export class Renderer {
   private lanePresentationTime(state: GameState): number {
     if (this.frameLaneTime !== null) return this.frameLaneTime;
     const now = performance.now(), base = presentationCombatTime(state);
+    const prior = this.priorLaneSim;
+    this.priorLaneSim = base;
+    this.frameSimJump = prior === null || base < prior ? 0 : base - prior;
     const effect = this.legendaryEffects.current(now, false), hitstop = effect?.layers.find(layer => layer.type === 'hitstop');
     const hold = Number(hitstop?.params.holdMs ?? 0), slow = Number(hitstop?.params.slowFactor ?? 1);
-    const sample = this.laneClock.sample(base, hitstop && effect ? { holdMs: hold, slowFactor: slow } : null, effect?.age ?? 0, this.framePaused, this.ui.reducedMotion, `${state.seed}:${state.encounter}`);
+    const applied = presentationHitstop(hitstop && effect ? { holdMs: hold, slowFactor: slow } : null, this.frameSimJump, TICK_MS);
+    const sample = this.laneClock.sample(base, applied, effect?.age ?? 0, this.framePaused, this.ui.reducedMotion, `${state.seed}:${state.encounter}`);
     this.frameLaneSample = base;
     this.frameLaneRate = sample.rate; this.frameLaneTime = sample.time; return sample.time;
   }

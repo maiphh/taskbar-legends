@@ -26,6 +26,25 @@ export function enemyFormationX(slot: number): number {
   return 158 + slot * 18;
 }
 
+/**
+ * Longest a single action or enemy special may hold the lane. Honest clips
+ * (boss leap, assassin mark, bomber telegraph) finish well inside this.
+ * Anything older, scheduled longer, or stamped on the wrong clock is cleared.
+ */
+export const PRESENTATION_CAP_TICKS = ticksForSeconds(2.5);
+
+function marchLimitPx(): number {
+  let max = 0;
+  for (let slot = 0; slot < CONFIG.runtime.maxEnemiesPerWave; slot += 1) {
+    const spawn = CONFIG.sim.enemySpawnX + slot * CONFIG.sim.enemySpawnSpacingPx;
+    max = Math.max(max, Math.abs(spawn - enemyFormationX(slot)));
+  }
+  return max + ENEMY_ENTRY_PX;
+}
+
+/** Farthest a configured spawn slot walks. Farther positions snap home so a stuck mover cannot hold the lane. */
+export const ENEMY_MARCH_LIMIT_PX = marchLimitPx();
+
 export type SkillDelivery = 'leap' | 'cast';
 
 /** Turn gauge speed from role and basic style. Not pixel movement speed. */
@@ -112,6 +131,36 @@ function presentationBusy(unit: Unit): boolean {
   const action = unit.action;
   if (action?.state === 'windup' || action?.state === 'recovery') return true;
   return !!unit.specialAction;
+}
+function presentationOverdue(startTick: number, endTick: number, now: number): boolean {
+  if (!Number.isFinite(startTick) || !Number.isFinite(endTick) || !Number.isFinite(now)) return true;
+  if (startTick > now) return true;
+  if (now - startTick >= PRESENTATION_CAP_TICKS) return true;
+  return endTick - startTick > PRESENTATION_CAP_TICKS;
+}
+/** Drop a presentation that can no longer finish on its own. Due impacts are left for the resolver when requested. */
+function releaseStalePresentations(state: GameState, units: readonly Unit[], now: number, keepResolvable: boolean): void {
+  for (const unit of units) {
+    if (unit.hp <= 0) continue;
+    const action = unit.action;
+    if (action && action.state !== 'idle') {
+      const end = action.readyTick ?? action.impactTick;
+      const due = action.state === 'windup' && Number.isFinite(action.impactTick) && action.impactTick <= now;
+      const finishedRecovery = action.state === 'recovery' && Number.isFinite(action.readyTick) && action.readyTick <= now;
+      if (finishedRecovery) unit.action = { state: 'idle' };
+      else if (presentationOverdue(action.startTick, end, now) && !(keepResolvable && due)) {
+        unit.action = { state: 'idle' };
+        emit(state, { type: 'presentationForced', unitId: unit.id, kind: 'action' }, now);
+      }
+    }
+    const special = unit.specialAction;
+    if (!special) continue;
+    const due = Number.isFinite(special.impactTick) && special.impactTick <= now;
+    if (presentationOverdue(special.startTick, special.impactTick, now) && !(keepResolvable && due)) {
+      delete unit.specialAction;
+      emit(state, { type: 'presentationForced', unitId: unit.id, kind: 'special' }, now);
+    }
+  }
 }
 export function hasPendingActionPresentation(state: GameState): boolean {
   const now = combatTime(state);
@@ -402,7 +451,8 @@ function advanceProjectiles(state: GameState, now: number): { damage: DamageInte
     const pool = projectile.targetSide === 'hero' ? state.party : state.enemies;
     const primary = pool.find(unit => unit.id === projectile.targetId && unit.hp > 0);
     const ground = projectile.delivery === 'ground';
-    if ((!ground && !primary) || now >= projectile.expiresAtTick) {
+    const flightCap = projectile.releasedAtTick + PARTY_V2.timing.projectileExpiryTicks;
+    if ((!ground && !primary) || now >= projectile.expiresAtTick || !Number.isFinite(flightCap) || now >= flightCap) {
       emit(state, { type: 'projectile', projectileId: projectile.id, sourceId: projectile.sourceId, action: 'expire' }, now); consumed.add(projectile.id); continue;
     }
     if (projectile.releasedAtTick >= now) { keep.push(projectile); continue; }
@@ -571,24 +621,22 @@ export function partyCombatTick(state: GameState, allowNewActions = true): void 
     if (!enemy.moving) continue;
     const home = enemyFormationX(enemy.slot);
     const delta = home - enemy.x;
-    if (Math.abs(delta) <= ENEMY_ENTRY_PX) {
+    if (!Number.isFinite(enemy.x) || !Number.isFinite(delta) || Math.abs(delta) > ENEMY_MARCH_LIMIT_PX || Math.abs(delta) <= ENEMY_ENTRY_PX) {
       enemy.x = home;
       enemy.moving = false;
-    } else {
-      enemy.x += Math.sign(delta) * ENEMY_ENTRY_PX;
-    }
+    } else enemy.x += Math.sign(delta) * ENEMY_ENTRY_PX;
   }
-  if (living(state.enemies).some(enemy => enemy.moving)) return;
+  // March may delay the next turn. It must not delay a hit, a telegraph, or a recovery that is already due.
   prunePartyEffects(state);
   for (const unit of startUnits) if (unit.shieldUntilTick <= now) { unit.shield = 0; delete unit.shieldProviderId; }
-  for (const unit of living(startUnits)) {
-    if (unit.action?.state === 'recovery' && unit.action.readyTick <= now) unit.action = { state: 'idle' };
-    unit.moving = false;
-  }
+  releaseStalePresentations(state, startUnits, now, true);
   const specials = advanceEnemySpecials(state, now);
   resolveDueImpacts(state, startUnits, now, specials.damage);
+  releaseStalePresentations(state, startUnits, now, false);
 
   if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); return; }
+  if (living(state.enemies).some(enemy => enemy.moving)) return;
+  for (const unit of living(startUnits)) unit.moving = false;
 
   // A turn owns the presentation lane until its recovery finishes. Keep every
   // unit's gauge frozen during that window so the next actor is selected from

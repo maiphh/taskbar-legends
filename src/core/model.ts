@@ -102,6 +102,8 @@ const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('effect'), sourceId: z.string(), targetId: z.string(), effectId: z.string(), group: z.string(), expiresAtTick: natural }),
   z.object({ type: z.literal('projectile'), projectileId: z.string(), sourceId: z.string(), action: z.enum(['release', 'impact', 'expire']) }),
   z.object({ type: z.literal('skill'), unitId: z.string(), skill: z.string() }),
+  // A presentation exceeded its cap and was cleared so the turn lock cannot stall the wave.
+  z.object({ type: z.literal('presentationForced'), unitId: z.string(), kind: z.enum(['action', 'special']) }).strict(),
   z.object({ type: z.literal('death'), unitId: z.string(), side: z.enum(['hero', 'enemy']) }),
   z.object({ type: z.literal('gold'), amount: finite.int(), total: natural, reason: z.string() }),
   // levels lists only heroes whose level changed; omitted when nobody levelled up.

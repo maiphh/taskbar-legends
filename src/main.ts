@@ -1,5 +1,5 @@
 import './style.css';
-import { CONFIG, TICK_MS, activeSalvageRules, activeV14Rules, parseV14Flag, setSalvageRules, setV14Rules } from './config';
+import { CONFIG, activeSalvageRules, activeV14Rules, parseV14Flag, setSalvageRules, setV14Rules } from './config';
 import { audio } from './audio';
 import { cheapestEquippedUpgrade } from './core/economy';
 import { salvageToast } from './salvage-copy';
@@ -27,6 +27,7 @@ import type { CompactPrefs } from './platform/desktop/compact-geometry';
 import { startManagementBridge } from './platform/desktop/management-bridge';
 import { emit } from '@tauri-apps/api/event';
 import { consumeNewEvents } from './legendary-events';
+import { settleVisibleFrame, simulatedWallMs } from './frame-budget';
 
 function element(id: string): HTMLElement {
   const value = document.getElementById(id); if (!value) throw new Error(`Missing UI element ${id}`); return value;
@@ -64,7 +65,7 @@ window.addEventListener('storage', event => {
 let compactPrefs: CompactPrefs = readCompactPrefs();
 document.body.classList.add('compact-shell'); renderer.setCompactViewport(true, compactPrefs.zoom);
 const newSelectedState = (seed = 1) => createState(seed);
-let state = newSelectedState(), paused = false, accumulatorMs = 0, hidden = document.hidden;
+let state = newSelectedState(), paused = false, accumulatorMs = 0, unsimulatedDebtMs = 0, hidden = document.hidden;
 let restoring = false, failedSave = false, checkpointBlocked = false, rendering = false;
 const managementAuthority = new ManagementAuthority(state, paused, next => { state = next; render(); });
 managementAuthority.setAvailable(false);
@@ -175,6 +176,8 @@ function restore(): Promise<void> {
         if (data.state.combatRules !== 'party-v2') throw new Error(`The current save at ${canonicalSaveKey} is incompatible and has been preserved for export. It was not overwritten.`);
         // RestoreCoordinator wrote the new state, remainder, and consumed timestamp before it can be exposed here.
         replaceSelectedState(saved.state); accumulatorMs = saved.remainderMs;
+        // resumeSave paid the gap and the coordinator checkpointed the resume clock.
+        unsimulatedDebtMs = 0;
         if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq));
           if (!renderer.ui.welcome) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears · ${Math.round(saved.partialClears * 100)}% toward next clear${saved.capped ? ' (8h cap)' : ''}`); }
       }
@@ -218,22 +221,29 @@ function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number)
   for (const pair of state.pendingChoice ?? []) for (const item of pair) if (item.acquiredAt.tick === state.tick) consider(item.rarity, item.slot);
   return { ...result, stage: result.stage, partialClears: result.partialClears, best, choices: activeV14Rules().includes('chestChoice') && result.chests ? state.pendingChoice?.length ?? 0 : 0 };
 }
+/** Fold one visible frame into combat and the session debt. Debt is not cleared here. */
+function absorbVisibleFrame(elapsedMs: number): void {
+  const settled = settleVisibleFrame(state, { accumulatorMs, unsimulatedDebtMs }, elapsedMs, Date.now(), paused);
+  accumulatorMs = settled.accumulatorMs;
+  unsimulatedDebtMs = settled.unsimulatedDebtMs;
+}
+/** Last simulated instant: wall clock minus `unsimulatedDebtMs`. Autosave, hide, and quit all stamp it. */
+function payableSavedAt(nowMs = Date.now()): number {
+  return saveTimestamp.next(simulatedWallMs(nowMs, unsimulatedDebtMs));
+}
 function save(): void {
   if (restoring || failedSave || checkpointBlocked || hidden) return;
-  store.save({ state, savedAtMs: saveTimestamp.next(Date.now()), remainderMs: accumulatorMs })
+  store.save({ state, savedAtMs: payableSavedAt(), remainderMs: accumulatorMs })
     .catch(() => { showNotice('Save failed: storage unavailable/full. Export __game.snapshot().'); });
 }
 /** Consume the final visible frame into a durable timestamp before the browser freezes the page. */
 function checkpointVisibleTime(): void {
   if (restoring || failedSave || checkpointBlocked) return;
   const now = performance.now();
-  if (!paused) {
-    accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
-    const ticks = Math.floor(accumulatorMs / TICK_MS);
-    if (ticks > 0) { step(state, ticks); accumulatorMs -= ticks * TICK_MS; }
-  }
+  // The unsimulated part of this frame joins the session debt. The stamp lags by that debt so the gap stays payable.
+  absorbVisibleFrame(now - lastFrame);
   lastFrame = now; lastSave = now;
-  store.save({ state, savedAtMs: saveTimestamp.next(Date.now()), remainderMs: accumulatorMs }).catch(() => {
+  store.save({ state, savedAtMs: payableSavedAt(), remainderMs: accumulatorMs }).catch(() => {
     checkpointBlocked = true; paused = true; managementAuthority.setPaused(true); managementAuthority.setAvailable(false);
     notice.textContent = 'Idle return could not be saved. Original save is preserved; free storage, then close and reopen the game.'; noticeUntil = Infinity; render();
   });
@@ -367,10 +377,7 @@ void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler 
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
 void debug.whenReady().then(() => { if (debug.getAssetErrors().length) showNotice('Some UI/art unavailable; see __game.getAssetErrors().'); });
 function frame(now: number): void {
-  if (!paused && !hidden && !restoring && !failedSave && !checkpointBlocked) {
-    accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
-    const ticks = Math.floor(accumulatorMs / TICK_MS); if (ticks > 0) { step(state, ticks); accumulatorMs -= ticks * TICK_MS; }
-  }
+  if (!hidden && !restoring && !failedSave && !checkpointBlocked) absorbVisibleFrame(now - lastFrame);
   lastFrame = now; audio.consume(state.events); render();
   if (!hidden && now - lastSave >= CONFIG.runtime.autosaveSeconds * 1000) { save(); lastSave = now; }
   requestAnimationFrame(frame);

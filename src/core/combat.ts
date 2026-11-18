@@ -40,7 +40,7 @@ export function spawnWave(state: GameState): void {
       return unit;
     });
     emit(state, { type: 'wave', stage: stage.index, wave: state.wave });
-    for (const hero of state.party) { hero.targetId = null; hero.moving = false; hero.action = { state: 'idle' }; }
+    for (const hero of state.party) { hero.targetId = null; hero.moving = false; hero.action = { state: 'idle' }; delete hero.specialAction; }
     state.phase = { kind: 'battle' };
   }
 }
