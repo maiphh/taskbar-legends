@@ -13,7 +13,7 @@ import type { GameEvent, GameState, PartyProjectile, Unit } from './model';
 
 export const PARTY_V2 = Object.freeze({
   version: 'party-v2', radius: { normal: 10, tank: 12 }, reach: { melee: 12, ranged: 260, heal: 260 },
-  timing: { windupTicks: 10, returnTicks: 14, settleTicks: 4, minimumRecoveryTicks: 22, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
+  timing: { windupTicks: 10, returnTicks: 3, settleTicks: 1, minimumRecoveryTicks: 22, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
   animation: { attackImpactFraction: 0.5, healImpactFraction: 0.5 },
   speed: { tank: 65, melee: 90, support: 65, ranged: 80, enemyMelee: 70, enemyRanged: 55 },
 });
@@ -589,6 +589,11 @@ export function partyCombatTick(state: GameState, allowNewActions = true): void 
   resolveDueImpacts(state, startUnits, now, specials.damage);
 
   if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); return; }
+
+  // A turn owns the presentation lane until its recovery finishes. Keep every
+  // unit's gauge frozen during that window so the next actor is selected from
+  // the same gauge order that existed when this action began.
+  if (living([...state.party, ...state.enemies]).some(presentationBusy)) return;
 
   if (!allowNewActions) return;
 

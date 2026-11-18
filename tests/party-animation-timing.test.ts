@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../src/config';
-import { actionBoundaries, clipFor, createActionTimeline, PARTY_CLIPS, sampleActionPresentation } from '../src/core/turn/animation-timing';
+import { actionBoundaries, APPROACH_TICKS, ANIMATION_TICK_MS, clipFor, createActionTimeline, PARTY_CLIPS, PRESENTATION_FRAME_MS, RETURN_TICKS, sampleActionPresentation } from '../src/core/turn/animation-timing';
 
 const assetManifest = JSON.parse(readFileSync(resolve(process.cwd(), 'public/assets/manifest.json'), 'utf8')) as { heroes: { key: string; atlasPath: string }[]; enemies: { key: string; atlasPath: string }[] };
 const assets = [...assetManifest.heroes, ...assetManifest.enemies];
@@ -30,19 +30,19 @@ describe('party attack clip timing', () => {
 
   it.each([['mw1', 4], ['hk1', 7], ['ew3', 13], ['boss_ch1', 16]] as const)('plays every frame for %s (%i frames) before return', (actor, frames) => {
     const timeline = createActionTimeline(actor, 'leap', 10), clip = clipFor(actor, 'leap');
-    expect(timeline.contactTick).toBe(20);
-    expect(timeline.impactTick).toBe(20 + Math.ceil(Math.floor(frames / 2) * 90 / 50));
+    expect(timeline.contactTick).toBe(10 + APPROACH_TICKS);
+    expect(timeline.impactTick).toBe(timeline.contactTick + Math.ceil(Math.floor(frames / 2) * PRESENTATION_FRAME_MS / ANIMATION_TICK_MS));
     expect(timeline.attackEndTick).toBe(timeline.contactTick + clip.ticks);
-    expect(timeline.returnEndTick).toBe(timeline.attackEndTick + 14);
+    expect(timeline.returnEndTick).toBe(timeline.attackEndTick + RETURN_TICKS);
     const seen: number[] = [];
     for (let now = timeline.contactTick; now < timeline.attackEndTick; now += 1) {
       const sample = sampleActionPresentation('leap', timeline, now);
       expect(sample.phase).toBe('attack');
       expect(sample.progress).toBe(1);
-      seen.push(Math.floor(sample.ageMs / clip.frameMs));
+      seen.push(Math.min(frames - 1, Math.floor(sample.ageMs / clip.frameMs)));
     }
     expect([...new Set(seen)]).toEqual(Array.from({ length: frames }, (_, index) => index));
-    expect(timeline.attackEndTick - timeline.contactTick).toBeGreaterThanOrEqual(Math.ceil(frames * 90 / 50));
+    expect(timeline.attackEndTick - timeline.contactTick).toBeGreaterThanOrEqual(Math.ceil(frames * PRESENTATION_FRAME_MS / ANIMATION_TICK_MS));
     expect(sampleActionPresentation('leap', timeline, timeline.attackEndTick).phase).toBe('return');
     expect(sampleActionPresentation('leap', timeline, timeline.returnEndTick).phase).toBe('settle');
     expect(sampleActionPresentation('leap', timeline, timeline.readyTick).phase).toBe('done');

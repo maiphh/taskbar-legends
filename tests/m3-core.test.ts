@@ -44,7 +44,7 @@ describe('levelBefore / levelAfter', () => {
     expect(offlineEvent(state).heroes).toEqual(result.heroes);
   });
   it('carries fractional XP across sub-clear time without claiming a full clear', () => {
-    const state = farmer(), result = applyOffline(state, 1000);
+    const state = farmer(), result = applyOffline(state, 10_000);
     expect(result.clears).toBe(0); expect(result.xp).toBeGreaterThan(0); expect(result.partialClears).toBeGreaterThan(0);
     expect(result.heroes.every(hero => hero.levelBefore === hero.levelAfter)).toBe(true);
   });

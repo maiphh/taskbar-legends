@@ -32,7 +32,7 @@ describe('party-v2 positioning and actions', () => {
     state.wave = CONFIG.stages[0]!.waves.length;
     state.party.filter(unit => unit !== attacker).forEach(unit => { unit.hp = 0; idle(unit); });
     for (const other of state.enemies.slice(1)) other.hp = 0;
-    state.enemies = [enemy]; enemy.hp = enemy.maxHp = 1; enemy.def = 0; enemy.x = attacker.x;
+    state.enemies = [enemy]; enemy.hp = enemy.maxHp = 1; enemy.def = 0; enemy.x = attacker.x; enemy.moving = false;
     attacker.atk = 10_000; idle(attacker);
     const timeline = createActionTimeline(attacker.sourceId, 'leap', state.tick);
     attacker.action = { state: 'windup', kind: 'attack', targetId: enemy.id, targetSide: 'enemy', targetSlot: enemy.slot,
@@ -101,7 +101,8 @@ describe('party-v2 positioning and actions', () => {
     const { state, tank, enemy } = contactState(), tankHp = tank.hp, enemyHp = enemy.hp;
     tank.gauge = 10000; enemy.gauge = 0;
     step(state);
-    expect(tank.action).toMatchObject({ state: 'windup', startTick: 1, contactTick: 11, impactTick: 15, attackEndTick: 19 });
+    const tankTimeline = createActionTimeline(tank.sourceId, 'leap', 1);
+    expect(tank.action).toMatchObject({ state: 'windup', ...tankTimeline });
     expect(enemy.action).toMatchObject({ state: 'idle' });
     expect([tank.hp, enemy.hp]).toEqual([tankHp, enemyHp]);
     step(state, tank.action?.state === 'windup' ? tank.action.impactTick - state.tick - 1 : 0);
