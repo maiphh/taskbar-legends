@@ -6,6 +6,8 @@ export const FONT_FILES = [
   ['GameSans', 'NotoSans-SemiBold.ttf', '600'],
   ['GamePixel', 'Galmuri11.ttf', '400'],
   ['GamePixel', 'Galmuri11-Bold.ttf', '700'],
+  ['Galmuri11', 'Galmuri11.ttf', '400'],
+  ['Galmuri11', 'Galmuri11-Bold.ttf', '700'],
   ['GameMeta', 'Galmuri9.ttf', '400'],
   ['GameSymbols', 'Galmuri11.ttf', '400'],
 ] as const;

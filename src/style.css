@@ -11,11 +11,21 @@ canvas { display: block; image-rendering: pixelated; pointer-events: none; }
 #notice { position: absolute; top: 4px; left: 8px; max-width: calc(100% - 16px); background: #17212d; color: #f2e9cf; font: 12px var(--game-font); pointer-events: none; }
 #notice:empty { display: none; }
 #notice.legendary-notice { padding: 5px 8px; border: 2px solid #f0cf7f; outline: 1px solid #101c27; color: #fff0b1; background: #302719; }
-#legendary-toast:not([hidden]) { position:fixed; z-index:100; top:64px; right:16px; max-width:min(420px,calc(100vw - 32px)); padding:10px 14px; border:3px solid #e9bd68; outline:2px solid #101820; color:#fff0b1; background:#302719; box-shadow:inset 0 0 0 2px #735329; font:700 14px/20px var(--game-font); pointer-events:none; }
-.legendary-pop { animation: legendary-pop-in 220ms steps(4,end), legendary-border-pulse 800ms steps(2,end) infinite; }
-@keyframes legendary-pop-in { from { opacity:0; transform:scale(.85); } to { opacity:1; transform:scale(1); } }
-@keyframes legendary-border-pulse { 50% { box-shadow:inset 0 0 0 2px #fff0b1,0 0 0 2px #e9bd68; } }
-@media (prefers-reduced-motion: reduce) { .legendary-pop { animation:none !important; } }
+#legendary-toast:not([hidden]) { position:fixed; z-index:100; top:64px; right:16px; max-width:min(420px,calc(100vw - 32px)); min-height:56px; padding:7px 12px; display:flex; align-items:center; gap:10px; border:4px solid #e9bd68; outline:2px solid #101820; color:#fff0b1; background:#202c39; box-shadow:inset 0 0 0 3px #735329,2px 2px 0 #101820; font:700 12px/16px "Galmuri11","GamePixel",monospace; image-rendering:pixelated; overflow:hidden; pointer-events:none; }
+.legendary-toast-icon { flex:none; width:32px; height:32px; image-rendering:pixelated; }
+.legendary-toast-copy { position:relative; z-index:1; display:flex; flex-direction:column; gap:2px; min-width:0; text-shadow:1px 1px #101720,-1px 0 #101720; }
+.legendary-toast-copy b { color:#fff4bf; font-size:11px; letter-spacing:1px; }
+.legendary-toast-copy span { color:#ffe38c; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.legendary-pop { animation: legendary-pop-in 360ms steps(1,end), legendary-border-pulse 680ms steps(2,end) infinite; }
+.legendary-pop::before { content:"+"; position:absolute; z-index:2; right:8px; top:2px; color:#fff4bf; font:700 14px/14px "GamePixel",monospace; text-shadow:2px 0 #e9bd68,-2px 0 #e9bd68,0 2px #e9bd68,0 -2px #e9bd68; }
+.legendary-pop::after { content:""; position:absolute; z-index:3; top:4px; bottom:4px; left:-24px; width:8px; background:#fff; box-shadow:4px 0 #fff4bf,8px 0 #e9bd68,12px 0 #735329; animation: legendary-sweep 560ms steps(8,end) 1 both; pointer-events:none; }
+@keyframes legendary-pop-in { 0% { opacity:0; transform:translateY(8px); } 50% { opacity:1; transform:translateY(-4px); } 75% { transform:translateY(2px); } 100% { opacity:1; transform:translateY(0); } }
+@keyframes legendary-border-pulse { 50% { border-color:#fff4bf; box-shadow:inset 0 0 0 3px #e9bd68,2px 2px 0 #101820; } }
+@keyframes legendary-sweep { 0% { left:-24px; } 100% { left:320px; } }
+
+@media (prefers-reduced-motion: reduce) { .legendary-pop { animation:none !important; } .legendary-pop::after,.legendary-pop::before { display:none; } }
+body[data-reduced-motion="true"] .legendary-pop, .legendary-pop[data-reduced-motion="true"] { animation:none !important; transform:none !important; }
+body[data-reduced-motion="true"] .legendary-pop::after, body[data-reduced-motion="true"] .legendary-pop::before, .legendary-pop[data-reduced-motion="true"]::after, .legendary-pop[data-reduced-motion="true"]::before { display:none; }
 #save-recovery:not([hidden]) { position: fixed; z-index: 20; inset: 8px; padding: 16px; overflow: auto; background: #17212d; border: 2px solid #f2e9cf; color: #f2e9cf; font: 14px system-ui, sans-serif; }
 body.compact-shell #app { overflow:hidden; }
 body.compact-shell #controls { pointer-events:none; }
@@ -724,8 +734,14 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .management-status:empty { display:none; }
 .px-menu[data-layout="v2"] .management-status:not(:empty) { display:block; position:absolute; z-index:30; left:96px; right:16px; top:auto; bottom:64px; width:auto; height:auto; min-height:32px; padding:8px 12px; overflow:visible; white-space:normal; background:#202c39; border:1px solid #536276; pointer-events:none; }
 .px-menu[data-layout="v2"] .management-status[data-quiet="true"] { position:absolute; width:1px; height:1px; min-height:0; left:-10000px; right:auto; bottom:auto; padding:0; border:0; clip:rect(0,0,0,0); overflow:hidden; white-space:nowrap; }
-.px-menu[data-layout="v2"] .px-legendary-toast:not([hidden]) { position:absolute; z-index:40; top:64px; right:16px; max-width:360px; padding:8px 12px; color:#ffe38c; background:#202c39; border:2px solid var(--px-gold,#e9bd68); box-shadow:2px 2px 0 #101820; font:12px/18px var(--game-font); pointer-events:none; }
-.px-legendary-toast.legendary-pop { animation: legendary-pop-in 220ms steps(4,end), legendary-border-pulse 800ms steps(2,end) infinite; }
+.px-menu[data-layout="v2"] .px-legendary-toast:not([hidden]) { position:absolute; z-index:40; top:64px; right:16px; max-width:360px; min-height:54px; padding:6px 10px; display:flex; align-items:center; gap:8px; color:#ffe38c; background:#202c39; border:4px solid var(--px-gold,#e9bd68); box-shadow:inset 0 0 0 3px #735329,2px 2px 0 #101820; font:12px/16px "Galmuri11","GamePixel",monospace; image-rendering:pixelated; overflow:hidden; pointer-events:none; }
+.px-legendary-toast.legendary-pop { animation:legendary-pop-in 360ms steps(6,end),legendary-border-pulse 680ms steps(2,end) infinite; }
+.px-legendary-toast.legendary-pop::after { content:""; position:absolute; z-index:3; top:4px; bottom:4px; left:-24px; width:8px; background:#fff; box-shadow:4px 0 #fff4bf,8px 0 #e9bd68,12px 0 #735329; animation:legendary-sweep 560ms steps(8,end) 1 both; pointer-events:none; }
+.px-menu[data-layout="v2"] .px-legendary-toast[data-reduced-motion="true"] { animation:none !important; transform:none !important; }
+.px-menu[data-layout="v2"] .px-legendary-toast[data-reduced-motion="true"]::after { display:none !important; }
+@media (prefers-reduced-motion: reduce) { .px-menu[data-layout="v2"] .px-legendary-toast.legendary-pop::after { display:none !important; } }
+body[data-reduced-motion="true"] .px-menu[data-layout="v2"] .px-legendary-toast { animation:none !important; transform:none !important; }
+body[data-reduced-motion="true"] .px-menu[data-layout="v2"] .px-legendary-toast::before, body[data-reduced-motion="true"] .px-menu[data-layout="v2"] .px-legendary-toast::after { display:none !important; }
 .px-menu[data-layout="v2"][data-preset="960"] .management-status:not(:empty) { left:16px; right:16px; bottom:128px; }
 .px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-help-row { display:flex; min-height:20px; font-size:11px; }
 .px-menu[data-layout="v2"] .px-equip-plate { background-color:transparent; }

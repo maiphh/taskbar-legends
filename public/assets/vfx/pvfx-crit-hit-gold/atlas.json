@@ -1,0 +1,189 @@
+{
+  "key": "pvfx-crit-hit-gold",
+  "image": "sprites.png",
+  "imageSize": [
+    1056,
+    80
+  ],
+  "cellSize": [
+    96,
+    80
+  ],
+  "anchor": {
+    "x": 48,
+    "y": 40
+  },
+  "loop": false,
+  "blend": "lighter (additive)",
+  "frames": [
+    {
+      "name": "pvfx-crit-hit-gold/000",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        39,
+        31,
+        58,
+        52
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/001",
+      "index": 1,
+      "x": 96,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        8,
+        18,
+        88,
+        67
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/002",
+      "index": 2,
+      "x": 192,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        7,
+        17,
+        90,
+        69
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/003",
+      "index": 3,
+      "x": 288,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        5,
+        14,
+        90,
+        69
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/004",
+      "index": 4,
+      "x": 384,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        6,
+        9,
+        92,
+        69
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/005",
+      "index": 5,
+      "x": 480,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        10,
+        9,
+        87,
+        72
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/006",
+      "index": 6,
+      "x": 576,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        9,
+        9,
+        88,
+        75
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/007",
+      "index": 7,
+      "x": 672,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        9,
+        17,
+        87,
+        75
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/008",
+      "index": 8,
+      "x": 768,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        7,
+        16,
+        87,
+        73
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/009",
+      "index": 9,
+      "x": 864,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": [
+        15,
+        16,
+        84,
+        69
+      ]
+    },
+    {
+      "name": "pvfx-crit-hit-gold/010",
+      "index": 10,
+      "x": 960,
+      "y": 0,
+      "w": 96,
+      "h": 80,
+      "durationMs": 70.0,
+      "contentBounds": null
+    }
+  ],
+  "durationMs": 770.0,
+  "meta": {
+    "sourcePack": "pvfx-foundry",
+    "source": "raw/vfx/pvfx-foundry/unpacked/PVFX-Foundry-1.0.0/effects/impacts/crit-hit/strict/grid/sprite-sheet.png",
+    "licence": "CC0-1.0",
+    "modification": "luminance gradient map to the gold ramp",
+    "sampling": "nearest",
+    "scale": 1
+  }
+}

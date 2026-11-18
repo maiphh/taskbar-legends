@@ -39,6 +39,13 @@ export interface TextOptions { exactY?: boolean }
 const rootUrl = (): URL => new URL(`${import.meta.env.BASE_URL}ui/`, window.location.href);
 /** Round half to even, as the designer's rect tables do (e.g. banner x 894.5 -> 894, 887.5 -> 888). */
 export function roundHalfEven(value: number): number { const floor = Math.floor(value); return value - floor !== 0.5 ? Math.round(value) : floor % 2 === 0 ? floor : floor + 1; }
+const REDUCED_MOTION_KEY = 'taskbar-legends:reduced-motion:v1';
+export function presentationReducedMotionPreference(): boolean { try { return localStorage.getItem(REDUCED_MOTION_KEY) === 'true'; } catch { return false; } }
+export function setPresentationReducedMotionPreference(enabled: boolean): void {
+  try { localStorage.setItem(REDUCED_MOTION_KEY, String(enabled)); } catch { /* in-memory setting is reflected by the event below */ }
+  document.body.dataset.reducedMotion = String(enabled);
+  window.dispatchEvent(new CustomEvent('presentation-reduced-motion-change', { detail: enabled }));
+}
 export class PixelUI {
   /** Management-only reveal typography; the taskbar lane keeps its original catalog-name layout. */
   managementReveal = false;
@@ -55,7 +62,7 @@ export class PixelUI {
   private measureContext: CanvasRenderingContext2D | null = null;
   private readonly badgeMemory = new Map<string, { on: boolean; pulseTick: number; seen: boolean }>();
   private readonly badgesDrawn = new Set<string>();
-  readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  get reducedMotion(): boolean { return (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
   private readonly buttons = new Map<string, HTMLButtonElement>();
   private readonly surfaces = new Map<string, HTMLDivElement>();
   private pressed = '';

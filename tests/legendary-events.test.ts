@@ -10,7 +10,7 @@ describe('Legendary presentation event consumption', () => {
     const state = createState(4421), template = state.roster[0]!;
     for (const id of ['mh3', 'priest']) if (!state.roster.some(hero => hero.id === id)) state.roster.push({ ...structuredClone(template), id });
     state.partyIds = ['mh3', 'mw1', 'priest']; spawnParty(state);
-    const effects: string[] = [], trigger = (kind: string, label: string) => effects.push(`${kind}:${label}`);
+    const effects: string[] = [], trigger = (value: { kind: string; label: string }) => effects.push(`${value.kind}:${value.label}`);
     emit(state, { type: 'skill', unitId: 'hero-mh3', skill: 'heavy-single-burst' });
     emit(state, { type: 'skill', unitId: 'hero-mw1', skill: 'basic-strike' });
     let lastSeq = 0;

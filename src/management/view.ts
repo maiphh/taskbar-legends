@@ -24,6 +24,8 @@ export interface ManagementClient {
   setAudio(value: { muted: boolean; volume: number; buses?: { music: number; sfx: number; ui: number } }): Promise<void>;
   getCompactPrefs(): Promise<CompactPrefs>;
   setCompactPrefs(value: CompactPrefs): Promise<void>;
+  getReducedMotion(): Promise<boolean>;
+  setReducedMotion(value: boolean): Promise<void>;
   close(): void;
   /** Optional UI sound (ui_click, ui_open, ui_close, gacha cues); the host maps it to its audio buses. */
   cue?(key: string): void;
@@ -171,6 +173,7 @@ export class ManagementView {
   private pendingCompareGeneration = -1;
   private audioValue: AudioValue = { muted: false, volume: 0.5 };
   private compactPrefs: CompactPrefs | null = null;
+  private reducedMotionValue = false;
   private dragging: { name: string; pointerId: number } | null = null;
   private formationGesture: FormationGesture | null = null;
   private formationPending = false;
@@ -244,7 +247,7 @@ export class ManagementView {
     this.closed = false; const generation = ++this.generation; this.clientId = crypto.randomUUID(); this.sequence = 0; this.root.hidden = false;
     this.startAnimationClock();
     this.client.cue?.('ui_open');
-    try { [this.audioValue, this.compactPrefs] = await Promise.all([this.client.getAudio(), this.client.getCompactPrefs()]); } catch { /* window settings remain available from the main view */ }
+    try { [this.audioValue, this.compactPrefs, this.reducedMotionValue] = await Promise.all([this.client.getAudio(), this.client.getCompactPrefs(), this.client.getReducedMotion()]); } catch { /* window settings remain available from the main view */ }
     if (!this.isLive(generation)) return;
     if (!this.atlas) this.atlas = new AtlasLibrary();
     void this.atlas.ready.then(() => { this.portraits.clear(); this.contentKey = ''; this.renderContent(); });
@@ -292,11 +295,18 @@ export class ManagementView {
       if (frame) img.src = frame.toDataURL();
     }
   }
-  presentLegendaryDrop(seq: number, message: string): void {
+  presentLegendaryDrop(seq: number, message: string, itemSlot?: 'weapon' | 'armor' | 'charm'): void {
     if (this.closed || seq <= this.lastLegendaryDropSeq) return;
     this.lastLegendaryDropSeq = seq;
     const toast = this.root.querySelector<HTMLElement>('.px-legendary-toast'); if (!toast) return;
-    toast.textContent = message; toast.hidden = false; toast.classList.remove('legendary-pop'); void toast.offsetWidth; toast.classList.add('legendary-pop');
+    toast.replaceChildren();
+    toast.dataset.reducedMotion = String(this.reducedMotionValue || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches));
+    const slot = itemSlot ?? (/\b(armor|charm|weapon)\b/i.exec(message)?.[1]?.toLowerCase() as 'weapon' | 'armor' | 'charm' | undefined) ?? 'weapon';
+    const icon = document.createElement('img'); icon.src = asset(`ui/icon-${SLOT_ICON[slot] ?? 'sword'}.png`); icon.alt = ''; icon.width = 32; icon.height = 32; icon.className = 'legendary-toast-icon';
+    const copy = document.createElement('span'); copy.className = 'legendary-toast-copy';
+    const title = document.createElement('b'); title.textContent = 'LEGENDARY DROP';
+    const name = document.createElement('span'); name.textContent = message.replace(/^Legendary drop:\s*/i, '');
+    copy.append(title, name); toast.append(icon, copy); toast.hidden = false; toast.classList.remove('legendary-pop'); void toast.offsetWidth; toast.classList.add('legendary-pop');
     window.setTimeout(() => { toast.hidden = true; }, 4000);
   }
   /** Debug/shot hook: the reveal in this menu, or null. */
@@ -671,6 +681,7 @@ export class ManagementView {
     else if (action === 'equip-upgrade' && this.equipItem) void this.command({ type:'upgrade', gearId:this.equipItem as GameState['inventory'][number]['id'] });
     else if (action === 'pause') { const generation = this.generation; void this.settingRequest(this.client.pause(!state.paused).then(() => this.refresh(generation))); }
     else if (action === 'mute') { this.audioValue = { ...this.audioValue, muted: !this.audioValue.muted }; void this.settingRequest(this.client.setAudio(this.audioValue)); this.contentKey = ''; this.renderContent(); }
+    else if (action === 'reduced-motion') { this.reducedMotionValue = !this.reducedMotionValue; void this.settingRequest(this.client.setReducedMotion(this.reducedMotionValue)); this.contentKey = ''; this.renderContent(); }
     else if (action === 'reset-size' && this.compactPrefs) { this.compactPrefs = { ...this.compactPrefs, sourceWidth: 640, sourceHeight: 160 }; void this.settingRequest(this.client.setCompactPrefs(this.compactPrefs)); this.contentKey = ''; this.renderContent(); }
   }
   /** Dropdown commits: filters and selections re-render; the preset applies at once (as the old select did). */
@@ -951,7 +962,7 @@ export class ManagementView {
       ? `${Math.floor(nextChest / 3600)}h ${Math.ceil(nextChest % 3600 / 60)}m` : `${Math.ceil(nextChest / 60)}m`;
     return [`<h2>Settings</h2><div class="px-settings px-v2-settings">
       <section class="px-offline-summary px-setting-group" aria-label="Offline progress"><div class="px-offline-rate"><h3>Offline progress</h3><span class="px-badge ${state.offline.earned ? 'px-green' : ''}">${state.offline.earned ? 'Earned' : 'Estimate'}</span></div><p>Farm ${esc(state.offline.stageId)} · ~${fmt(state.offline.goldPerHour)} gold/h · ~${fmt(state.offline.xpPerHour)} XP/h per hero</p><p>Cap ${state.offline.capHours} hours · next chest in ${chestTime}. Partial gold, XP, tickets, and chest progress carry across visits.</p></section>
-      <section class="px-setting-group" aria-label="Simulation and audio"><h3>Simulation and audio</h3><div class="px-srow">${toggle('pause', 'pause', !state.paused, state.paused ? 'Resume simulation' : 'Pause simulation', 'Simulation running')}</div><div class="px-srow">${toggle('mute', 'mute', this.audioValue.muted, this.audioValue.muted ? 'Unmute audio' : 'Mute audio', 'Audio muted')}</div>${slider('master', 'Volume', this.audioValue.volume, width)}${slider('music', 'Music', this.sliderValue('music'), width)}${slider('sfx', 'SFX', this.sliderValue('sfx'), width)}${slider('ui', 'UI', this.sliderValue('ui'), width)}</section>
+      <section class="px-setting-group" aria-label="Simulation and audio"><h3>Simulation and audio</h3><div class="px-srow">${toggle('pause', 'pause', !state.paused, state.paused ? 'Resume simulation' : 'Pause simulation', 'Simulation running')}</div><div class="px-srow">${toggle('mute', 'mute', this.audioValue.muted, this.audioValue.muted ? 'Unmute audio' : 'Mute audio', 'Audio muted')}</div><div class="px-srow">${toggle('reduced-motion', 'reduced-motion', this.reducedMotionValue, this.reducedMotionValue ? 'Reduced motion on' : 'Reduced motion off', 'Reduce visual motion')}</div>${slider('master', 'Volume', this.audioValue.volume, width)}${slider('music', 'Music', this.sliderValue('music'), width)}${slider('sfx', 'SFX', this.sliderValue('sfx'), width)}${slider('ui', 'UI', this.sliderValue('ui'), width)}</section>
       <section class="px-setting-group" aria-label="Window"><h3>Window</h3><div class="px-srow px-zoomrow"><span class="px-slider-label">Zoom</span><span class="px-pair" role="group" aria-label="Zoom">${['1', '2'].map(value => button(`zoom-${value}`, `${value}×`, `data-zoom="${value}"`, { selected: zoom === value, className: 'px-zoom' })).join('')}</span></div><div class="px-srow">${this.dropdown('placement', 'Placement', [{ value: 'free', label: 'Free' }, { value: 'snapped', label: 'Snap to bottom' }], prefs?.placement ?? 'free', 160, 'data-setting="placement"')}${button('reset-size', 'Reset size', 'data-action="reset-size"')}</div><p>Integer zoom. Letterbox instead of fractional scaling.</p></section>
       <section class="px-setting-group" aria-label="Recovery"><h3>Save recovery</h3><p>If a save cannot be loaded, use the game window recovery panel to export it or discard it.</p>${button('recovery-help', 'Recovery help', 'data-help-toggle data-help="If a save cannot be loaded, use the game window recovery panel to export it or discard it."', { aria: 'Explain save recovery' })}</section></div>`, ''];
   }

@@ -2,12 +2,12 @@ import { CONFIG, TICK_MS, heroConfig, stageConfig, ticksForSeconds } from './con
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
-import { BODY, fontFor, loadFonts } from './font';
+import { BODY, loadFonts } from './font';
 import { bannerFrame, popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { stageCue, upgradePopups } from './core/selectors';
-import { combatEventAge, enemyFormationX, presentationCombatTime } from './core/party-combat';
+import { enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
 import { formationScreenX } from './core/turn/formation-view';
@@ -19,6 +19,7 @@ import { compactLaneLayout } from './compact-lane-layout';
 import { LegendaryEffects } from './legendary-effects';
 import { consumeNewEvents, triggerLegendaryEvent } from './legendary-events';
 import { effectRandom } from './legendary-effects';
+import { dropCardSize, LanePositionCache, PresentationLaneClock } from './legendary-presentation';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -29,6 +30,12 @@ export class Renderer {
   private resizes = 0;
   private cameraTranslation = 0;
   private frameCamera: number | null = null;
+  private frameLaneTime: number | null = null;
+  private frameLaneSample = 0;
+  private readonly laneClock = new PresentationLaneClock();
+  private framePaused = false;
+  private frameLaneRate = 1;
+  private readonly lanePositions = new LanePositionCache();
   private rendering = false;
   private pixelFontReady = false;
   readonly atlases = new AtlasLibrary();
@@ -36,25 +43,30 @@ export class Renderer {
   readonly legendaryEffects = new LegendaryEffects();
   private effectEventSeq = 0;
   private effectEventsInitialized = false;
-  baselineLegendaryEvents(seq: number): void { this.effectEventSeq = seq; this.effectEventsInitialized = true; this.legendaryEffects.clear(); }
+  baselineLegendaryEvents(seq: number): void { this.effectEventSeq = seq; this.effectEventsInitialized = true; this.legendaryEffects.clear(); this.laneClock.reset(); this.lanePositions.reset(); }
   private holySheet: HTMLImageElement | null = null;
+  private signatureSheet: HTMLImageElement | null = null;
   private treasureSheet: HTMLImageElement | null = null;
-  private dropBurstSheet: HTMLImageElement | null = null;
+  private legendarySword: HTMLImageElement | null = null;
+  private legendaryArmor: HTMLImageElement | null = null;
+  private legendaryCharm: HTMLImageElement | null = null;
   constructor(private readonly canvas: HTMLCanvasElement, controls: HTMLElement) {
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Canvas 2D is unavailable');
     this.ctx = ctx; this.ui = new PixelUI(this.atlases, controls);
-    void loadFonts().then(() => document.fonts.load('700 16px GamePixel')).then(() => { this.pixelFontReady = true; this.ui.onRedraw?.(); });
-    this.holySheet = this.loadVfx('holy-smite'); this.treasureSheet = this.loadVfx('treasure-glint'); this.dropBurstSheet = this.loadVfx('cs5475-explosion-gold-48');
+    void loadFonts().then(() => document.fonts.load('700 16px GamePixel')).then(() => { this.pixelFontReady = true; this.ui.onRedraw?.(); }).catch(() => { /* no FontFace (tests/headless): keep fallback font */ });
+    this.holySheet = this.loadVfx('holy-smite'); this.signatureSheet = this.loadVfx('pvfx-crit-hit-gold'); this.treasureSheet = this.loadVfx('treasure-glint');
+    this.legendarySword = this.loadUiIcon('sword'); this.legendaryArmor = this.loadUiIcon('armor'); this.legendaryCharm = this.loadUiIcon('potion');
   }
-  private loadVfx(name: string): HTMLImageElement { const image = new Image(); image.src = new URL(`${import.meta.env.BASE_URL}assets/vfx/${name.startsWith('cs5475-') ? name : `pvfx-${name}`}/sprites.png`, window.location.href).href; image.onerror = () => { image.dataset.unavailable = 'true'; }; return image; }
+  private loadUiIcon(name: string): HTMLImageElement { const image = new Image(); image.src = new URL(`${import.meta.env.BASE_URL}ui/icon-${name}.png`, window.location.href).href; return image; }
+  private loadVfx(name: string): HTMLImageElement { const image = new Image(); image.src = new URL(`${import.meta.env.BASE_URL}assets/vfx/${name.startsWith('cs5475-') || name.startsWith('pvfx-') ? name : `pvfx-${name}`}/sprites.png`, window.location.href).href; image.onerror = () => { image.dataset.unavailable = 'true'; }; return image; }
   /** Debug capture uses the same caster resolver as retained combat events without touching sim state. */
-  debugLegendaryShowcase(kind: 'skill' | 'drop', state: GameState): void {
-    const event: GameEvent = kind === 'skill'
-      ? { seq: state.eventSeq, tick: state.tick, data: { type: 'skill', unitId: 'hero-mh3', skill: 'heavy-single-burst' } }
-      : { seq: state.eventSeq, tick: state.tick, data: { type: 'gear', gearId: itemId(state.seed, 0), slot: 'weapon', rarity: 'legendary' } };
-    const caster = state.party[0] ? { ...state.party[0], id: 'hero-mh3', sourceId: 'mh3', side: 'hero' as const } : undefined;
-    triggerLegendaryEvent(event, caster ? [caster] : state.party, state.enemies, (effectKind, label) => this.legendaryEffects.trigger(effectKind, performance.now(), label));
+  debugLegendaryShowcase(kind: 'skill' | 'drop', state: GameState, slot: 'weapon' | 'armor' | 'charm' = 'weapon'): void {
+    const anchor = state.party[0];
+    if (!anchor) throw new Error('Legendary showcase needs a rendered party anchor');
+    if (kind === 'skill') { this.legendaryEffects.trigger('skill', performance.now(), 'HEAVY SINGLE BURST', { anchorId: anchor.id }); return; }
+    const event: GameEvent = { seq: state.eventSeq, tick: state.tick, data: { type: 'gear', gearId: itemId(state.seed, 0), slot, rarity: 'legendary' } };
+    triggerLegendaryEvent(event, state.party, state.enemies, value => this.legendaryEffects.trigger(value.kind, performance.now(), value.label, value));
   }
   seekLegendaryShowcase(ms: number): void { this.legendaryEffects.seek(ms); }
   getHitRegions(): HitRegion[] {
@@ -67,7 +79,7 @@ export class Renderer {
       cssHeight: height * this.zoom / this.dpr, dpr: this.dpr, zoom: this.zoom, compact: this.compact, resizeCount: this.resizes, sourceHitRegions: this.ui.sourceRegions(), ui: this.ui.stateForDebug() };
   }
   getCombatProjection(state: GameState) {
-    if (!this.rendering) this.frameCamera = null;
+    if (!this.rendering) { this.frameCamera = null; this.frameLaneTime = null; }
     const field = this.field(), cameraLeft = this.cameraLeft(state, field);
     const sx = (worldX: number) => Math.round(field.x + worldX - cameraLeft), baselineY = this.ui.height() - CONFIG.ui.closed.coreHeight + CONFIG.ui.closed.baselineCoreLocalY;
     const allUnits = [...state.party, ...state.enemies];
@@ -85,7 +97,7 @@ export class Renderer {
         delivery: projectile.delivery, direction: Math.sign((projectile.delivery === 'ground' ? projectile.centerX ?? projectile.x : allUnits.find(unit => unit.id === projectile.targetId)?.x ?? projectile.x) - projectile.x) })),
       statusCues,
       guardCues: state.events.flatMap(event => {
-        const age = combatEventAge(state, event);
+        const age = event.combatEncounter === state.encounter ? this.lanePresentationTime(state) - (event.combatTick ?? event.tick) : null;
         return event.data.type === 'guard' && age !== null && age >= 0 && age <= ticksForSeconds(0.8)
           ? [{ guardianId: event.data.guardianId, fromTargetId: event.data.fromTargetId, toTargetId: event.data.toTargetId, age }] : [];
       }) };
@@ -149,6 +161,19 @@ export class Renderer {
     this.frameCamera = interpolated;
     return interpolated;
   }
+  private lanePresentationTime(state: GameState): number {
+    if (this.frameLaneTime !== null) return this.frameLaneTime;
+    const now = performance.now(), base = presentationCombatTime(state);
+    const effect = this.legendaryEffects.current(now, false), hitstop = effect?.layers.find(layer => layer.type === 'hitstop');
+    const hold = Number(hitstop?.params.holdMs ?? 0), slow = Number(hitstop?.params.slowFactor ?? 1);
+    const sample = this.laneClock.sample(base, hitstop && effect ? { holdMs: hold, slowFactor: slow } : null, effect?.age ?? 0, this.framePaused, this.ui.reducedMotion, `${state.seed}:${state.encounter}`);
+    this.frameLaneSample = base;
+    this.frameLaneRate = sample.rate; this.frameLaneTime = sample.time; return sample.time;
+  }
+  private lanePosition(id: string, target: number, rate = this.frameLaneRate): number {
+    if (!this.rendering) return Math.round(target);
+    return this.lanePositions.sample(id, target, rate, this.frameLaneSample);
+  }
   private edgeMarkers(state: GameState, field: { x: number; width: number }): { threatId: string; worldX: number; screenX: number; edge: 'left' | 'right'; label: string }[] {
     const camera = this.cameraLeft(state, field), markers: { threatId: string; worldX: number; screenX: number; edge: 'left' | 'right'; label: string }[] = [];
     const add = (threatId: string, worldX: number, label: string): void => {
@@ -172,7 +197,7 @@ export class Renderer {
     const side = unit.side;
     let screenX = formationScreenX(side, unit.slot, enemyCount, field.width);
     const action = unit.action;
-    const now = presentationCombatTime(state);
+    const now = this.lanePresentationTime(state);
     if (action && (action.state === 'windup' || action.state === 'recovery') && action.delivery === 'leap') {
       const target = [...state.party, ...state.enemies].find(other => other.id === action.targetId);
       const targetSide = target?.side ?? action.targetSide;
@@ -194,17 +219,19 @@ export class Renderer {
       const t = spawnX === home ? 0 : Math.max(0, Math.min(1, (unit.x - home) / (spawnX - home)));
       screenX += t * (field.width + 16 - screenX);
     }
-    return Math.round(field.x + screenX);
+    // Leap placement already follows the presentation clock above, so its target delta is slowed there.
+    const rate = action && (action.state === 'windup' || action.state === 'recovery') && action.delivery === 'leap' ? 1 : this.frameLaneRate;
+    return this.lanePosition(unit.id, Math.round(field.x + screenX), rate);
   }
   private latest(state: GameState, predicate: (event: GameEvent) => boolean): GameEvent | undefined {
     for (let i = state.events.length - 1; i >= 0; i -= 1) { const event = state.events[i]; if (event && predicate(event)) return event; }
     return undefined;
   }
   private animation(state: GameState, unit: Unit, key: string | undefined): { name: AnimationName; ageMs: number; returning?: boolean } {
-    const now = presentationCombatTime(state);
+    const now = this.lanePresentationTime(state);
     const age = (event: GameEvent | undefined): number => {
       if (!event) return Infinity;
-      const ticks = combatEventAge(state, event);
+      const ticks = event.combatEncounter !== state.encounter ? null : this.lanePresentationTime(state) - (event.combatTick ?? event.tick);
       return ticks === null ? Infinity : ticks * TICK_MS;
     };
     const dead = this.latest(state, event => event.data.type === 'death' && event.data.unitId === unit.id);
@@ -222,11 +249,15 @@ export class Renderer {
   }
   render(state: GameState, paused = false): void {
     this.rendering = true;
+    this.framePaused = paused;
     this.frameCamera = null;
+    this.frameLaneTime = null;
+    this.lanePositions.beginFrame();
+    this.lanePresentationTime(state);
     const ctx = this.ctx, view = CONFIG.view, palette = CONFIG.ui.palette, height = this.ui.height();
     if (!this.effectEventsInitialized) { this.effectEventSeq = state.eventSeq; this.effectEventsInitialized = true; }
     this.effectEventSeq = consumeNewEvents(state.eventSeq, this.effectEventSeq, state.events, event => {
-      triggerLegendaryEvent(event, state.party, state.enemies, (kind, label) => this.legendaryEffects.trigger(kind, performance.now(), label));
+      triggerLegendaryEvent(event, state.party, state.enemies, value => this.legendaryEffects.trigger(value.kind, performance.now(), value.label, value));
     });
     const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -249,7 +280,7 @@ export class Renderer {
       const key = unit.side === 'hero' ? Object.entries(view.heroAssets).find(([id]) => id === unit.sourceId)?.[1] : view.enemyAssets[enemyVisual!];
       const anim = this.animation(state, unit, key);
       const lastHit = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
-      const lastHitAge = lastHit ? combatEventAge(state, lastHit) : null;
+      const lastHitAge = lastHit && lastHit.combatEncounter === state.encounter ? this.lanePresentationTime(state) - (lastHit.combatTick ?? lastHit.tick) : null;
       const flash = lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
       const flip = anim.returning ? unit.side === 'hero' : unit.facing === -1;
       if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, 1, flash)) {
@@ -302,7 +333,7 @@ export class Renderer {
       for (const projectile of state.projectiles ?? []) {
         const target = allUnits.find(unit => unit.id === projectile.targetId && unit.hp > 0);
         const destination = projectile.delivery === 'ground' ? projectile.centerX ?? projectile.x : target?.x ?? projectile.x;
-        const direction = Math.sign(destination - projectile.x) || 1, x = sx(projectile.x), y = baselineY - 27;
+        const direction = Math.sign(destination - projectile.x) || 1, x = this.lanePosition(projectile.id, sx(projectile.x)), y = baselineY - 27;
         ctx.save();
         if (projectile.delivery === 'ground') {
           ctx.fillStyle = '#ffd16e'; ctx.strokeStyle = '#fff0bd'; ctx.lineWidth = 1;
@@ -349,11 +380,11 @@ export class Renderer {
       }
     }
     const lifetime = ticksForSeconds(CONFIG.runtime.damageLabelSeconds), bucket = ticksForSeconds(CONFIG.runtime.damageCoalesceSeconds);
-    const labelClock = presentationCombatTime(state);
+    const labelClock = this.lanePresentationTime(state);
     const groups = new Map<string, { targetId: string; tick: number; amount: number; heal: boolean }>();
     for (const event of state.events) {
       const data = event.data;
-      const ageTicks = combatEventAge(state, event);
+      const ageTicks = event.combatEncounter === state.encounter ? labelClock - (event.combatTick ?? event.tick) : null;
       if (ageTicks === null || ageTicks > lifetime || (data.type !== 'hit' && data.type !== 'heal')) continue;
       const eventTick = labelClock - ageTicks;
       const key = `${data.targetId}:${data.type}:${Math.floor(eventTick / bucket)}`, old = groups.get(key);
@@ -374,76 +405,128 @@ export class Renderer {
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
     this.drawFeedback(ctx, state, units, field, coreY);
-    this.drawLegendaryEffect(ctx, field, coreY);
-    this.rendering = false;
+    this.drawLegendaryEffect(ctx, state, field, coreY);
+    this.lanePositions.endFrame();
+    this.rendering = false; this.frameLaneTime = null;
   }
-  private drawLegendaryEffect(ctx: CanvasRenderingContext2D, field: { x: number; width: number }, coreY: number): void {
-    const effect = this.legendaryEffects.current(performance.now(), this.ui.reducedMotion); if (!effect) return;
+  private drawLegendaryEffect(ctx: CanvasRenderingContext2D, state: GameState, field: { x: number; width: number }, coreY: number): void {
     const reducedMotion = this.ui.reducedMotion;
-    const cx = field.x + Math.floor(field.width / 2), cy = coreY + 30, progress = effect.age / effect.spec.durationMs;
+    const effect = this.legendaryEffects.current(performance.now(), reducedMotion); if (!effect) return;
     const gold = CONFIG.ui.rarity.legendary.frame;
+    const bannerX = Math.floor(field.x + field.width / 2);
+    const anchor = effect.anchorId ? [...state.party, ...state.enemies].find(unit => unit.id === effect.anchorId) : undefined;
+    const anchorX = anchor ? this.position(anchor, state) : bannerX;
+    const cy = coreY + 10;
+    const has = (type: string) => effect.layers.find(layer => layer.type === type);
     ctx.save(); ctx.imageSmoothingEnabled = false;
-    const shake = effect.layers.find(layer => layer.type === 'shake');
-    if (shake) { const offset = Math.floor(effectRandom(effect.seed, Math.floor(effect.age / 45)) * 5) - 2; ctx.translate(offset * Number(shake.params.intensity ?? 1), 0); }
+    const shake = has('shake');
+    if (shake && !reducedMotion) { const cadence = Number(shake.params.cadenceMs ?? 45), offset = Math.floor(effectRandom(effect.seed, Math.floor((effect.age - shake.startMs) / cadence)) * 5) - 2; ctx.translate(offset, 0); }
     if (reducedMotion) {
-      const alpha = 1;
-      ctx.globalAlpha = alpha; ctx.fillStyle = '#101c27'; ctx.fillRect(cx - 112, cy - 37, 224, 24);
-      ctx.strokeStyle = gold; ctx.strokeRect(cx - 112.5, cy - 37.5, 225, 25);
-      ctx.fillStyle = gold; ctx.fillRect(cx - 4, cy - 4, 9, 9);
-      this.drawLegendaryBanner(ctx, effect.label, cx, cy, gold);
-    } else if (effect.kind === 'skill') {
-      const radius = 10 + Math.floor(progress * 42), alpha = Math.max(0, 1 - progress);
-      if (!this.ui.reducedMotion && !this.compact) { ctx.globalAlpha = alpha * 0.22; ctx.fillStyle = gold; ctx.fillRect(field.x, 0, field.width, coreY + 54); }
-      ctx.globalAlpha = alpha;
-      for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6, x = Math.round(cx + Math.cos(a) * radius), y = Math.round(cy + Math.sin(a) * radius * 0.55); ctx.fillStyle = i % 2 ? '#fff4bf' : gold; ctx.fillRect(x, y, 3, 3); }
-      ctx.fillStyle = '#fff4bf'; ctx.fillRect(cx - 3, cy - 3, 7, 7);
-      if (this.holySheet?.complete && this.holySheet.naturalWidth) {
-        const frame = Math.min(13, Math.floor(effect.age / 80)); ctx.globalAlpha = alpha;
-        ctx.drawImage(this.holySheet, frame * 80, 0, 80, 120, cx - 24, cy - 50, 48, 72);
-      }
-      ctx.globalAlpha = alpha; ctx.fillStyle = '#101c27'; ctx.fillRect(cx - 112, cy - 37, 224, 24); ctx.strokeStyle = gold; ctx.strokeRect(cx - 112.5, cy - 37.5, 225, 25);
-      this.drawLegendaryBanner(ctx, effect.label, cx, cy, gold);
+      if (effect.kind === 'drop') this.drawLegendaryDropCard(ctx, anchorX, cy + 23, gold, effect.slot, 48, true);
+      this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, 4, effect.age, effect.spec.durationMs, true);
     } else {
-      const alpha = Math.max(0, 1 - progress), radius = 12 + Math.floor(progress * 38);
-      ctx.globalAlpha = alpha * 0.7; ctx.strokeStyle = gold; ctx.lineWidth = 2;
-      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + progress * Math.PI / 2; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * 7, cy + Math.sin(a) * 7); ctx.lineTo(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius); ctx.stroke(); }
-      const size = 8 + Math.min(8, Math.floor(effect.age / 60)); ctx.globalAlpha = alpha; ctx.fillStyle = gold; ctx.fillRect(cx - size / 2, cy - size / 2, size, size); ctx.strokeRect(cx - size / 2 - 2, cy - size / 2 - 2, size + 4, size + 4);
-      if (this.treasureSheet?.complete && this.treasureSheet.naturalWidth) {
-        const frame = Math.min(15, Math.floor(effect.age / 62)); ctx.drawImage(this.treasureSheet, frame * 48, 0, 48, 48, cx - 24, cy - 24, 48, 48);
+      if (has('flash')) {
+        const age = effect.age - has('flash')!.startMs;
+        const pulse = age < 100 || age >= 210 && age < 315 ? 1 : age < 175 || age >= 315 ? 0.45 : 0.15;
+        ctx.save(); this.drawPixelFrame(ctx, field, coreY, gold, pulse * Number(has('flash')!.params.intensity ?? 1)); ctx.restore();
       }
-      if (this.dropBurstSheet?.complete && this.dropBurstSheet.naturalWidth) {
-        const frame = Math.min(11, Math.floor(effect.age / 84)); ctx.globalAlpha = alpha;
-        ctx.drawImage(this.dropBurstSheet, frame * 48, 0, 48, 48, cx - 24, cy - 24, 48, 48);
-      }
-      this.drawLegendaryBanner(ctx, effect.label, cx, cy, gold);
-    }
-    for (const layer of effect.layers) {
-      const intensity = Number(layer.params.intensity ?? 1);
-      if (layer.type === 'particles' || layer.type === 'rays') {
-        const count = Number(layer.params.count ?? 8), alpha = Math.max(0, 1 - progress);
-        for (let i = 0; i < count; i++) {
-          const angle = effectRandom(effect.seed, i) * Math.PI * 2, distance = 8 + Math.floor(effectRandom(effect.seed, i + 64) * (effect.age / 20 + 30));
-          const x = Math.round(cx + Math.cos(angle) * distance), y = Math.round(cy + Math.sin(angle) * distance * 0.55);
-          ctx.globalAlpha = alpha * (layer.type === 'rays' ? 0.45 : 0.8); ctx.fillStyle = i % 2 ? '#fff4bf' : gold;
-          ctx.fillRect(x, y, layer.type === 'rays' ? 2 : 3, layer.type === 'rays' ? 5 : 3);
+      if (has('borderPulse')) { const pulse = Math.floor((effect.age - has('borderPulse')!.startMs) / 220) % 2 === 0 ? 1 : 0.55; ctx.save(); this.drawPixelFrame(ctx, field, coreY, gold, pulse * 0.85); ctx.restore(); }
+      if (effect.kind === 'skill') {
+        const sheet = has('sheet');
+        if (has('flash')) { ctx.save(); ctx.globalAlpha = effect.age < 110 ? 0.20 : effect.age < 330 ? 0.10 : 0; ctx.fillStyle = gold; ctx.fillRect(field.x, 0, field.width, coreY + 54); ctx.restore(); }
+        if (sheet) {
+          const age = effect.age - sheet.startMs, frameMs = Number(sheet.params.frameMs ?? 80), frame = Math.floor(age / frameMs);
+          const sheetOpacity = age < 190 ? 1 : age < 760 ? 0.88 : age < 880 ? 0.66 : age < 1000 ? 0.44 : 0.22;
+          ctx.save(); ctx.globalAlpha = sheetOpacity;
+          if (this.signatureSheet?.complete && this.signatureSheet.naturalWidth) { const frameCount = Math.floor(this.signatureSheet.naturalWidth / 96); ctx.drawImage(this.signatureSheet, Math.min(frameCount - 1, frame) * 96, 0, 96, 80, anchorX - 96, cy - 80, 192, 160); }
+          else if (this.holySheet?.complete && this.holySheet.naturalWidth) { const holyFrame = Math.min(Math.floor(this.holySheet.naturalWidth / 80) - 1, Math.floor(age / frameMs)); ctx.drawImage(this.holySheet, holyFrame * 80, 0, 80, 120, anchorX - 60, cy - 60, 120, 120); }
+          ctx.restore();
         }
-      } else if (layer.type === 'flash') {
-        ctx.globalAlpha = intensity * Math.max(0, 1 - effect.age / Math.max(1, layer.endMs)); ctx.fillStyle = '#fff4bf';
-        ctx.fillRect(field.x, 0, field.width, 3); ctx.fillRect(field.x, coreY + 51, field.width, 3);
-        ctx.fillRect(field.x, 0, 3, coreY + 54); ctx.fillRect(field.x + field.width - 3, 0, 3, coreY + 54);
-      } else if (layer.type === 'beam') {
-        ctx.globalAlpha = 0.18 * Math.max(0, 1 - effect.age / layer.endMs); ctx.fillStyle = gold; ctx.fillRect(cx - 3, 0, 6, cy);
-      } else if (layer.type === 'borderPulse') {
-        ctx.globalAlpha = 0.6 * intensity; ctx.strokeStyle = gold; ctx.lineWidth = 2; ctx.strokeRect(field.x + 1, 1, field.width - 2, coreY + 51);
+        const rayLayer = has('rays'), particleLayer = has('particles');
+        if (rayLayer || particleLayer) this.drawLegendaryBurst(ctx, anchorX, cy, effect, gold, rayLayer, particleLayer);
+        const banner = has('banner');
+        this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1120), false);
+      } else {
+        const beam = has('beam'); if (beam) this.drawDropBeam(ctx, anchorX, effect.age - beam.startMs, beam.endMs - beam.startMs, gold, Number(beam.params.width ?? 24));
+        const sheet = has('sheet');
+        if (sheet && this.treasureSheet?.complete && this.treasureSheet.naturalWidth) {
+          const age = effect.age - sheet.startMs, frame = Math.min(Math.floor(this.treasureSheet.naturalWidth / 48) - 1, Math.floor(age / Number(sheet.params.frameMs ?? 62)));
+          const sheetOpacity = age < 760 ? 1 : age < 880 ? 0.75 : age < 1000 ? 0.5 : age < 1120 ? 0.25 : 0;
+          ctx.save(); ctx.globalAlpha = sheetOpacity; ctx.drawImage(this.treasureSheet, frame * 48, 0, 48, 48, anchorX - 48, cy - 48, 96, 96); ctx.restore();
+        }
+        const particles = has('particles'), rays = has('rays'); if (particles || rays) this.drawLegendaryBurst(ctx, anchorX, cy, effect, gold, rays, particles);
+        const card = has('cardPop'); if (card) {
+          const age = effect.age - card.startMs, stage = dropCardSize(age, Number(card.params.stepMs ?? 48), Number(card.params.popMs ?? 240));
+          const fadeAge = age - Number(card.params.fadeStartMs ?? 1740), fadeStep = Number(card.params.fadeStepMs ?? 90);
+          const alpha = fadeAge < 0 ? 1 : fadeAge < fadeStep ? 0.75 : fadeAge < fadeStep * 2 ? 0.5 : 0.25;
+          ctx.save(); ctx.globalAlpha = alpha; this.drawLegendaryDropCard(ctx, anchorX, cy + 23, gold, effect.slot, stage, false, effect.age); ctx.restore();
+        }
+        const banner = has('banner');
+        this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1450), false);
       }
     }
     ctx.restore();
   }
-  private drawLegendaryBanner(ctx: CanvasRenderingContext2D, label: string, cx: number, cy: number, gold: string): void {
+  private bannerScale(age: number, stepMs: number, entranceMs: number): number { return age < entranceMs ? [0, 1, 2, 3, 4][Math.min(4, Math.floor(age / stepMs))]! : 4; }
+  private drawLegendaryBanner(ctx: CanvasRenderingContext2D, label: string, cx: number, y: number, gold: string, stage: number, age: number, holdMs: number, staticMode: boolean): void {
     if (!this.pixelFontReady) return;
-    const x = Math.round(cx - 112); ctx.fillStyle = '#101c27'; ctx.fillRect(x, cy - 37, 224, 24); ctx.strokeStyle = gold; ctx.strokeRect(x + 0.5, cy - 36.5, 223, 23);
-    ctx.save(); ctx.font = `700 16px ${fontFor(label, 16, true, true)}`; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffe38c';
-    const width = ctx.measureText(label).width; ctx.fillText(label, Math.round(cx - Math.min(104, width / 2)), cy - 31); ctx.restore();
+    const width = Math.min(340, Math.max(208, label.length * 9 + 42)), height = 34, visibleWidth = Math.floor(width * stage / 4), x = Math.floor(cx - visibleWidth / 2);
+    if (!visibleWidth) return;
+    ctx.save(); ctx.globalAlpha = staticMode ? 1 : age <= holdMs ? 1 : age < holdMs + 180 ? 0.5 : 0;
+    ctx.beginPath(); ctx.rect(x, y, visibleWidth, height); ctx.clip();
+    ctx.fillStyle = '#101c27'; ctx.fillRect(x, y, width, height); ctx.fillStyle = '#735329'; ctx.fillRect(x + 3, y + 3, width - 6, height - 6);
+    ctx.fillStyle = '#202c39'; ctx.fillRect(x + 5, y + 5, width - 10, height - 10); ctx.fillStyle = gold; ctx.fillRect(x, y, width, 3); ctx.fillRect(x, y + height - 3, width, 3); ctx.fillRect(x, y, 3, height); ctx.fillRect(x + width - 3, y, 3, height);
+    ctx.fillStyle = '#fff4bf'; ctx.fillRect(x + 8, y + 8, 3, 3); ctx.fillRect(x + width - 11, y + 8, 3, 3);
+    ctx.font = '700 9px "Galmuri11", monospace'; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff4bf'; ctx.fillText('LEGENDARY', x + 12, y + 5);
+    ctx.font = '700 12px "Galmuri11", monospace'; const text = label.toUpperCase(), textWidth = ctx.measureText(text).width, tx = Math.floor(cx - textWidth / 2), ty = y + 17;
+    ctx.fillStyle = '#101720'; for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) ctx.fillText(text, tx + dx!, ty + dy!);
+    ctx.fillStyle = '#fff0b1'; ctx.fillText(text, tx, ty);
+    if (!staticMode && age < 920) { ctx.globalAlpha = 0.8; ctx.fillStyle = '#fff'; const shineX = x + 8 + Math.floor((age % 460) / 460 * (width - 16)); ctx.fillRect(shineX, y + 5, 3, height - 10); }
+    ctx.restore();
+  }
+  private drawPixelFrame(ctx: CanvasRenderingContext2D, field: { x: number; width: number }, coreY: number, gold: string, alpha: number): void {
+    const h = coreY + 54; ctx.globalAlpha = alpha; ctx.fillStyle = gold; ctx.fillRect(field.x, 0, field.width, 4); ctx.fillRect(field.x, h - 4, field.width, 4); ctx.fillRect(field.x, 0, 4, h); ctx.fillRect(field.x + field.width - 4, 0, 4, h);
+    ctx.globalAlpha = alpha * 0.55; ctx.fillStyle = '#fff4bf'; ctx.fillRect(field.x + 4, 4, field.width - 8, 2); ctx.fillRect(field.x + 4, h - 6, field.width - 8, 2); ctx.fillRect(field.x + 4, 4, 2, h - 8); ctx.fillRect(field.x + field.width - 6, 4, 2, h - 8);
+  }
+  private drawLegendaryBurst(ctx: CanvasRenderingContext2D, cx: number, cy: number, effect: NonNullable<ReturnType<LegendaryEffects['current']>>, gold: string, rayLayer?: { startMs: number; endMs: number; params: Record<string, number | string | boolean> }, particleLayer?: { startMs: number; endMs: number; params: Record<string, number | string | boolean> }): void {
+    const layer = rayLayer ?? particleLayer; if (!layer) return;
+    const age = effect.age - layer.startMs, duration = layer.endMs - layer.startMs, growth = Math.min(1, age / 240), shrink = age < duration * 0.55 ? 1 : Math.max(0, 1 - (age - duration * 0.55) / (duration * 0.45));
+    const radius = Math.floor((14 + 60 * growth) * shrink), alpha = age < 180 ? 1 : age < duration * 0.7 ? 0.85 : 0.42;
+    if (rayLayer) {
+      const count = Number(rayLayer.params.count ?? 8);
+      for (let i = 0; i < count; i++) {
+        const angle = i * Math.PI * 2 / count + Math.floor(age / Number(rayLayer.params.cadenceMs ?? 90)) * 0.035, outer = radius + (i % 2) * 7;
+        const x2 = Math.round(cx + Math.cos(angle) * outer), y2 = Math.round(cy + Math.sin(angle) * outer);
+        ctx.save(); ctx.globalAlpha = alpha * 0.68; ctx.fillStyle = i % 2 ? '#fff4bf' : gold;
+        let x = cx, y = cy; const dx = Math.abs(x2 - x), sx = x < x2 ? 1 : -1, dy = -Math.abs(y2 - y), sy = y < y2 ? 1 : -1; let err = dx + dy;
+        for (;;) { ctx.fillRect(x, y, 2, 2); if (x === x2 && y === y2) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } }
+        ctx.restore();
+      }
+    }
+    ctx.globalAlpha = alpha; ctx.fillStyle = '#fff4bf'; ctx.fillRect(cx - 5, cy - 5, 10, 10); ctx.fillStyle = gold; ctx.fillRect(cx - 2, cy - 2, 4, 4);
+    if (particleLayer) {
+      const count = Number(particleLayer.params.count ?? 28);
+      const particleAge = effect.age - particleLayer.startMs, particleDuration = particleLayer.endMs - particleLayer.startMs;
+      for (let i = 0; i < count; i++) {
+        const angle = effectRandom(effect.seed, i) * Math.PI * 2, speed = 0.035 + effectRandom(effect.seed, i + 80) * 0.07, t = Math.max(0, particleAge - 80), x = Math.round(cx + Math.cos(angle) * t * speed), y = Math.round(cy + Math.sin(angle) * t * speed + t * t * 0.000055), life = Math.max(0, 1 - t / (particleDuration * 0.9));
+        ctx.save(); ctx.globalAlpha = (life > 0.66 ? 1 : life > 0.33 ? 0.65 : 0.32) * alpha; ctx.fillStyle = i % 3 ? gold : '#fff4bf'; ctx.fillRect(x, y, i % 4 === 0 ? 2 : 1, i % 4 === 0 ? 2 : 1); ctx.restore();
+      }
+    }
+  }
+  private drawDropBeam(ctx: CanvasRenderingContext2D, cx: number, age: number, duration: number, gold: string, maxWidth: number): void {
+    if (age >= duration) return; const width = age < 120 ? 4 + Math.floor(age / 4) : age < Math.floor(duration * 0.53) ? maxWidth + 10 : Math.max(8, maxWidth + 10 - Math.floor((age - Math.floor(duration * 0.53)) / 15));
+    ctx.save(); ctx.globalAlpha = age < 300 ? 0.78 : age < 540 ? 0.55 : 0.25; ctx.fillStyle = gold; ctx.fillRect(cx - Math.floor(width / 2), 0, width, 104); ctx.globalAlpha *= 0.55; ctx.fillRect(cx - Math.floor(width / 2) - 4, 0, 3, 104); ctx.fillRect(cx + Math.floor(width / 2) + 1, 0, 3, 104); ctx.globalAlpha = 0.95; ctx.fillStyle = '#fff4bf'; ctx.fillRect(cx - 3, 0, 6, 104); ctx.restore();
+  }
+  private drawLegendaryDropCard(ctx: CanvasRenderingContext2D, cx: number, cy: number, gold: string, slot: string | undefined, size: number, staticMode: boolean, age = 0): void {
+    const x = Math.floor(cx - size / 2), y = Math.floor(cy - size / 2), pulse = staticMode ? 0 : Math.floor(age / 120) % 2;
+    ctx.save();
+    ctx.fillStyle = '#101720'; ctx.fillRect(x - 4, y - 4, size + 8, size + 8); ctx.fillStyle = '#735329'; ctx.fillRect(x, y, size, size); ctx.fillStyle = '#202c39'; ctx.fillRect(x + 3, y + 3, size - 6, size - 6);
+    ctx.fillStyle = pulse ? '#fff4bf' : gold; ctx.fillRect(x - 3, y - 3, size + 6, 2); ctx.fillRect(x - 3, y + size + 1, size + 6, 2); ctx.fillRect(x - 3, y - 3, 2, size + 6); ctx.fillRect(x + size + 1, y - 3, 2, size + 6);
+    ctx.fillStyle = staticMode || pulse ? gold : '#fff4bf'; ctx.fillRect(x - 5, y - 5, size + 10, 1); ctx.fillRect(x - 5, y + size + 4, size + 10, 1);
+    const icon = slot === 'armor' ? this.legendaryArmor : slot === 'charm' ? this.legendaryCharm : this.legendarySword, inset = Math.floor((size - 32) / 2);
+    if (icon?.complete && icon.naturalWidth) ctx.drawImage(icon, x + inset, y + inset, 32, 32);
+    else { ctx.fillStyle = gold; ctx.fillRect(cx - 2, y + inset, 4, 28); ctx.fillRect(cx - 7, y + inset + 16, 14, 4); }
+    ctx.fillStyle = '#fff4bf'; ctx.fillRect(cx - 2, y - 8, 4, 12); ctx.fillRect(cx - 6, y - 4, 12, 4); ctx.restore();
   }
   /**
    * Upgrade popups and stage/boss banners (ui.md §10, ui-tokens coreLoopFeedback). Everything is derived from the event log and

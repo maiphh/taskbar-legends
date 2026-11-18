@@ -65,7 +65,7 @@ Original game code is proprietary: Copyright (c) 2026 Mai Gia Phu. All rights re
 
 | Files | Source | Licence |
 |---|---|---|
-| `public/assets/vfx/pvfx-holy-smite/*`, `pvfx-treasure-glint/*` | PVFX Foundry 1.0.0, legacy sheets | CC0-1.0; licence retained at `public/assets/vfx/PVFX-Foundry-LICENSE.txt` |
+| `public/assets/vfx/pvfx-holy-smite/*`, `pvfx-treasure-glint/*`, `pvfx-crit-hit-gold/*` | PVFX Foundry 1.0.0, legacy sheets (Pixel VFX Studio / nerijs) | CC0-1.0; licence retained at `public/assets/vfx/PVFX-Foundry-LICENSE.txt` and alongside copied crit-hit sheet |
 | `public/assets/vfx/cs5475-explosion-gold-48/*` | CS5475 Free Pixel Effects | CC0-1.0; licence retained at `public/assets/vfx/CS5475-LICENSE.txt` |
 
 
