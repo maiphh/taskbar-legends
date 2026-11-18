@@ -1,4 +1,4 @@
-import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, stageConfig, ticksForSeconds } from './config';
+import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, stageConfig, statusEffectsConfig, ticksForSeconds } from './config';
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
@@ -11,6 +11,12 @@ import { ellipsize } from './text-fit';
 import { enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
+import { isStatusBoss } from './core/status-effects';
+import {
+  STATUS_GLYPH_IDS, STATUS_GOLD, STATUS_LIGHT, STATUS_MUTED,
+  compareStatusDisplay, drawDigit3x5, drawOverflowChip, drawStatusGlyph,
+  statusFrameFor, type StatusGlyphId,
+} from './core/status-icons';
 import { formationScreenX } from './core/turn/formation-view';
 import { actionBoundaries, sampleActionPresentation } from './core/turn/animation-timing';
 import { easeReturn } from './core/turn/presentation';
@@ -324,25 +330,27 @@ export class Renderer {
       }
       if (isLaneBoss) ctx.restore();
       if (unit.hp <= 0) continue;
-      // Boss uses the top-of-lane HP plate; skip the tiny per-unit bar.
-      if (isLaneBoss) continue;
       const hpWidth = unit.side === 'hero' ? 34 : 32, hpY = coreY + CONFIG.ui.unitHpBars.coreLocalY - depth;
-      ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
-      ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, hpWidth - 2, CONFIG.ui.unitHpBars.height - 2);
-      ctx.fillStyle = unit.side === 'hero' ? palette.green : palette.red; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, Math.round((hpWidth - 2) * unit.hp / unit.maxHp), CONFIG.ui.unitHpBars.height - 2);
-      {
-        ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY - 3, hpWidth, 2);
-        ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, hpWidth - 2, 2);
-        ctx.fillStyle = palette.gold; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, Math.round((hpWidth - 2) * gaugeRatio(unit.gauge)), 2);
-        if (unit.side === 'hero') {
-          const manaCap = unit.sourceId === 'mh2' ? 40 : ['wiz', 'mw3', 'ew2', 'mk2', 'mh3'].includes(unit.sourceId) ? 80 : 60;
-          const mana = Math.min(manaCap, unit.mana ?? 0);
-          ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY + CONFIG.ui.unitHpBars.height, hpWidth, 2);
-          ctx.fillStyle = '#182a38'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + CONFIG.ui.unitHpBars.height + 1, hpWidth - 2, 1);
-          ctx.fillStyle = mana >= manaCap ? '#63d6ff' : '#438bb4'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + CONFIG.ui.unitHpBars.height + 1, Math.round((hpWidth - 2) * mana / manaCap), 1);
+      // Boss uses the top-of-lane HP plate; skip the tiny per-unit bar, but still draw status icons.
+      if (!isLaneBoss) {
+        ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
+        ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, hpWidth - 2, CONFIG.ui.unitHpBars.height - 2);
+        ctx.fillStyle = unit.side === 'hero' ? palette.green : palette.red; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, Math.round((hpWidth - 2) * unit.hp / unit.maxHp), CONFIG.ui.unitHpBars.height - 2);
+        {
+          ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY - 3, hpWidth, 2);
+          ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, hpWidth - 2, 2);
+          ctx.fillStyle = palette.gold; ctx.fillRect(x - hpWidth / 2 + 1, hpY - 3, Math.round((hpWidth - 2) * gaugeRatio(unit.gauge)), 2);
+          if (unit.side === 'hero') {
+            const manaCap = unit.sourceId === 'mh2' ? 40 : ['wiz', 'mw3', 'ew2', 'mk2', 'mh3'].includes(unit.sourceId) ? 80 : 60;
+            const mana = Math.min(manaCap, unit.mana ?? 0);
+            ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY + CONFIG.ui.unitHpBars.height, hpWidth, 2);
+            ctx.fillStyle = '#182a38'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + CONFIG.ui.unitHpBars.height + 1, hpWidth - 2, 1);
+            ctx.fillStyle = mana >= manaCap ? '#63d6ff' : '#438bb4'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + CONFIG.ui.unitHpBars.height + 1, Math.round((hpWidth - 2) * mana / manaCap), 1);
+          }
         }
+        if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
       }
-      if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
+      this.drawStatusRow(ctx, state, unit, x, hpY);
     }
     if (bossBar) {
       const barX = bossBarX, barW = bossBarW, barY = bossBarY, barH = bossBarH;
@@ -453,15 +461,20 @@ export class Renderer {
     }
     const lifetime = ticksForSeconds(CONFIG.runtime.damageLabelSeconds), bucket = ticksForSeconds(CONFIG.runtime.damageCoalesceSeconds);
     const labelClock = this.lanePresentationTime(state);
-    const groups = new Map<string, { targetId: string; tick: number; amount: number; heal: boolean }>();
+    const statusDisplay = statusEffectsConfig()?.display;
+    const groups = new Map<string, { targetId: string; tick: number; amount: number; heal: boolean; dot: boolean }>();
     for (const event of state.events) {
       const data = event.data;
       const ageTicks = event.combatEncounter === state.encounter ? labelClock - (event.combatTick ?? event.tick) : null;
       if (ageTicks === null || ageTicks > lifetime || (data.type !== 'hit' && data.type !== 'heal')) continue;
       const eventTick = labelClock - ageTicks;
-      const key = `${data.targetId}:${data.type}:${Math.floor(eventTick / bucket)}`, old = groups.get(key);
+      const isDot = data.type === 'hit' && Boolean(data.dot);
+      const key = data.type === 'hit'
+        ? (isDot ? `${data.targetId}:dot:${Math.floor(eventTick / bucket)}` : `${data.targetId}:hit:${Math.floor(eventTick / bucket)}`)
+        : `${data.targetId}:heal:${Math.floor(eventTick / bucket)}`;
+      const old = groups.get(key);
       const amount = data.type === 'hit' ? data.damage : data.amount;
-      if (old) old.amount += amount; else groups.set(key, { targetId: data.targetId, tick: eventTick, amount, heal: data.type === 'heal' });
+      if (old) old.amount += amount; else groups.set(key, { targetId: data.targetId, tick: eventTick, amount, heal: data.type === 'heal', dot: isDot });
     }
     const counts = new Map<string, number>();
     for (const group of [...groups.values()].sort((a, b) => b.tick - a.tick)) {
@@ -472,7 +485,26 @@ export class Renderer {
       const y = Math.max(8, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
       const label = `${group.heal ? '+' : '-'}${group.amount}`;
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, BODY, true);
-      this.ui.text(ctx, label, x, y, group.heal ? palette.green : palette.gold, BODY, true);
+      const color = group.heal
+        ? (statusDisplay?.hotNumber ?? palette.green)
+        : group.dot ? (statusDisplay?.dotNumber ?? '#de7c80') : palette.gold;
+      this.ui.text(ctx, label, x, y, color, BODY, true);
+    }
+    // STUN / RESIST floating labels from presentation status events.
+    for (const event of state.events) {
+      const data = event.data;
+      if (data.type !== 'status' || (data.kind !== 'skip' && data.kind !== 'resist')) continue;
+      const ageTicks = event.combatEncounter === state.encounter ? labelClock - (event.combatTick ?? event.tick) : null;
+      if (ageTicks === null) continue;
+      const maxAge = data.kind === 'skip' ? ticksForSeconds(0.6) : ticksForSeconds(0.5);
+      if (ageTicks > maxAge) continue;
+      const unit = units.find(unit => unit.id === data.targetId); if (!unit || unit.hp <= 0) continue;
+      const text = data.kind === 'skip' ? 'STUN' : 'RESIST';
+      const color = data.kind === 'skip' ? STATUS_GOLD : STATUS_MUTED;
+      const x = this.position(unit, state);
+      const y = Math.max(8, baselineY - 56);
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, text, x + (dx ?? 0), y + (dy ?? 0), palette.ink, BODY, true);
+      this.ui.text(ctx, text, x, y, color, BODY, true);
     }
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
@@ -481,6 +513,72 @@ export class Renderer {
     this.lanePositions.endFrame();
     this.rendering = false; this.frameLaneTime = null;
   }
+  private drawStatusRow(ctx: CanvasRenderingContext2D, state: GameState, unit: Unit, x: number, hpY: number): void {
+    const config = statusEffectsConfig();
+    if (!config) return;
+    const display = config.display;
+    const iconPx = display.iconPx, gap = display.gapPx;
+    const maxVisible = isStatusBoss(unit) ? display.maxVisibleBoss : display.maxVisible;
+    type RowItem = {
+      glyph: StatusGlyphId; id: string; turnsLeft: number; stacks: number; appliedAtTick: number;
+      showCounter: boolean; flash: boolean; grey: boolean; pop: boolean;
+    };
+    const now = this.lanePresentationTime(state);
+    const reduced = this.ui.reducedMotion;
+    const items: RowItem[] = [];
+    const glyphSet = new Set<string>(STATUS_GLYPH_IDS);
+    for (const status of unit.statuses ?? []) {
+      if (status.targetId !== unit.id) continue;
+      const glyphId = (status.display === 'crushed' ? 'crushed' : status.id);
+      if (!glyphSet.has(glyphId)) continue;
+      const applied = state.events.filter(event =>
+        event.data.type === 'status' && event.data.targetId === unit.id && event.data.statusId === status.id
+        && (event.data.kind === 'apply' || event.data.kind === 'refresh' || event.data.kind === 'stack')
+        && event.combatEncounter === state.encounter).at(-1);
+      const age = applied ? now - (applied.combatTick ?? applied.tick) : 999;
+      items.push({
+        glyph: glyphId as StatusGlyphId, id: glyphId, turnsLeft: status.turnsLeft, stacks: status.stacks,
+        appliedAtTick: status.appliedAtTick ?? 0, showCounter: true,
+        flash: !reduced && age >= 0 && age < 2, pop: !reduced && age >= 0 && age < 2, grey: false,
+      });
+    }
+    if (unit.shield > 0 && unit.shieldUntilTick > presentationCombatTime(state)) {
+      items.push({
+        glyph: 'shield', id: 'shield', turnsLeft: 99, stacks: 1, appliedAtTick: unit.shieldUntilTick,
+        showCounter: false, flash: false, pop: false, grey: false,
+      });
+    }
+    items.sort((a, b) => compareStatusDisplay(
+      { id: a.id, turnsLeft: a.turnsLeft, appliedAtTick: a.appliedAtTick },
+      { id: b.id, turnsLeft: b.turnsLeft, appliedAtTick: b.appliedAtTick },
+    ));
+    const overflow = items.length > maxVisible ? items.length - (maxVisible - 1) : 0;
+    const visible = overflow > 0 ? items.slice(0, maxVisible - 1) : items.slice(0, maxVisible);
+    const chipW = overflow > 0 ? 7 : 0;
+    const rowW = visible.length * iconPx + Math.max(0, visible.length - 1) * gap + (overflow > 0 ? gap + chipW : 0);
+    const rowLeft = Math.round(x - rowW / 2);
+    const rowTop = Math.round(hpY - display.rowOffsetAboveHpPx);
+    let cursor = rowLeft;
+    for (const item of visible) {
+      const y = rowTop - (item.pop ? 1 : 0);
+      const colors = item.flash ? { frame: STATUS_LIGHT, fill: statusFrameFor(item.id).fill } : statusFrameFor(item.id);
+      drawStatusGlyph(ctx, item.glyph, cursor, y, colors);
+      if (item.showCounter && item.turnsLeft >= 1 && item.turnsLeft <= 9) {
+        const digitColor = item.turnsLeft === 1 ? (display.lastTurnDigit ?? STATUS_GOLD) : STATUS_LIGHT;
+        ctx.fillStyle = '#0d121b';
+        ctx.fillRect(cursor + 4, y + 2, 5, 7);
+        drawDigit3x5(ctx, item.turnsLeft, cursor + 5, y + 3, digitColor);
+      }
+      if (item.glyph === 'dot' && item.stacks >= 2) {
+        ctx.fillStyle = '#0d121b';
+        ctx.fillRect(cursor, y, 5, 7);
+        drawDigit3x5(ctx, item.stacks, cursor + 1, y + 1, STATUS_LIGHT);
+      }
+      cursor += iconPx + gap;
+    }
+    if (overflow > 0) drawOverflowChip(ctx, overflow, cursor, rowTop);
+  }
+
   private drawLegendaryEffect(ctx: CanvasRenderingContext2D, state: GameState, field: { x: number; width: number }, coreY: number): void {
     const reducedMotion = this.ui.reducedMotion;
     const effect = this.legendaryEffects.current(performance.now(), reducedMotion); if (!effect) return;
