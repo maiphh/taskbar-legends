@@ -30,6 +30,7 @@ export interface GameDebug {
   /** Pins the reveal / welcome presentation clock to an absolute ms value; null = live performance.now(). */
   freezeClock(ms: number | null): void;
   debugShowcase(kind: 'skill' | 'drop'): void;
+  debugShowcaseSeek(ms: number): void;
   getAudio(): ReturnType<AudioAdapter['debug']>;
   /** Applies an offline absence to the running state (like a restore) and shows the welcome-back panel. */
   away(ms: number): Record<string, unknown>;

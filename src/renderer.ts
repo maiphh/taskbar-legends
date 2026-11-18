@@ -2,7 +2,7 @@ import { CONFIG, TICK_MS, heroConfig, stageConfig, ticksForSeconds } from './con
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
-import { BODY } from './font';
+import { BODY, fontFor, loadFonts } from './font';
 import { bannerFrame, popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
@@ -18,6 +18,7 @@ import { stepCombatCamera, type CombatCameraInput } from './party-camera';
 import { compactLaneLayout } from './compact-lane-layout';
 import { LegendaryEffects } from './legendary-effects';
 import { consumeNewEvents, triggerLegendaryEvent } from './legendary-events';
+import { effectRandom } from './legendary-effects';
 export interface HitRegion { kind: 'hud' | 'panel'; id: string; x: number; y: number; width: number; height: number }
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -29,6 +30,7 @@ export class Renderer {
   private cameraTranslation = 0;
   private frameCamera: number | null = null;
   private rendering = false;
+  private pixelFontReady = false;
   readonly atlases = new AtlasLibrary();
   readonly ui: PixelUI;
   readonly legendaryEffects = new LegendaryEffects();
@@ -42,6 +44,7 @@ export class Renderer {
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Canvas 2D is unavailable');
     this.ctx = ctx; this.ui = new PixelUI(this.atlases, controls);
+    void loadFonts().then(() => document.fonts.load('700 16px GamePixel')).then(() => { this.pixelFontReady = true; this.ui.onRedraw?.(); });
     this.holySheet = this.loadVfx('holy-smite'); this.treasureSheet = this.loadVfx('treasure-glint'); this.dropBurstSheet = this.loadVfx('cs5475-explosion-gold-48');
   }
   private loadVfx(name: string): HTMLImageElement { const image = new Image(); image.src = new URL(`${import.meta.env.BASE_URL}assets/vfx/${name.startsWith('cs5475-') ? name : `pvfx-${name}`}/sprites.png`, window.location.href).href; image.onerror = () => { image.dataset.unavailable = 'true'; }; return image; }
@@ -53,6 +56,7 @@ export class Renderer {
     const caster = state.party[0] ? { ...state.party[0], id: 'hero-mh3', sourceId: 'mh3', side: 'hero' as const } : undefined;
     triggerLegendaryEvent(event, caster ? [caster] : state.party, state.enemies, (effectKind, label) => this.legendaryEffects.trigger(effectKind, performance.now(), label));
   }
+  seekLegendaryShowcase(ms: number): void { this.legendaryEffects.seek(ms); }
   getHitRegions(): HitRegion[] {
     const origin = this.canvas.getBoundingClientRect();
     return this.ui.sourceRegions().map(rect => ({ ...rect, x: origin.left + rect.x * this.zoom / this.dpr, y: origin.top + rect.y * this.zoom / this.dpr, width: rect.width * this.zoom / this.dpr, height: rect.height * this.zoom / this.dpr }));
@@ -136,9 +140,14 @@ export class Renderer {
     if (this.frameCamera !== null) return this.frameCamera;
     const input = this.cameraInput(state, field) ?? { fieldWidth: field.width, laneWidth: CONFIG.sim.laneWidthPx, partyXs: [], threats: [] };
     const next = stepCombatCamera(this.cameraTranslation, input);
-    this.cameraTranslation = next;
-    this.frameCamera = next;
-    return next;
+    const effect = this.legendaryEffects.current(performance.now(), this.ui.reducedMotion);
+    const hitstop = effect?.layers.find(layer => layer.type === 'hitstop');
+    if (hitstop && effect && effect.age < Number(hitstop.params.holdMs ?? 0)) { this.frameCamera = this.cameraTranslation; return this.cameraTranslation; }
+    const factor = hitstop ? Number(hitstop.params.slowFactor ?? 1) : 1;
+    const interpolated = this.cameraTranslation + (next - this.cameraTranslation) * Math.max(0, Math.min(1, factor));
+    this.cameraTranslation = interpolated;
+    this.frameCamera = interpolated;
+    return interpolated;
   }
   private edgeMarkers(state: GameState, field: { x: number; width: number }): { threatId: string; worldX: number; screenX: number; edge: 'left' | 'right'; label: string }[] {
     const camera = this.cameraLeft(state, field), markers: { threatId: string; worldX: number; screenX: number; edge: 'left' | 'right'; label: string }[] = [];
@@ -369,17 +378,19 @@ export class Renderer {
     this.rendering = false;
   }
   private drawLegendaryEffect(ctx: CanvasRenderingContext2D, field: { x: number; width: number }, coreY: number): void {
-    const effect = this.legendaryEffects.current(performance.now()); if (!effect) return;
+    const effect = this.legendaryEffects.current(performance.now(), this.ui.reducedMotion); if (!effect) return;
     const reducedMotion = this.ui.reducedMotion;
-    const cx = field.x + Math.floor(field.width / 2), cy = coreY + 30, progress = effect.age / (effect.kind === 'skill' ? 1100 : 1000);
+    const cx = field.x + Math.floor(field.width / 2), cy = coreY + 30, progress = effect.age / effect.spec.durationMs;
     const gold = CONFIG.ui.rarity.legendary.frame;
     ctx.save(); ctx.imageSmoothingEnabled = false;
+    const shake = effect.layers.find(layer => layer.type === 'shake');
+    if (shake) { const offset = Math.floor(effectRandom(effect.seed, Math.floor(effect.age / 45)) * 5) - 2; ctx.translate(offset * Number(shake.params.intensity ?? 1), 0); }
     if (reducedMotion) {
-      const alpha = Math.max(0, 1 - effect.age / 450);
+      const alpha = 1;
       ctx.globalAlpha = alpha; ctx.fillStyle = '#101c27'; ctx.fillRect(cx - 112, cy - 37, 224, 24);
       ctx.strokeStyle = gold; ctx.strokeRect(cx - 112.5, cy - 37.5, 225, 25);
       ctx.fillStyle = gold; ctx.fillRect(cx - 4, cy - 4, 9, 9);
-      this.ui.text(ctx, effect.label, cx - Math.min(104, effect.label.length * 3.5), cy - 31, '#ffe38c', 16, true);
+      this.drawLegendaryBanner(ctx, effect.label, cx, cy, gold);
     } else if (effect.kind === 'skill') {
       const radius = 10 + Math.floor(progress * 42), alpha = Math.max(0, 1 - progress);
       if (!this.ui.reducedMotion && !this.compact) { ctx.globalAlpha = alpha * 0.22; ctx.fillStyle = gold; ctx.fillRect(field.x, 0, field.width, coreY + 54); }
@@ -391,7 +402,7 @@ export class Renderer {
         ctx.drawImage(this.holySheet, frame * 80, 0, 80, 120, cx - 24, cy - 50, 48, 72);
       }
       ctx.globalAlpha = alpha; ctx.fillStyle = '#101c27'; ctx.fillRect(cx - 112, cy - 37, 224, 24); ctx.strokeStyle = gold; ctx.strokeRect(cx - 112.5, cy - 37.5, 225, 25);
-      this.ui.text(ctx, effect.label, cx - Math.min(104, effect.label.length * 3.5), cy - 31, '#ffe38c', 16, true);
+      this.drawLegendaryBanner(ctx, effect.label, cx, cy, gold);
     } else {
       const alpha = Math.max(0, 1 - progress), radius = 12 + Math.floor(progress * 38);
       ctx.globalAlpha = alpha * 0.7; ctx.strokeStyle = gold; ctx.lineWidth = 2;
@@ -404,8 +415,35 @@ export class Renderer {
         const frame = Math.min(11, Math.floor(effect.age / 84)); ctx.globalAlpha = alpha;
         ctx.drawImage(this.dropBurstSheet, frame * 48, 0, 48, 48, cx - 24, cy - 24, 48, 48);
       }
+      this.drawLegendaryBanner(ctx, effect.label, cx, cy, gold);
+    }
+    for (const layer of effect.layers) {
+      const intensity = Number(layer.params.intensity ?? 1);
+      if (layer.type === 'particles' || layer.type === 'rays') {
+        const count = Number(layer.params.count ?? 8), alpha = Math.max(0, 1 - progress);
+        for (let i = 0; i < count; i++) {
+          const angle = effectRandom(effect.seed, i) * Math.PI * 2, distance = 8 + Math.floor(effectRandom(effect.seed, i + 64) * (effect.age / 20 + 30));
+          const x = Math.round(cx + Math.cos(angle) * distance), y = Math.round(cy + Math.sin(angle) * distance * 0.55);
+          ctx.globalAlpha = alpha * (layer.type === 'rays' ? 0.45 : 0.8); ctx.fillStyle = i % 2 ? '#fff4bf' : gold;
+          ctx.fillRect(x, y, layer.type === 'rays' ? 2 : 3, layer.type === 'rays' ? 5 : 3);
+        }
+      } else if (layer.type === 'flash') {
+        ctx.globalAlpha = intensity * Math.max(0, 1 - effect.age / Math.max(1, layer.endMs)); ctx.fillStyle = '#fff4bf';
+        ctx.fillRect(field.x, 0, field.width, 3); ctx.fillRect(field.x, coreY + 51, field.width, 3);
+        ctx.fillRect(field.x, 0, 3, coreY + 54); ctx.fillRect(field.x + field.width - 3, 0, 3, coreY + 54);
+      } else if (layer.type === 'beam') {
+        ctx.globalAlpha = 0.18 * Math.max(0, 1 - effect.age / layer.endMs); ctx.fillStyle = gold; ctx.fillRect(cx - 3, 0, 6, cy);
+      } else if (layer.type === 'borderPulse') {
+        ctx.globalAlpha = 0.6 * intensity; ctx.strokeStyle = gold; ctx.lineWidth = 2; ctx.strokeRect(field.x + 1, 1, field.width - 2, coreY + 51);
+      }
     }
     ctx.restore();
+  }
+  private drawLegendaryBanner(ctx: CanvasRenderingContext2D, label: string, cx: number, cy: number, gold: string): void {
+    if (!this.pixelFontReady) return;
+    const x = Math.round(cx - 112); ctx.fillStyle = '#101c27'; ctx.fillRect(x, cy - 37, 224, 24); ctx.strokeStyle = gold; ctx.strokeRect(x + 0.5, cy - 36.5, 223, 23);
+    ctx.save(); ctx.font = `700 16px ${fontFor(label, 16, true, true)}`; ctx.textBaseline = 'top'; ctx.fillStyle = '#ffe38c';
+    const width = ctx.measureText(label).width; ctx.fillText(label, Math.round(cx - Math.min(104, width / 2)), cy - 31); ctx.restore();
   }
   /**
    * Upgrade popups and stage/boss banners (ui.md §10, ui-tokens coreLoopFeedback). Everything is derived from the event log and

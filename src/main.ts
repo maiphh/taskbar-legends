@@ -40,7 +40,7 @@ const notice = element('notice'), liveStatus = element('live-status');
 const legendaryToast = element('legendary-toast');
 let legendaryToastTimer = 0;
 function showLegendaryToast(message: string): void {
-  legendaryToast.textContent = message; legendaryToast.hidden = false;
+  legendaryToast.textContent = message; legendaryToast.hidden = false; legendaryToast.classList.remove('legendary-pop'); void legendaryToast.offsetWidth; legendaryToast.classList.add('legendary-pop');
   window.clearTimeout(legendaryToastTimer); legendaryToastTimer = window.setTimeout(() => { legendaryToast.hidden = true; }, 4000);
 }
 const recovery = element('save-recovery'), exportFailed = element('export-failed-save') as HTMLButtonElement, discardFailed = element('discard-failed-save') as HTMLButtonElement;
@@ -333,6 +333,7 @@ const debug: GameDebug = {
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
   debugShowcase: kind => { renderer.debugLegendaryShowcase(kind, state); if (kind === 'drop') { const message = 'Legendary drop: Legendary Weapon'; showNotice(message); showLegendaryToast(message); managementView?.presentLegendaryDrop(++legendaryNotificationSeq, message); audio.play('gacha_legendary_sting'); } render(); },
+  debugShowcaseSeek: ms => { renderer.seekLegendaryShowcase(ms); render(); },
   getAudio: () => audio.debug(),
   away: ms => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };

@@ -27,9 +27,9 @@ export function loadFonts(): Promise<void> {
   return loading;
 }
 
-export function fontFor(value: string, size: number, bold: boolean): FontName {
+export function fontFor(value: string, size: number, bold: boolean, pixel = false): FontName {
   void value; void size; void bold;
-  return CSS_FONT_STACK;
+  return pixel ? 'GamePixel, GameSymbols, monospace' : CSS_FONT_STACK;
 }
 /** Noto's native metrics do not need the old Galmuri slot correction. */
 export function slotOffsetY(size: number, bold: boolean): number { void size; void bold; return 0; }

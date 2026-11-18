@@ -296,7 +296,7 @@ export class ManagementView {
     if (this.closed || seq <= this.lastLegendaryDropSeq) return;
     this.lastLegendaryDropSeq = seq;
     const toast = this.root.querySelector<HTMLElement>('.px-legendary-toast'); if (!toast) return;
-    toast.textContent = message; toast.hidden = false;
+    toast.textContent = message; toast.hidden = false; toast.classList.remove('legendary-pop'); void toast.offsetWidth; toast.classList.add('legendary-pop');
     window.setTimeout(() => { toast.hidden = true; }, 4000);
   }
   /** Debug/shot hook: the reveal in this menu, or null. */

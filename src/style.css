@@ -12,6 +12,10 @@ canvas { display: block; image-rendering: pixelated; pointer-events: none; }
 #notice:empty { display: none; }
 #notice.legendary-notice { padding: 5px 8px; border: 2px solid #f0cf7f; outline: 1px solid #101c27; color: #fff0b1; background: #302719; }
 #legendary-toast:not([hidden]) { position:fixed; z-index:100; top:64px; right:16px; max-width:min(420px,calc(100vw - 32px)); padding:10px 14px; border:3px solid #e9bd68; outline:2px solid #101820; color:#fff0b1; background:#302719; box-shadow:inset 0 0 0 2px #735329; font:700 14px/20px var(--game-font); pointer-events:none; }
+.legendary-pop { animation: legendary-pop-in 220ms steps(4,end), legendary-border-pulse 800ms steps(2,end) infinite; }
+@keyframes legendary-pop-in { from { opacity:0; transform:scale(.85); } to { opacity:1; transform:scale(1); } }
+@keyframes legendary-border-pulse { 50% { box-shadow:inset 0 0 0 2px #fff0b1,0 0 0 2px #e9bd68; } }
+@media (prefers-reduced-motion: reduce) { .legendary-pop { animation:none !important; } }
 #save-recovery:not([hidden]) { position: fixed; z-index: 20; inset: 8px; padding: 16px; overflow: auto; background: #17212d; border: 2px solid #f2e9cf; color: #f2e9cf; font: 14px system-ui, sans-serif; }
 body.compact-shell #app { overflow:hidden; }
 body.compact-shell #controls { pointer-events:none; }
@@ -721,6 +725,7 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .management-status:not(:empty) { display:block; position:absolute; z-index:30; left:96px; right:16px; top:auto; bottom:64px; width:auto; height:auto; min-height:32px; padding:8px 12px; overflow:visible; white-space:normal; background:#202c39; border:1px solid #536276; pointer-events:none; }
 .px-menu[data-layout="v2"] .management-status[data-quiet="true"] { position:absolute; width:1px; height:1px; min-height:0; left:-10000px; right:auto; bottom:auto; padding:0; border:0; clip:rect(0,0,0,0); overflow:hidden; white-space:nowrap; }
 .px-menu[data-layout="v2"] .px-legendary-toast:not([hidden]) { position:absolute; z-index:40; top:64px; right:16px; max-width:360px; padding:8px 12px; color:#ffe38c; background:#202c39; border:2px solid var(--px-gold,#e9bd68); box-shadow:2px 2px 0 #101820; font:12px/18px var(--game-font); pointer-events:none; }
+.px-legendary-toast.legendary-pop { animation: legendary-pop-in 220ms steps(4,end), legendary-border-pulse 800ms steps(2,end) infinite; }
 .px-menu[data-layout="v2"][data-preset="960"] .management-status:not(:empty) { left:16px; right:16px; bottom:128px; }
 .px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-help-row { display:flex; min-height:20px; font-size:11px; }
 .px-menu[data-layout="v2"] .px-equip-plate { background-color:transparent; }
