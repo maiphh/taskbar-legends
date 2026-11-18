@@ -64,17 +64,41 @@ export function retry(state: GameState, manual: boolean): void {
   emit(state, { type: 'retry', stage: state.progress.stage, manual });
   beginEncounter(state);
 }
+/** Seconds the wipe banner stays on the farming status line after a non-boss loss. */
+const WIPE_BANNER_SEC = 8;
+/** Strip widths below this use the short wipe form (`Wiped 1-9 · 2:00`). */
+export const WIPE_STATUS_COMPACT_WIDTH = 640;
+
+function formatRetryClock(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+/** Wipe banner for the farming status line, or null when the window has expired / no wipe. */
+export function wipeStatusText(state: GameState, compact = false): string | null {
+  const progress = state.progress;
+  const loss = state.lastLoss;
+  if (progress.kind !== 'FARMING' || !loss || loss.cause !== 'wipe') return null;
+  if (state.tick - loss.tick >= ticksForSeconds(WIPE_BANNER_SEC)) return null;
+  const seconds = Math.max(0, Math.ceil((progress.retryAtTick - state.tick) / CONFIG.sim.ticksPerSecond));
+  const clock = formatRetryClock(seconds);
+  const stage = stageName(loss.stage);
+  return compact ? `Wiped ${stage} · ${clock}` : `Wiped on ${stage} · retry ${clock}`;
+}
+
 function lose(state: GameState): void {
   const progress = state.progress;
   const boss = progress.kind === 'BOSS_FIGHT';
   state.stats.losses += 1;
   if (boss) state.stats.bossFailures += 1;
   emit(state, { type: 'loss', stage: progress.stage, boss });
-  if (boss) state.progress = { kind: 'BOSS_READY', stage: state.highestCleared, bossStage: progress.stage,
-    failedPower: state.attemptPower, bossLosses: progress.bossLosses + 1 };
-  else if (progress.kind === 'PUSHING') {
+  if (boss) {
+    delete state.lastLoss;
+    state.progress = { kind: 'BOSS_READY', stage: state.highestCleared, bossStage: progress.stage,
+      failedPower: state.attemptPower, bossLosses: progress.bossLosses + 1 };
+  } else if (progress.kind === 'PUSHING') {
     state.retryFailures += 1;
     const backoff = CONFIG.progression.retryBackoff[Math.min(state.retryFailures - 1, CONFIG.progression.retryBackoff.length - 1)] ?? CONFIG.progression.retryIntervalSec;
+    state.lastLoss = { stage: progress.stage, tick: state.tick, cause: 'wipe' };
     state.progress = { kind: 'FARMING', stage: Math.max(1, state.highestCleared), failedStage: progress.stage,
       retryAtTick: state.tick + ticksForSeconds(backoff), failTick: state.tick, failedPower: state.attemptPower, failures: state.retryFailures };
   }
@@ -83,6 +107,7 @@ function lose(state: GameState): void {
   rest(state, 'encounter');
 }
 function awardClear(state: GameState, duration: number, nativeDuration = duration): void {
+  delete state.lastLoss;
   const stage = stageConfig(state.progress.stage);
   // At this point the full encounter is settled (including farmPad); record immutable
   // entry stats before XP, drops, or progression mutate the current account.
@@ -233,7 +258,7 @@ export function bossSecondsRemaining(state: GameState): number | null {
   if (timeoutSec === null || state.phase.kind === 'farmPad' || (state.phase.kind === 'rest' && state.phase.next === 'encounter')) return null;
   return Math.max(0, Math.ceil(timeoutSec - (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond));
 }
-export function statusText(state: GameState): string {
+export function statusText(state: GameState, options: { compact?: boolean } = {}): string {
   const progress = state.progress;
   switch (progress.kind) {
     case 'PUSHING': return `Pushing ${stageName(progress.stage)}`;
@@ -241,8 +266,10 @@ export function statusText(state: GameState): string {
     case 'BOSS_READY': return `Boss ${stageName(progress.bossStage)} ${progress.bossLosses ? 'failed, tap to retry' : 'ready, click to fight'}`;
     case 'COMPLETE': return `Campaign clear · Farming ${stageName(progress.stage)}`;
     case 'FARMING': {
+      const wipe = wipeStatusText(state, options.compact === true);
+      if (wipe) return wipe;
       const seconds = Math.max(0, Math.ceil((progress.retryAtTick - state.tick) / CONFIG.sim.ticksPerSecond));
-      return `Farming ${stageName(progress.stage)}, next try in ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+      return `Farming ${stageName(progress.stage)}, next try in ${formatRetryClock(seconds)}`;
     }
     default: { const exhaustive: never = progress; return exhaustive; }
   }

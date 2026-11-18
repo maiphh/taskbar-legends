@@ -2,7 +2,7 @@
 import { CONFIG, heroConfig, stageConfig, ticksForSeconds } from '../src/config';
 import { beginEncounter, damage } from '../src/core/combat';
 import { blankEquipment, chest, drawHero, grantXp, heroStats, partyPower, pull, upgrade, upgradeCost } from '../src/core/economy';
-import { bossSecondsRemaining, createState, input, load, snapshot, step } from '../src/core/game';
+import { bossSecondsRemaining, createState, input, load, snapshot, statusText, step, wipeStatusText } from '../src/core/game';
 import { parseState } from '../src/core/model';
 import { getPartyHeroDefinition } from '../src/core/party-definitions';
 import type { GameState } from '../src/core/model';
@@ -145,6 +145,49 @@ describe('progression, retry and boss gates', () => {
     step(state, deadline - state.tick - 1); expect(state.stats.retries).toBe(0);
     step(state); expect(state.stats.retries).toBe(1);
     expect(state.events.find(event => event.data.type === 'retry')?.tick).toBe(deadline);
+  });
+  it('shows a wipe banner for 8 s after a non-boss loss, then the farming countdown', () => {
+    const state = failedFrontier(9);
+    expect(state.progress.kind).toBe('FARMING');
+    if (state.progress.kind !== 'FARMING') throw new Error('Fixture');
+    expect(state.lastLoss).toEqual({ stage: 9, tick: state.tick, cause: 'wipe' });
+    expect(statusText(state)).toBe('Wiped on 1-9 · retry 2:00');
+    expect(statusText(state, { compact: true })).toBe('Wiped 1-9 · 2:00');
+    expect(wipeStatusText(state)).toBe('Wiped on 1-9 · retry 2:00');
+    const saved = load(snapshot(state));
+    expect(saved.lastLoss).toEqual(state.lastLoss);
+    expect(statusText(saved)).toBe('Wiped on 1-9 · retry 2:00');
+    // Freeze the farm rest so the banner window can expire without an auto-retry.
+    state.phase = { kind: 'rest', next: 'encounter', remainingTicks: ticksForSeconds(200) };
+    step(state, ticksForSeconds(8) - 1);
+    expect(statusText(state)).toMatch(/^Wiped on 1-9 · retry /);
+    step(state);
+    expect(wipeStatusText(state)).toBeNull();
+    expect(statusText(state)).toMatch(/^Farming 1-8, next try in /);
+    expect(state.lastLoss).toEqual({ stage: 9, tick: expect.any(Number), cause: 'wipe' });
+  });
+  it('clears lastLoss on the next clear and leaves boss-fail copy unchanged', () => {
+    const state = failedFrontier(8);
+    expect(statusText(state)).toBe('Wiped on 1-8 · retry 2:00');
+    input(state, { type: 'retry' });
+    forceClear(state);
+    expect(state.lastLoss).toBeUndefined();
+    expect(state.progress).toEqual({ kind: 'PUSHING', stage: 9 });
+    expect(statusText(state)).toBe('Pushing 1-9');
+    const chapterOne = stageConfig(10);
+    if (!chapterOne.isBoss) throw new Error('expected boss stage');
+    const boss = fixtureState();
+    boss.highestCleared = 9;
+    boss.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 };
+    beginEncounter(boss);
+    for (const unit of [...boss.party, ...boss.enemies]) { unit.hp = unit.maxHp = 1_000_000; unit.atk = 1; }
+    boss.wave = chapterOne.waves.length;
+    boss.stageStartedTick = 0;
+    boss.tick = ticksForSeconds(chapterOne.timeoutSec);
+    step(boss);
+    expect(boss.progress.kind).toBe('BOSS_READY');
+    expect(boss.lastLoss).toBeUndefined();
+    expect(statusText(boss)).toBe('Boss 1-10 failed, tap to retry');
   });
   it('backs off repeated frontier failures to 240/480/600 seconds and resets on clear', () => {
     const state = failedFrontier();
