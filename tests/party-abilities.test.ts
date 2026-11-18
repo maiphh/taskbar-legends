@@ -36,8 +36,9 @@ describe('party-v2 common impact resolution', () => {
     banner.action = { state: 'windup', kind: 'heal', targetId: target.id, startTick: 0, impactTick: 5, abilityId: 'banner-buff', delivery: 'cast' };
     target.action = { state: 'windup', kind: 'attack', targetId: enemy.id, startTick: 0, impactTick: 5, abilityId: 'melee-cleave-strike', delivery: 'leap' };
     for (let i = 0; i < 5; i += 1) { state.tick += 1; partyCombatTick(state); }
-    const buff = state.partyEffects?.find(effect => effect.group === 'party-atk-buff' && effect.targetId === target.id);
-    expect(buff).toMatchObject({ sourceId: banner.id, magnitude: 0.15, expiresAtTick: 85 });
+    const buff = target.statuses?.find(status => status.id === 'atkUp');
+    // Same-tick dual impact: melee turn-end ticks the freshly applied ATK Up (2 → 1).
+    expect(buff).toMatchObject({ sourceId: banner.id, magnitude: 0.15, turnsLeft: 1 });
     expect(banner.mana).toBe(0);
     const damage = state.events.find(event => event.data.type === 'hit' && event.data.attackerId === target.id && event.data.targetId === enemy.id);
     expect(damage?.data.type === 'hit' ? damage.data.damage : 0).toBe(Math.round(target.atk * 1.15));
@@ -399,10 +400,11 @@ describe('party-v2 common impact resolution', () => {
     state.enemies = [target]; target.x = weakener.x; target.hp = 10000; target.maxHp = 10000; hold(target);
     const cast = (): void => {
       weakener.mana = 60; weakener.partyCooldowns = { weaken: 0 }; weakener.action = { state: 'idle' }; weakener.statuses = []; weakener.gauge = 10000;
-      step(state); for (let i = 0; i < 100 && !state.partyEffects?.some(effect => effect.targetId === target.id && effect.group === 'enemy-atk-weaken'); i += 1) step(state);
+      step(state); for (let i = 0; i < 100 && !target.statuses?.some(status => status.id === 'atkDown'); i += 1) step(state);
     };
     cast();
-    expect(state.partyEffects?.some(effect => effect.targetId === target.id && effect.group === 'enemy-atk-weaken')).toBe(true);
+    expect(target.statuses?.some(status => status.id === 'atkDown')).toBe(true);
+    expect(target.statuses?.some(status => status.id === 'defDown')).toBe(true);
     expect(target.procCounters?.firstWeakenShield).toBeUndefined();
     expect(weakener.shield).toBe(0);
     expect(state.events.filter(event => event.data.type === 'skill' && event.data.unitId === weakener.id && event.data.skill === 'weaken')).toHaveLength(1);
