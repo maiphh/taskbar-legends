@@ -2,7 +2,7 @@ import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, stageConfig, statusEffectsC
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
-import { BODY, loadFonts } from './font';
+import { BODY, SMALL, loadFonts } from './font';
 import { bannerFrame, popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
@@ -12,6 +12,7 @@ import { enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
 import { isStatusBoss } from './core/status-effects';
+import { skillShortName } from './skill-names';
 import {
   STATUS_GLYPH_IDS, STATUS_GOLD, STATUS_LIGHT, STATUS_MUTED,
   compareStatusDisplay, drawDigit3x5, drawOverflowChip, drawStatusGlyph,
@@ -298,6 +299,11 @@ export class Renderer {
     const unitHpBaseY = coreY + CONFIG.ui.unitHpBars.coreLocalY;
     const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
+    const turnActor = units.find(unit => {
+      const action = unit.action;
+      return unit.hp > 0 && action && (action.state === 'windup' || action.state === 'recovery');
+    });
+    const dimOthers = !!turnActor && !this.ui.reducedMotion;
     for (const unit of units) {
       const x = this.position(unit, state);
       const depth = unit.side === 'hero' ? unit.slot * 4 : 0;
@@ -315,19 +321,29 @@ export class Renderer {
       const flip = anim.returning ? unit.side === 'hero' : unit.facing === -1;
       const bossScale = unit.boss && enemyDef?.scale ? Math.max(1, Math.round(enemyDef.scale)) : 1;
       const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
+      const isTurnActor = turnActor?.id === unit.id;
       if (isLaneBoss && enemyDef?.outline) {
         // Ground mark only; tint/outline live on the sprite itself.
         ctx.fillStyle = enemyDef.outline;
         ctx.fillRect(Math.round(x - 18 * bossScale), unitBaseline - 2, Math.round(36 * bossScale), 3);
       }
+      if (isTurnActor) {
+        // 2 px role-coloured floor under the acting sprite (windup or recovery).
+        // Drawn after the lane-boss mark so the full 2 px stays visible under a boss windup.
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x - 16 * bossScale), unitBaseline, Math.round(32 * bossScale), 2);
+      }
       // Plate is painted after units, so scale-2 bosses stay unclipped and read as large.
       const tint = isLaneBoss ? enemyDef?.tint : undefined;
       const outline = isLaneBoss ? enemyDef?.outline : undefined;
+      const dimSprite = dimOthers && !isTurnActor && unit.hp > 0;
+      if (dimSprite) { ctx.save(); ctx.globalAlpha = 0.7; }
       if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline)) {
         const w = unit.boss ? view.bossWidth * bossScale : view.heroWidth, h = unit.boss ? view.bossHeight * bossScale : view.heroHeight;
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : (enemyDef?.tint ?? color);
         ctx.fillRect(x - w / 2, unitBaseline - h, w, h);
       }
+      if (dimSprite) ctx.restore();
       if (unit.hp <= 0) continue;
       const hpWidth = unit.side === 'hero' ? 34 : 32;
       // Boss status icons hang just under the plate; party bars keep their usual ceiling slot.
@@ -353,6 +369,9 @@ export class Renderer {
         if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
       }
       this.drawStatusRow(ctx, state, unit, x, hpY);
+    }
+    if (turnActor && turnActor.action?.state === 'windup') {
+      this.drawTurnSkillName(ctx, state, turnActor, baselineY, bossPlateBottom);
     }
     if (bossBar) {
       const barX = bossBarX, barW = bossBarW, barY = bossBarY, barH = bossBarH;
@@ -515,6 +534,43 @@ export class Renderer {
     this.drawLegendaryEffect(ctx, state, field, coreY);
     this.lanePositions.endFrame();
     this.rendering = false; this.frameLaneTime = null;
+  }
+  /** One-line skill callout above a windup actor; skipped for lane bosses and while a legendary skill showcase owns the strip. */
+  private drawTurnSkillName(ctx: CanvasRenderingContext2D, state: GameState, actor: Unit, baselineY: number, bossPlateBottom: number): void {
+    if (actor.boss && isBossEnemyId(actor.sourceId)) return;
+    const showcase = this.legendaryEffects.current(performance.now(), this.ui.reducedMotion);
+    if (showcase?.kind === 'skill') return;
+    const name = skillShortName(actor.action && 'abilityId' in actor.action ? actor.action.abilityId : undefined);
+    if (!name) return;
+    const depth = actor.side === 'hero' ? actor.slot * 4 : 0;
+    const unitBaseline = baselineY - depth;
+    const x = this.position(actor, state);
+    const field = this.field();
+    const color = actor.side === 'hero'
+      ? CONFIG.view.roleColors[heroConfig(actor.sourceId).role]
+      : CONFIG.view.enemyColors[getPartyEnemyDefinition(actor.sourceId)?.visualKind ?? 'grunt'];
+    const y = Math.max(bossPlateBottom + 2, unitBaseline - 54);
+    // Clamp into the field with 1 px for the ink outline so rear-slot names (x≈20) stay fully visible.
+    const clampNameX = (width: number): number => {
+      const minX = field.x + 1;
+      const maxX = field.x + field.width - 1 - Math.ceil(width);
+      return Math.max(minX, Math.min(maxX, Math.round(x - width / 2)));
+    };
+    if (!this.pixelFontReady) {
+      const width = this.ui.measureText(name, SMALL, true);
+      this.ui.text(ctx, name, clampNameX(width), y, color, SMALL, true);
+      return;
+    }
+    ctx.save();
+    ctx.font = `700 ${SMALL}px "Galmuri11", monospace`;
+    ctx.textBaseline = 'top';
+    const width = ctx.measureText(name).width;
+    const tx = clampNameX(width);
+    ctx.fillStyle = CONFIG.ui.palette.ink;
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as const) ctx.fillText(name, tx + dx, y + dy);
+    ctx.fillStyle = color;
+    ctx.fillText(name, tx, y);
+    ctx.restore();
   }
   private drawStatusRow(ctx: CanvasRenderingContext2D, state: GameState, unit: Unit, x: number, hpY: number): void {
     const config = statusEffectsConfig();

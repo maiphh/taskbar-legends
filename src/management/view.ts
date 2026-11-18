@@ -14,6 +14,7 @@ import { ManagementTooltip } from './tooltip';
 import { autoEquipBest, equipList } from './equip-model';
 import { shouldRunManagementAnimation } from './animation';
 import { roleIconName } from './role-icons';
+import { BASIC_SKILL_NAMES, activeSkillName } from '../skill-names';
 
 export interface ManagementClient {
   snapshot(): Promise<ManagementSnapshot>;
@@ -44,10 +45,6 @@ const roleBadge = (role: string): string => {
   const kind = roleIconName(role);
   return `<i class="px-v2-role ${esc(kind)}" title="${esc(role)}" aria-label="${esc(role)}"><img src="${asset(`ui/icon-role-${kind}.png`)}" width="16" height="16" alt=""><span class="px-sr">${esc(role.toUpperCase())}</span></i>`;
 };
-function activeSkillName(id: string): string {
-  const names: Record<string, string> = { mw2: 'Guardian Shield', hk1: 'Second Wind', mw1: 'Cleave', hu1: 'Piercing Shot', priest: 'Restoration', ew1: 'Withering Hex', mk1: 'Rally', wiz: 'Fireball', mw3: 'Wide Cleave', mh1: 'Focused Burst', mh2: 'Quick Burst', hu2: 'Long Shot', hk2: 'Bulwark', fw: 'Blood Strike', ew2: 'Inferno', mk2: 'Iron Wall', mh3: 'Execution', ew3: 'Armor Break' };
-  return names[id] ?? 'Signature Skill';
-}
 const pct = (value: number): string => `${Math.round(value * 100)}%`;
 function activeDescription(id: string) {
   const definition = getPartyHeroDefinition(id), ability = definition.active, seconds = (ticks: number | undefined) => `${(ticks ?? 0) / CONFIG.sim.ticksPerSecond}s`;
@@ -868,7 +865,7 @@ export class ManagementView {
     const detailScale = this.portraitScale(selected.id, this.root.dataset.preset === '960' ? 112 : 220, this.root.dataset.preset === '960' ? 112 : 208);
     const definition = getPartyHeroDefinition(selected.id);
     const mana = definition.active.manaCost ?? 60;
-    const basicNames: Record<string,string> = { 'guardian-strike':'Guardian Strike', 'bruiser-strike':'Brute Strike', 'melee-cleave-strike':'Cleave', 'ranger-shot':'Ranger Shot', 'priest-heal-or-bolt':'Prayer', 'hex-bolt':'Hex Bolt', 'banner-bolt':'Banner Bolt', 'arcane-bolt':'Arcane Bolt', 'wide-cleave-strike':'Wide Cleave', 'duelist-strike':'Duelist Strike', 'long-range-shot':'Long Shot' };
+    const basicNames = BASIC_SKILL_NAMES;
     const passiveNames: Record<string,string> = { intercept:'Intercept', fourthSelfHeal:'Fourth Strike Heal', sameTargetRamp:'Focused Assault', fourthBonus:'Fourth Shot', healGuard:'Heal Guard', firstWeakenShield:'Opening Ward', livingAura:'Living Banner', thirdSplash:'Third Shot Splash', fourthGuard:'Fourth Hit Guard' };
     const passive = definition.passive;
     const passiveDescription = passive.kind === 'healGuard' ? `When healing an ally, grants ${pct(passive.coefficient ?? 0)} damage reduction for ${(passive.durationTicks ?? 0) / CONFIG.sim.ticksPerSecond}s.`
