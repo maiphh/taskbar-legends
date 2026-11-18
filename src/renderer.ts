@@ -322,15 +322,16 @@ export class Renderer {
       const bossScale = unit.boss && enemyDef?.scale ? Math.max(1, Math.round(enemyDef.scale)) : 1;
       const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
       const isTurnActor = turnActor?.id === unit.id;
-      if (isTurnActor) {
-        // 2 px role-coloured floor under the acting sprite (windup or recovery).
-        ctx.fillStyle = color;
-        ctx.fillRect(Math.round(x - 16 * bossScale), unitBaseline, Math.round(32 * bossScale), 2);
-      }
       if (isLaneBoss && enemyDef?.outline) {
         // Ground mark only; tint/outline live on the sprite itself.
         ctx.fillStyle = enemyDef.outline;
         ctx.fillRect(Math.round(x - 18 * bossScale), unitBaseline - 2, Math.round(36 * bossScale), 3);
+      }
+      if (isTurnActor) {
+        // 2 px role-coloured floor under the acting sprite (windup or recovery).
+        // Drawn after the lane-boss mark so the full 2 px stays visible under a boss windup.
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x - 16 * bossScale), unitBaseline, Math.round(32 * bossScale), 2);
       }
       // Plate is painted after units, so scale-2 bosses stay unclipped and read as large.
       const tint = isLaneBoss ? enemyDef?.tint : undefined;
@@ -544,20 +545,27 @@ export class Renderer {
     const depth = actor.side === 'hero' ? actor.slot * 4 : 0;
     const unitBaseline = baselineY - depth;
     const x = this.position(actor, state);
+    const field = this.field();
     const color = actor.side === 'hero'
       ? CONFIG.view.roleColors[heroConfig(actor.sourceId).role]
       : CONFIG.view.enemyColors[getPartyEnemyDefinition(actor.sourceId)?.visualKind ?? 'grunt'];
     const y = Math.max(bossPlateBottom + 2, unitBaseline - 54);
+    // Clamp into the field with 1 px for the ink outline so rear-slot names (x≈20) stay fully visible.
+    const clampNameX = (width: number): number => {
+      const minX = field.x + 1;
+      const maxX = field.x + field.width - 1 - Math.ceil(width);
+      return Math.max(minX, Math.min(maxX, Math.round(x - width / 2)));
+    };
     if (!this.pixelFontReady) {
       const width = this.ui.measureText(name, SMALL, true);
-      this.ui.text(ctx, name, Math.round(x - width / 2), y, color, SMALL, true);
+      this.ui.text(ctx, name, clampNameX(width), y, color, SMALL, true);
       return;
     }
     ctx.save();
     ctx.font = `700 ${SMALL}px "Galmuri11", monospace`;
     ctx.textBaseline = 'top';
     const width = ctx.measureText(name).width;
-    const tx = Math.round(x - width / 2);
+    const tx = clampNameX(width);
     ctx.fillStyle = CONFIG.ui.palette.ink;
     for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as const) ctx.fillText(name, tx + dx, y + dy);
     ctx.fillStyle = color;
