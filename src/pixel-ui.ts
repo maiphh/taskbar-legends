@@ -11,7 +11,7 @@ import { campaignPresentation } from './core/selectors';
 import { getPartyHeroDefinition } from './core/party-definitions';
 import { welcomeLayout } from './welcome-layout';
 import { ellipsize } from './text-fit';
-import { roleIconName } from './management/role-icons';
+import { drawRoleIcon } from './management/role-icons';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -119,18 +119,17 @@ export class PixelUI {
   private async load(): Promise<void> {
     try {
       await loadFonts();
-      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'icon-role-tank.png', 'icon-role-dps.png', 'icon-role-support.png'];
+      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png'];
       await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
     } catch (error) { this.errors.push(String(error)); }
   }
   private drawManagementRole(ctx: CanvasRenderingContext2D, role: string, x: number, y: number): void {
-    const mapped = roleIconName(role), image = this.images.get(`icon-role-${mapped}.png`);
-    const colors = { tank: '#8dbfe3', dps: '#de7c80', support: '#90c99b' };
+    // Integer-pixel plate + authored sword/shield/plus glyphs (no PNG load for roles).
     const left = Math.round(x), top = Math.round(y);
-    ctx.fillStyle = colors[mapped]; ctx.fillRect(left, top, 18, 18);
+    ctx.fillStyle = '#17212d'; ctx.fillRect(left, top, 18, 18);
     ctx.fillStyle = '#101820'; ctx.fillRect(left + 1, top + 1, 16, 16);
-    if (image) { ctx.imageSmoothingEnabled = false; ctx.drawImage(image, left + 1, top + 1, 16, 16); }
+    drawRoleIcon(ctx, role, left + 1, top + 1, 1);
   }
   setPanel(tab: PanelTab | null): void {
     if (tab) { this.onPanelRequest(tab); return; }

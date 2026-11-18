@@ -40,7 +40,10 @@ const heroName = (id: string): string => heroConfig(id).name
   .replace(/\s*(?:\||[-–])\s*(?:asset|pack|sprite|sheet)\b.*$/ig, '').trim();
 /** Card / slot label (mockups): drop the asset-pack prefixes so names fit 88 px cards (Warrior 2, Martial 1, King 2). */
 const shortName = (id: string): string => shortHeroName(id);
-const roleBadge = (role: string): string => `<i class="px-v2-role ${esc(role)}" title="${esc(role)}" aria-label="${esc(role)}"><img src="${asset(`ui/icon-role-${roleIconName(role)}.png`)}" width="16" height="16" alt=""><span class="px-sr">${esc(role.toUpperCase())}</span></i>`;
+const roleBadge = (role: string): string => {
+  const kind = roleIconName(role);
+  return `<i class="px-v2-role ${esc(kind)}" title="${esc(role)}" aria-label="${esc(role)}"><img src="${asset(`ui/icon-role-${kind}.png`)}" width="16" height="16" alt=""><span class="px-sr">${esc(role.toUpperCase())}</span></i>`;
+};
 function activeSkillName(id: string): string {
   const names: Record<string, string> = { mw2: 'Guardian Shield', hk1: 'Second Wind', mw1: 'Cleave', hu1: 'Piercing Shot', priest: 'Restoration', ew1: 'Withering Hex', mk1: 'Rally', wiz: 'Fireball', mw3: 'Wide Cleave', mh1: 'Focused Burst', mh2: 'Quick Burst', hu2: 'Long Shot', hk2: 'Bulwark', fw: 'Blood Strike', ew2: 'Inferno', mk2: 'Iron Wall', mh3: 'Execution', ew3: 'Armor Break' };
   return names[id] ?? 'Signature Skill';
