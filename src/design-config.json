@@ -1,5 +1,5 @@
 {
-  "version": "1.4.4",
+  "version": "1.5.0",
   "sim": {
     "ticksPerSecond": 20,
     "rng": "mulberry32",
@@ -1065,7 +1065,6 @@
         }
       ]
     }
-
   ],
   "rewards": {
     "killScaling": 1.1,
@@ -1302,6 +1301,221 @@
       ],
       "startingTickets": 6,
       "farmTicketChance": 0.005
+    }
+  },
+  "statusEffects": {
+    "durationUnit": "ownTurns",
+    "caps": {
+      "atkUp": 0.5,
+      "atkDown": 0.5,
+      "defDown": 0.6,
+      "dmgReduction": 0.5,
+      "spdUp": 0.5,
+      "spdDown": 0.5
+    },
+    "display": {
+      "iconPx": 9,
+      "gapPx": 1,
+      "maxVisible": 3,
+      "maxVisibleBoss": 4,
+      "rowOffsetAboveHpPx": 13,
+      "frame": {
+        "buff": "#8dbfe3",
+        "debuff": "#de7c80",
+        "control": "#e9bd68",
+        "bossDebuff": "#c19cd9",
+        "overflow": "#536276"
+      },
+      "dotNumber": "#de7c80",
+      "hotNumber": "#90c99b",
+      "lastTurnDigit": "#e9bd68"
+    },
+    "effects": {
+      "atkUp": {
+        "polarity": "buff",
+        "stack": "strongest",
+        "maxStacks": 1,
+        "turns": 2,
+        "magnitude": 0.15
+      },
+      "dmgReduction": {
+        "polarity": "buff",
+        "stack": "strongest",
+        "maxStacks": 1,
+        "turns": 1,
+        "magnitude": 0.1
+      },
+      "hot": {
+        "polarity": "buff",
+        "stack": "refresh",
+        "maxStacks": 1,
+        "turns": 2,
+        "magnitude": 0.05
+      },
+      "atkDown": {
+        "polarity": "debuff",
+        "stack": "strongest",
+        "maxStacks": 1,
+        "turns": 2,
+        "magnitude": 0.2
+      },
+      "defDown": {
+        "polarity": "debuff",
+        "stack": "strongest",
+        "maxStacks": 1,
+        "turns": 2,
+        "magnitude": 0.25
+      },
+      "spdDown": {
+        "polarity": "debuff",
+        "stack": "strongest",
+        "maxStacks": 1,
+        "turns": 2,
+        "magnitude": 0.3
+      },
+      "dot": {
+        "polarity": "debuff",
+        "stack": "add",
+        "maxStacks": 3,
+        "turns": 2,
+        "magnitude": 0.04,
+        "bossScale": 0.5
+      },
+      "stun": {
+        "polarity": "debuff",
+        "stack": "refresh",
+        "maxStacks": 1,
+        "turns": 1,
+        "control": true
+      },
+      "steadfast": {
+        "polarity": "buff",
+        "stack": "refresh",
+        "maxStacks": 1,
+        "turns": 2,
+        "bossTurns": 3,
+        "grantedOnStunEnd": true,
+        "cleansable": false
+      }
+    },
+    "cleanse": {
+      "priest-burst-heal": {
+        "count": 1,
+        "order": [
+          "stun",
+          "dot",
+          "spdDown",
+          "defDown",
+          "atkDown"
+        ]
+      }
+    },
+    "apply": {
+      "heroes": {
+        "banner-buff": [
+          {
+            "status": "atkUp",
+            "target": "abilityTarget"
+          }
+        ],
+        "priest-burst-heal": [
+          {
+            "status": "dmgReduction",
+            "target": "abilityTarget",
+            "when": "healed"
+          }
+        ],
+        "bruiser-heal": [
+          {
+            "status": "hot",
+            "target": "self",
+            "when": "healed"
+          }
+        ],
+        "weaken": [
+          {
+            "status": "atkDown",
+            "target": "abilityTarget"
+          },
+          {
+            "status": "defDown",
+            "target": "abilityTarget"
+          }
+        ],
+        "defense-break": [
+          {
+            "status": "atkDown",
+            "target": "abilityTarget"
+          },
+          {
+            "status": "defDown",
+            "target": "abilityTarget",
+            "magnitude": 0.4
+          }
+        ],
+        "cleave": [
+          {
+            "status": "dot",
+            "target": "primaryHit"
+          }
+        ],
+        "wide-cleave": [
+          {
+            "status": "stun",
+            "target": "primaryHit"
+          }
+        ],
+        "ranged-burst": [
+          {
+            "status": "spdDown",
+            "target": "primaryHit"
+          }
+        ],
+        "long-range-burst": [
+          {
+            "status": "spdDown",
+            "target": "primaryHit"
+          }
+        ]
+      },
+      "enemies": {
+        "assassin": [
+          {
+            "on": "leap",
+            "status": "dot",
+            "target": "primaryHit"
+          }
+        ],
+        "bomber": [
+          {
+            "on": "bomber-blast",
+            "status": "spdDown",
+            "target": "everyHit",
+            "turns": 1,
+            "magnitude": 0.2
+          }
+        ],
+        "boss_ch1": [
+          {
+            "on": "boss-ch1-cleave",
+            "status": "defDown",
+            "target": "everyHit",
+            "turns": 2,
+            "magnitude": 0.2,
+            "display": "crushed"
+          }
+        ],
+        "boss_ch2": [
+          {
+            "on": "boss-ch2-cleave",
+            "status": "defDown",
+            "target": "everyHit",
+            "turns": 2,
+            "magnitude": 0.2,
+            "display": "crushed"
+          }
+        ]
+      }
     }
   }
 }

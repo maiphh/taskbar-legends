@@ -105,10 +105,55 @@ export function setSalvageRules(rules: SalvageRules | 'design' | 'default'): Sal
   return { ...CONFIG.gear.salvage };
 }
 export function activeSalvageRules(): SalvageRules { return { ...CONFIG.gear.salvage }; }
+
+const statusPolarity = z.enum(['buff', 'debuff']);
+const statusStack = z.enum(['refresh', 'strongest', 'add']);
+const statusEffectEntry = z.object({
+  polarity: statusPolarity, stack: statusStack, maxStacks: z.number().int().positive(),
+  turns: z.number().int().positive(), magnitude: z.number().nonnegative().optional(),
+  bossScale: z.number().positive().optional(), control: z.boolean().optional(),
+  bossTurns: z.number().int().positive().optional(), grantedOnStunEnd: z.boolean().optional(),
+  cleansable: z.boolean().optional(),
+}).strict();
+const statusApplyRule = z.object({
+  status: z.string().min(1), target: z.enum(['abilityTarget', 'self', 'primaryHit', 'everyHit']),
+  when: z.enum(['healed']).optional(), turns: z.number().int().positive().optional(),
+  magnitude: z.number().nonnegative().optional(), display: z.string().min(1).optional(),
+  on: z.string().min(1).optional(),
+}).strict();
+export const statusEffectsSchema = z.object({
+  durationUnit: z.literal('ownTurns'),
+  caps: z.object({
+    atkUp: z.number().nonnegative(), atkDown: z.number().nonnegative(), defDown: z.number().nonnegative(),
+    dmgReduction: z.number().nonnegative(), spdUp: z.number().nonnegative(), spdDown: z.number().nonnegative(),
+  }).strict(),
+  display: z.object({
+    iconPx: z.number().int().positive(), gapPx: z.number().int().nonnegative(),
+    maxVisible: z.number().int().positive(), maxVisibleBoss: z.number().int().positive(),
+    rowOffsetAboveHpPx: z.number().int().positive(),
+    frame: z.object({
+      buff: z.string().min(1), debuff: z.string().min(1), control: z.string().min(1),
+      bossDebuff: z.string().min(1), overflow: z.string().min(1),
+    }).strict(),
+    dotNumber: z.string().min(1), hotNumber: z.string().min(1), lastTurnDigit: z.string().min(1),
+  }).strict(),
+  effects: z.record(z.string(), statusEffectEntry),
+  cleanse: z.record(z.string(), z.object({ count: z.number().int().positive(), order: z.array(z.string().min(1)).nonempty() }).strict()),
+  apply: z.object({
+    heroes: z.record(z.string(), z.array(statusApplyRule)),
+    enemies: z.record(z.string(), z.array(statusApplyRule)),
+  }).strict(),
+}).strict();
+export type StatusEffectsConfig = z.infer<typeof statusEffectsSchema>;
+const parsedStatusEffects = statusEffectsSchema.optional().parse(
+  (design as { statusEffects?: unknown }).statusEffects,
+) ?? null;
+
 const parsedEnemies = enemiesConfig.parse(design.enemies);
 export const CONFIG = {
   ...design,
   enemies: parsedEnemies,
+  statusEffects: parsedStatusEffects,
   gear: { ...design.gear, salvage: { ...SALVAGE_DEFAULTS } },
   v14: v14Defaults(),
   combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
@@ -200,4 +245,11 @@ export function heroConfig(id: string) {
   const value = CONFIG.heroes.find(hero => hero.id === id);
   if (!value) throw new Error(`Unknown hero: ${id}`);
   return value;
+}
+/** Absent `statusEffects` keeps the legacy seconds-based partyEffects path. */
+export function statusEffectsEnabled(): boolean {
+  return CONFIG.statusEffects !== null;
+}
+export function statusEffectsConfig(): StatusEffectsConfig | null {
+  return CONFIG.statusEffects;
 }

@@ -106,3 +106,11 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Boss stages keep `timeoutSec` (1-10 is 22 s, 2-10 is 21 s) and the visible countdown. The countdown is still wall time from `stageStartedTick`, hidden during the stage rest and the §20 boss-repeat pad.
 - `combat.lossCondition` matches that split. Balance version stays `1.4.4`; old saves still load.
 - Runtime `src/design-config.json` SHA-256 is `a21b75425011e8aa3255d1d82a5b8a0660ee5e51f6804f4dddf95c91e224c258`. The CI v1.4 smoke checks it. This copy is no longer byte-identical to the 1.4.4 designer file.
+
+## Own-turn status effects v1 (config 1.5.0)
+
+- New top-level `statusEffects` block. Absent key = legacy seconds-based `partyEffects` path for timed ATK/DEF/Guard. Present = own-turn statuses for ATK Up/Down, Guard, Regen, Armor Break, Slow, Bleed, Stun, Steadfast; shields stay 5 s.
+- Durations count the carrier's own completed turns. Stun consumes at turn start and grants Steadfast (2 turns; bosses 3). Bleed ×0.5 on bosses. Priest cleanse removes one debuff (Stun > Bleed > Slow > Armor Break > ATK Down).
+- Open questions resolved for v1: Crushed applies from the rebuilt hero-style boss cleave (`boss-ch1-cleave` / `boss-ch2-cleave`), not the retired slam; keep 2-turn durations; shields stay seconds; bomber Slow stays −20%/1 turn; T2 band is not required from effects alone.
+- Icons: 9×9 row above the unit HP bar (4 max on bosses, else 3 + overflow chip). Farm-proof revision bumped; offline still does not model statuses.
+- `balance` union accepts `'1.4.4'`. Config SHA-256 `fd58e0e31148a0eec76579f616d1fc43fdc3ee900155fbf5d156e9a49eb475a2`.

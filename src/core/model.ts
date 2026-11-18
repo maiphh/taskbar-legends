@@ -47,6 +47,7 @@ const unitSchema = z.object({
   statuses: z.array(z.object({
     id: z.string().min(1), sourceId: z.string().min(1), targetId: z.string().min(1),
     stacks: positive, magnitude: finite, turnsLeft: natural,
+    selfApplied: z.boolean().optional(), display: z.string().min(1).optional(), appliedAtTick: natural.optional(),
   }).strict()).optional(),
   partyCooldowns: z.record(z.string(), natural).optional(), procCounters: z.record(z.string(), finite.nonnegative()).optional(),
   guardReadyTick: natural.optional(), lastBasicTargetId: z.string().nullable().optional(), lastBasicRamp: finite.nonnegative().optional(),
@@ -93,7 +94,12 @@ export const levelChangeSchema = z.object({ id: z.string(), levelBefore: positiv
 export type LevelChange = z.infer<typeof levelChangeSchema>;
 const eventDataSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('spawn'), unitId: z.string(), side: z.enum(['hero', 'enemy']), stage: stageNumber, wave: positive }),
-  z.object({ type: z.literal('hit'), attackerId: z.string(), targetId: z.string(), damage: positive, side: z.enum(['hero', 'enemy']) }),
+  z.object({ type: z.literal('hit'), attackerId: z.string(), targetId: z.string(), damage: positive, side: z.enum(['hero', 'enemy']), dot: z.boolean().optional() }),
+  z.object({
+    type: z.literal('status'), kind: z.enum(['apply', 'refresh', 'stack', 'expire', 'resist', 'skip']),
+    statusId: z.string().min(1), targetId: z.string().min(1), sourceId: z.string().min(1),
+    turnsLeft: natural, stacks: natural,
+  }),
   z.object({ type: z.literal('actionStart'), unitId: z.string(), targetId: z.string(), kind: z.enum(['attack', 'heal']), startTick: natural, impactTick: natural }),
   z.object({ type: z.literal('miss'), unitId: z.string(), targetId: z.string(), kind: z.enum(['attack', 'heal']), reason: z.enum(['target', 'range', 'facing', 'unneeded']) }),
   z.object({ type: z.literal('heal'), sourceId: z.string(), targetId: z.string(), amount: natural }),
@@ -131,7 +137,7 @@ const eventSchema = z.object({ seq: positive, tick: natural, combatTick: natural
 export type GameEvent = z.infer<typeof eventSchema>;
 export const stateSchema = z.object({
   // Saves from earlier balance passes load under the current config (same rule as balance-v1.2).
-  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2'), z.literal('1.4.3')]).transform(() => CONFIG.version), tick: natural,
+  version: z.literal(2), balance: z.union([z.literal(CONFIG.version), z.literal('1.1.0'), z.literal('1.2.0'), z.literal('1.3.0'), z.literal('1.4.0'), z.literal('1.4.1'), z.literal('1.4.2'), z.literal('1.4.3'), z.literal('1.4.4')]).transform(() => CONFIG.version), tick: natural,
   combatRules: z.literal('party-v2'),
   partyPreset: z.enum(['balanced', 'fastFarm', 'bossSustain']).optional(),
   rng: natural.max(0xffffffff), seed: natural.max(0xffffffff),
