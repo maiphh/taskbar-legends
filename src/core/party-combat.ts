@@ -6,6 +6,10 @@ import { applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveD
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
 import { partyKillReward } from './rewards';
+import {
+  applyHeroSupportStatuses, applyOnHitStatuses, beginStatusTurn, cleanseUnit, clearUnitStatuses,
+  endStatusTurn, statusSystemOn, unitHasStatus,
+} from './status-effects';
 import { spendTurn, type GaugeUnit } from './turn/action-bar';
 import { canAct, fillMultiplier, onTurnStart, statusDef, type RunningStatus } from './turn/statuses';
 import { actionBoundaries, createActionTimeline, hasUnfinishedPresentation } from './turn/animation-timing';
@@ -196,9 +200,23 @@ function chooseActive(state: GameState, source: Unit, target: Unit | undefined):
     case 'shield': if (source.hp / source.maxHp < (active.hpThreshold ?? 0.9) || threatened(state, source)) picked = { target: source, kind: 'heal', abilityId: active.id }; break;
     case 'selfHeal': if (source.hp / source.maxHp < (active.hpThreshold ?? 0.65)) picked = { target: source, kind: 'heal', abilityId: active.id }; break;
     case 'burstHeal': { const ally = hurtAlly(state, active.hpThreshold ?? 0.8); if (ally) picked = { target: ally, kind: 'heal', abilityId: active.id }; break; }
-    case 'buff': { const ally = supportTarget(state); if (ally && !effectActive(state, ally.id, 'party-atk-buff')) picked = { target: ally, kind: 'heal', abilityId: active.id }; break; }
+    case 'buff': {
+      const ally = supportTarget(state);
+      if (ally && !(statusSystemOn() ? unitHasStatus(ally, 'atkUp') : effectActive(state, ally.id, 'party-atk-buff'))) {
+        picked = { target: ally, kind: 'heal', abilityId: active.id };
+      }
+      break;
+    }
     case 'selfSustain': if (enemy && source.hp < source.maxHp) picked = { target: enemy, kind: 'attack', abilityId: active.id }; break;
-    case 'weaken': if (enemy && !effectActive(state, enemy.id, 'enemy-atk-weaken') && !effectActive(state, enemy.id, 'enemy-def-weaken')) picked = { target: enemy, kind: 'attack', abilityId: active.id }; break;
+    case 'weaken': {
+      if (enemy) {
+        const blocked = statusSystemOn()
+          ? unitHasStatus(enemy, 'atkDown') || unitHasStatus(enemy, 'defDown')
+          : effectActive(state, enemy.id, 'enemy-atk-weaken') || effectActive(state, enemy.id, 'enemy-def-weaken');
+        if (!blocked) picked = { target: enemy, kind: 'attack', abilityId: active.id };
+      }
+      break;
+    }
     case 'cleave': case 'projectile': case 'fireball': case 'singleBurst': if (enemy) picked = { target: enemy, kind: 'attack', abilityId: active.id }; break;
     case 'intercept': break;
   }
@@ -382,12 +400,26 @@ function commitAbility(state: GameState, impact: Impact, now: number): boolean {
     case 'selfHeal': heal(state, source, source, source.maxHp * (ability.healCoefficient ?? 0), now); break;
     case 'burstHeal': {
       const healed = heal(state, source, target, effectiveAttack(state, source) * (ability.healCoefficient ?? 0), now);
-      if (healed > 0) applyEffect(state, source, target, { group: 'healing-guard', kind: 'damageReduction', magnitude: 0.1, durationTicks: ticksForSeconds(2) }, now);
+      if (healed > 0) {
+        if (statusSystemOn()) {
+          cleanseUnit(state, source, target, ability.id, now);
+          applyHeroSupportStatuses(state, source, target, ability.id, now, { healed: true });
+        } else {
+          applyEffect(state, source, target, { group: 'healing-guard', kind: 'damageReduction', magnitude: 0.1, durationTicks: ticksForSeconds(2) }, now);
+        }
+      }
       if (!healed) return false; break;
     }
-    case 'buff': applyEffect(state, source, target, { group: 'party-atk-buff', kind: 'atkBonus', magnitude: ability.atkBonus ?? 0, durationTicks: ability.durationTicks ?? 0 }, now); break;
-    case 'weaken': applyEffect(state, source, target, { group: 'enemy-atk-weaken', kind: 'atkReduction', magnitude: ability.atkReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
-      applyEffect(state, source, target, { group: 'enemy-def-weaken', kind: 'defReduction', magnitude: ability.defReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+    case 'buff':
+      if (statusSystemOn()) applyHeroSupportStatuses(state, source, target, ability.id, now);
+      else applyEffect(state, source, target, { group: 'party-atk-buff', kind: 'atkBonus', magnitude: ability.atkBonus ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+      break;
+    case 'weaken':
+      if (statusSystemOn()) applyHeroSupportStatuses(state, source, target, ability.id, now);
+      else {
+        applyEffect(state, source, target, { group: 'enemy-atk-weaken', kind: 'atkReduction', magnitude: ability.atkReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+        applyEffect(state, source, target, { group: 'enemy-def-weaken', kind: 'defReduction', magnitude: ability.defReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+      }
       break;
     case 'selfSustain': return false;
     case 'cleave': case 'projectile': case 'fireball': case 'singleBurst': return false;
@@ -501,20 +533,32 @@ export function expireFriendlyDeadTargetProjectiles(state: GameState): void {
   for (const projectile of state.projectiles ?? []) if (projectile.sourceSide === 'hero' && projectile.targetSide === 'enemy') emit(state, { type: 'projectile', projectileId: projectile.id, sourceId: projectile.sourceId, action: 'expire' }, combatTime(state));
   state.projectiles = (state.projectiles ?? []).filter(projectile => !(projectile.sourceSide === 'hero' && projectile.targetSide === 'enemy'));
 }
-export function cancelPartyEncounterEffects(state: GameState): void { state.partyEffects = []; state.projectiles = []; }
+export function cancelPartyEncounterEffects(state: GameState): void {
+  state.partyEffects = [];
+  state.projectiles = [];
+  clearUnitStatuses(state.party, state.enemies);
+}
 
 function beginActorTurn(state: GameState, unit: Unit, now: number): void {
   const wrapper = toGaugeUnit(unit);
   spendTurn(wrapper);
   syncGauge(wrapper);
-  const statuses = unitStatuses(unit);
-  if (!canAct(statuses)) {
-    const turned = onTurnStart({ id: unit.id, hp: unit.hp, maxHp: unit.maxHp, statuses });
-    unit.hp = turned.unit.hp;
-    unit.statuses = turned.unit.statuses;
-    unit.action = { state: 'idle' };
-    unit.moving = false;
-    return;
+  if (statusSystemOn()) {
+    if (!beginStatusTurn(state, unit, now)) {
+      unit.action = { state: 'idle' };
+      unit.moving = false;
+      return;
+    }
+  } else {
+    const statuses = unitStatuses(unit);
+    if (!canAct(statuses)) {
+      const turned = onTurnStart({ id: unit.id, hp: unit.hp, maxHp: unit.maxHp, statuses });
+      unit.hp = turned.unit.hp;
+      unit.statuses = turned.unit.statuses;
+      unit.action = { state: 'idle' };
+      unit.moving = false;
+      return;
+    }
   }
   if (startEnemySpecial(state, unit, now)) {
     unit.moving = false;
@@ -599,6 +643,14 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (result.hpDamage > 0 && victim.side === 'hero' && isTank(victim) && result.intent.source.side === 'enemy') tankDamage.add(victim.id);
     if (result.intent.basic && result.intent.primary && result.total > 0) successfulBasic(result);
   }
+  if (statusSystemOn()) {
+    for (const result of results) {
+      if (result.total <= 0 || result.intent.target.hp <= 0) continue;
+      const { source, target, abilityId, primary } = result.intent;
+      const delivery = source.action && 'delivery' in source.action ? source.action.delivery : undefined;
+      applyOnHitStatuses(state, source, target, abilityId, primary, now, { delivery });
+    }
+  }
   for (const id of tankDamage) { const tank = state.party.find(unit => unit.id === id); if (tank) tank.mana = Math.min(manaCost(partyDef(tank)!), (tank.mana ?? 0) + 5); }
   for (const impact of valid) {
     if (impact.abilityId) {
@@ -612,7 +664,14 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (entry.requiresHit && !successfulHits.has(`${entry.requiresHit.sourceId}/${entry.requiresHit.targetId}`)) continue;
     const actual = heal(state, entry.source, entry.target, entry.amount, now);
     if (actual > 0) {
-      if (entry.effect) applyEffect(state, entry.source, entry.target, entry.effect, now);
+      if (statusSystemOn() && entry.cooldownId === 'priest-burst-heal') {
+        cleanseUnit(state, entry.source, entry.target, entry.cooldownId, now);
+        applyHeroSupportStatuses(state, entry.source, entry.target, entry.cooldownId, now, { healed: true });
+      } else if (statusSystemOn() && entry.cooldownId === 'bruiser-heal') {
+        applyHeroSupportStatuses(state, entry.source, entry.target, entry.cooldownId, now, { healed: true });
+      } else if (entry.effect) {
+        applyEffect(state, entry.source, entry.target, entry.effect, now);
+      }
       if (entry.cooldownId) {
         entry.source.mana = 0;
       }
@@ -625,9 +684,12 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (action?.state === 'windup') {
       const anchor = { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot };
       recover(impact.source, action, anchor, action.targetCount ?? Math.max(1, state.enemies.length));
-      const turned = onTurnStart({ id: impact.source.id, hp: impact.source.hp, maxHp: impact.source.maxHp, statuses: unitStatuses(impact.source) });
-      impact.source.hp = turned.unit.hp;
-      impact.source.statuses = turned.unit.statuses;
+      if (statusSystemOn()) endStatusTurn(impact.source);
+      else {
+        const turned = onTurnStart({ id: impact.source.id, hp: impact.source.hp, maxHp: impact.source.maxHp, statuses: unitStatuses(impact.source) });
+        impact.source.hp = turned.unit.hp;
+        impact.source.statuses = turned.unit.statuses;
+      }
     }
   }
 }
