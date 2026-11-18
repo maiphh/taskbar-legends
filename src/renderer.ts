@@ -519,6 +519,8 @@ export class Renderer {
     const display = config.display;
     const iconPx = display.iconPx, gap = display.gapPx;
     const maxVisible = isStatusBoss(unit) ? display.maxVisibleBoss : display.maxVisible;
+    const expireGrey = '#536276';
+    const expireHold = ticksForSeconds(0.16);
     type RowItem = {
       glyph: StatusGlyphId; id: string; turnsLeft: number; stacks: number; appliedAtTick: number;
       showCounter: boolean; flash: boolean; grey: boolean; pop: boolean;
@@ -527,20 +529,42 @@ export class Renderer {
     const reduced = this.ui.reducedMotion;
     const items: RowItem[] = [];
     const glyphSet = new Set<string>(STATUS_GLYPH_IDS);
+    const livingIds = new Set<string>();
     for (const status of unit.statuses ?? []) {
       if (status.targetId !== unit.id) continue;
       const glyphId = (status.display === 'crushed' ? 'crushed' : status.id);
       if (!glyphSet.has(glyphId)) continue;
+      livingIds.add(glyphId);
       const applied = state.events.filter(event =>
         event.data.type === 'status' && event.data.targetId === unit.id && event.data.statusId === status.id
         && (event.data.kind === 'apply' || event.data.kind === 'refresh' || event.data.kind === 'stack')
         && event.combatEncounter === state.encounter).at(-1);
       const age = applied ? now - (applied.combatTick ?? applied.tick) : 999;
+      const kind = applied && applied.data.type === 'status' ? applied.data.kind : undefined;
       items.push({
         glyph: glyphId as StatusGlyphId, id: glyphId, turnsLeft: status.turnsLeft, stacks: status.stacks,
         appliedAtTick: status.appliedAtTick ?? 0, showCounter: true,
-        flash: !reduced && age >= 0 && age < 2, pop: !reduced && age >= 0 && age < 2, grey: false,
+        flash: !reduced && age >= 0 && age < 2,
+        pop: !reduced && kind === 'apply' && age >= 0 && age < 2,
+        grey: false,
       });
+    }
+    // Expiry hold: keep the icon grey for 160 ms after the expire event (skip under reduced motion).
+    if (!reduced) {
+      for (const event of state.events) {
+        const data = event.data;
+        if (data.type !== 'status' || data.kind !== 'expire' || data.targetId !== unit.id) continue;
+        if (event.combatEncounter !== state.encounter) continue;
+        const displayId = data.statusId;
+        if (!glyphSet.has(displayId) || livingIds.has(displayId)) continue;
+        const age = now - (event.combatTick ?? event.tick);
+        if (age < 0 || age > expireHold) continue;
+        items.push({
+          glyph: displayId as StatusGlyphId, id: displayId, turnsLeft: 0, stacks: data.stacks,
+          appliedAtTick: event.combatTick ?? event.tick, showCounter: false,
+          flash: false, pop: false, grey: true,
+        });
+      }
     }
     if (unit.shield > 0 && unit.shieldUntilTick > presentationCombatTime(state)) {
       items.push({
@@ -561,10 +585,13 @@ export class Renderer {
     let cursor = rowLeft;
     for (const item of visible) {
       const y = rowTop - (item.pop ? 1 : 0);
-      const colors = item.flash ? { frame: STATUS_LIGHT, fill: statusFrameFor(item.id).fill } : statusFrameFor(item.id);
-      drawStatusGlyph(ctx, item.glyph, cursor, y, colors);
+      const base = statusFrameFor(item.id);
+      const colors = item.grey
+        ? { frame: expireGrey, fill: base.fill }
+        : item.flash ? { frame: STATUS_LIGHT, fill: base.fill } : base;
+      drawStatusGlyph(ctx, item.glyph, cursor, y, colors, item.grey ? expireGrey : undefined);
       if (item.showCounter && item.turnsLeft >= 1 && item.turnsLeft <= 9) {
-        const digitColor = item.turnsLeft === 1 ? (display.lastTurnDigit ?? STATUS_GOLD) : STATUS_LIGHT;
+        const digitColor = item.grey ? expireGrey : item.turnsLeft === 1 ? (display.lastTurnDigit ?? STATUS_GOLD) : STATUS_LIGHT;
         ctx.fillStyle = '#0d121b';
         ctx.fillRect(cursor + 4, y + 2, 5, 7);
         drawDigit3x5(ctx, item.turnsLeft, cursor + 5, y + 3, digitColor);
@@ -572,7 +599,7 @@ export class Renderer {
       if (item.glyph === 'dot' && item.stacks >= 2) {
         ctx.fillStyle = '#0d121b';
         ctx.fillRect(cursor, y, 5, 7);
-        drawDigit3x5(ctx, item.stacks, cursor + 1, y + 1, STATUS_LIGHT);
+        drawDigit3x5(ctx, item.stacks, cursor + 1, y + 1, item.grey ? expireGrey : STATUS_LIGHT);
       }
       cursor += iconPx + gap;
     }

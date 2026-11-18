@@ -209,6 +209,77 @@ describe('combat status wiring', () => {
     expect(restored.party[0]?.statuses?.[0]).toMatchObject({ id: 'atkUp', turnsLeft: 2, selfApplied: true });
   });
 
+  it('lets a hero act when a shield eats a would-be-lethal bleed (no false stun skip)', () => {
+    const state = createState(15106);
+    spawnParty(state);
+    const hero = state.party[0]!;
+    state.party.forEach(hold); state.enemies.forEach(hold);
+    hero.maxHp = 1000;
+    hero.hp = 10;
+    hero.statuses = [];
+    applyPartyShield(state, hero, hero, 500, 100, state.tick);
+    hero.statuses = [{ id: 'dot', sourceId: 'e', targetId: hero.id, stacks: 1, magnitude: 0.04, turnsLeft: 2 }];
+    expect(beginStatusTurn(state, hero, state.tick)).toBe(true);
+    expect(hero.hp).toBe(10);
+    expect(hero.shield).toBe(460);
+    expect(state.events.some(e => e.data.type === 'status' && e.data.kind === 'skip')).toBe(false);
+    expect(state.events.some(e => e.data.type === 'shieldAbsorb')).toBe(true);
+  });
+
+  it('ticks boss statuses after a cleave resolves and after a missed windup', () => {
+    const state = createState(15107);
+    state.highestCleared = 9;
+    state.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 };
+    beginEncounter(state);
+    const boss = state.enemies.find(u => u.sourceId === 'boss_ch1')!;
+    const tank = state.party[0]!;
+    expect(boss).toBeTruthy();
+    state.enemies = [boss];
+    state.party.forEach(hold);
+    boss.statuses = [
+      { id: 'dot', sourceId: tank.id, targetId: boss.id, stacks: 1, magnitude: 0.04, turnsLeft: 2 },
+      { id: 'atkDown', sourceId: tank.id, targetId: boss.id, stacks: 1, magnitude: 0.2, turnsLeft: 2 },
+    ];
+    boss.moving = false;
+    boss.x = tank.x + 40;
+    boss.procCounters = { basicSuccess: 4, bossPattern: 0 };
+    boss.action = { state: 'idle' };
+    boss.gauge = 10000;
+    const hpBefore = boss.hp;
+    step(state);
+    expect(boss.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch1-cleave' });
+    expect(boss.hp).toBeLessThan(hpBefore); // bleed ticked at turn start
+    for (let i = 0; i < 200 && boss.specialAction; i += 1) {
+      boss.gauge = 0;
+      step(state);
+    }
+    expect(boss.specialAction).toBeUndefined();
+    expect(boss.statuses.find(s => s.id === 'dot')?.turnsLeft).toBe(1);
+    expect(boss.statuses.find(s => s.id === 'atkDown')?.turnsLeft).toBe(1);
+
+    const missState = createState(15108);
+    spawnParty(missState);
+    const hero = missState.party[0]!;
+    missState.party.slice(1).forEach(hold);
+    missState.enemies.forEach(hold);
+    hero.statuses = [
+      { id: 'atkUp', sourceId: hero.id, targetId: hero.id, stacks: 1, magnitude: 0.15, turnsLeft: 2 },
+    ];
+    hero.moving = false;
+    hero.gauge = 10000;
+    step(missState);
+    expect(hero.action?.state).toBe('windup');
+    const windup = hero.action as Unit['action'] & { state: 'windup'; targetId: string; impactTick: number };
+    expect(windup.state).toBe('windup');
+    hero.action = { ...windup, targetId: 'missing-target' };
+    for (let i = 0; i < 80 && hero.action?.state === 'windup'; i += 1) {
+      hero.gauge = 0;
+      step(missState);
+      if (missState.tick > windup.impactTick + 2) break;
+    }
+    expect(hero.statuses.find(s => s.id === 'atkUp')?.turnsLeft).toBe(1);
+  });
+
   it('clears statuses on wave start and sorts display with overflow', () => {
     const state = createState(15104);
     spawnParty(state);
@@ -244,6 +315,6 @@ describe('combat status wiring', () => {
     const resisted = addUnitStatus(state, state.party[0]!, boss, 'stun', 1, 0, state.tick + 1);
     expect(resisted).toBe(false);
     expect(state.events.some(e => e.data.type === 'status' && e.data.kind === 'resist')).toBe(true);
-    endStatusTurn(boss);
+    endStatusTurn(state, boss, state.tick);
   });
 });

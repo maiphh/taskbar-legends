@@ -8,7 +8,7 @@ import { getPartyEnemyDefinition } from './party-enemies';
 import { partyKillReward } from './rewards';
 import {
   applyHeroSupportStatuses, applyOnHitStatuses, beginStatusTurn, cleanseUnit, clearUnitStatuses,
-  endStatusTurn, statusSystemOn, unitHasStatus,
+  completeStatusTurn, finishStatusTurn, markStatusTurn, statusSystemOn, unitHasStatus,
 } from './status-effects';
 import { spendTurn, type GaugeUnit } from './turn/action-bar';
 import { canAct, fillMultiplier, onTurnStart, statusDef, type RunningStatus } from './turn/statuses';
@@ -154,6 +154,7 @@ function releaseStalePresentations(state: GameState, units: readonly Unit[], now
       if (finishedRecovery) unit.action = { state: 'idle' };
       else if (presentationOverdue(action.startTick, end, now) && !(keepResolvable && due)) {
         unit.action = { state: 'idle' };
+        if (statusSystemOn()) finishStatusTurn(state, unit, now);
         emit(state, { type: 'presentationForced', unitId: unit.id, kind: 'action' }, now);
       }
     }
@@ -162,6 +163,7 @@ function releaseStalePresentations(state: GameState, units: readonly Unit[], now
     const due = Number.isFinite(special.impactTick) && special.impactTick <= now;
     if (presentationOverdue(special.startTick, special.impactTick, now) && !(keepResolvable && due)) {
       delete unit.specialAction;
+      if (statusSystemOn()) finishStatusTurn(state, unit, now);
       emit(state, { type: 'presentationForced', unitId: unit.id, kind: 'special' }, now);
     }
   }
@@ -316,6 +318,7 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       const targets = action.global ? living(state.party) : living(state.party).filter(target => Math.abs(target.x - action.centerX) <= action.radius + radius(target));
       for (const target of targets.sort(compareId)) damage.push({ source, target, coefficient, abilityId: action.abilityId, basic: false, interceptable: !action.global, primary: target.id === action.targetId });
       delete source.specialAction;
+      if (statusSystemOn()) finishStatusTurn(state, source, now);
       continue;
     }
     if (action.state === 'assassinDash') {
@@ -323,7 +326,10 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       const target = state.party.find(unit => unit.id === action.targetId && unit.hp > 0);
       delete source.specialAction;
       source.moving = false;
-      if (!target) continue;
+      if (!target) {
+        if (statusSystemOn()) finishStatusTurn(state, source, now);
+        continue;
+      }
       source.facing = aimDirection(source, target);
       source.targetId = target.id;
       const timeline = createActionTimeline(source.sourceId, 'leap', now);
@@ -332,11 +338,20 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       continue;
     }
     const target = state.party.find(unit => unit.id === action.targetId && unit.hp > 0);
-    if (!target) { delete source.specialAction; source.moving = false; continue; }
+    if (!target) {
+      delete source.specialAction;
+      source.moving = false;
+      if (statusSystemOn()) finishStatusTurn(state, source, now);
+      continue;
+    }
     if (action.state === 'assassinMark') {
       if (action.impactTick > now) continue;
       const enemy = getPartyEnemyDefinition(source.sourceId), special = enemy.special;
-      if (!special || special.kind !== 'assassin') { delete source.specialAction; continue; }
+      if (!special || special.kind !== 'assassin') {
+        delete source.specialAction;
+        if (statusSystemOn()) finishStatusTurn(state, source, now);
+        continue;
+      }
       delete source.specialAction;
       source.moving = false;
       source.facing = aimDirection(source, target);
@@ -360,10 +375,12 @@ function recover(source: Unit, action: Extract<NonNullable<Unit['action']>, { st
 }
 function miss(state: GameState, impact: Impact, reason: Impact['reason']): void {
   if (!reason) return;
-  emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: impact.kind, reason }, combatTime(state));
+  const now = combatTime(state);
+  emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: impact.kind, reason }, now);
   const action = impact.source.action;
   if (action?.state === 'windup') {
     recover(impact.source, action, { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot }, action.targetCount ?? 1);
+    if (statusSystemOn()) completeStatusTurn(state, impact.source, now);
   }
 }
 function rewardDeath(state: GameState, target: Unit): void {
@@ -549,6 +566,7 @@ function beginActorTurn(state: GameState, unit: Unit, now: number): void {
       unit.moving = false;
       return;
     }
+    markStatusTurn(unit);
   } else {
     const statuses = unitStatuses(unit);
     if (!canAct(statuses)) {
@@ -568,12 +586,14 @@ function beginActorTurn(state: GameState, unit: Unit, now: number): void {
   if (!choice) {
     unit.targetId = null;
     unit.action = { state: 'idle' };
+    if (statusSystemOn()) finishStatusTurn(state, unit, now);
     return;
   }
   const target = targetPool(state, unit, choice.kind).find(item => item.id === choice.target.id && item.hp > 0);
   if (!target) {
     unit.targetId = null;
     unit.action = { state: 'idle' };
+    if (statusSystemOn()) finishStatusTurn(state, unit, now);
     return;
   }
   const direction = Math.sign(target.x - unit.x);
@@ -684,7 +704,7 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (action?.state === 'windup') {
       const anchor = { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot };
       recover(impact.source, action, anchor, action.targetCount ?? Math.max(1, state.enemies.length));
-      if (statusSystemOn()) endStatusTurn(impact.source);
+      if (statusSystemOn()) completeStatusTurn(state, impact.source, now);
       else {
         const turned = onTurnStart({ id: impact.source.id, hp: impact.source.hp, maxHp: impact.source.maxHp, statuses: unitStatuses(impact.source) });
         impact.source.hp = turned.unit.hp;

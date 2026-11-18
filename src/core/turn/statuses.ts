@@ -285,9 +285,11 @@ export function turnStartPhases<T extends { id: string; hp: number; maxHp: numbe
 
   const stunned = mine.some(status => isControl(status));
   if (!stunned) {
+    // mayAct is about control, not projected DoT. Shields (and real HP after applyDotThroughShield)
+    // decide whether the unit dies; only stun skips the action.
     return {
       unit: { ...unit, statuses: unit.statuses }, events,
-      mayAct: projectedHp > 0, stunEnded: false, steadfastGranted: false, projectedHp,
+      mayAct: true, stunEnded: false, steadfastGranted: false, projectedHp,
     };
   }
 

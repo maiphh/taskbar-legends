@@ -220,6 +220,7 @@ export function drawStatusGlyph(
   x: number,
   y: number,
   colors: StatusFrameColors,
+  glyphColor?: string,
 ): void {
   const left = Math.round(x);
   const top = Math.round(y);
@@ -229,7 +230,7 @@ export function drawStatusGlyph(
   ctx.fillStyle = colors.fill;
   ctx.fillRect(left + 1, top + 1, 7, 7);
   const glyph = STATUS_GLYPHS[id];
-  paintPattern(ctx, glyph, left + 1, top + 1, ch => GLYPH_INK[ch]);
+  paintPattern(ctx, glyph, left + 1, top + 1, ch => (glyphColor ? glyphColor : GLYPH_INK[ch]));
 }
 
 /** Draw a 3×5 digit (0-9 or `+`) in `color` at integer (x, y). */

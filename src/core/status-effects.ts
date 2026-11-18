@@ -14,6 +14,30 @@ import {
 } from './turn/statuses';
 import type { GameState, Unit } from './model';
 
+/**
+ * Units whose beginActorTurn opened a status turn that has not ended yet.
+ * WeakSet keys on the unit object so parallel sims with the same unit ids stay isolated.
+ */
+const openStatusTurns = new WeakSet<Unit>();
+
+export function markStatusTurn(unit: Unit): void {
+  if (!statusSystemOn()) return;
+  openStatusTurns.add(unit);
+}
+
+/** End a marked non-windup turn (area special, no-target). No-op if nothing was marked. */
+export function finishStatusTurn(state: GameState, unit: Unit, now: number): void {
+  if (!openStatusTurns.has(unit)) return;
+  openStatusTurns.delete(unit);
+  endStatusTurn(state, unit, now);
+}
+
+/** End statuses for a windup/miss recovery. Always ticks; clears a mark if present. */
+export function completeStatusTurn(state: GameState, unit: Unit, now: number): void {
+  openStatusTurns.delete(unit);
+  endStatusTurn(state, unit, now);
+}
+
 export function statusSystemOn(): boolean {
   return statusEffectsEnabled();
 }
@@ -36,7 +60,10 @@ export function isStatusBoss(unit: Unit): boolean {
 export function clearUnitStatuses(...groups: Array<readonly Unit[] | Unit[] | undefined>): void {
   for (const group of groups) {
     if (!group) continue;
-    for (const unit of group) unit.statuses = [];
+    for (const unit of group) {
+      unit.statuses = [];
+      openStatusTurns.delete(unit);
+    }
   }
 }
 
@@ -158,16 +185,27 @@ export function beginStatusTurn(state: GameState, unit: Unit, now: number): bool
   }
 
   if (!started.mayAct) {
+    // Only control (stun) skips the action. Emit skip, then tick remaining statuses.
+    if (started.stunEnded) {
+      emitStatus(state, 'expire', 'stun', unit.id, unit.id, 0, 1, now);
+    }
     emitStatus(state, 'skip', 'stun', unit.id, unit.id, 0, 1, now);
-    endStatusTurn(unit);
+    endStatusTurn(state, unit, now);
     return false;
   }
   return true;
 }
 
-export function endStatusTurn(unit: Unit): void {
+export function endStatusTurn(state: GameState, unit: Unit, now: number): void {
   if (!statusSystemOn()) return;
-  unit.statuses = turnEndStatuses(list(unit), unit.id);
+  const before = list(unit);
+  const after = turnEndStatuses(before, unit.id);
+  for (const status of before) {
+    if (status.targetId !== unit.id) continue;
+    if (after.some(next => next.id === status.id && next.targetId === unit.id)) continue;
+    emitStatus(state, 'expire', status.id, unit.id, status.sourceId, 0, status.stacks, now);
+  }
+  unit.statuses = after;
 }
 
 type ApplySpec = {
