@@ -8,6 +8,7 @@ import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
 import { campaignPresentation } from './core/selectors';
+import { wipeStatusText, WIPE_STATUS_COMPACT_WIDTH } from './core/game';
 import { getPartyHeroDefinition } from './core/party-definitions';
 import { welcomeLayout } from './welcome-layout';
 import { ellipsize } from './text-fit';
@@ -202,10 +203,17 @@ export class PixelUI {
   private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, _paused: boolean): void {
     void _paused;
     const width = this.width, coreY = this.sourceHeight - CONFIG.ui.closed.coreHeight;
-    const campaign = campaignPresentation(state.progress, _paused);
+    const campaign = campaignPresentation(state.progress, false);
     const color = campaign.tone === 'boss' ? palette.red : campaign.tone === 'complete' ? palette.green : palette.gold;
+    // Wipe banner (idea 11) replaces the short farm lane for 8 s; under 640 px use the short form.
+    const base = wipeStatusText(state, width < WIPE_STATUS_COMPACT_WIDTH) ?? campaign.lane;
+    const label = _paused ? `Paused · ${base}` : base;
+    const maxWidth = Math.max(0, width - 16);
+    const drawn = maxWidth > 0 && this.measureText(label) > maxWidth
+      ? ellipsize(label, maxWidth, value => this.measureText(value))
+      : label;
     // Sit above the bottom-lane health bars; the battlefield is empty at this height.
-    this.text(ctx, campaign.lane, 8, Math.max(0, coreY - 40), color, BODY, true, Math.max(0, width - 16), { exactY: true });
+    this.text(ctx, drawn, 8, Math.max(0, coreY - 40), color, BODY, true, maxWidth || undefined, { exactY: true });
     if (this.compactEditing) {
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameInk; ctx.fillRect(0, coreY, width, 1); ctx.fillRect(0, coreY + 79, width, 1); ctx.fillRect(0, coreY, 1, 80); ctx.fillRect(width - 1, coreY, 1, 80);
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameColor; ctx.fillRect(1, coreY + 1, width - 2, 1); ctx.fillRect(1, coreY + 78, width - 2, 1); ctx.fillRect(1, coreY + 1, 1, 78); ctx.fillRect(width - 2, coreY + 1, 1, 78);

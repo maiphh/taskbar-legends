@@ -183,6 +183,8 @@ export const stateSchema = z.object({
   // Continuous idle production survives short visits. Absent is treated as all-zero for prior saves.
   offlineAccrual: z.object({ goldFraction: finite.nonnegative().lt(1), xpFraction: finite.nonnegative().lt(1), clearFraction: finite.nonnegative().lt(1),
     normalChestFraction: finite.nonnegative().lt(1), expeditionChestFraction: finite.nonnegative().lt(1), secondsFraction: finite.nonnegative().lt(1) }).strict().optional(),
+  // Idea 11: optional wipe banner after a non-boss loss. Absent on older saves; cleared on the next clear.
+  lastLoss: z.object({ stage: stageNumber, tick: natural, cause: z.literal('wipe') }).strict().optional(),
   eventSeq: natural, eventCounts: z.record(z.string(), natural), events: z.array(eventSchema).max(CONFIG.runtime.eventLogLimit),
 }).strict().superRefine((state, context) => {
   const invalid = (message: string): void => context.addIssue({ code: 'custom', message });
@@ -218,6 +220,7 @@ export const stateSchema = z.object({
   if (progress.kind === 'BOSS_READY' && (progress.stage !== state.highestCleared || progress.bossStage !== state.highestCleared + 1 || !stageConfig(progress.bossStage).isBoss)) invalid('Invalid boss gate');
   if (progress.kind === 'COMPLETE' && state.highestCleared !== CONFIG.stages.length) invalid('Campaign incomplete');
   if (progress.kind === 'FARMING' && progress.failTick !== undefined && progress.failTick > state.tick) invalid('Failure tick cannot be in the future');
+  if (state.lastLoss && state.lastLoss.tick > state.tick) invalid('lastLoss tick cannot be in the future');
   if (state.phase.kind === 'farmPad' && !state.farmClock) invalid('Padding needs a native encounter clock');
   if (state.encounterFarmContext && (state.encounterFarmContext.encounter !== state.encounter
     || state.encounterFarmContext.startedTick > state.tick)) invalid('Pending farm context does not match the current encounter');
