@@ -95,15 +95,16 @@ await page.waitForTimeout(150);
 await page.screenshot({ path: `${out}/idea2-farm-x3-1280.png` });
 
 // Crop the status band so the ×3 token is obvious in review.
+// Compact lane text is at coreY - 40 (= 40 with sourceHeight 160 / coreHeight 80); glyphs sit on y 41–50.
 const band = await page.evaluate(() => {
   const canvas = document.querySelector('#game');
   if (!(canvas instanceof HTMLCanvasElement)) return null;
   const tmp = document.createElement('canvas');
-  tmp.width = 420; tmp.height = 36;
+  tmp.width = 420; tmp.height = 16;
   const ctx = tmp.getContext('2d');
   if (!ctx) return null;
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(canvas, 0, 0, 420, 36, 0, 0, 420, 36);
+  ctx.drawImage(canvas, 0, 40, 420, 16, 0, 0, 420, 16);
   return tmp.toDataURL('image/png');
 });
 if (band) {
