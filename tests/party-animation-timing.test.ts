@@ -57,4 +57,17 @@ describe('party attack clip timing', () => {
     const oldRecovery = actionBoundaries('ew3', 'leap', { state: 'recovery', startTick: 0, impactTick: 10, readyTick: 32 });
     expect(sampleActionPresentation('leap', oldRecovery, 11).phase).toBe('return');
   });
+
+  it('uses a two-tick farm beat when farmFast is set (impact +1, ready +2, leap return included)', () => {
+    const leap = createActionTimeline('mw2', 'leap', 40, { farmFast: true });
+    expect(leap).toEqual({
+      startTick: 40, contactTick: 40, impactTick: 41, attackEndTick: 41, returnEndTick: 42, readyTick: 42,
+    });
+    const cast = createActionTimeline('priest', 'cast', 10, { farmFast: true });
+    expect(cast).toEqual({
+      startTick: 10, contactTick: 10, impactTick: 11, attackEndTick: 11, returnEndTick: 11, readyTick: 12,
+    });
+    const full = createActionTimeline('mw2', 'leap', 40);
+    expect(full.readyTick - full.startTick).toBeGreaterThan(leap.readyTick - leap.startTick);
+  });
 });

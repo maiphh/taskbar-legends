@@ -1,8 +1,8 @@
 {
   "date": "2026-11-16",
   "source": {
-    "configVersion": "1.4.4",
-    "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+    "configVersion": "1.5.0",
+    "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
     "team": [
       "hk1",
       "wiz",
@@ -23,7 +23,7 @@
     {
       "seed": 1,
       "stage": 1,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -48,10 +48,10 @@
         }
       ],
       "clear": {
-        "ticks": 519,
+        "ticks": 317,
         "proof": {
           "stage": 1,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -76,19 +76,19 @@
             }
           ],
           "nativeSeconds": [
-            31.95
+            21.85
           ],
           "wallSeconds": [
-            31.95
+            21.85
           ]
         }
       },
       "earned": {
         "stage": 1,
-        "nativeSeconds": 31.95,
-        "wallSeconds": 31.95,
-        "gold": 4732,
-        "xp": 4732,
+        "nativeSeconds": 21.85,
+        "wallSeconds": 21.85,
+        "gold": 6919,
+        "xp": 6919,
         "chests": 0
       },
       "fallback": {
@@ -101,16 +101,16 @@
       },
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_36deb503_00000006",
-      "changedTeamRealClearTicks": 675,
+      "changedTeamRealClearTicks": 420,
       "changedTeamProof": true,
       "final": {
-        "gold": 9766,
+        "gold": 11953,
         "tickets": 7,
         "rng": 1135788947,
         "proofs": [
           {
             "stage": 1,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "mw2",
@@ -135,17 +135,17 @@
               }
             ],
             "nativeSeconds": [
-              33.75
+              16.9
             ],
             "wallSeconds": [
-              33.75
+              21
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.39436619718344446,
-          "xpFraction": 0.39436619718344446,
-          "clearFraction": 0.6760563380281752,
+          "goldFraction": 0.9084668192217578,
+          "xpFraction": 0.9084668192217578,
+          "clearFraction": 0.7597254004576541,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -155,7 +155,7 @@
     {
       "seed": 2,
       "stage": 1,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -180,10 +180,10 @@
         }
       ],
       "clear": {
-        "ticks": 519,
+        "ticks": 317,
         "proof": {
           "stage": 1,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -208,19 +208,19 @@
             }
           ],
           "nativeSeconds": [
-            31.95
+            21.85
           ],
           "wallSeconds": [
-            31.95
+            21.85
           ]
         }
       },
       "earned": {
         "stage": 1,
-        "nativeSeconds": 31.95,
-        "wallSeconds": 31.95,
-        "gold": 4732,
-        "xp": 4732,
+        "nativeSeconds": 21.85,
+        "wallSeconds": 21.85,
+        "gold": 6919,
+        "xp": 6919,
         "chests": 0
       },
       "fallback": {
@@ -233,16 +233,16 @@
       },
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_b4421bbb_00000006",
-      "changedTeamRealClearTicks": 675,
+      "changedTeamRealClearTicks": 420,
       "changedTeamProof": true,
       "final": {
-        "gold": 9766,
+        "gold": 11953,
         "tickets": 7,
         "rng": 1135788948,
         "proofs": [
           {
             "stage": 1,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "mw2",
@@ -267,17 +267,17 @@
               }
             ],
             "nativeSeconds": [
-              33.75
+              16.9
             ],
             "wallSeconds": [
-              33.75
+              21
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.39436619718344446,
-          "xpFraction": 0.39436619718344446,
-          "clearFraction": 0.6760563380281752,
+          "goldFraction": 0.9084668192217578,
+          "xpFraction": 0.9084668192217578,
+          "clearFraction": 0.7597254004576541,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -287,7 +287,7 @@
     {
       "seed": 3,
       "stage": 1,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -312,10 +312,10 @@
         }
       ],
       "clear": {
-        "ticks": 519,
+        "ticks": 317,
         "proof": {
           "stage": 1,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -340,19 +340,19 @@
             }
           ],
           "nativeSeconds": [
-            31.95
+            21.85
           ],
           "wallSeconds": [
-            31.95
+            21.85
           ]
         }
       },
       "earned": {
         "stage": 1,
-        "nativeSeconds": 31.95,
-        "wallSeconds": 31.95,
-        "gold": 4732,
-        "xp": 4732,
+        "nativeSeconds": 21.85,
+        "wallSeconds": 21.85,
+        "gold": 6919,
+        "xp": 6919,
         "chests": 0
       },
       "fallback": {
@@ -365,16 +365,16 @@
       },
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_96a0f96b_00000006",
-      "changedTeamRealClearTicks": 675,
+      "changedTeamRealClearTicks": 420,
       "changedTeamProof": true,
       "final": {
-        "gold": 9766,
+        "gold": 11953,
         "tickets": 7,
         "rng": 1135788949,
         "proofs": [
           {
             "stage": 1,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "mw2",
@@ -399,17 +399,17 @@
               }
             ],
             "nativeSeconds": [
-              33.75
+              16.9
             ],
             "wallSeconds": [
-              33.75
+              21
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.39436619718344446,
-          "xpFraction": 0.39436619718344446,
-          "clearFraction": 0.6760563380281752,
+          "goldFraction": 0.9084668192217578,
+          "xpFraction": 0.9084668192217578,
+          "clearFraction": 0.7597254004576541,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -419,7 +419,7 @@
     {
       "seed": 1,
       "stage": 9,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -444,10 +444,10 @@
         }
       ],
       "clear": {
-        "ticks": 1764,
+        "ticks": 420,
         "proof": {
           "stage": 9,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -472,19 +472,19 @@
             }
           ],
           "nativeSeconds": [
-            88.2
+            23.85
           ],
           "wallSeconds": [
-            88.2
+            21
           ]
         }
       },
       "earned": {
         "stage": 9,
-        "nativeSeconds": 88.2,
-        "wallSeconds": 88.2,
-        "gold": 9224,
-        "xp": 9224,
+        "nativeSeconds": 23.85,
+        "wallSeconds": 21,
+        "gold": 34113,
+        "xp": 34113,
         "chests": 0
       },
       "fallback": {
@@ -498,13 +498,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_36deb503_00000005",
       "final": {
-        "gold": 14400,
+        "gold": 39289,
         "tickets": 7,
         "rng": 4231026100,
         "proofs": [
           {
             "stage": 9,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "hk1",
@@ -529,17 +529,17 @@
               }
             ],
             "nativeSeconds": [
-              88.2
+              23.85
             ],
             "wallSeconds": [
-              88.2
+              21
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.48979591836723557,
-          "xpFraction": 0.48979591836723557,
-          "clearFraction": 0.816326530612244,
+          "goldFraction": 0.20754716980445664,
+          "xpFraction": 0.20754716980445664,
+          "clearFraction": 0.943396226415075,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -549,7 +549,7 @@
     {
       "seed": 2,
       "stage": 9,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -574,10 +574,10 @@
         }
       ],
       "clear": {
-        "ticks": 1764,
+        "ticks": 420,
         "proof": {
           "stage": 9,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -602,19 +602,19 @@
             }
           ],
           "nativeSeconds": [
-            88.2
+            23.85
           ],
           "wallSeconds": [
-            88.2
+            21
           ]
         }
       },
       "earned": {
         "stage": 9,
-        "nativeSeconds": 88.2,
-        "wallSeconds": 88.2,
-        "gold": 9224,
-        "xp": 9224,
+        "nativeSeconds": 23.85,
+        "wallSeconds": 21,
+        "gold": 34113,
+        "xp": 34113,
         "chests": 0
       },
       "fallback": {
@@ -628,13 +628,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_b4421bbb_00000005",
       "final": {
-        "gold": 14400,
+        "gold": 39289,
         "tickets": 6,
         "rng": 567894475,
         "proofs": [
           {
             "stage": 9,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "hk1",
@@ -659,17 +659,17 @@
               }
             ],
             "nativeSeconds": [
-              88.2
+              23.85
             ],
             "wallSeconds": [
-              88.2
+              21
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.48979591836723557,
-          "xpFraction": 0.48979591836723557,
-          "clearFraction": 0.816326530612244,
+          "goldFraction": 0.20754716980445664,
+          "xpFraction": 0.20754716980445664,
+          "clearFraction": 0.943396226415075,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -679,7 +679,7 @@
     {
       "seed": 3,
       "stage": 9,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -704,10 +704,10 @@
         }
       ],
       "clear": {
-        "ticks": 1764,
+        "ticks": 420,
         "proof": {
           "stage": 9,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -732,19 +732,19 @@
             }
           ],
           "nativeSeconds": [
-            88.2
+            23.85
           ],
           "wallSeconds": [
-            88.2
+            21
           ]
         }
       },
       "earned": {
         "stage": 9,
-        "nativeSeconds": 88.2,
-        "wallSeconds": 88.2,
-        "gold": 9224,
-        "xp": 9224,
+        "nativeSeconds": 23.85,
+        "wallSeconds": 21,
+        "gold": 34113,
+        "xp": 34113,
         "chests": 0
       },
       "fallback": {
@@ -758,13 +758,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_96a0f96b_00000005",
       "final": {
-        "gold": 14400,
+        "gold": 39289,
         "tickets": 6,
         "rng": 567894476,
         "proofs": [
           {
             "stage": 9,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "hk1",
@@ -789,17 +789,17 @@
               }
             ],
             "nativeSeconds": [
-              88.2
+              23.85
             ],
             "wallSeconds": [
-              88.2
+              21
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.48979591836723557,
-          "xpFraction": 0.48979591836723557,
-          "clearFraction": 0.816326530612244,
+          "goldFraction": 0.20754716980445664,
+          "xpFraction": 0.20754716980445664,
+          "clearFraction": 0.943396226415075,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -809,7 +809,7 @@
     {
       "seed": 1,
       "stage": 11,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -834,10 +834,10 @@
         }
       ],
       "clear": {
-        "ticks": 811,
+        "ticks": 463,
         "proof": {
           "stage": 11,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -862,19 +862,19 @@
             }
           ],
           "nativeSeconds": [
-            46.55
+            29.15
           ],
           "wallSeconds": [
-            46.55
+            29.15
           ]
         }
       },
       "earned": {
         "stage": 11,
-        "nativeSeconds": 46.55,
-        "wallSeconds": 46.55,
-        "gold": 9203,
-        "xp": 9203,
+        "nativeSeconds": 29.15,
+        "wallSeconds": 29.15,
+        "gold": 14696,
+        "xp": 14696,
         "chests": 0
       },
       "fallback": {
@@ -888,13 +888,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_36deb503_00000006",
       "final": {
-        "gold": 14272,
+        "gold": 19765,
         "tickets": 8,
         "rng": 1767624617,
         "proofs": [
           {
             "stage": 11,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "hk1",
@@ -919,17 +919,17 @@
               }
             ],
             "nativeSeconds": [
-              46.55
+              29.15
             ],
             "wallSeconds": [
-              46.55
+              29.15
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.00751879699237179,
-          "xpFraction": 0.00751879699237179,
-          "clearFraction": 0.336197636949521,
+          "goldFraction": 0.3979416809597751,
+          "xpFraction": 0.3979416809597751,
+          "clearFraction": 0.4991423670668951,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -939,7 +939,7 @@
     {
       "seed": 2,
       "stage": 11,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -964,10 +964,10 @@
         }
       ],
       "clear": {
-        "ticks": 811,
+        "ticks": 463,
         "proof": {
           "stage": 11,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -992,19 +992,19 @@
             }
           ],
           "nativeSeconds": [
-            46.55
+            29.15
           ],
           "wallSeconds": [
-            46.55
+            29.15
           ]
         }
       },
       "earned": {
         "stage": 11,
-        "nativeSeconds": 46.55,
-        "wallSeconds": 46.55,
-        "gold": 9203,
-        "xp": 9203,
+        "nativeSeconds": 29.15,
+        "wallSeconds": 29.15,
+        "gold": 14696,
+        "xp": 14696,
         "chests": 0
       },
       "fallback": {
@@ -1018,13 +1018,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_b4421bbb_00000006",
       "final": {
-        "gold": 14272,
+        "gold": 19765,
         "tickets": 8,
         "rng": 1767624618,
         "proofs": [
           {
             "stage": 11,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "hk1",
@@ -1049,17 +1049,17 @@
               }
             ],
             "nativeSeconds": [
-              46.55
+              29.15
             ],
             "wallSeconds": [
-              46.55
+              29.15
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.00751879699237179,
-          "xpFraction": 0.00751879699237179,
-          "clearFraction": 0.336197636949521,
+          "goldFraction": 0.3979416809597751,
+          "xpFraction": 0.3979416809597751,
+          "clearFraction": 0.4991423670668951,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -1069,7 +1069,7 @@
     {
       "seed": 3,
       "stage": 11,
-      "signature": "party-v2-farm-proof-resolver-1-fc5e4704",
+      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
       "formation": [
         {
           "id": "hk1",
@@ -1094,10 +1094,10 @@
         }
       ],
       "clear": {
-        "ticks": 811,
+        "ticks": 463,
         "proof": {
           "stage": 11,
-          "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
           "heroes": [
             {
               "id": "hk1",
@@ -1122,19 +1122,19 @@
             }
           ],
           "nativeSeconds": [
-            46.55
+            29.15
           ],
           "wallSeconds": [
-            46.55
+            29.15
           ]
         }
       },
       "earned": {
         "stage": 11,
-        "nativeSeconds": 46.55,
-        "wallSeconds": 46.55,
-        "gold": 9203,
-        "xp": 9203,
+        "nativeSeconds": 29.15,
+        "wallSeconds": 29.15,
+        "gold": 14696,
+        "xp": 14696,
         "chests": 0
       },
       "fallback": {
@@ -1148,13 +1148,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_96a0f96b_00000006",
       "final": {
-        "gold": 14272,
+        "gold": 19765,
         "tickets": 8,
         "rng": 1767624619,
         "proofs": [
           {
             "stage": 11,
-            "rulesSignature": "party-v2-farm-proof-resolver-1-fc5e4704",
+            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
             "heroes": [
               {
                 "id": "hk1",
@@ -1179,17 +1179,17 @@
               }
             ],
             "nativeSeconds": [
-              46.55
+              29.15
             ],
             "wallSeconds": [
-              46.55
+              29.15
             ]
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.00751879699237179,
-          "xpFraction": 0.00751879699237179,
-          "clearFraction": 0.336197636949521,
+          "goldFraction": 0.3979416809597751,
+          "xpFraction": 0.3979416809597751,
+          "clearFraction": 0.4991423670668951,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0

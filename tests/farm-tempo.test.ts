@@ -44,10 +44,15 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
     for (const scale of [0, 1.5, 5]) expect(() => farmTempoSchema.parse({ nonBossFarmTimeScale: scale })).toThrow();
     expect(() => farmTempoSchema.parse({ nonBossFarmMinCycleSec: -1 })).toThrow();
   });
-  it('keeps the current battle timeline on wall ticks when repeat tempo is configured', () => {
-    tempo(3, 20); const state = controlled(1000); step(state, 10);
-    expect(state.tick).toBe(10); expect(state.farmClock?.elapsedTicks).toBe(10);
-    tempo(1, 0); step(state); expect(state.farmClock?.elapsedTicks).toBe(11);
+  it('advances farm-clock combat time by scale during battle when repeat tempo is configured', () => {
+    tempo(3, 20); const state = controlled(1000);
+    // Keep the wave alive so scale applies for the full step window.
+    for (const enemy of state.enemies) { enemy.hp = 1e9; enemy.maxHp = 1e9; }
+    for (const hero of state.party) { hero.gauge = 0; hero.atk = 0; }
+    step(state, 10);
+    expect(state.tick).toBe(10); expect(state.farmClock?.elapsedTicks).toBe(30);
+    tempo(1, 0); state.farmClock!.scale = 1; state.farmClock!.remainder = 0; step(state);
+    expect(state.farmClock?.elapsedTicks).toBe(31);
   });
   it('settles a fast farm at exactly20seconds with one stage gap, no padding attacks/rewards/RNG', () => {
     tempo(3, 20); const state = controlled(); const start = state.tick; step(state);
@@ -67,13 +72,72 @@ describe('repeat-only native encounter clock and wall-time floor', () => {
     expect(state.metrics.nativeFarmClearSeconds?.[0]).toBeGreaterThan(20);
     expect(state.metrics.farmClearSeconds?.[0]).toBeCloseTo(state.metrics.nativeFarmClearSeconds?.[0] ?? 0, 2);
   });
-  it('preserves native ordered hits/skills/deaths and RNG/rewards while events keep ordered wall ticks', () => {
-    tempo(1, 0); const native = repeat(); untilClear(native);
-    tempo(3, 20); const scaled = repeat(); untilClear(scaled);
-    const actions = (state: GameState) => state.events.filter(event => !['spawn', 'stage', 'wave', 'clear'].includes(event.data.type)).map(event => event.data);
-    expect(actions(scaled)).toEqual(actions(native)); expect(scaled.rng).toBe(native.rng); expect(scaled.gold).toBe(native.gold);
-    expect(scaled.metrics.nativeFarmClearSeconds?.[0]).toBe(native.metrics.farmClearSeconds[0]);
-    expect(scaled.events.every((event, index, events) => event.tick <= scaled.tick && (!index || event.seq > (events[index - 1]?.seq ?? 0)))).toBe(true);
+  it('records wall farm clears in the 20–40 s band while a same-party push keeps the long full-clip duration', () => {
+    // Fixture: one tanky grunt. Full-clip push stays slow; scaled farm with short beats clears inside the T6 band.
+    const toughFight = (kind: 'farm' | 'push'): GameState => {
+      tempo(3, 20);
+      const state = createState(11);
+      for (const hero of state.roster) { hero.level = 8; hero.stars = 2; }
+      state.highestCleared = kind === 'farm' ? 5 : 4;
+      state.progress = kind === 'farm'
+        ? { kind: 'FARMING', stage: 5, failedStage: 6, retryAtTick: 1e9, failTick: 0, failedPower: 1e9, failures: 1 }
+        : { kind: 'PUSHING', stage: 5 };
+      beginEncounter(state);
+      state.wave = CONFIG.stages[4]?.waves.length ?? 3;
+      const enemy = state.enemies[0]; if (!enemy) throw new Error('Fixture');
+      state.enemies = [enemy];
+      enemy.hp = 18_000; enemy.maxHp = 18_000; enemy.def = 40; enemy.atk = 1; enemy.x = 160; enemy.speed = 0;
+      enemy.gauge = 0; enemy.action = { state: 'idle' }; delete enemy.specialAction;
+      for (const hero of state.party) {
+        hero.hp = hero.maxHp; hero.atk = 55; hero.def = 30; hero.gauge = hero.slot === 0 ? 10000 : 0;
+        hero.action = { state: 'idle' }; hero.moving = false;
+      }
+      return state;
+    };
+    const farm = toughFight('farm'), farmStart = farm.tick, farmClears = farm.stats.clears;
+    for (let tick = 0; tick < 20_000 && farm.stats.clears === farmClears; tick += 1) step(farm);
+    expect(farm.stats.clears).toBe(farmClears + 1);
+    const farmWall = (farm.tick - farmStart) / CONFIG.sim.ticksPerSecond;
+    expect(farmWall).toBeGreaterThanOrEqual(19.95);
+    expect(farmWall).toBeLessThanOrEqual(40.05);
+    expect(farm.metrics.farmMinSeconds).toBeGreaterThanOrEqual(19.95);
+    expect(farm.metrics.farmMaxSeconds).toBeLessThanOrEqual(40.05);
+
+    const push = toughFight('push'), pushStart = push.tick, pushClears = push.stats.clears;
+    expect(push.farmClock).toBeUndefined();
+    for (let tick = 0; tick < 40_000 && push.stats.clears === pushClears; tick += 1) step(push);
+    expect(push.stats.clears).toBe(pushClears + 1);
+    const pushWall = (push.tick - pushStart) / CONFIG.sim.ticksPerSecond;
+    // Same board without farm clock keeps the long full-clip timeline (well above the 20–40 farm band).
+    expect(pushWall).toBeGreaterThan(80);
+    expect(pushWall).toBeGreaterThan(farmWall * 3);
+    expect(farmWall).toBeLessThanOrEqual(40.05);
+  });
+
+  it('applies the farm damage ramp only while farmClock.scale > 1 after the configured combat seconds', () => {
+    tempo(3, 20);
+    const state = controlled();
+    const enemy = state.enemies[0]!; enemy.hp = 1e6; enemy.maxHp = 1e6; enemy.def = 0; enemy.x = 120;
+    const hero = state.party[0]!; hero.atk = 100; hero.gauge = 10000; hero.x = 100; hero.action = { state: 'idle' };
+    for (const unit of state.party) if (unit !== hero) { unit.hp = 0; unit.gauge = 0; }
+    // Before the ramp window: one hit at base damage.
+    step(state, 4);
+    const earlyHit = [...state.events].reverse().find(event => event.data.type === 'hit' && event.data.attackerId === hero.id);
+    expect(earlyHit?.data.type).toBe('hit');
+    if (earlyHit?.data.type !== 'hit') throw new Error('expected hit');
+    const baseDamage = earlyHit.data.damage;
+    // Jump past farmDamageRampAfterSec on the farm clock and take another hit.
+    state.farmClock!.elapsedTicks = ticksForSeconds(CONFIG.combat.farmDamageRampAfterSec ?? 20);
+    hero.gauge = 10000; hero.action = { state: 'idle' }; enemy.hp = 1e6;
+    const before = state.events.length;
+    step(state, 6);
+    const lateHit = state.events.slice(before).reverse().find(event => event.data.type === 'hit' && event.data.attackerId === hero.id);
+    expect(lateHit?.data.type).toBe('hit');
+    if (lateHit?.data.type !== 'hit') throw new Error('expected ramp hit');
+    expect(lateHit.data.damage).toBe(Math.max(1, Math.round(baseDamage * (CONFIG.combat.farmDamageRampMult ?? 1.5))));
+    // Push (no farm clock) never ramps.
+    const push = createState(3); push.progress = { kind: 'PUSHING', stage: 1 }; beginEncounter(push);
+    expect(push.farmClock).toBeUndefined();
   });
   it('never allocates or uses a tempo clock for pushes or boss fights/repeats (bossRepeatMinCycle absent, 1.4.3)', () => {
     const run = (scale: number, floor: number, boss: boolean, repeatBoss = false): GameState => {
