@@ -169,6 +169,8 @@ export const stateSchema = z.object({
   // and repeat farm clears since the last farm chest at stage ≥ farmChest.fromStage.
   pendingChoice: z.array(z.tuple([gearSchema, gearSchema])).max(CONFIG.runtime.chestChoiceQueueMax).optional(),
   farmChestDry: natural.optional(),
+  // Day-1 spark: tick of the last forced farm pick-1-of-2. Absent on older saves (= never sparked).
+  dayOneSparkAtTick: natural.optional(),
   // v1.4 CR-14-01/02/03, optional: pulls since the last Legendary, consecutive pulls without a new hero,
   // chest Fortune rolls since the last Legendary gear, and whether a Legendary has dropped yet.
   pityLegendary: natural.max(V14_DESIGN.gacha.legendaryPityEvery - 1).optional(),

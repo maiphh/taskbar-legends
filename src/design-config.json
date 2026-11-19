@@ -1231,6 +1231,12 @@
       "fromStage": 9,
       "loserSalvage": "salvageBase * rarityMult gold"
     },
+    "dayOneSpark": {
+      "gapSec": 150,
+      "maxOpenHour": 6,
+      "belowStage": 10,
+      "note": "Rules-on only (with chestChoice). During the first maxOpenHour open hours, a farm clear of a stage below belowStage queues pick-1-of-2 every gapSec since the last spark, even when dropStage < chestChoice.fromStage. Rolls both options at the farm stage. Queue cap 3 unchanged. Stops after hour 6 so d2+ keep their own chest stream."
+    },
     "farmChest": {
       "baseChance": 0.03,
       "guaranteeEvery": 7,

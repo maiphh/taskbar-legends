@@ -233,6 +233,17 @@ export function setLocked(state: GameState, id: ItemId, locked: boolean): void {
   state.economyRevision += 1;
 }
 /**
+ * Queue a pick-1-of-2 chest at dropStage, ignoring chestChoice.fromStage.
+ * Used by CR-14-08 (when stage ≥ fromStage) and by day-one sparks (early farm stages).
+ * Cap 3; a 4th auto-resolves the oldest by score.
+ */
+export function queueChestChoice(state: GameState, dropStage: number, units = CONFIG.v14.fortune.chestUnits, bestOf = 1): void {
+  state.stats.chests += 1;
+  const first = rollGear(state, dropStage, units, bestOf), second = rollGear(state, dropStage, 0, bestOf);
+  (state.pendingChoice ??= []).push([first, second]); state.economyRevision += 1;
+  while (state.pendingChoice.length > CONFIG.runtime.chestChoiceQueueMax) chooseChest(state, bestChoice(state.pendingChoice[0]));
+}
+/**
  * One chest. With v14.chestChoice.options 2 (CR-14-08) at dropStage ≥ fromStage it rolls two items into
  * state.pendingChoice instead; a 4th unresolved choice auto-resolves the oldest by score. With options 1 this is 1.3.0.
  */
@@ -240,11 +251,8 @@ export function chest(state: GameState, dropStage: number, kind: 'chest' | 'expe
   const rule = CONFIG.v14.chestChoice;
   // CR-14-04: an Expedition Chest is best-of-expeditionBestOf and weighs expeditionUnits on Fortune; both options of a choice use best-of.
   const units = kind === 'expedition' ? CONFIG.v14.fortune.expeditionUnits : CONFIG.v14.fortune.chestUnits, bestOf = kind === 'expedition' ? CONFIG.v14.offline.expeditionBestOf : 1;
-  state.stats.chests += 1;
-  if (rule.options < 2 || dropStage < rule.fromStage) { addGear(state, rollGear(state, dropStage, units, bestOf)); return; }
-  const first = rollGear(state, dropStage, units, bestOf), second = rollGear(state, dropStage, 0, bestOf);
-  (state.pendingChoice ??= []).push([first, second]); state.economyRevision += 1;
-  while (state.pendingChoice.length > CONFIG.runtime.chestChoiceQueueMax) chooseChest(state, bestChoice(state.pendingChoice[0]));
+  if (rule.options < 2 || dropStage < rule.fromStage) { state.stats.chests += 1; addGear(state, rollGear(state, dropStage, units, bestOf)); return; }
+  queueChestChoice(state, dropStage, units, bestOf);
 }
 /** Index the score rule keeps: the higher gearScore, ties keep the first option. */
 export function bestChoice(options: readonly [Gear, Gear] | undefined): 0 | 1 {
