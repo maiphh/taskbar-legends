@@ -1,6 +1,7 @@
 import { statusEffectsConfig, statusEffectsEnabled } from '../config';
 import { grantXp } from './economy';
 import { emit, goldChange } from './events';
+import { farmDamageRampMultiplier } from './farm-damage-ramp';
 import { getPartyEnemyDefinition } from './party-enemies';
 import { partyKillReward } from './rewards';
 import {
@@ -127,6 +128,9 @@ export function cleanseUnit(state: GameState, source: Unit, target: Unit, abilit
 
 function applyDotThroughShield(state: GameState, sourceId: string, unit: Unit, amount: number, now: number): void {
   if (amount <= 0 || unit.hp <= 0) return;
+  const source = [...state.party, ...state.enemies].find(candidate => candidate.id === sourceId);
+  const ramp = source ? farmDamageRampMultiplier(state, source) : 1;
+  if (ramp !== 1) amount = Math.max(1, Math.round(amount * ramp));
   const absorbed = unit.shieldUntilTick > now ? Math.min(unit.shield, amount) : 0;
   if (absorbed > 0) {
     unit.shield -= absorbed;

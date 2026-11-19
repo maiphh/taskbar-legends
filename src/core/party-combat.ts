@@ -2,6 +2,7 @@ import { CONFIG, ticksForSeconds } from '../config';
 import { grantXp } from './economy';
 import { combatTime } from './clock';
 import { emit, goldChange } from './events';
+import { farmDamageRampMultiplier } from './farm-damage-ramp';
 import { applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveDefense, effectActive, prunePartyEffects } from './party-effects';
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
@@ -444,18 +445,10 @@ function commitAbility(state: GameState, impact: Impact, now: number): boolean {
   }
   source.mana = 0; emit(state, { type: 'skill', unitId: source.id, skill: ability.id }, now); return true;
 }
-function farmDamageRamp(state: GameState, source: Unit): number {
-  const clock = state.farmClock;
-  if (source.side !== 'hero' || !clock || clock.scale <= 1) return 1;
-  const afterSec = CONFIG.combat.farmDamageRampAfterSec, mult = CONFIG.combat.farmDamageRampMult;
-  if (afterSec === undefined || mult === undefined) return 1;
-  if (clock.elapsedTicks < ticksForSeconds(afterSec)) return 1;
-  return mult;
-}
 function damageAmount(state: GameState, source: Unit, target: Unit, coefficient: number, snapAtk?: number): number {
   const atk = snapAtk ?? effectiveAttack(state, source), def = effectiveDefense(state, target), dr = effectiveDamageReduction(state, target);
   const base = Math.max(1, Math.round(atk * coefficient * 100 / (100 + def) * (1 - dr)));
-  const ramp = farmDamageRamp(state, source);
+  const ramp = farmDamageRampMultiplier(state, source);
   return ramp === 1 ? base : Math.max(1, Math.round(base * ramp));
 }
 function farmFastTimeline(state: GameState): boolean {

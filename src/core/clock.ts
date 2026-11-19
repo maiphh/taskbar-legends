@@ -4,6 +4,7 @@ import type { GameState } from './model';
 export function combatTime(state: GameState): number { return state.farmClock?.elapsedTicks ?? state.tick; }
 export function captureFarmClock(state: GameState): void {
   delete state.farmClock;
+  delete state.nativeReplay;
   const progress = state.progress;
   const repeat = progress.kind === 'FARMING' || progress.kind === 'BOSS_READY' || progress.kind === 'COMPLETE';
   // §20: after the campaign the farm stage is the boss2 stage. With combat.bossRepeatMinCycle its repeats get the

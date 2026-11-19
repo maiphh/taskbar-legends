@@ -2,7 +2,7 @@
   "date": "2026-11-16",
   "source": {
     "configVersion": "1.5.0",
-    "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+    "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
     "team": [
       "hk1",
       "wiz",
@@ -23,7 +23,7 @@
     {
       "seed": 1,
       "stage": 1,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -51,7 +51,7 @@
         "ticks": 317,
         "proof": {
           "stage": 1,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -110,7 +110,7 @@
         "proofs": [
           {
             "stage": 1,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "mw2",
@@ -135,7 +135,7 @@
               }
             ],
             "nativeSeconds": [
-              16.9
+              21.55
             ],
             "wallSeconds": [
               21
@@ -155,7 +155,7 @@
     {
       "seed": 2,
       "stage": 1,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -183,7 +183,7 @@
         "ticks": 317,
         "proof": {
           "stage": 1,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -242,7 +242,7 @@
         "proofs": [
           {
             "stage": 1,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "mw2",
@@ -267,7 +267,7 @@
               }
             ],
             "nativeSeconds": [
-              16.9
+              21.55
             ],
             "wallSeconds": [
               21
@@ -287,7 +287,7 @@
     {
       "seed": 3,
       "stage": 1,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -315,7 +315,7 @@
         "ticks": 317,
         "proof": {
           "stage": 1,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -374,7 +374,7 @@
         "proofs": [
           {
             "stage": 1,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "mw2",
@@ -399,7 +399,7 @@
               }
             ],
             "nativeSeconds": [
-              16.9
+              21.55
             ],
             "wallSeconds": [
               21
@@ -419,7 +419,7 @@
     {
       "seed": 1,
       "stage": 9,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -447,7 +447,7 @@
         "ticks": 420,
         "proof": {
           "stage": 9,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -472,7 +472,7 @@
             }
           ],
           "nativeSeconds": [
-            23.85
+            45.15
           ],
           "wallSeconds": [
             21
@@ -481,10 +481,10 @@
       },
       "earned": {
         "stage": 9,
-        "nativeSeconds": 23.85,
+        "nativeSeconds": 45.15,
         "wallSeconds": 21,
-        "gold": 34113,
-        "xp": 34113,
+        "gold": 18019,
+        "xp": 18019,
         "chests": 0
       },
       "fallback": {
@@ -498,13 +498,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_36deb503_00000005",
       "final": {
-        "gold": 39289,
+        "gold": 23195,
         "tickets": 7,
         "rng": 4231026100,
         "proofs": [
           {
             "stage": 9,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "hk1",
@@ -529,7 +529,7 @@
               }
             ],
             "nativeSeconds": [
-              23.85
+              45.15
             ],
             "wallSeconds": [
               21
@@ -537,9 +537,9 @@
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.20754716980445664,
-          "xpFraction": 0.20754716980445664,
-          "clearFraction": 0.943396226415075,
+          "goldFraction": 0.9335548172748531,
+          "xpFraction": 0.9335548172748531,
+          "clearFraction": 0.7342192691029936,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -549,7 +549,7 @@
     {
       "seed": 2,
       "stage": 9,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -577,7 +577,7 @@
         "ticks": 420,
         "proof": {
           "stage": 9,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -602,7 +602,7 @@
             }
           ],
           "nativeSeconds": [
-            23.85
+            45.15
           ],
           "wallSeconds": [
             21
@@ -611,10 +611,10 @@
       },
       "earned": {
         "stage": 9,
-        "nativeSeconds": 23.85,
+        "nativeSeconds": 45.15,
         "wallSeconds": 21,
-        "gold": 34113,
-        "xp": 34113,
+        "gold": 18019,
+        "xp": 18019,
         "chests": 0
       },
       "fallback": {
@@ -628,13 +628,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_b4421bbb_00000005",
       "final": {
-        "gold": 39289,
+        "gold": 23195,
         "tickets": 6,
         "rng": 567894475,
         "proofs": [
           {
             "stage": 9,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "hk1",
@@ -659,7 +659,7 @@
               }
             ],
             "nativeSeconds": [
-              23.85
+              45.15
             ],
             "wallSeconds": [
               21
@@ -667,9 +667,9 @@
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.20754716980445664,
-          "xpFraction": 0.20754716980445664,
-          "clearFraction": 0.943396226415075,
+          "goldFraction": 0.9335548172748531,
+          "xpFraction": 0.9335548172748531,
+          "clearFraction": 0.7342192691029936,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -679,7 +679,7 @@
     {
       "seed": 3,
       "stage": 9,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -707,7 +707,7 @@
         "ticks": 420,
         "proof": {
           "stage": 9,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -732,7 +732,7 @@
             }
           ],
           "nativeSeconds": [
-            23.85
+            45.15
           ],
           "wallSeconds": [
             21
@@ -741,10 +741,10 @@
       },
       "earned": {
         "stage": 9,
-        "nativeSeconds": 23.85,
+        "nativeSeconds": 45.15,
         "wallSeconds": 21,
-        "gold": 34113,
-        "xp": 34113,
+        "gold": 18019,
+        "xp": 18019,
         "chests": 0
       },
       "fallback": {
@@ -758,13 +758,13 @@
       "upgradedFormationRetainedProof": true,
       "upgradeId": "itm_96a0f96b_00000005",
       "final": {
-        "gold": 39289,
+        "gold": 23195,
         "tickets": 6,
         "rng": 567894476,
         "proofs": [
           {
             "stage": 9,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "hk1",
@@ -789,7 +789,7 @@
               }
             ],
             "nativeSeconds": [
-              23.85
+              45.15
             ],
             "wallSeconds": [
               21
@@ -797,9 +797,9 @@
           }
         ],
         "offlineAccrual": {
-          "goldFraction": 0.20754716980445664,
-          "xpFraction": 0.20754716980445664,
-          "clearFraction": 0.943396226415075,
+          "goldFraction": 0.9335548172748531,
+          "xpFraction": 0.9335548172748531,
+          "clearFraction": 0.7342192691029936,
           "normalChestFraction": 0,
           "expeditionChestFraction": 0,
           "secondsFraction": 0
@@ -809,7 +809,7 @@
     {
       "seed": 1,
       "stage": 11,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -837,7 +837,7 @@
         "ticks": 463,
         "proof": {
           "stage": 11,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -894,7 +894,7 @@
         "proofs": [
           {
             "stage": 11,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "hk1",
@@ -939,7 +939,7 @@
     {
       "seed": 2,
       "stage": 11,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -967,7 +967,7 @@
         "ticks": 463,
         "proof": {
           "stage": 11,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -1024,7 +1024,7 @@
         "proofs": [
           {
             "stage": 11,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "hk1",
@@ -1069,7 +1069,7 @@
     {
       "seed": 3,
       "stage": 11,
-      "signature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+      "signature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
       "formation": [
         {
           "id": "hk1",
@@ -1097,7 +1097,7 @@
         "ticks": 463,
         "proof": {
           "stage": 11,
-          "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+          "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
           "heroes": [
             {
               "id": "hk1",
@@ -1154,7 +1154,7 @@
         "proofs": [
           {
             "stage": 11,
-            "rulesSignature": "party-v2-farm-proof-resolver-3-5bc24b9e",
+            "rulesSignature": "party-v2-farm-proof-resolver-4-5f5b2ac5",
             "heroes": [
               {
                 "id": "hk1",
