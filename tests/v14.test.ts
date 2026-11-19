@@ -2,15 +2,19 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { CONFIG, V14_DESIGN, activeV14Rules, parseV14Flag, setV14Rules, ticksForSeconds, v14RuleSchema } from '../src/config';
 import { beginEncounter } from '../src/core/combat';
-import { bestChoice, chest, chooseChest, farmChestRoll } from '../src/core/economy';
+import { bestChoice, chest, chooseChest, farmChestRoll, partyPower } from '../src/core/economy';
 import { createState, input, load, snapshot, step } from '../src/core/game';
 import { captureFarmClock } from '../src/core/clock';
 import { parseState } from '../src/core/model';
 import type { GameState, Gear } from '../src/core/model';
-import { runReference } from '../src/core/policy';
+import { referencePolicy, runReference, type PolicyCursor } from '../src/core/policy';
 import { maybeDayOneSpark } from '../src/core/rewards';
 import { applyOffline, makeSave, restoreSave } from '../src/core/save';
 import design from '../src/design-config.json';
+
+function gearRollFingerprint(item: Gear): string {
+  return JSON.stringify({ slot: item.slot, rarity: item.rarity, dropStage: item.dropStage, level: item.level, stats: item.stats });
+}
 
 afterEach(() => { setV14Rules([]); });
 describe('v14 config block', () => {
@@ -134,6 +138,156 @@ describe('dayOneSpark (idea 4)', () => {
     state.tick = ticksForSeconds(200);
     expect(maybeDayOneSpark(state, CONFIG.v14.dayOneSpark!.belowStage)).toBe(false);
     expect(state.pendingChoice).toBeUndefined();
+  });
+
+  it('spark rolls use a side stream: campaign rng + Fortune match a no-spark twin, and the next stage-9 chest matches', () => {
+    setV14Rules(['chestChoice', 'gearFortune']);
+    const twin = createState(11, { starterGear: false });
+    twin.tick = ticksForSeconds(300);
+    twin.gearSinceLegendary = 5;
+    twin.gearLegendaryFound = false;
+    const spark = load(snapshot(twin));
+
+    expect(maybeDayOneSpark(spark, 8)).toBe(true);
+    expect(spark.pendingChoice).toHaveLength(1);
+    expect(spark.nextGearId).toBe(twin.nextGearId + 2);
+    expect(spark.stats.chests).toBe(twin.stats.chests + 1);
+    expect(spark.rng).toBe(twin.rng);
+    expect(spark.gearSinceLegendary).toBe(twin.gearSinceLegendary);
+    expect(spark.gearLegendaryFound).toBe(twin.gearLegendaryFound);
+
+    chest(twin, 9);
+    chest(spark, 9);
+    const twinPair = twin.pendingChoice?.[0];
+    const sparkPair = spark.pendingChoice?.[1];
+    if (!twinPair || !sparkPair) throw new Error('expected stage-9 pairs');
+    expect(gearRollFingerprint(sparkPair[0]!)).toBe(gearRollFingerprint(twinPair[0]!));
+    expect(gearRollFingerprint(sparkPair[1]!)).toBe(gearRollFingerprint(twinPair[1]!));
+    expect(spark.rng).toBe(twin.rng);
+    expect(spark.gearSinceLegendary).toBe(twin.gearSinceLegendary);
+    expect(spark.gearLegendaryFound).toBe(twin.gearLegendaryFound);
+  });
+
+  it('farm-pad clears spark at the farm stage, respect the 150 s gap, then spark again', () => {
+    setV14Rules(['chestChoice']);
+    const spark = CONFIG.v14.dayOneSpark;
+    if (!spark) throw new Error('dayOneSpark');
+    const originalMinCycle = CONFIG.combat.nonBossFarmMinCycleSec;
+    CONFIG.combat.nonBossFarmMinCycleSec = 1;
+    try {
+      const state = createState(4, { starterGear: false });
+      state.tick = ticksForSeconds(200);
+      state.highestCleared = 5;
+      state.progress = { kind: 'FARMING', stage: 5, failedStage: 6, retryAtTick: Number.MAX_SAFE_INTEGER,
+        failTick: 0, failedPower: Number.MAX_SAFE_INTEGER, failures: 1 };
+      captureFarmClock(state);
+      expect(state.farmClock).toBeDefined();
+
+      const stage = CONFIG.stages[4];
+      if (!stage) throw new Error('stage 5');
+      const completeRepeat = () => {
+        const phaseKind = (): GameState['phase']['kind'] => state.phase.kind;
+        state.phase = { kind: 'battle' };
+        state.wave = stage.waves.length;
+        state.stageStartedTick = state.tick;
+        state.enemies.forEach(enemy => { enemy.hp = 0; });
+        step(state);
+        expect(phaseKind()).toBe('farmPad');
+        let guard = 0;
+        while (phaseKind() === 'farmPad' && guard < 200) { step(state); guard += 1; }
+        expect(phaseKind()).toBe('battle');
+      };
+
+      completeRepeat();
+      expect(state.pendingChoice).toHaveLength(1);
+      const first = state.pendingChoice?.[0];
+      if (!first) throw new Error('spark pair');
+      expect(first[0]?.dropStage).toBe(5);
+      expect(first[1]?.dropStage).toBe(5);
+      const sparkTick = state.dayOneSparkAtTick;
+      expect(sparkTick).toBeDefined();
+
+      state.tick += ticksForSeconds(10);
+      completeRepeat();
+      expect(state.pendingChoice).toHaveLength(1);
+      expect(state.dayOneSparkAtTick).toBe(sparkTick);
+
+      state.tick += ticksForSeconds(spark.gapSec);
+      completeRepeat();
+      expect(state.pendingChoice).toHaveLength(2);
+      expect(state.pendingChoice?.[1]?.[0]?.dropStage).toBe(5);
+      expect(state.dayOneSparkAtTick).toBe(state.tick);
+    } finally {
+      CONFIG.combat.nonBossFarmMinCycleSec = originalMinCycle;
+    }
+  });
+
+  it('seed 11: side-stream spark keeps the campaign cursor; kept spark gear may still move the boss', { timeout: 120_000 }, () => {
+    setV14Rules([...v14RuleSchema.options]);
+    const sparkOn = createState(11);
+    const cursorOn: PolicyCursor = { revision: -1 };
+    const stopTick = ticksForSeconds(8 * 3600);
+    while (sparkOn.tick < stopTick && sparkOn.dayOneSparkAtTick === undefined) {
+      referencePolicy(sparkOn, cursorOn);
+      step(sparkOn);
+    }
+    const sparkTick = sparkOn.dayOneSparkAtTick;
+    expect(sparkTick).toBe(44717);
+    if (sparkTick === undefined) throw new Error('expected spark tick');
+    expect(sparkOn.pendingChoice).toHaveLength(1);
+
+    // No-spark twin at the same seed: campaign path through stage 9 / boss without dayOneSpark.
+    const savedSpark = CONFIG.v14.dayOneSpark;
+    CONFIG.v14.dayOneSpark = null;
+    try {
+      const sparkOff = createState(11);
+      const cursorOff: PolicyCursor = { revision: -1 };
+      while (sparkOff.tick < sparkTick) {
+        referencePolicy(sparkOff, cursorOff);
+        step(sparkOff);
+      }
+      // Same campaign cursor after the historic spark tick: side stream did not consume it.
+      expect(sparkOn.rng).toBe(sparkOff.rng);
+      expect(sparkOn.gearSinceLegendary).toBe(sparkOff.gearSinceLegendary);
+      expect(sparkOn.gearLegendaryFound).toBe(sparkOff.gearLegendaryFound);
+
+      const onChest = load(snapshot(sparkOn));
+      const offChest = load(snapshot(sparkOff));
+      // Drop pending so chest() appends at the same queue index; compare the rolled stage-9 pair.
+      delete onChest.pendingChoice;
+      delete offChest.pendingChoice;
+      chest(onChest, 9);
+      chest(offChest, 9);
+      const onPair = onChest.pendingChoice?.[0];
+      const offPair = offChest.pendingChoice?.[0];
+      if (!onPair || !offPair) throw new Error('stage-9 pairs');
+      expect(gearRollFingerprint(onPair[0]!)).toBe(gearRollFingerprint(offPair[0]!));
+      expect(gearRollFingerprint(onPair[1]!)).toBe(gearRollFingerprint(offPair[1]!));
+
+      while (sparkOff.tick < stopTick && sparkOff.metrics.firstClearTicks['10'] === undefined) {
+        referencePolicy(sparkOff, cursorOff);
+        step(sparkOff);
+      }
+      expect(partyPower(sparkOff)).toBeGreaterThan(0);
+      const offBoss = sparkOff.metrics.firstClearTicks['10']! / CONFIG.sim.ticksPerSecond / 3600;
+      expect(offBoss).toBeCloseTo(2.975, 2);
+    } finally {
+      CONFIG.v14.dayOneSpark = savedSpark;
+    }
+
+    let powerAtStage9: number | null = null;
+    while (sparkOn.tick < stopTick && sparkOn.metrics.firstClearTicks['10'] === undefined) {
+      referencePolicy(sparkOn, cursorOn);
+      step(sparkOn);
+      if (powerAtStage9 === null && sparkOn.metrics.firstClearTicks['9'] !== undefined) {
+        referencePolicy(sparkOn, cursorOn);
+        powerAtStage9 = partyPower(sparkOn);
+      }
+    }
+    // Side-stream spark rolled keepable weapons; reference keeps one (idea Risk). Cursor stay is the BLOCKING fix.
+    expect(powerAtStage9).toBe(909);
+    const bossOpenHours = sparkOn.metrics.firstClearTicks['10']! / CONFIG.sim.ticksPerSecond / 3600;
+    expect(bossOpenHours).toBeCloseTo(0.692, 2);
   });
 });
 
