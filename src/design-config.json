@@ -290,7 +290,9 @@
     "fullHealBetweenStages": true,
     "nonBossFarmTimeScale": 3,
     "nonBossFarmMinCycleSec": 21,
-    "bossRepeatMinCycle": true
+    "bossRepeatMinCycle": true,
+    "farmDamageRampAfterSec": 20,
+    "farmDamageRampMult": 1.5
   },
   "enemies": {
     "scalingPerStage": 1.06,

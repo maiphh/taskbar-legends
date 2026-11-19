@@ -206,9 +206,9 @@ function tick(state: GameState): void {
     if (state.phase.remainingTicks <= 0) beginEncounter(state);
     return;
   }
-  const farmScale = state.farmClock?.scale ?? 1;
-  const readableBeat = state.phase.kind === 'battle' || (state.phase.kind === 'rest' && state.phase.next === 'wave');
-  const scale = readableBeat ? 1 : farmScale;
+  // Farm repeats consume farmClock.scale during battle and between-wave rests (idea 2).
+  // Pushes and boss fights have no clock; boss-repeat pads stay at scale 1. Boss timers stay on wall ticks.
+  const scale = state.farmClock?.scale ?? 1;
   for (let substep = 0; substep < scale; substep += 1) {
     if (state.farmClock) { state.farmClock.remainder = scale - substep - 1; state.farmClock.elapsedTicks += 1; }
     encounterSubstep(state);
