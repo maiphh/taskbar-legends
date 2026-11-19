@@ -157,7 +157,10 @@ export const CONFIG = {
   gear: { ...design.gear, salvage: { ...SALVAGE_DEFAULTS } },
   v14: v14Defaults(),
   combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
-  progression: { ...design.progression, ...z.object({ powerGainRetryMinSec: z.number().finite().nonnegative().default(0) }).parse(design.progression) },
+  progression: { ...design.progression, ...z.object({
+    powerGainRetryMinSec: z.number().finite().nonnegative().default(0),
+    openTicketMilestones: z.array(z.object({ openHour: z.number().finite().positive(), tickets: z.number().int().positive() }).strict()).default([]),
+  }).parse(design.progression) },
   ui: uiTokens,
   heroes: z.array(heroDefinition).parse(design.heroes),
   stages: z.array(stageDefinition).parse(design.stages),
