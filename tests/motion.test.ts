@@ -36,4 +36,10 @@ describe('floating damage / heal numbers', () => {
     expect(floatNumberFrame(1, true)).toBeNull();
     expect(floatNumberFrame(350, true)).toBeNull();
   });
+  it('accepts runtime lifeMs / risePx overrides from config', () => {
+    expect(floatNumberFrame(0, false, 400, 20)).toEqual({ rise: 0, alpha: 1 });
+    expect(floatNumberFrame(200, false, 400, 20)).toEqual({ rise: 10, alpha: 0.5 });
+    expect(floatNumberFrame(400, false, 400, 20)).toBeNull();
+    expect(floatNumberFrame(0, true, 400, 20)).toEqual({ rise: 20, alpha: 1 });
+  });
 });

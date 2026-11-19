@@ -3,7 +3,7 @@ import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
 import { BODY, SMALL, loadFonts } from './font';
-import { bannerFrame, FLOAT_NUMBER_DAMAGE, FLOAT_NUMBER_LIFE_MS, floatNumberFrame, popupFrame } from './motion';
+import { bannerFrame, FLOAT_NUMBER_DAMAGE, floatNumberFrame, popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { bossHpBar, stageCue, upgradePopups } from './core/selectors';
@@ -462,14 +462,16 @@ export class Renderer {
         ctx.fillStyle = '#f4d37e'; ctx.fillRect(targetX - 2, coreY + 11, 4, 2); ctx.fillRect(targetX - 1, coreY + 13, 2, 2);
       }
     }
-    // Floating hit/heal integers (idea 9): current encounter, under 700 ms, cap 3/unit newest-first.
+    // Floating hit/heal integers (idea 9): current encounter, under label life, cap 3/unit newest-first.
     const labelClock = this.lanePresentationTime(state);
     const statusRowOffset = statusEffectsConfig()?.display.rowOffsetAboveHpPx ?? 13;
-    const floatLifeTicks = ticksForSeconds(FLOAT_NUMBER_LIFE_MS / 1000);
+    const floatLifeMs = CONFIG.runtime.damageLabelSeconds * 1000;
+    const floatRisePx = CONFIG.runtime.damageRisePx;
+    const floatLifeTicks = ticksForSeconds(CONFIG.runtime.damageLabelSeconds);
     const floatMax = CONFIG.runtime.damageLabelMaxPerTarget;
     const reducedFloats = this.ui.reducedMotion;
     const narrowLane = this.width <= 480;
-    type FloatLabel = { targetId: string; tick: number; amount: number; heal: boolean };
+    type FloatLabel = { targetId: string; tick: number; seq: number; amount: number; heal: boolean };
     const floats: FloatLabel[] = [];
     for (const event of state.events) {
       const data = event.data;
@@ -479,35 +481,41 @@ export class Renderer {
       floats.push({
         targetId: data.targetId,
         tick: event.combatTick ?? event.tick,
+        seq: event.seq,
         amount: data.type === 'hit' ? data.damage : data.amount,
         heal: data.type === 'heal',
       });
     }
-    floats.sort((a, b) => b.tick - a.tick || b.amount - a.amount);
+    floats.sort((a, b) => b.seq - a.seq);
     const perUnit = new Map<string, number>();
-    const usedSnapX = new Set<number>();
+    const usedSnapX = new Map<number, string>();
+    const statusIconPx = 9;
     for (const float of floats) {
       const count = perUnit.get(float.targetId) ?? 0;
       if (count >= floatMax) continue;
       const unit = units.find(candidate => candidate.id === float.targetId);
-      if (!unit || unit.hp <= 0) continue;
+      // Keep floats on corpses (killing hit + earlier numbers still inside life).
+      if (!unit) continue;
       const ageMs = (labelClock - float.tick) * TICK_MS;
-      const frame = floatNumberFrame(ageMs, reducedFloats);
+      const frame = floatNumberFrame(ageMs, reducedFloats, floatLifeMs, floatRisePx);
       if (!frame) continue;
       const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
       const depth = unit.side === 'hero' ? unit.slot * 4 : 0;
       const hpY = isLaneBoss ? bossPlateBottom + statusRowOffset + 2 : unitHpBaseY - depth;
-      // Sit just above the status-icon row; stack older floats a few px higher.
       const iconRowTop = hpY - statusRowOffset;
-      const anchorY = iconRowTop - SMALL - 1 - count * 8;
-      const y = anchorY - frame.rise;
-      // Keep numbers out of the boss HP plate.
-      if (bossBar && y < bossPlateBottom + 1) continue;
+      // Party: above the icon row (stack up). Lane boss: below the 9 px icon row (clear of plate).
+      const anchorY = isLaneBoss
+        ? iconRowTop + statusIconPx + 1 + count * 8
+        : iconRowTop - SMALL - 1 - count * 8;
+      let y = anchorY - frame.rise;
+      // Rising party numbers park under the boss HP plate instead of vanishing.
+      if (bossBar) y = Math.max(y, bossPlateBottom + 1);
       let x = this.position(unit, state);
       if (narrowLane) {
         x = Math.round(x / 8) * 8;
-        if (usedSnapX.has(x)) continue;
-        usedSnapX.add(x);
+        const owner = usedSnapX.get(x);
+        if (owner !== undefined && owner !== float.targetId) continue;
+        usedSnapX.set(x, float.targetId);
       }
       perUnit.set(float.targetId, count + 1);
       const label = `${float.heal ? '+' : '-'}${float.amount}`;

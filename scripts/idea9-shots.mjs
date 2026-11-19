@@ -38,7 +38,7 @@ async function openAtWidth(sourceWidth) {
   return { context, page, errors };
 }
 
-/** Pin a hit (and optional heal) on a paused 1-1 board at age 0 so floats are fully opaque. */
+/** Pin a hit (and optional heal / kill) on a paused 1-1 board at age 0 so floats are fully opaque. */
 async function pinFloats(page, { mode }) {
   return page.evaluate(async ({ mode: shotMode }) => {
     const { createState } = await import('/src/core/game.ts');
@@ -62,15 +62,16 @@ async function pinFloats(page, { mode }) {
     if (!enemy || !priest || !ally) return { ok: false, reason: 'missing-units' };
 
     const eventTick = state.tick;
+    const damage = shotMode === 'kill' ? Math.max(1, enemy.hp) : 14;
     state.eventSeq += 1;
     state.events.push({
       seq: state.eventSeq,
       tick: eventTick,
       combatTick: eventTick,
       combatEncounter: state.encounter,
-      data: { type: 'hit', attackerId: priest.id, targetId: enemy.id, damage: 14, side: 'enemy' },
+      data: { type: 'hit', attackerId: priest.id, targetId: enemy.id, damage, side: 'enemy' },
     });
-    enemy.hp = Math.max(1, enemy.hp - 14);
+    enemy.hp = shotMode === 'kill' ? 0 : Math.max(1, enemy.hp - 14);
 
     if (shotMode === 'heal') {
       ally.hp = Math.max(1, Math.floor(ally.maxHp * 0.55));
@@ -95,11 +96,87 @@ async function pinFloats(page, { mode }) {
       mode: shotMode,
       encounter: after.encounter,
       tick: after.tick,
+      enemyHp: after.enemies.find(u => u.id === enemy.id)?.hp ?? null,
       enemyScreenX: projection.units.find(u => u.id === enemy.id)?.screenX ?? null,
       allyScreenX: projection.units.find(u => u.id === ally.id)?.screenX ?? null,
       layoutWidth: window.__game.getLayout().width,
     };
   }, { mode });
+}
+
+/** Pin a cream hit on stage 1-10 boss, optionally with a cleave telegraph. */
+async function pinBossHit(page, { telegraph }) {
+  return page.evaluate(async ({ telegraph: withTelegraph }) => {
+    window.__game.pause();
+    const state = window.__game.getState();
+    for (const hero of state.roster) { hero.level = 10; hero.stars = 2; }
+    state.highestCleared = 9;
+    state.progress = { kind: 'BOSS_READY', stage: 9, bossStage: 10, failedPower: 0, bossLosses: 0 };
+    delete state.farmClock;
+    delete state.encounterFarmContext;
+    if (state.phase?.kind === 'farmPad') state.phase = { kind: 'rest', remainingTicks: 20, next: 'encounter' };
+    window.__game.load(state);
+    window.__game.input({ type: 'retry' });
+    window.__game.openPanel(null);
+    document.getElementById('management')?.setAttribute('hidden', '');
+
+    const s = window.__game.getState();
+    const boss = s.enemies.find(unit => unit.sourceId === 'boss_ch1');
+    const tank = s.party[0];
+    if (!boss || !tank) return { ok: false, reason: 'missing-boss' };
+    for (const unit of [...s.party, ...s.enemies]) {
+      unit.moving = false;
+      unit.action = { state: 'idle' };
+      unit.gauge = 0;
+    }
+    boss.hp = Math.max(2, Math.floor(boss.maxHp * 0.62));
+    if (withTelegraph) {
+      boss.specialAction = {
+        state: 'areaMark', targetId: tank.id, centerX: tank.x, radius: 56,
+        startTick: s.tick, impactTick: s.tick + 80, abilityId: 'boss-ch1-cleave',
+      };
+    } else {
+      delete boss.specialAction;
+    }
+    const eventTick = s.tick;
+    s.eventSeq += 1;
+    s.events.push({
+      seq: s.eventSeq,
+      tick: eventTick,
+      combatTick: eventTick,
+      combatEncounter: s.encounter,
+      data: { type: 'hit', attackerId: tank.id, targetId: boss.id, damage: 18, side: 'enemy' },
+    });
+    // Also pin a party heal so rear-slot float parks under a tall telegraph plate.
+    const priest = s.party.find(unit => unit.sourceId === 'priest') ?? s.party[2];
+    if (priest) {
+      priest.hp = Math.max(1, Math.floor(priest.maxHp * 0.6));
+      s.eventSeq += 1;
+      s.events.push({
+        seq: s.eventSeq,
+        tick: eventTick,
+        combatTick: eventTick,
+        combatEncounter: s.encounter,
+        data: { type: 'heal', sourceId: tank.id, targetId: priest.id, amount: 11 },
+      });
+    }
+    window.__game.load(s);
+    window.__game.openPanel(null);
+    document.getElementById('management')?.setAttribute('hidden', '');
+    window.__game.pause();
+    const after = window.__game.getState();
+    const projection = window.__game.getCombatProjection(after);
+    const bossUnit = after.enemies.find(u => u.sourceId === 'boss_ch1');
+    return {
+      ok: true,
+      telegraph: withTelegraph,
+      bossHp: bossUnit?.hp ?? null,
+      bossScreenX: projection.units.find(u => u.id === boss.id)?.screenX ?? null,
+      priestScreenX: priest ? (projection.units.find(u => u.id === priest.id)?.screenX ?? null) : null,
+      special: bossUnit?.specialAction?.abilityId ?? null,
+      layoutWidth: window.__game.getLayout().width,
+    };
+  }, { telegraph });
 }
 
 async function canvasClip(page) {
@@ -115,15 +192,15 @@ async function canvasClip(page) {
   });
 }
 
-async function sampleNear(page, { x, color }) {
-  return page.evaluate(({ x: cx, color: kind }) => {
+async function sampleNear(page, { x, color, yMin = 40, yMax = 90 }) {
+  return page.evaluate(({ x: cx, color: kind, yMin: ymin, yMax: ymax }) => {
     const canvas = document.querySelector('#game');
     const ctx = canvas.getContext('2d');
     const { width, height } = canvas;
     const data = ctx.getImageData(0, 0, width, height).data;
     const target = kind === 'cream' ? [0xf2, 0xe9, 0xcf] : [0x90, 0xc9, 0x9b];
     const hits = [];
-    for (let y = 40; y < 70; y += 1) {
+    for (let y = ymin; y < Math.min(height, ymax); y += 1) {
       for (let px = Math.max(0, cx - 40); px < Math.min(width, cx + 40); px += 1) {
         const i = (y * width + px) * 4;
         if (data[i + 3] < 140) continue;
@@ -133,7 +210,7 @@ async function sampleNear(page, { x, color }) {
       }
     }
     return { count: hits.length, mid: hits.length ? hits[Math.floor(hits.length / 2)] : null };
-  }, { x, color });
+  }, { x, color, yMin, yMax });
 }
 
 async function canvasHasInk(page) {
@@ -150,11 +227,12 @@ async function canvasHasInk(page) {
 
 const results = [];
 for (const width of [1280, 480]) {
-  for (const mode of ['hit', 'heal']) {
+  for (const mode of ['hit', 'heal', 'kill']) {
     const { context, page, errors } = await openAtWidth(width);
     const setup = await pinFloats(page, { mode });
     console.log('setup', JSON.stringify(setup));
     if (!setup.ok) throw new Error(`setup failed: ${JSON.stringify(setup)}`);
+    if (mode === 'kill' && setup.enemyHp !== 0) throw new Error(`kill shot expected hp 0, got ${setup.enemyHp}`);
     await page.waitForTimeout(120);
     const path = `${out}/idea9-${mode}-${width}.png`;
     const clip = await canvasClip(page);
@@ -163,7 +241,7 @@ for (const width of [1280, 480]) {
     if (!ink.ok) throw new Error(`blank canvas for ${mode}@${width}`);
     if (errors.length) throw new Error(`page errors ${mode}@${width}: ${errors.join('; ')}`);
 
-    if (mode === 'hit') {
+    if (mode === 'hit' || mode === 'kill') {
       const cream = await sampleNear(page, { x: setup.enemyScreenX, color: 'cream' });
       console.log('cream near enemy', JSON.stringify(cream));
       if (cream.count < 8) throw new Error(`expected cream damage near x=${setup.enemyScreenX}, got ${cream.count}`);
@@ -176,6 +254,32 @@ for (const width of [1280, 480]) {
     results.push({ width, mode, path, clip, ink, setup, errors });
     await context.close();
   }
+}
+
+for (const telegraph of [false, true]) {
+  const { context, page, errors } = await openAtWidth(1280);
+  const setup = await pinBossHit(page, { telegraph });
+  console.log('boss setup', JSON.stringify(setup));
+  if (!setup.ok) throw new Error(`boss setup failed: ${JSON.stringify(setup)}`);
+  await page.waitForTimeout(120);
+  const tag = telegraph ? 'boss-cleave' : 'boss-hit';
+  const path = `${out}/idea9-${tag}-1280.png`;
+  const clip = await canvasClip(page);
+  await page.screenshot({ path, clip });
+  const ink = await canvasHasInk(page);
+  if (!ink.ok) throw new Error(`blank canvas for ${tag}`);
+  if (errors.length) throw new Error(`page errors ${tag}: ${errors.join('; ')}`);
+  // Boss float sits below the plate/icons — sample a wider y band.
+  const cream = await sampleNear(page, { x: setup.bossScreenX, color: 'cream', yMin: 20, yMax: 110 });
+  console.log('cream near boss', JSON.stringify(cream));
+  if (cream.count < 8) throw new Error(`expected cream boss damage near x=${setup.bossScreenX}, got ${cream.count}`);
+  if (setup.priestScreenX != null) {
+    const green = await sampleNear(page, { x: setup.priestScreenX, color: 'green', yMin: 20, yMax: 80 });
+    console.log('green near priest under plate', JSON.stringify(green));
+    if (green.count < 4) throw new Error(`expected green party heal under plate near x=${setup.priestScreenX}, got ${green.count}`);
+  }
+  results.push({ width: 1280, mode: tag, path, clip, ink, setup, errors });
+  await context.close();
 }
 
 await browser.close();
