@@ -69,8 +69,14 @@ export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int()
  * CR-14-04 expeditionChests, CR-14-05 offlineTickets.
  * Other v14 keys are parsed loosely and stay inert.
  */
+const dayOneSparkSchema = z.looseObject({
+  gapSec: z.number().positive(),
+  maxOpenHour: z.number().positive(),
+  belowStage: z.number().int().positive(),
+});
 const v14Schema = z.looseObject({
   chestChoice: z.looseObject({ options: z.number().int().min(1).max(2), fromStage: z.number().int().positive() }),
+  dayOneSpark: dayOneSparkSchema.optional(),
   farmChest: z.looseObject({ baseChance: z.number().min(0).max(1), guaranteeEvery: z.number().int().positive(), fromStage: z.number().int().positive() }),
   gacha: z.looseObject({ legendaryPityEvery: z.number().int().min(2), legendaryPityPrefersUnowned: z.boolean(), newHeroGuaranteeEvery: z.number().int().min(2) }),
   gearPity: z.looseObject({ legendaryEvery: z.number().int().min(2), firstLegendaryBy: z.number().int().min(2), rollUnits: z.looseObject({ chest: z.number().int().positive(), expeditionChest: z.number().int().positive() }) }),
@@ -79,8 +85,11 @@ const v14Schema = z.looseObject({
 export const V14_DESIGN = v14Schema.parse(design.v14);
 export const v14RuleSchema = z.enum(['chestChoice', 'farmChest', 'recruitPity', 'gearFortune', 'expeditionChests', 'offlineTickets']);
 export type V14Rule = z.infer<typeof v14RuleSchema>;
+export type DayOneSpark = { gapSec: number; maxOpenHour: number; belowStage: number };
 export interface V14Live {
   chestChoice: { options: number; fromStage: number };
+  /** Day-1 farm pick-1-of-2 sparks; null when chestChoice is off. */
+  dayOneSpark: DayOneSpark | null;
   farmChest: { baseChance: number; guaranteeEvery: number; fromStage: number } | null;
   /** CR-14-01 legendaryPityEvery / CR-14-02 newHeroGuaranteeEvery; 0 = off. */
   recruit: { legendaryPityEvery: number; legendaryPityPrefersUnowned: boolean; newHeroGuaranteeEvery: number };
@@ -90,7 +99,7 @@ export interface V14Live {
   offline: { expeditionChestsPerHour: number; expeditionBestOf: number; expeditionChestMax: number; ticketRateVsOnline: number };
 }
 // §18 defaults: options 1 (off), farmChest null (→ rewards.farmChestChance everywhere), pity and Fortune 0 (off).
-const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null,
+const v14Defaults = (): V14Live => ({ chestChoice: { options: 1, fromStage: 1 }, dayOneSpark: null, farmChest: null,
   recruit: { legendaryPityEvery: 0, legendaryPityPrefersUnowned: true, newHeroGuaranteeEvery: 0 },
   fortune: { legendaryEvery: 0, firstLegendaryBy: 0, chestUnits: 1, expeditionUnits: 1 },
   offline: { expeditionChestsPerHour: 0, expeditionBestOf: 1, expeditionChestMax: 0, ticketRateVsOnline: 0 } });
@@ -207,6 +216,11 @@ export type FontTokens = UiTokens['font'];
 export function setV14Rules(rules: readonly V14Rule[]): void {
   const on = new Set(rules.map(rule => v14RuleSchema.parse(rule)));
   CONFIG.v14.chestChoice = on.has('chestChoice') ? { options: V14_DESIGN.chestChoice.options, fromStage: V14_DESIGN.chestChoice.fromStage } : v14Defaults().chestChoice;
+  // Day-one sparks need pick-1-of-2; live only while chestChoice is on and the designer block is present.
+  const spark = V14_DESIGN.dayOneSpark;
+  CONFIG.v14.dayOneSpark = on.has('chestChoice') && spark
+    ? { gapSec: spark.gapSec, maxOpenHour: spark.maxOpenHour, belowStage: spark.belowStage }
+    : null;
   CONFIG.v14.farmChest = on.has('farmChest') ? { baseChance: V14_DESIGN.farmChest.baseChance, guaranteeEvery: V14_DESIGN.farmChest.guaranteeEvery, fromStage: V14_DESIGN.farmChest.fromStage } : null;
   const gacha = V14_DESIGN.gacha, gear = V14_DESIGN.gearPity;
   CONFIG.v14.recruit = on.has('recruitPity') ? { legendaryPityEvery: gacha.legendaryPityEvery, legendaryPityPrefersUnowned: gacha.legendaryPityPrefersUnowned, newHeroGuaranteeEvery: gacha.newHeroGuaranteeEvery } : v14Defaults().recruit;

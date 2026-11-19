@@ -1,4 +1,6 @@
 import { CONFIG, stageConfig } from '../config';
+import { queueChestChoice } from './economy';
+import type { GameState } from './model';
 import { getPartyEnemyDefinition } from './party-enemies';
 
 /** Per-event kill rewards shared by combat and idle-rate estimation. */
@@ -12,4 +14,23 @@ export function partyKillReward(sourceId: string, stageNumber: number): { gold: 
 export function stageClearReward(stageNumber: number): { gold: number; xp: number } {
   const stage = stageConfig(stageNumber), mult = CONFIG.rewards.clearScaling ** (stage.index - 1);
   return { gold: Math.round(CONFIG.rewards.clearGold * mult), xp: Math.round(CONFIG.rewards.clearXp * mult) };
+}
+
+/**
+ * Day-1 decision spark (v14.dayOneSpark, rules-on with chestChoice).
+ * On a farm clear of a stage below belowStage during the first maxOpenHour open hours,
+ * if gapSec have passed since the last spark (or none yet), queue a pick-1-of-2 at the farm stage
+ * even when dropStage < chestChoice.fromStage. Returns true when a choice was queued.
+ */
+export function maybeDayOneSpark(state: GameState, stage: number): boolean {
+  const spark = CONFIG.v14.dayOneSpark;
+  if (!spark || CONFIG.v14.chestChoice.options < 2) return false;
+  if (stage >= spark.belowStage) return false;
+  const openSeconds = state.tick / CONFIG.sim.ticksPerSecond;
+  if (openSeconds >= spark.maxOpenHour * 3600) return false;
+  const last = state.dayOneSparkAtTick;
+  if (last !== undefined && (state.tick - last) / CONFIG.sim.ticksPerSecond < spark.gapSec) return false;
+  queueChestChoice(state, stage);
+  state.dayOneSparkAtTick = state.tick;
+  return true;
 }

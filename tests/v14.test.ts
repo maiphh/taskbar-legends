@@ -1,6 +1,6 @@
 ﻿// v1.4 code requests implemented in this PR (design.md Â§18): CR-14-08 chest pick-1-of-2, CR-14-09 farm chest pity, CR-14-11 zero tickets.
 import { afterEach, describe, expect, it } from 'vitest';
-import { CONFIG, V14_DESIGN, activeV14Rules, parseV14Flag, setV14Rules, v14RuleSchema } from '../src/config';
+import { CONFIG, V14_DESIGN, activeV14Rules, parseV14Flag, setV14Rules, ticksForSeconds, v14RuleSchema } from '../src/config';
 import { beginEncounter } from '../src/core/combat';
 import { bestChoice, chest, chooseChest, farmChestRoll } from '../src/core/economy';
 import { createState, input, load, snapshot, step } from '../src/core/game';
@@ -8,6 +8,7 @@ import { captureFarmClock } from '../src/core/clock';
 import { parseState } from '../src/core/model';
 import type { GameState, Gear } from '../src/core/model';
 import { runReference } from '../src/core/policy';
+import { maybeDayOneSpark } from '../src/core/rewards';
 import { applyOffline, makeSave, restoreSave } from '../src/core/save';
 import design from '../src/design-config.json';
 
@@ -15,13 +16,16 @@ afterEach(() => { setV14Rules([]); });
 describe('v14 config block', () => {
   it('ships the designer block inert: no rule on by default, Â§18 defaults, designer values parsed', () => {
     expect(activeV14Rules()).toEqual([]);
-    expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
+    expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, dayOneSpark: null, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
     expect(design.version).toBe('1.5.0'); expect(design.v14.targetVersion).toBe('1.4.0');
     expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 9 });
+    expect(V14_DESIGN.dayOneSpark).toMatchObject({ gapSec: 150, maxOpenHour: 6, belowStage: 10 });
     expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 7, fromStage: 9 });
     setV14Rules(['chestChoice', 'farmChest']); expect(activeV14Rules()).toEqual(['chestChoice', 'farmChest']);
+    expect(CONFIG.v14.dayOneSpark).toMatchObject({ gapSec: 150, maxOpenHour: 6, belowStage: 10 });
     setV14Rules(['recruitPity', 'gearFortune']); expect(activeV14Rules()).toEqual(['recruitPity', 'gearFortune']);
-    setV14Rules([]); expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
+    expect(CONFIG.v14.dayOneSpark).toBeNull();
+    setV14Rules([]); expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, dayOneSpark: null, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
     expect(parseV14Flag(null)).toEqual([...v14RuleSchema.options]);
     expect(parseV14Flag('all')).toEqual([...v14RuleSchema.options]);
     expect(parseV14Flag('none')).toEqual([]);
@@ -73,6 +77,63 @@ describe('CR-14-08 chest pick-1-of-2', () => {
     setV14Rules(['chestChoice']); CONFIG.v14.chestChoice.fromStage = 10;
     const state = createState(2), initialItems = state.inventory.length; chest(state, 9); expect(state.pendingChoice).toBeUndefined(); expect(state.inventory).toHaveLength(initialItems + 1);
     chest(state, 10); expect(state.pendingChoice).toHaveLength(1);
+  });
+});
+
+describe('dayOneSpark (idea 4)', () => {
+  it('a farm clear 150 s after the last spark queues two items; 10 s later does not; a day-2 clear does not', () => {
+    setV14Rules(['chestChoice']);
+    const spark = CONFIG.v14.dayOneSpark;
+    if (!spark) throw new Error('dayOneSpark');
+    const state = createState(3, { starterGear: false });
+    // Below chestChoice.fromStage (9) so a normal chest would be a single item; spark still queues a pair.
+    expect(CONFIG.v14.chestChoice.fromStage).toBeGreaterThan(5);
+
+    state.tick = ticksForSeconds(300);
+    state.dayOneSparkAtTick = state.tick - ticksForSeconds(spark.gapSec);
+    const queued = state.pendingChoice?.length ?? 0;
+    expect(maybeDayOneSpark(state, 5)).toBe(true);
+    expect(state.pendingChoice).toHaveLength(queued + 1);
+    const pair = state.pendingChoice?.[queued];
+    if (!pair) throw new Error('spark pair');
+    expect(pair).toHaveLength(2);
+    expect(pair[0]?.dropStage).toBe(5);
+    expect(pair[1]?.dropStage).toBe(5);
+    expect(state.dayOneSparkAtTick).toBe(state.tick);
+
+    state.tick += ticksForSeconds(10);
+    const afterGap = state.pendingChoice?.length ?? 0;
+    expect(maybeDayOneSpark(state, 5)).toBe(false);
+    expect(state.pendingChoice?.length ?? 0).toBe(afterGap);
+
+    // Past maxOpenHour (hour 6 of day 1 / start of day-2 open time in the reference clock).
+    state.tick = ticksForSeconds(spark.maxOpenHour * 3600);
+    state.dayOneSparkAtTick = state.tick - ticksForSeconds(spark.gapSec * 2);
+    expect(maybeDayOneSpark(state, 5)).toBe(false);
+    expect(state.pendingChoice?.length ?? 0).toBe(afterGap);
+  });
+
+  it('first eligible farm clear on day 1 sparks with no prior dayOneSparkAtTick', () => {
+    setV14Rules(['chestChoice']);
+    const state = createState(8, { starterGear: false });
+    state.tick = ticksForSeconds(60);
+    expect(state.dayOneSparkAtTick).toBeUndefined();
+    expect(maybeDayOneSpark(state, 3)).toBe(true);
+    expect(state.pendingChoice).toHaveLength(1);
+    expect(state.dayOneSparkAtTick).toBe(state.tick);
+  });
+
+  it('does nothing when chestChoice is off or the farm stage is at/above belowStage', () => {
+    setV14Rules([]);
+    const off = createState(2, { starterGear: false });
+    expect(CONFIG.v14.dayOneSpark).toBeNull();
+    expect(maybeDayOneSpark(off, 4)).toBe(false);
+
+    setV14Rules(['chestChoice']);
+    const state = createState(2, { starterGear: false });
+    state.tick = ticksForSeconds(200);
+    expect(maybeDayOneSpark(state, CONFIG.v14.dayOneSpark!.belowStage)).toBe(false);
+    expect(state.pendingChoice).toBeUndefined();
   });
 });
 

@@ -6,7 +6,7 @@ import { emit, goldChange } from './events';
 import { cloneState, gearTemplateId, itemId, parseState } from './model';
 import type { Action, GameState } from './model';
 import { normalizeSeed, random } from './rng';
-import { stageClearReward } from './rewards';
+import { maybeDayOneSpark, stageClearReward } from './rewards';
 import { recordSettledFarmClear } from './farm-proof';
 
 export function stageName(stage: number): string { return stageConfig(stage).id; }
@@ -119,6 +119,7 @@ function awardClear(state: GameState, duration: number, nativeDuration = duratio
     state.metrics.farmMaxSeconds = Math.max(state.metrics.farmMaxSeconds ?? duration, duration);
     state.metrics.farmSamples += 1;
     farmChestRoll(state, stage.index);
+    maybeDayOneSpark(state, stage.index);
     if (random(state) < CONFIG.rewards.farmTicketChance) { state.tickets += 1; state.economyRevision += 1; emit(state, { type: 'tickets', amount: 1, total: state.tickets }); }
   }
 }
