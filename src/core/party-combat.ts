@@ -6,14 +6,18 @@ import { applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveD
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
 import { partyKillReward } from './rewards';
-import { fillGauges, nextActor, spendTurn, type GaugeUnit } from './turn/action-bar';
-import { canAct, onTurnStart, type RunningStatus } from './turn/statuses';
+import {
+  applyHeroSupportStatuses, applyOnHitStatuses, beginStatusTurn, cleanseUnit, clearUnitStatuses,
+  completeStatusTurn, finishStatusTurn, markStatusTurn, statusSystemOn, unitHasStatus,
+} from './status-effects';
+import { spendTurn, type GaugeUnit } from './turn/action-bar';
+import { canAct, fillMultiplier, onTurnStart, statusDef, type RunningStatus } from './turn/statuses';
 import { actionBoundaries, createActionTimeline, hasUnfinishedPresentation } from './turn/animation-timing';
 import type { GameEvent, GameState, PartyProjectile, Unit } from './model';
 
 export const PARTY_V2 = Object.freeze({
   version: 'party-v2', radius: { normal: 10, tank: 12 }, reach: { melee: 12, ranged: 260, heal: 260 },
-  timing: { windupTicks: 10, returnTicks: 14, settleTicks: 4, minimumRecoveryTicks: 22, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
+  timing: { windupTicks: 10, returnTicks: 3, settleTicks: 1, minimumRecoveryTicks: 22, projectileExpiryTicks: ticksForSeconds(4), projectileSpeed: 500 },
   animation: { attackImpactFraction: 0.5, healImpactFraction: 0.5 },
   speed: { tank: 65, melee: 90, support: 65, ranged: 80, enemyMelee: 70, enemyRanged: 55 },
 });
@@ -25,6 +29,25 @@ export const ENEMY_ENTRY_PX = 12;
 export function enemyFormationX(slot: number): number {
   return 158 + slot * 18;
 }
+
+/**
+ * Longest a single action or enemy special may hold the lane. Honest clips
+ * (boss leap, assassin mark, bomber telegraph) finish well inside this.
+ * Anything older, scheduled longer, or stamped on the wrong clock is cleared.
+ */
+export const PRESENTATION_CAP_TICKS = ticksForSeconds(2.5);
+
+function marchLimitPx(): number {
+  let max = 0;
+  for (let slot = 0; slot < CONFIG.runtime.maxEnemiesPerWave; slot += 1) {
+    const spawn = CONFIG.sim.enemySpawnX + slot * CONFIG.sim.enemySpawnSpacingPx;
+    max = Math.max(max, Math.abs(spawn - enemyFormationX(slot)));
+  }
+  return max + ENEMY_ENTRY_PX;
+}
+
+/** Farthest a configured spawn slot walks. Farther positions snap home so a stuck mover cannot hold the lane. */
+export const ENEMY_MARCH_LIMIT_PX = marchLimitPx();
 
 export type SkillDelivery = 'leap' | 'cast';
 
@@ -113,6 +136,38 @@ function presentationBusy(unit: Unit): boolean {
   if (action?.state === 'windup' || action?.state === 'recovery') return true;
   return !!unit.specialAction;
 }
+function presentationOverdue(startTick: number, endTick: number, now: number): boolean {
+  if (!Number.isFinite(startTick) || !Number.isFinite(endTick) || !Number.isFinite(now)) return true;
+  if (startTick > now) return true;
+  if (now - startTick >= PRESENTATION_CAP_TICKS) return true;
+  return endTick - startTick > PRESENTATION_CAP_TICKS;
+}
+/** Drop a presentation that can no longer finish on its own. Due impacts are left for the resolver when requested. */
+function releaseStalePresentations(state: GameState, units: readonly Unit[], now: number, keepResolvable: boolean): void {
+  for (const unit of units) {
+    if (unit.hp <= 0) continue;
+    const action = unit.action;
+    if (action && action.state !== 'idle') {
+      const end = action.readyTick ?? action.impactTick;
+      const due = action.state === 'windup' && Number.isFinite(action.impactTick) && action.impactTick <= now;
+      const finishedRecovery = action.state === 'recovery' && Number.isFinite(action.readyTick) && action.readyTick <= now;
+      if (finishedRecovery) unit.action = { state: 'idle' };
+      else if (presentationOverdue(action.startTick, end, now) && !(keepResolvable && due)) {
+        unit.action = { state: 'idle' };
+        if (statusSystemOn()) finishStatusTurn(state, unit, now);
+        emit(state, { type: 'presentationForced', unitId: unit.id, kind: 'action' }, now);
+      }
+    }
+    const special = unit.specialAction;
+    if (!special) continue;
+    const due = Number.isFinite(special.impactTick) && special.impactTick <= now;
+    if (presentationOverdue(special.startTick, special.impactTick, now) && !(keepResolvable && due)) {
+      delete unit.specialAction;
+      if (statusSystemOn()) finishStatusTurn(state, unit, now);
+      emit(state, { type: 'presentationForced', unitId: unit.id, kind: 'special' }, now);
+    }
+  }
+}
 export function hasPendingActionPresentation(state: GameState): boolean {
   const now = combatTime(state);
   return [...state.party, ...state.enemies].some(unit => unit.hp > 0 && (!!unit.specialAction || (unit.action && unit.action.state !== 'idle'
@@ -147,9 +202,23 @@ function chooseActive(state: GameState, source: Unit, target: Unit | undefined):
     case 'shield': if (source.hp / source.maxHp < (active.hpThreshold ?? 0.9) || threatened(state, source)) picked = { target: source, kind: 'heal', abilityId: active.id }; break;
     case 'selfHeal': if (source.hp / source.maxHp < (active.hpThreshold ?? 0.65)) picked = { target: source, kind: 'heal', abilityId: active.id }; break;
     case 'burstHeal': { const ally = hurtAlly(state, active.hpThreshold ?? 0.8); if (ally) picked = { target: ally, kind: 'heal', abilityId: active.id }; break; }
-    case 'buff': { const ally = supportTarget(state); if (ally && !effectActive(state, ally.id, 'party-atk-buff')) picked = { target: ally, kind: 'heal', abilityId: active.id }; break; }
+    case 'buff': {
+      const ally = supportTarget(state);
+      if (ally && !(statusSystemOn() ? unitHasStatus(ally, 'atkUp') : effectActive(state, ally.id, 'party-atk-buff'))) {
+        picked = { target: ally, kind: 'heal', abilityId: active.id };
+      }
+      break;
+    }
     case 'selfSustain': if (enemy && source.hp < source.maxHp) picked = { target: enemy, kind: 'attack', abilityId: active.id }; break;
-    case 'weaken': if (enemy && !effectActive(state, enemy.id, 'enemy-atk-weaken') && !effectActive(state, enemy.id, 'enemy-def-weaken')) picked = { target: enemy, kind: 'attack', abilityId: active.id }; break;
+    case 'weaken': {
+      if (enemy) {
+        const blocked = statusSystemOn()
+          ? unitHasStatus(enemy, 'atkDown') || unitHasStatus(enemy, 'defDown')
+          : effectActive(state, enemy.id, 'enemy-atk-weaken') || effectActive(state, enemy.id, 'enemy-def-weaken');
+        if (!blocked) picked = { target: enemy, kind: 'attack', abilityId: active.id };
+      }
+      break;
+    }
     case 'cleave': case 'projectile': case 'fireball': case 'singleBurst': if (enemy) picked = { target: enemy, kind: 'attack', abilityId: active.id }; break;
     case 'intercept': break;
   }
@@ -185,22 +254,38 @@ function aimDirection(source: Unit, target: Unit): -1 | 1 {
 }
 function startEnemySpecial(state: GameState, source: Unit, now: number): boolean {
   if (source.side !== 'enemy') return false;
-  const special = getPartyEnemyDefinition(source.sourceId).special;
+  const definition = getPartyEnemyDefinition(source.sourceId);
+  const enrage = definition.enrage;
+  const target = nearest(source, living(state.party));
+  // Signature enrage: once below the HP gate, telegraph a burst and lock the atk mult.
+  if (enrage && target && (source.procCounters?.enraged ?? 0) === 0 && source.hp <= source.maxHp * enrage.hpPct) {
+    source.procCounters ??= {}; source.procCounters.enraged = 1;
+    source.specialAction = {
+      state: 'areaMark', targetId: target.id, centerX: target.x, radius: enrage.burstGlobal ? 0 : 64,
+      startTick: now, impactTick: now + enrage.telegraphTicks, abilityId: enrage.abilityId,
+      ...(enrage.burstGlobal ? { global: true } : {}),
+    };
+    emit(state, { type: 'skill', unitId: source.id, skill: enrage.abilityId }, now);
+    return true;
+  }
+  const special = definition.special;
   if (!special) return false;
   if (special.kind === 'assassin') {
-    const target = rearmostHero(state); if (!target) return false;
-    source.specialAction = { state: 'assassinMark', targetId: target.id, startTick: now, impactTick: now + special.markTicks };
+    const rear = rearmostHero(state); if (!rear) return false;
+    source.specialAction = { state: 'assassinMark', targetId: rear.id, startTick: now, impactTick: now + special.markTicks };
     emit(state, { type: 'skill', unitId: source.id, skill: 'assassin-mark' }, now);
     return true;
   }
-  const target = nearest(source, living(state.party)); if (!target) return false;
+  if (!target) return false;
   if (special.kind === 'localArea') {
     if (!cooldownReady(source, special.abilityId, now)) return false;
     setCooldown(source, special.abilityId, now + special.cooldownTicks);
-  } else {
+  } else if (special.kind === 'bossLocal' || special.kind === 'bossGlobal') {
     const successful = source.procCounters?.basicSuccess ?? 0, used = source.procCounters?.bossPattern ?? 0;
     if (successful < (used + 1) * special.every) return false;
     source.procCounters ??= {}; source.procCounters.bossPattern = used + 1;
+  } else {
+    return false;
   }
   source.specialAction = { state: 'areaMark', targetId: target.id, centerX: target.x, radius: special.kind === 'bossGlobal' ? 0 : special.radius,
     startTick: now, impactTick: now + special.telegraphTicks, abilityId: special.abilityId, ...(special.kind === 'bossGlobal' ? { global: true } : {}) };
@@ -224,11 +309,16 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
     }
     if (action.state === 'areaImpact') {
       if (action.impactTick > now) continue;
-      const definition = getPartyEnemyDefinition(source.sourceId).special;
-      const coefficient = definition?.kind === 'localArea' || definition?.kind === 'bossLocal' || definition?.kind === 'bossGlobal' ? definition.coefficient : 1;
+      const enemy = getPartyEnemyDefinition(source.sourceId);
+      const special = enemy.special;
+      const enrage = enemy.enrage;
+      let coefficient = 1;
+      if (enrage && action.abilityId === enrage.abilityId) coefficient = enrage.burstCoefficient;
+      else if (special?.kind === 'localArea' || special?.kind === 'bossLocal' || special?.kind === 'bossGlobal') coefficient = special.coefficient;
       const targets = action.global ? living(state.party) : living(state.party).filter(target => Math.abs(target.x - action.centerX) <= action.radius + radius(target));
       for (const target of targets.sort(compareId)) damage.push({ source, target, coefficient, abilityId: action.abilityId, basic: false, interceptable: !action.global, primary: target.id === action.targetId });
       delete source.specialAction;
+      if (statusSystemOn()) finishStatusTurn(state, source, now);
       continue;
     }
     if (action.state === 'assassinDash') {
@@ -236,7 +326,10 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       const target = state.party.find(unit => unit.id === action.targetId && unit.hp > 0);
       delete source.specialAction;
       source.moving = false;
-      if (!target) continue;
+      if (!target) {
+        if (statusSystemOn()) finishStatusTurn(state, source, now);
+        continue;
+      }
       source.facing = aimDirection(source, target);
       source.targetId = target.id;
       const timeline = createActionTimeline(source.sourceId, 'leap', now);
@@ -245,11 +338,20 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       continue;
     }
     const target = state.party.find(unit => unit.id === action.targetId && unit.hp > 0);
-    if (!target) { delete source.specialAction; source.moving = false; continue; }
+    if (!target) {
+      delete source.specialAction;
+      source.moving = false;
+      if (statusSystemOn()) finishStatusTurn(state, source, now);
+      continue;
+    }
     if (action.state === 'assassinMark') {
       if (action.impactTick > now) continue;
       const enemy = getPartyEnemyDefinition(source.sourceId), special = enemy.special;
-      if (!special || special.kind !== 'assassin') { delete source.specialAction; continue; }
+      if (!special || special.kind !== 'assassin') {
+        delete source.specialAction;
+        if (statusSystemOn()) finishStatusTurn(state, source, now);
+        continue;
+      }
       delete source.specialAction;
       source.moving = false;
       source.facing = aimDirection(source, target);
@@ -273,10 +375,12 @@ function recover(source: Unit, action: Extract<NonNullable<Unit['action']>, { st
 }
 function miss(state: GameState, impact: Impact, reason: Impact['reason']): void {
   if (!reason) return;
-  emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: impact.kind, reason }, combatTime(state));
+  const now = combatTime(state);
+  emit(state, { type: 'miss', unitId: impact.source.id, targetId: impact.targetId, kind: impact.kind, reason }, now);
   const action = impact.source.action;
   if (action?.state === 'windup') {
     recover(impact.source, action, { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot }, action.targetCount ?? 1);
+    if (statusSystemOn()) completeStatusTurn(state, impact.source, now);
   }
 }
 function rewardDeath(state: GameState, target: Unit): void {
@@ -313,12 +417,26 @@ function commitAbility(state: GameState, impact: Impact, now: number): boolean {
     case 'selfHeal': heal(state, source, source, source.maxHp * (ability.healCoefficient ?? 0), now); break;
     case 'burstHeal': {
       const healed = heal(state, source, target, effectiveAttack(state, source) * (ability.healCoefficient ?? 0), now);
-      if (healed > 0) applyEffect(state, source, target, { group: 'healing-guard', kind: 'damageReduction', magnitude: 0.1, durationTicks: ticksForSeconds(2) }, now);
+      if (healed > 0) {
+        if (statusSystemOn()) {
+          cleanseUnit(state, source, target, ability.id, now);
+          applyHeroSupportStatuses(state, source, target, ability.id, now, { healed: true });
+        } else {
+          applyEffect(state, source, target, { group: 'healing-guard', kind: 'damageReduction', magnitude: 0.1, durationTicks: ticksForSeconds(2) }, now);
+        }
+      }
       if (!healed) return false; break;
     }
-    case 'buff': applyEffect(state, source, target, { group: 'party-atk-buff', kind: 'atkBonus', magnitude: ability.atkBonus ?? 0, durationTicks: ability.durationTicks ?? 0 }, now); break;
-    case 'weaken': applyEffect(state, source, target, { group: 'enemy-atk-weaken', kind: 'atkReduction', magnitude: ability.atkReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
-      applyEffect(state, source, target, { group: 'enemy-def-weaken', kind: 'defReduction', magnitude: ability.defReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+    case 'buff':
+      if (statusSystemOn()) applyHeroSupportStatuses(state, source, target, ability.id, now);
+      else applyEffect(state, source, target, { group: 'party-atk-buff', kind: 'atkBonus', magnitude: ability.atkBonus ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+      break;
+    case 'weaken':
+      if (statusSystemOn()) applyHeroSupportStatuses(state, source, target, ability.id, now);
+      else {
+        applyEffect(state, source, target, { group: 'enemy-atk-weaken', kind: 'atkReduction', magnitude: ability.atkReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+        applyEffect(state, source, target, { group: 'enemy-def-weaken', kind: 'defReduction', magnitude: ability.defReduction ?? 0, durationTicks: ability.durationTicks ?? 0 }, now);
+      }
       break;
     case 'selfSustain': return false;
     case 'cleave': case 'projectile': case 'fireball': case 'singleBurst': return false;
@@ -402,7 +520,8 @@ function advanceProjectiles(state: GameState, now: number): { damage: DamageInte
     const pool = projectile.targetSide === 'hero' ? state.party : state.enemies;
     const primary = pool.find(unit => unit.id === projectile.targetId && unit.hp > 0);
     const ground = projectile.delivery === 'ground';
-    if ((!ground && !primary) || now >= projectile.expiresAtTick) {
+    const flightCap = projectile.releasedAtTick + PARTY_V2.timing.projectileExpiryTicks;
+    if ((!ground && !primary) || now >= projectile.expiresAtTick || !Number.isFinite(flightCap) || now >= flightCap) {
       emit(state, { type: 'projectile', projectileId: projectile.id, sourceId: projectile.sourceId, action: 'expire' }, now); consumed.add(projectile.id); continue;
     }
     if (projectile.releasedAtTick >= now) { keep.push(projectile); continue; }
@@ -431,20 +550,33 @@ export function expireFriendlyDeadTargetProjectiles(state: GameState): void {
   for (const projectile of state.projectiles ?? []) if (projectile.sourceSide === 'hero' && projectile.targetSide === 'enemy') emit(state, { type: 'projectile', projectileId: projectile.id, sourceId: projectile.sourceId, action: 'expire' }, combatTime(state));
   state.projectiles = (state.projectiles ?? []).filter(projectile => !(projectile.sourceSide === 'hero' && projectile.targetSide === 'enemy'));
 }
-export function cancelPartyEncounterEffects(state: GameState): void { state.partyEffects = []; state.projectiles = []; }
+export function cancelPartyEncounterEffects(state: GameState): void {
+  state.partyEffects = [];
+  state.projectiles = [];
+  clearUnitStatuses(state.party, state.enemies);
+}
 
 function beginActorTurn(state: GameState, unit: Unit, now: number): void {
   const wrapper = toGaugeUnit(unit);
   spendTurn(wrapper);
   syncGauge(wrapper);
-  const statuses = unitStatuses(unit);
-  if (!canAct(statuses)) {
-    const turned = onTurnStart({ id: unit.id, hp: unit.hp, maxHp: unit.maxHp, statuses });
-    unit.hp = turned.unit.hp;
-    unit.statuses = turned.unit.statuses;
-    unit.action = { state: 'idle' };
-    unit.moving = false;
-    return;
+  if (statusSystemOn()) {
+    if (!beginStatusTurn(state, unit, now)) {
+      unit.action = { state: 'idle' };
+      unit.moving = false;
+      return;
+    }
+    markStatusTurn(unit);
+  } else {
+    const statuses = unitStatuses(unit);
+    if (!canAct(statuses)) {
+      const turned = onTurnStart({ id: unit.id, hp: unit.hp, maxHp: unit.maxHp, statuses });
+      unit.hp = turned.unit.hp;
+      unit.statuses = turned.unit.statuses;
+      unit.action = { state: 'idle' };
+      unit.moving = false;
+      return;
+    }
   }
   if (startEnemySpecial(state, unit, now)) {
     unit.moving = false;
@@ -454,12 +586,14 @@ function beginActorTurn(state: GameState, unit: Unit, now: number): void {
   if (!choice) {
     unit.targetId = null;
     unit.action = { state: 'idle' };
+    if (statusSystemOn()) finishStatusTurn(state, unit, now);
     return;
   }
   const target = targetPool(state, unit, choice.kind).find(item => item.id === choice.target.id && item.hp > 0);
   if (!target) {
     unit.targetId = null;
     unit.action = { state: 'idle' };
+    if (statusSystemOn()) finishStatusTurn(state, unit, now);
     return;
   }
   const direction = Math.sign(target.x - unit.x);
@@ -529,6 +663,14 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (result.hpDamage > 0 && victim.side === 'hero' && isTank(victim) && result.intent.source.side === 'enemy') tankDamage.add(victim.id);
     if (result.intent.basic && result.intent.primary && result.total > 0) successfulBasic(result);
   }
+  if (statusSystemOn()) {
+    for (const result of results) {
+      if (result.total <= 0 || result.intent.target.hp <= 0) continue;
+      const { source, target, abilityId, primary } = result.intent;
+      const delivery = source.action && 'delivery' in source.action ? source.action.delivery : undefined;
+      applyOnHitStatuses(state, source, target, abilityId, primary, now, { delivery });
+    }
+  }
   for (const id of tankDamage) { const tank = state.party.find(unit => unit.id === id); if (tank) tank.mana = Math.min(manaCost(partyDef(tank)!), (tank.mana ?? 0) + 5); }
   for (const impact of valid) {
     if (impact.abilityId) {
@@ -542,7 +684,14 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (entry.requiresHit && !successfulHits.has(`${entry.requiresHit.sourceId}/${entry.requiresHit.targetId}`)) continue;
     const actual = heal(state, entry.source, entry.target, entry.amount, now);
     if (actual > 0) {
-      if (entry.effect) applyEffect(state, entry.source, entry.target, entry.effect, now);
+      if (statusSystemOn() && entry.cooldownId === 'priest-burst-heal') {
+        cleanseUnit(state, entry.source, entry.target, entry.cooldownId, now);
+        applyHeroSupportStatuses(state, entry.source, entry.target, entry.cooldownId, now, { healed: true });
+      } else if (statusSystemOn() && entry.cooldownId === 'bruiser-heal') {
+        applyHeroSupportStatuses(state, entry.source, entry.target, entry.cooldownId, now, { healed: true });
+      } else if (entry.effect) {
+        applyEffect(state, entry.source, entry.target, entry.effect, now);
+      }
       if (entry.cooldownId) {
         entry.source.mana = 0;
       }
@@ -555,9 +704,12 @@ function resolveDueImpacts(state: GameState, startUnits: Unit[], now: number, sp
     if (action?.state === 'windup') {
       const anchor = { side: action.targetSide ?? impact.target.side, slot: action.targetSlot ?? impact.target.slot };
       recover(impact.source, action, anchor, action.targetCount ?? Math.max(1, state.enemies.length));
-      const turned = onTurnStart({ id: impact.source.id, hp: impact.source.hp, maxHp: impact.source.maxHp, statuses: unitStatuses(impact.source) });
-      impact.source.hp = turned.unit.hp;
-      impact.source.statuses = turned.unit.statuses;
+      if (statusSystemOn()) completeStatusTurn(state, impact.source, now);
+      else {
+        const turned = onTurnStart({ id: impact.source.id, hp: impact.source.hp, maxHp: impact.source.maxHp, statuses: unitStatuses(impact.source) });
+        impact.source.hp = turned.unit.hp;
+        impact.source.statuses = turned.unit.statuses;
+      }
     }
   }
 }
@@ -571,34 +723,43 @@ export function partyCombatTick(state: GameState, allowNewActions = true): void 
     if (!enemy.moving) continue;
     const home = enemyFormationX(enemy.slot);
     const delta = home - enemy.x;
-    if (Math.abs(delta) <= ENEMY_ENTRY_PX) {
+    if (!Number.isFinite(enemy.x) || !Number.isFinite(delta) || Math.abs(delta) > ENEMY_MARCH_LIMIT_PX || Math.abs(delta) <= ENEMY_ENTRY_PX) {
       enemy.x = home;
       enemy.moving = false;
-    } else {
-      enemy.x += Math.sign(delta) * ENEMY_ENTRY_PX;
-    }
+    } else enemy.x += Math.sign(delta) * ENEMY_ENTRY_PX;
   }
-  if (living(state.enemies).some(enemy => enemy.moving)) return;
+  // March may delay the next turn. It must not delay a hit, a telegraph, or a recovery that is already due.
   prunePartyEffects(state);
   for (const unit of startUnits) if (unit.shieldUntilTick <= now) { unit.shield = 0; delete unit.shieldProviderId; }
-  for (const unit of living(startUnits)) {
-    if (unit.action?.state === 'recovery' && unit.action.readyTick <= now) unit.action = { state: 'idle' };
-    unit.moving = false;
-  }
+  releaseStalePresentations(state, startUnits, now, true);
   const specials = advanceEnemySpecials(state, now);
   resolveDueImpacts(state, startUnits, now, specials.damage);
+  releaseStalePresentations(state, startUnits, now, false);
 
-  if (living([...state.party, ...state.enemies]).some(presentationBusy)) {
-    if (state.party.every(hero => hero.hp <= 0)) cancelPartyEncounterEffects(state);
-    return;
-  }
+  if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); return; }
+  if (living(state.enemies).some(enemy => enemy.moving)) return;
+  for (const unit of living(startUnits)) unit.moving = false;
+
+  // A turn owns the presentation lane until its recovery finishes. Keep every
+  // unit's gauge frozen during that window so the next actor is selected from
+  // the same gauge order that existed when this action began.
+  if (living([...state.party, ...state.enemies]).some(presentationBusy)) return;
+
   if (!allowNewActions) return;
 
-  const wrappers = living([...state.party, ...state.enemies]).map(toGaugeUnit);
-  fillGauges(wrappers);
-  for (const wrapper of wrappers) syncGauge(wrapper);
-  const actor = nextActor(wrappers);
-  if (actor) beginActorTurn(state, actor.ref, now);
+  let actor: Unit | undefined;
+  for (const unit of startUnits) {
+    if (unit.hp <= 0) continue;
+    const statuses = unitStatuses(unit);
+    if (!statuses.some(status => statusDef(status.id)?.locksGauge)) {
+      unit.gauge = (unit.gauge ?? 0) + Math.round(turnSpd(unit) * 7 * fillMultiplier(statuses));
+    }
+    if (presentationBusy(unit) || (unit.gauge ?? 0) < 10000) continue;
+    if (!actor || (unit.gauge ?? 0) > (actor.gauge ?? 0)
+      || ((unit.gauge ?? 0) === (actor.gauge ?? 0) && unit.side === 'hero' && actor.side === 'enemy')
+      || ((unit.gauge ?? 0) === (actor.gauge ?? 0) && unit.side === actor.side && unit.slot < actor.slot)) actor = unit;
+  }
+  if (actor) beginActorTurn(state, actor, now);
 
   if (state.party.every(hero => hero.hp <= 0)) cancelPartyEncounterEffects(state);
 }

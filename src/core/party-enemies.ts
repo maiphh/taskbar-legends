@@ -1,11 +1,15 @@
-import { CONFIG, enemyKindSchema, type EnemyKind } from '../config';
+import { CONFIG, bossConfig, enemyKindSchema, isBossEnemyId, type EnemyKind } from '../config';
 import { ticksForSeconds } from '../config';
 
 export type PartyEnemySpecial =
   | { kind: 'assassin'; markTicks: number; dashSpeed: number }
   | { kind: 'localArea'; abilityId: string; coefficient: number; radius: number; telegraphTicks: number; cooldownTicks: number }
-  | { kind: 'bossLocal'; abilityId: string; coefficient: number; radius: number; telegraphTicks: number; every: number }
-  | { kind: 'bossGlobal'; abilityId: string; coefficient: number; telegraphTicks: number; every: number };
+  | { kind: 'bossLocal'; abilityId: string; coefficient: number; radius: number; telegraphTicks: number; every: number; telegraphLabel: string }
+  | { kind: 'bossGlobal'; abilityId: string; coefficient: number; telegraphTicks: number; every: number; telegraphLabel: string }
+  | {
+      kind: 'bossEnrage'; abilityId: string; hpPct: number; atkMult: number; telegraphTicks: number;
+      telegraphLabel: string; burstCoefficient: number; burstGlobal: boolean;
+    };
 
 export interface PartyEnemyDefinition {
   id: string;
@@ -19,6 +23,15 @@ export interface PartyEnemyDefinition {
   visualKind: EnemyKind;
   rewardKind: EnemyKind;
   special?: PartyEnemySpecial;
+  /** Optional second signature skill (boss enrage). */
+  enrage?: Extract<PartyEnemySpecial, { kind: 'bossEnrage' }>;
+  scale?: number;
+  tint?: string;
+  outline?: string;
+  displayName?: string;
+  title?: string;
+  fullName?: string;
+  heroSprite?: string;
 }
 
 const tick = ticksForSeconds;
@@ -35,26 +48,38 @@ export function getPartyEnemyDefinition(id: string): PartyEnemyDefinition {
   const added = special[id];
   if (added) return added;
   const parsed = enemyKindSchema.parse(id), base = CONFIG.enemies[parsed];
-  const bossPattern: PartyEnemySpecial | undefined = parsed === 'boss_ch1'
-    ? { kind: 'bossLocal', abilityId: 'boss-ch1-slam', coefficient: 1, radius: 64, telegraphTicks: tick(1), every: 5 }
-    : parsed === 'boss_ch2'
-      ? { kind: 'bossGlobal', abilityId: 'boss-ch2-volley', coefficient: 0.9, telegraphTicks: tick(1), every: 4 }
-      : undefined;
-  const ranged = parsed === 'archer' || parsed === 'boss_ch2';
+  if (isBossEnemyId(parsed)) {
+    const boss = bossConfig(parsed);
+    const cleave = boss.skills.cleave;
+    const enrage = boss.skills.enrage;
+    return {
+      id, hp: boss.hp, atk: boss.atk, def: boss.def, attackTicks: boss.attackIntervalTicks,
+      range: boss.rangePx, speed: boss.speedPxPerSec, basicStyle: 'melee', visualKind: parsed, rewardKind: parsed,
+      special: {
+        kind: 'bossLocal', abilityId: cleave.id, coefficient: cleave.coefficient, radius: cleave.radius,
+        telegraphTicks: cleave.telegraphTicks, every: cleave.everyNthAttack, telegraphLabel: cleave.telegraphLabel,
+      },
+      enrage: {
+        kind: 'bossEnrage', abilityId: enrage.id, hpPct: enrage.hpPct, atkMult: enrage.atkMult,
+        telegraphTicks: enrage.telegraphTicks, telegraphLabel: enrage.telegraphLabel,
+        burstCoefficient: enrage.burstCoefficient, burstGlobal: enrage.burstGlobal,
+      },
+      scale: boss.scale, tint: boss.tint, outline: boss.outline,
+      displayName: boss.displayName, title: boss.title, fullName: boss.name, heroSprite: boss.heroSprite,
+    };
+  }
+  const ranged = parsed === 'archer';
   return { id, hp: base.hp, atk: base.atk, def: base.def, attackTicks: base.attackIntervalTicks,
     range: ranged ? 260 : 12, speed: parsed === 'archer' ? 55 : 70, basicStyle: ranged ? 'projectile' : 'melee',
-    visualKind: parsed, rewardKind: parsed, ...(bossPattern ? { special: bossPattern } : {}) };
+    visualKind: parsed, rewardKind: parsed };
 }
 
-/** Cap a wave to squad size 3 or 5 after special-id replacement. */
+/** Cap a wave to squad size 3 or 5 after special-id replacement. Boss waves keep 1 boss + 0–2 authored adds. */
 function capPartyWaveKinds(kinds: string[]): string[] {
   const bossIndex = kinds.findIndex(id => id.startsWith('boss'));
   if (bossIndex >= 0) {
     const boss = kinds[bossIndex]!;
-    const adds = kinds.filter((_, index) => index !== bossIndex);
-    if (adds.length >= 3) return [boss, ...adds.slice(-4)];
-    const pad = adds.at(-1) ?? 'grunt';
-    while (adds.length < 2) adds.push(pad);
+    const adds = kinds.filter((_, index) => index !== bossIndex).slice(0, 2);
     return [boss, ...adds];
   }
   if (kinds.length >= 5) return kinds.slice(-5);

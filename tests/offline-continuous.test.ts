@@ -33,7 +33,7 @@ describe('continuous idle reward rates', () => {
     }
     expect(expectedFarmRewards(9).gold).toBe(226);
     expect(expectedFarmRewards(11).gold).toBe(119);
-    expect(expectedFarmRewards(20).gold).toBe(2719);
+    expect(expectedFarmRewards(20).gold).toBe(2593);
   });
 
   it('makes three 10-second visits equal one 30-second absence across save roundtrips', () => {

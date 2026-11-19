@@ -205,7 +205,9 @@ describe('power-growth retry wall-time guard and boss countdown', () => {
   });
   it('boss countdown is wall-timed, includes wave gaps and hides in the stage rest', () => {
     const state = createState(); state.highestCleared = 9; state.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 0, bossLosses: 0 }; beginEncounter(state);
-    state.tick += ticksForSeconds(6); expect(bossSecondsRemaining(state)).toBe(CONFIG.stages[9]?.timeoutSec ? (CONFIG.stages[9].timeoutSec - 6) : null);
+    state.tick += ticksForSeconds(6);
+    const bossStage = CONFIG.stages[9];
+    expect(bossSecondsRemaining(state)).toBe(bossStage?.isBoss ? bossStage.timeoutSec - 6 : null);
     state.phase = { kind: 'rest', next: 'wave', remainingTicks: 1 }; expect(bossSecondsRemaining(state)).not.toBeNull();
     state.phase = { kind: 'rest', next: 'encounter', remainingTicks: 1 }; expect(bossSecondsRemaining(state)).toBeNull();
   });

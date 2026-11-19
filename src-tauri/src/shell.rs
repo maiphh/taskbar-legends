@@ -599,8 +599,8 @@ mod tests {
         let work = super::PixelRect {
             x: -1280,
             y: 0,
-            width: 1280,
-            height: 800,
+            width: 1920,
+            height: 1080,
         };
         let insets = super::Insets {
             left: 8,
@@ -611,35 +611,35 @@ mod tests {
         let contained = super::PixelRect {
             x: -900,
             y: 100,
-            width: 776,
-            height: 600,
+            width: 1296,
+            height: 760,
         };
         assert_eq!(
-            super::fit_managed_bounds(contained, 760, 560, insets, work),
+            super::fit_managed_bounds(contained, 1280, 720, insets, work),
             super::ManagedBounds {
                 frame: contained,
-                client_width: 760,
-                client_height: 560
+                client_width: 1280,
+                client_height: 720
             }
         );
         let offscreen = super::PixelRect {
             x: 100,
             y: 500,
-            width: 776,
-            height: 600,
+            width: 1296,
+            height: 760,
         };
         assert_eq!(
-            super::fit_managed_bounds(offscreen, 760, 560, insets, work),
+            super::fit_managed_bounds(offscreen, 1280, 720, insets, work),
             super::ManagedBounds {
-                // Off-screen: keep the requested 760x560 client (it fits the work area) and clamp the frame into the monitor.
+                // Off-screen: keep the requested 1280x720 client (it fits the work area) and clamp the frame into the monitor.
                 frame: super::PixelRect {
-                    x: -776,
-                    y: 200,
-                    width: 776,
-                    height: 600
+                    x: -656,
+                    y: 320,
+                    width: 1296,
+                    height: 760
                 },
-                client_width: 760,
-                client_height: 560,
+                client_width: 1280,
+                client_height: 720,
             }
         );
     }

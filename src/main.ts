@@ -1,5 +1,5 @@
 import './style.css';
-import { CONFIG, TICK_MS, activeSalvageRules, activeV14Rules, parseV14Flag, setSalvageRules, setV14Rules } from './config';
+import { CONFIG, activeSalvageRules, activeV14Rules, parseV14Flag, setSalvageRules, setV14Rules } from './config';
 import { audio } from './audio';
 import { cheapestEquippedUpgrade } from './core/economy';
 import { salvageToast } from './salvage-copy';
@@ -13,6 +13,7 @@ import type { WelcomeData } from './pixel-ui';
 import { raritySchema } from './config';
 import { localSaveStore } from './platform/storage';
 import { Renderer } from './renderer';
+import { presentationReducedMotionPreference, setPresentationReducedMotionPreference } from './pixel-ui';
 import type { GameDebug } from './debug';
 import type { HitRegion } from './renderer';
 import type { Action } from './core/model';
@@ -24,6 +25,9 @@ import { readCompactPrefs, writeCompactPrefs } from './platform/compact-prefs';
 import { parseCompactPrefs } from './platform/desktop/compact-geometry';
 import type { CompactPrefs } from './platform/desktop/compact-geometry';
 import { startManagementBridge } from './platform/desktop/management-bridge';
+import { emit } from '@tauri-apps/api/event';
+import { consumeNewEvents } from './legendary-events';
+import { settleVisibleFrame, simulatedWallMs } from './frame-budget';
 
 function element(id: string): HTMLElement {
   const value = document.getElementById(id); if (!value) throw new Error(`Missing UI element ${id}`); return value;
@@ -31,22 +35,41 @@ function element(id: string): HTMLElement {
 const query = new URLSearchParams(location.search);
 setV14Rules(parseV14Flag(query.get('v14')));
 setSalvageRules(query.get('salvage') === 'off' ? 'default' : 'design');
-/** Shot harness only (`?shot&menu=native`): render the 760×560 native-window variant in the page to compare it with its mockups. */
+/** Shot harness only (`?shot&menu=native`): exercise the native management presentation inside the browser. */
 const nativeMenuShot = query.has('shot') && query.get('menu') === 'native';
 const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) throw new Error('Missing canvas');
 const notice = element('notice'), liveStatus = element('live-status');
+const legendaryToast = element('legendary-toast');
+let legendaryToastTimer = 0;
+function showLegendaryToast(message: string, slot?: 'weapon' | 'armor' | 'charm'): void {
+  legendaryToast.replaceChildren();
+  legendaryToast.dataset.reducedMotion = String(renderer.ui.reducedMotion);
+  const itemSlot = slot ?? (/\b(armor|charm|weapon)\b/i.exec(message)?.[1]?.toLowerCase() as 'weapon' | 'armor' | 'charm' | undefined) ?? 'weapon';
+  const icon = document.createElement('img'); icon.src = `${import.meta.env.BASE_URL}ui/icon-${itemSlot === 'weapon' ? 'sword' : itemSlot === 'charm' ? 'potion' : 'armor'}.png`; icon.alt = ''; icon.width = 32; icon.height = 32; icon.className = 'legendary-toast-icon';
+  const copy = document.createElement('span'); copy.className = 'legendary-toast-copy';
+  const title = document.createElement('b'); title.textContent = 'LEGENDARY DROP';
+  const name = document.createElement('span'); name.textContent = message.replace(/^Legendary drop:\s*/i, '');
+  copy.append(title, name); legendaryToast.append(icon, copy); legendaryToast.hidden = false; legendaryToast.classList.remove('legendary-pop'); void legendaryToast.offsetWidth; legendaryToast.classList.add('legendary-pop');
+  window.clearTimeout(legendaryToastTimer); legendaryToastTimer = window.setTimeout(() => { legendaryToast.hidden = true; }, 4000);
+}
 const recovery = element('save-recovery'), exportFailed = element('export-failed-save') as HTMLButtonElement, discardFailed = element('discard-failed-save') as HTMLButtonElement;
 const recoveryTitle = element('save-recovery-title'), recoveryDescription = element('recovery-description'), recoveryStatus = element('recovery-status');
 const legacyNotice = element('legacy-save-notice'), exportLegacy = element('export-legacy-save') as HTMLButtonElement, legacyExportStatus = element('legacy-export-status');
 const renderer = new Renderer(canvas, element('controls'));
+document.body.dataset.reducedMotion = String(presentationReducedMotionPreference());
+window.addEventListener('storage', event => {
+  if (event.key !== 'taskbar-legends:reduced-motion:v1') return;
+  const enabled = event.newValue === 'true'; document.body.dataset.reducedMotion = String(enabled);
+  for (const toast of document.querySelectorAll<HTMLElement>('.legendary-pop,.px-legendary-toast')) toast.dataset.reducedMotion = String(enabled || matchMedia('(prefers-reduced-motion: reduce)').matches);
+});
 let compactPrefs: CompactPrefs = readCompactPrefs();
 document.body.classList.add('compact-shell'); renderer.setCompactViewport(true, compactPrefs.zoom);
 const newSelectedState = (seed = 1) => createState(seed);
-let state = newSelectedState(), paused = false, accumulatorMs = 0, hidden = document.hidden;
+let state = newSelectedState(), paused = false, accumulatorMs = 0, unsimulatedDebtMs = 0, hidden = document.hidden;
 let restoring = false, failedSave = false, checkpointBlocked = false, rendering = false;
 const managementAuthority = new ManagementAuthority(state, paused, next => { state = next; render(); });
 managementAuthority.setAvailable(false);
-function replaceSelectedState(next: typeof state): void { managementAuthority.replaceState(next); }
+function replaceSelectedState(next: typeof state): void { renderer.baselineLegendaryEvents(next.eventSeq); legendaryNoticeSeq = next.eventSeq; legendaryToast.hidden = true; managementAuthority.replaceState(next); }
 function setCompactSettings(next: CompactPrefs): void {
   compactPrefs = parseCompactPrefs(next); writeCompactPrefs(compactPrefs);
   renderer.setCompactViewport(true, compactPrefs.zoom); resize();
@@ -55,6 +78,8 @@ function setCompactSettings(next: CompactPrefs): void {
 const managementRoot = element('management'), compactMenu = element('compact-menu-bar');
 let managementView: ManagementView | null = null, internalRequest = 0;
 let lastFrame = performance.now(), lastSave = lastFrame, noticeUntil = 0;
+let legendaryNoticeSeq = 0;
+let legendaryNotificationSeq = 0;
 const showNotice = (message: string): void => { notice.textContent = message; noticeUntil = performance.now() + 7000; };
 export const canonicalSaveKey = `${CONFIG.runtime.saveKey}:party-v2`;
 const store = localSaveStore(canonicalSaveKey);
@@ -84,51 +109,29 @@ function managementClient(): ManagementClient {
     pause: async value => { if (hidden || restoring || checkpointBlocked || failedSave) return; paused = value; managementAuthority.setPaused(value); lastFrame = performance.now(); render(); }, close: () => undefined,
     getAudio: async () => audio.settings(), setAudio: async value => { audio.set(value); renderer.ui.audio = audio.settings(); render(); },
     getCompactPrefs: async () => compactPrefs, setCompactPrefs: async value => setCompactSettings(value),
+    getReducedMotion: async () => presentationReducedMotionPreference(), setReducedMotion: async value => { setPresentationReducedMotionPreference(value); renderer.ui.onRedraw?.(); render(); },
     cue: key => { audio.play(key); },
   };
 }
-const MENU_TOKENS = CONFIG.ui.compactMenu.browser;
-/**
- * Browser dock (compact-menu.md §5): the PARTY CAMP panel sits 8 px above the lane when the viewport has room for
- * lane + gap + panel (the lane is then bottom-anchored, like the native window at the taskbar), otherwise directly below
- * it. Width is W-16 (624 at W=640), 720 once W ≥ 736; it never overlaps the lane.
- */
 function dockManagement(): void {
   if ('__TAURI_INTERNALS__' in window) return;
-  if (nativeMenuShot) { managementRoot.style.left = '0px'; managementRoot.style.top = '0px'; return; }
-  const app = element('app'), laneHeight = app.getBoundingClientRect().height, [, , , panelHeight = 400] = MENU_TOKENS.panel, gap = MENU_TOKENS.gapPx;
-  // The side is chosen once per open (§5: the window resizes once; switching tabs or the one-shot growth never re-docks).
-  const above = openDock?.above ?? window.innerHeight >= laneHeight + gap + panelHeight;
-  document.body.classList.toggle('compact-dock-above', above);
-  // W is the page viewport (the browser stand-in for the compact window): 624 at 640, 720 from 736 up.
-  const lane = app.getBoundingClientRect(), width = window.innerWidth >= 736 ? 720 : Math.max(320, Math.min(MENU_TOKENS.panelSize[0] ?? 624, window.innerWidth - 16));
-  // Below keeps the 8 px gap (window 640×568, top edge fixed, bottom grows — see growForDock); never collapse the gap.
-  const top = above ? lane.top - gap - panelHeight : lane.bottom + gap;
-  managementRoot.style.setProperty('--px-panel-w', `${width}px`);
-  // Document coordinates (the panel lives on <body>): a viewport too short for lane + panel scrolls instead of overlapping.
-  managementRoot.style.left = `${Math.round(window.scrollX + Math.max(0, Math.min(lane.left + 8, window.innerWidth - width - 8)))}px`; managementRoot.style.top = `${Math.round(window.scrollY + top)}px`;
-  managementRoot.dataset.dock = above ? 'above' : 'below';
+  managementRoot.dataset.dock = 'overlay';
+  fitManagementOverlay();
 }
-/** Dock side and one-shot window growth for the open panel; null while the panel is closed. */
-let openDock: { above: boolean; grewBy: number } | null = null;
-/**
- * Window on open is lane + 8 + panel (640×568, compact-menu.md §5). Docked below, the top edge stays fixed and the bottom
- * grows once by the shortfall, so the page never scrolls; close restores it once. `resizeBy` is honoured by standalone /
- * script-opened windows; `data-window-height` publishes the requested client height for hosts (and the shot harness)
- * that size the window themselves.
- */
-function growForDock(): void {
-  if ('__TAURI_INTERNALS__' in window || nativeMenuShot || openDock) return;
-  const laneHeight = element('app').getBoundingClientRect().height, [, , , panelHeight = 400] = MENU_TOKENS.panel, need = Math.ceil(laneHeight + MENU_TOKENS.gapPx + panelHeight);
-  const above = window.innerHeight >= need, grewBy = above ? 0 : Math.max(0, need - window.innerHeight);
-  openDock = { above, grewBy };
-  if (grewBy > 0) { try { window.resizeBy(0, grewBy); } catch { /* not resizable from script */ } managementRoot.dataset.windowHeight = String(need); }
+function fitManagementOverlay(): void {
+  if ('__TAURI_INTERNALS__' in window) return;
+  const wide = window.innerWidth >= 1280 && window.innerHeight >= 720;
+  const width = wide ? 1280 : 960, height = wide ? 720 : Math.min(640, Math.max(600, window.innerHeight));
+  const scale = window.innerWidth >= width * 2 && window.innerHeight >= height * 2 ? 2 : 1;
+  managementRoot.dataset.preset = wide ? '1280' : '960';
+  managementView?.setLayoutPreset(managementRoot.dataset.preset);
+  managementRoot.style.setProperty('--px-v2-scale', String(scale));
+  managementRoot.style.setProperty('--px-v2-height', `${height}px`);
+  managementRoot.style.left = `${Math.floor((window.innerWidth - width * scale) / 2)}px`;
+  managementRoot.style.top = `${Math.floor((window.innerHeight - height * scale) / 2)}px`;
 }
-function shrinkAfterDock(): void {
-  if (!openDock) return;
-  const { grewBy } = openDock; openDock = null; delete managementRoot.dataset.windowHeight;
-  if (grewBy > 0) { try { window.resizeBy(0, -grewBy); } catch { /* not resizable from script */ } }
-}
+window.addEventListener('resize', fitManagementOverlay);
+fitManagementOverlay();
 /** Compact HUD buttons follow the lane's source-pixel scale (zoom / devicePixelRatio). */
 function syncCompactScale(): void {
   const z = (compactPrefs?.zoom ?? 1) / (window.devicePixelRatio || 1);
@@ -142,12 +145,12 @@ function domHitRegions(): HitRegion[] {
   if (!managementRoot.hidden) add(managementRoot, 'panel', 'management');
   return regions;
 }
-function openManagement(tab: 'party' | 'stash' | 'recruit' | 'upgrades' | 'settings' = 'party'): void {
-  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; shrinkAfterDock(); element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
-  if (managementRoot.hidden) growForDock();
-  dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open(tab);
+function openManagement(tab: 'home' | 'heroes' | 'formation' | 'gear' | 'recruit' | 'stages' | 'settings' | 'party' | 'stash' | 'upgrades' = 'home'): void {
+  if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
+  const destination = tab === 'party' ? 'heroes' : tab === 'stash' || tab === 'upgrades' ? 'gear' : tab;
+  dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open(destination);
 }
-renderer.ui.onPanelRequest = tab => openManagement(tab === 'heroes' ? 'party' : tab === 'gear' ? 'stash' : 'recruit');
+renderer.ui.onPanelRequest = tab => openManagement(tab === 'heroes' ? 'heroes' : tab === 'gear' ? 'gear' : tab === 'recruit' ? 'recruit' : 'home');
 function setEditing(value: boolean): void {
   const overlay = document.getElementById('edit-overlay'); if (overlay) overlay.toggleAttribute('hidden', !value);
   // Done takes Edit's rect while editing (compact-menu.md §2.3); the lane draws the gold/ink HUD-band frame.
@@ -173,6 +176,8 @@ function restore(): Promise<void> {
         if (data.state.combatRules !== 'party-v2') throw new Error(`The current save at ${canonicalSaveKey} is incompatible and has been preserved for export. It was not overwritten.`);
         // RestoreCoordinator wrote the new state, remainder, and consumed timestamp before it can be exposed here.
         replaceSelectedState(saved.state); accumulatorMs = saved.remainderMs;
+        // resumeSave paid the gap and the coordinator checkpointed the resume clock.
+        unsimulatedDebtMs = 0;
         if (saved.seconds >= 1) { renderer.ui.showWelcome(welcomeData(saved, data.state.eventSeq));
           if (!renderer.ui.welcome) showNotice(`Away ${Math.floor(saved.seconds / 60)}m · +${saved.gold} gold · ${saved.clears} clears · ${Math.round(saved.partialClears * 100)}% toward next clear${saved.capped ? ' (8h cap)' : ''}`); }
       }
@@ -216,22 +221,29 @@ function welcomeData(result: ReturnType<typeof applyOffline>, beforeSeq: number)
   for (const pair of state.pendingChoice ?? []) for (const item of pair) if (item.acquiredAt.tick === state.tick) consider(item.rarity, item.slot);
   return { ...result, stage: result.stage, partialClears: result.partialClears, best, choices: activeV14Rules().includes('chestChoice') && result.chests ? state.pendingChoice?.length ?? 0 : 0 };
 }
+/** Fold one visible frame into combat and the session debt. Debt is not cleared here. */
+function absorbVisibleFrame(elapsedMs: number): void {
+  const settled = settleVisibleFrame(state, { accumulatorMs, unsimulatedDebtMs }, elapsedMs, Date.now(), paused);
+  accumulatorMs = settled.accumulatorMs;
+  unsimulatedDebtMs = settled.unsimulatedDebtMs;
+}
+/** Last simulated instant: wall clock minus `unsimulatedDebtMs`. Autosave, hide, and quit all stamp it. */
+function payableSavedAt(nowMs = Date.now()): number {
+  return saveTimestamp.next(simulatedWallMs(nowMs, unsimulatedDebtMs));
+}
 function save(): void {
   if (restoring || failedSave || checkpointBlocked || hidden) return;
-  store.save({ state, savedAtMs: saveTimestamp.next(Date.now()), remainderMs: accumulatorMs })
+  store.save({ state, savedAtMs: payableSavedAt(), remainderMs: accumulatorMs })
     .catch(() => { showNotice('Save failed: storage unavailable/full. Export __game.snapshot().'); });
 }
 /** Consume the final visible frame into a durable timestamp before the browser freezes the page. */
 function checkpointVisibleTime(): void {
   if (restoring || failedSave || checkpointBlocked) return;
   const now = performance.now();
-  if (!paused) {
-    accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
-    const ticks = Math.floor(accumulatorMs / TICK_MS);
-    if (ticks > 0) { step(state, ticks); accumulatorMs -= ticks * TICK_MS; }
-  }
+  // The unsimulated part of this frame joins the session debt. The stamp lags by that debt so the gap stays payable.
+  absorbVisibleFrame(now - lastFrame);
   lastFrame = now; lastSave = now;
-  store.save({ state, savedAtMs: saveTimestamp.next(Date.now()), remainderMs: accumulatorMs }).catch(() => {
+  store.save({ state, savedAtMs: payableSavedAt(), remainderMs: accumulatorMs }).catch(() => {
     checkpointBlocked = true; paused = true; managementAuthority.setPaused(true); managementAuthority.setAvailable(false);
     notice.textContent = 'Idle return could not be saved. Original save is preserved; free storage, then close and reopen the game.'; noticeUntil = Infinity; render();
   });
@@ -257,6 +269,19 @@ function render(): void {
   if (rendering) return;
   rendering = true;
   try {
+  legendaryNoticeSeq = consumeNewEvents(state.eventSeq, legendaryNoticeSeq, state.events, event => {
+    const data = event.data;
+    if (data.type === 'gear' && data.rarity === 'legendary') {
+      const item = state.inventory.find(value => value.id === data.gearId);
+      const name = item ? `Legendary ${item.slot}` : `Legendary ${data.slot}`;
+      const notificationSeq = ++legendaryNotificationSeq;
+      showNotice(`Legendary drop: ${name}`); noticeUntil = performance.now() + 4000; notice.classList.add('legendary-notice'); audio.play('gacha_legendary_sting');
+      showLegendaryToast(`Legendary drop: ${name}`, data.slot);
+      managementView?.presentLegendaryDrop(notificationSeq, `Legendary drop: ${name}`, data.slot);
+      if ('__TAURI_INTERNALS__' in window) void emit('management://legendary-drop', { seq: notificationSeq, message: `Legendary drop: ${name}`, slot: data.slot }).catch(() => undefined);
+    }
+  });
+  if (performance.now() > noticeUntil) notice.classList.remove('legendary-notice');
   renderer.render(state, paused);
   const status = statusText(state); if (liveStatus.textContent !== status) liveStatus.textContent = status;
   if (performance.now() > noticeUntil) notice.textContent = '';
@@ -325,13 +350,16 @@ const debug: GameDebug = {
   },
   getEvents: () => structuredClone(state.events), getHitRegions: () => [...renderer.getHitRegions(), ...domHitRegions()], getManagementReveal: () => managementView?.revealState() ?? null, getLayout: () => renderer.getLayout(),
   getCombatProjection: (source = state) => renderer.getCombatProjection(source),
-  openPanel: tab => { if (tab) openManagement(tab === 'heroes' ? 'party' : tab === 'gear' ? 'stash' : 'recruit'); else managementView?.close(); },
+  setShowcaseZoom: zoom => { setCompactSettings({ ...compactPrefs, zoom }); render(); },
+  openPanel: tab => { if (tab) openManagement(tab === 'heroes' ? 'heroes' : tab === 'gear' ? 'gear' : tab === 'recruit' ? 'recruit' : tab === 'formation' ? 'formation' : tab === 'stages' ? 'stages' : tab === 'settings' ? 'settings' : 'home'); else managementView?.close(); },
   whenReady: () => Promise.all([renderer.atlases.ready, renderer.ui.ready]).then(() => { render(); }),
   getAssetErrors: () => [...renderer.atlases.errors, ...renderer.ui.errors],
   setV14Rules: rules => { setV14Rules(rules); render(); return activeV14Rules(); }, getV14Rules: () => activeV14Rules(),
   setSalvageRules: rules => { const next = setSalvageRules(rules); render(); return next; }, getSalvageRules: () => activeSalvageRules(),
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
+  debugShowcase: (kind, slot = 'weapon') => { renderer.debugLegendaryShowcase(kind, state, slot); if (kind === 'drop') { const message = `Legendary drop: Legendary ${slot[0]!.toUpperCase()}${slot.slice(1)}`; showNotice(message); showLegendaryToast(message, slot); managementView?.presentLegendaryDrop(++legendaryNotificationSeq, message, slot); audio.play('gacha_legendary_sting'); } render(); },
+  debugShowcaseSeek: ms => { renderer.seekLegendaryShowcase(ms); render(); },
   getAudio: () => audio.debug(),
   away: ms => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },
 };
@@ -340,6 +368,7 @@ if (import.meta.env.DEV) window.__management = {
   snapshot: () => managementAuthority.snapshot(),
   execute: (value: unknown) => managementAuthority.execute(value),
   compare: (heroId: string, gearId: string) => managementAuthority.compareGear(heroId, gearId),
+  freezeAnimation: (frozen: boolean) => managementView?.freezeAnimation(frozen),
 };
 void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler),
   presentationState: () => ({ welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() }) }, {
@@ -348,14 +377,11 @@ void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler 
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
 void debug.whenReady().then(() => { if (debug.getAssetErrors().length) showNotice('Some UI/art unavailable; see __game.getAssetErrors().'); });
 function frame(now: number): void {
-  if (!paused && !hidden && !restoring && !failedSave && !checkpointBlocked) {
-    accumulatorMs += Math.min(Math.max(0, now - lastFrame), CONFIG.idle.offlineCapHours * 3_600_000);
-    const ticks = Math.floor(accumulatorMs / TICK_MS); if (ticks > 0) { step(state, ticks); accumulatorMs -= ticks * TICK_MS; }
-  }
+  if (!hidden && !restoring && !failedSave && !checkpointBlocked) absorbVisibleFrame(now - lastFrame);
   lastFrame = now; audio.consume(state.events); render();
   if (!hidden && now - lastSave >= CONFIG.runtime.autosaveSeconds * 1000) { save(); lastSave = now; }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
-declare global { interface Window { __management?: { snapshot(): ReturnType<typeof managementAuthority.snapshot>; execute(value: unknown): ReturnType<typeof managementAuthority.execute>; compare(heroId: string, gearId: string): ReturnType<typeof managementAuthority.compareGear> } } }
+declare global { interface Window { __management?: { snapshot(): ReturnType<typeof managementAuthority.snapshot>; execute(value: unknown): ReturnType<typeof managementAuthority.execute>; compare(heroId: string, gearId: string): ReturnType<typeof managementAuthority.compareGear>; freezeAnimation(frozen: boolean): void } } }

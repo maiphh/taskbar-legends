@@ -4,6 +4,11 @@ import { CONFIG } from './config';
 export const FONT_FILES = [
   ['GameSans', 'NotoSans-Regular.ttf', '400'],
   ['GameSans', 'NotoSans-SemiBold.ttf', '600'],
+  ['GamePixel', 'Galmuri11.ttf', '400'],
+  ['GamePixel', 'Galmuri11-Bold.ttf', '700'],
+  ['Galmuri11', 'Galmuri11.ttf', '400'],
+  ['Galmuri11', 'Galmuri11-Bold.ttf', '700'],
+  ['GameMeta', 'Galmuri9.ttf', '400'],
   ['GameSymbols', 'Galmuri11.ttf', '400'],
 ] as const;
 export type FontName = string;
@@ -24,9 +29,9 @@ export function loadFonts(): Promise<void> {
   return loading;
 }
 
-export function fontFor(value: string, size: number, bold: boolean): FontName {
+export function fontFor(value: string, size: number, bold: boolean, pixel = false): FontName {
   void value; void size; void bold;
-  return CSS_FONT_STACK;
+  return pixel ? 'GamePixel, GameSymbols, monospace' : CSS_FONT_STACK;
 }
 /** Noto's native metrics do not need the old Galmuri slot correction. */
 export function slotOffsetY(size: number, bold: boolean): number { void size; void bold; return 0; }

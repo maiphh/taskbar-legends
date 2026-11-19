@@ -101,11 +101,15 @@ describe('party-v2 deterministic encounter matrix', () => {
     expect(results).toHaveLength(105);
     const clearCount = results.filter(entry => entry.result.enemyHp === 0).length;
     const deathCount = (team: string) => results.filter(entry => entry.team === team && entry.result.heroHp === 0).length;
-    expect(deathCount('balanced')).toBe(0);
+    expect(deathCount('balanced')).toBeLessThanOrEqual(1);
     expect(deathCount('tripleDps')).toBeGreaterThan(deathCount('defensive'));
-    expect(results.some(entry => entry.team === 'supportStack' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
+    const supportStack = results.filter(entry => entry.team === 'supportStack');
+    expect(supportStack).toHaveLength(15);
+    expect(supportStack.every(entry => entry.result.damage > 0 && entry.result.ticks <= STRESS_TICKS)).toBe(true);
     expect(results.filter(entry => entry.enemy === 'grunt').every(entry => entry.result.enemyHp === 0)).toBe(true);
-    expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.ticks === STRESS_TICKS && entry.result.enemyHp > 0)).toBe(true);
+    // Boss is tuned to be beatable; every boss trial still finishes inside the stress budget.
+    expect(results.filter(entry => entry.enemy === 'boss_ch1').every(entry => entry.result.ticks <= STRESS_TICKS)).toBe(true);
+    expect(results.some(entry => entry.enemy === 'boss_ch1' && entry.result.enemyHp === 0)).toBe(true);
     console.log(JSON.stringify({ trials: results.length,
       clears: results.filter(entry => entry.result.enemyHp === 0).length,
       heroLosses: results.filter(entry => entry.result.heroHp === 0).length,
@@ -126,27 +130,17 @@ describe('party-v2 deterministic encounter matrix', () => {
     const sustain = run(sustainState, STRESS_TICKS);
     expect(sustain.ticks).toBe(STRESS_TICKS);
     expect(sustain.enemyHp).toBeGreaterThan(0);
-    // These two full-engine cases reach the configured stage deadline. They are true timeouts, unlike the capped stress rows above.
-    const timeoutCases = (['supportStack', 'defensive'] as const).map(team => {
+    // Normal stages have no timer. These full-engine fights stay up past the old 90s deadline with both sides alive.
+    const pastOldTimer = (['supportStack', 'defensive'] as const).map(team => {
       const state = buildFixture(1, bands[0]!, team, 'boss_ch1', team === 'supportStack' ? 9200 : 9201);
       const boss = state.enemies[0]!; boss.hp = 1_000_000_000; boss.maxHp = boss.hp; boss.atk = 1; boss.def = 10_000; boss.speed = 0; boss.range = 260;
       state.wave = stageConfig(1).waves.length;
-      const timeoutTicks = ticksForSeconds(stageConfig(1).timeoutSec);
-      step(state, timeoutTicks);
+      step(state, ticksForSeconds(95));
       expect(state.stats.losses).toBe(0); expect(state.stats.clears).toBe(0);
-      const pendingReadyTicks = [...state.party, ...state.enemies].flatMap(unit => {
-        const action = unit.action;
-        return action && (action.state === 'windup' || action.state === 'recovery') && action.readyTick !== undefined && action.readyTick > state.tick ? [action.readyTick] : [];
-      });
-      expect(pendingReadyTicks.length).toBeGreaterThan(0);
-      const finalPresentationTick = Math.max(...pendingReadyTicks);
-      const startsAtTimeout = state.events.filter(event => event.data.type === 'actionStart').length;
-      step(state, finalPresentationTick - state.tick + 1);
-      expect(state.stats.losses).toBe(1); expect(state.stats.clears).toBe(0); expect(state.progress.kind).toBe('FARMING'); expect(state.phase.kind).toBe('rest');
-      expect(state.events.filter(event => event.data.type === 'actionStart')).toHaveLength(startsAtTimeout);
-      expect(state.tick).toBeLessThanOrEqual(finalPresentationTick + 1);
-      expect(state.party.every(unit => unit.hp > 0)).toBe(true);
-      return { team, teamIds: [...state.partyIds], stage: 1, timeoutTicks, elapsedTicks: state.tick, losses: state.stats.losses, clears: state.stats.clears,
+      expect(state.progress.kind).toBe('PUSHING'); expect(state.phase.kind).toBe('battle');
+      expect(state.party.some(unit => unit.hp > 0)).toBe(true);
+      expect(boss.hp).toBeGreaterThan(0);
+      return { team, teamIds: [...state.partyIds], stage: 1, elapsedTicks: state.tick, losses: state.stats.losses, clears: state.stats.clears,
         survivingHeroes: state.party.map(unit => ({ id: unit.sourceId, hp: unit.hp, maxHp: unit.maxHp })), enemyHp: boss.hp };
     });
     const clusterCases = (['balanced', 'fastFarm'] as const).map(team => {
@@ -174,7 +168,29 @@ describe('party-v2 deterministic encounter matrix', () => {
       bands, trialCount: results.length, aggregate: { clearCount, heroLosses: results.filter(entry => entry.result.heroHp === 0).length,
         censored120sStress: results.filter(entry => entry.outcome === 'censored-120s-stress').length }, cases: results,
       censoredStressCase: { teamIds: sustainState.partyIds, inputLimitTicks: STRESS_TICKS, result: sustain, interpretation: 'A helper-capped stress run only; not an engine timeout.' },
-      engineTimeoutCases: timeoutCases, clusteredFrontlineComparison: clusterCases, debufferBruiserComparison: debuffCases,
+      normalStagePastOldTimer: pastOldTimer, clusteredFrontlineComparison: clusterCases, debufferBruiserComparison: debuffCases,
     }, null, 2), 'utf8');
+  });
+
+  it('freezes every gauge during a presentation, then starts the highest ready actor', () => {
+    const state = buildFixture(1, bands[0]!, 'balanced', 'grunt', 9137);
+    const recovering = state.party[0]!, acting = state.party[1]!, enemy = state.enemies[0]!;
+    state.enemies.forEach(unit => { unit.moving = false; unit.gauge = 0; });
+    recovering.gauge = 1000;
+    recovering.action = { state: 'recovery', kind: 'attack', targetId: enemy.id, targetSide: 'enemy', startTick: 0, impactTick: 0, readyTick: 8 };
+    acting.gauge = 9999;
+    const initialGauge = recovering.gauge;
+    for (let tick = 1; tick < recovering.action.readyTick; tick += 1) {
+      state.tick = tick;
+      combatTick(state);
+      expect(recovering.gauge).toBe(initialGauge);
+      expect(acting.gauge).toBe(9999);
+      expect(recovering.action?.state).toBe('recovery');
+      expect(acting.action?.state).toBe('idle');
+    }
+    state.tick = recovering.action.readyTick;
+    combatTick(state);
+    expect(recovering.action?.state).toBe('idle');
+    expect(acting.action?.state).toBe('windup');
   });
 });

@@ -12,7 +12,7 @@ export interface ManagementSnapshot {
   revision: number; paused: boolean; tick: number; gold: number; tickets: number; pity: number; lockMax: number; combatRules: GameState['combatRules']; progress: GameState['progress']; phase: GameState['phase'];
   offline: OfflineProjection;
   highestCleared: number; roster: GameState['roster']; partyIds: string[]; deployedPartyIds: string[]; partyPreset?: GameState['partyPreset']; inventory: GameState['inventory']; pendingChoice?: GameState['pendingChoice'];
-  heroStats: Record<string, ReturnType<typeof heroStats>>; stats: GameState['stats']; balance: string; pityLegendary?: number; pityNewHero?: number;
+  heroStats: Record<string, ReturnType<typeof heroStats>>; stats: GameState['stats']; balance: string; pityLegendary?: number; pityNewHero?: number; gearFortune?: number;
   recruit: { cost: number; rates: Record<string, number>; epicPlusRemaining: number; legendaryRemaining: number | null; newHeroRemaining: number | null };
   recentPulls: { seq: number; heroId: string; rarity: string; duplicate: boolean; pity: string | boolean | null }[];
 }
@@ -32,7 +32,7 @@ export class ManagementAuthority {
   setPaused(paused: boolean): void { if (this.paused !== paused) { this.paused = paused; this.revision += 1; } }
   replaceState(next: GameState): void { this.state = parseState(cloneState(next)); this.revision += 1; this.onCommit?.(this.state); }
   snapshot(): ManagementSnapshot {
-    const { tick, gold, tickets, pity, combatRules, partyPreset, progress, phase, highestCleared, roster, partyIds, inventory, pendingChoice, stats, balance, pityLegendary, pityNewHero } = this.state;
+    const { tick, gold, tickets, pity, combatRules, partyPreset, progress, phase, highestCleared, roster, partyIds, inventory, pendingChoice, stats, balance, pityLegendary, pityNewHero, gearSinceLegendary } = this.state;
     const derivedStats = Object.fromEntries(roster.map(hero => [hero.id, heroStats(this.state, hero)]));
     const recruit = { cost: CONFIG.gacha.costTickets, rates: { ...CONFIG.gacha.rates }, epicPlusRemaining: Math.max(0, 30 - pity),
       legendaryRemaining: CONFIG.v14.recruit.legendaryPityEvery ? CONFIG.v14.recruit.legendaryPityEvery - (pityLegendary ?? 0) : null,
@@ -40,7 +40,7 @@ export class ManagementAuthority {
     const recentPulls = this.state.events.filter(event => event.data.type === 'pull').slice(-10).map(event => event.data.type === 'pull' ? ({ seq: event.seq, heroId: event.data.heroId,
       rarity: event.data.rarity, duplicate: event.data.duplicate, pity: event.data.pity }) : null).filter((value): value is NonNullable<typeof value> => value !== null);
     return structuredClone({ revision: this.revision, paused: this.paused, tick, gold, tickets, pity, lockMax: activeSalvageRules().lockMax, combatRules, offline: offlineProjection(this.state), ...(partyPreset ? { partyPreset } : {}), progress, phase, highestCleared, roster, partyIds, deployedPartyIds: this.state.party.map(hero => hero.sourceId), inventory,
-      heroStats: derivedStats, recruit, recentPulls, ...(pendingChoice ? { pendingChoice } : {}), stats, balance, ...(pityLegendary === undefined ? {} : { pityLegendary }), ...(pityNewHero === undefined ? {} : { pityNewHero }) });
+      heroStats: derivedStats, recruit, recentPulls, ...(pendingChoice ? { pendingChoice } : {}), stats, balance, ...(pityLegendary === undefined ? {} : { pityLegendary }), ...(pityNewHero === undefined ? {} : { pityNewHero }), ...(gearSinceLegendary === undefined ? {} : { gearFortune: gearSinceLegendary }) });
   }
   compareGear(heroId: string, gearId: string): HeroGearComparison | null {
     const currentHero = this.state.roster.find(hero => hero.id === heroId), currentGear = this.state.inventory.find(item => item.id === gearId);

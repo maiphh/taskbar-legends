@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taskbar Legends — management window prototype</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-size="1280" data-screen="home">
+  <p class="page-label">Taskbar Legends · management window prototype · not the taskbar lane</p>
+  <div class="page-tools">
+    <span id="sizeLabel">1280 × 720  (16:9 preset)</span>
+    <div class="size-toggle">
+      <button type="button" class="btn js-size is-on" data-size="1280">1280</button>
+      <button type="button" class="btn js-size" data-size="960">960</button>
+    </div>
+    <div class="size-toggle" id="prog-toggle" title="Demo the Home stage state">
+      <button type="button" class="btn js-prog is-on" data-prog="PUSHING">Pushing</button>
+      <button type="button" class="btn js-prog" data-prog="BOSS_READY">Boss ready</button>
+    </div>
+  </div>
+
+  <div class="window" id="window">
+    <header class="topbar">
+      <h1>TASKBAR LEGENDS</h1>
+      <span class="sub" id="top-sub">Management</span>
+      <div class="wallet">
+        <span class="wallet-item"><img src="assets/ui/icon-gold.png" width="16" height="16" alt=""> <span id="goldVal">4,280</span></span>
+        <span class="wallet-item"><img src="assets/ui/icon-potion.png" width="16" height="16" alt=""> <span id="tixVal">16</span></span>
+      </div>
+      <button type="button" class="btn icon-x" aria-label="Close">X</button>
+    </header>
+
+    <nav class="nav" aria-label="Management">
+      <button type="button" class="nav-btn is-on" data-nav="home"><img src="assets/ui/icon-chest.png" width="16" height="16" alt="" class="nav-ico"><span class="lbl">Home</span></button>
+      <button type="button" class="nav-btn" data-nav="heroes"><img src="assets/ui/icon-book.png" width="16" height="16" alt="" class="nav-ico"><span class="lbl">Heroes</span></button>
+      <button type="button" class="nav-btn" data-nav="formation"><img src="assets/ui/icon-sword.png" width="16" height="16" alt="" class="nav-ico"><span class="lbl">Formation</span></button>
+      <button type="button" class="nav-btn" data-nav="gear"><img src="assets/ui/icon-armor.png" width="16" height="16" alt="" class="nav-ico"><span class="lbl">Gear</span></button>
+      <button type="button" class="nav-btn" data-nav="recruit"><img src="assets/ui/icon-potion.png" width="16" height="16" alt="" class="nav-ico"><span class="lbl">Recruit</span></button>
+      <button type="button" class="nav-btn" data-nav="stages"><img src="assets/ui/icon-gold.png" width="16" height="16" alt="" class="nav-ico"><span class="lbl">Stages</span></button>
+      <button type="button" class="nav-btn" data-nav="settings"><span class="glyph">#</span><span class="lbl">Settings</span></button>
+    </nav>
+
+    <main>
+      <section class="screen is-on" data-screen="home" aria-label="Home">
+        <h2>Home</h2>
+        <div class="home-hero">
+          <div class="panel-inner" id="home-stage"></div>
+          <div class="col" id="home-side"></div>
+          <div class="party-row" id="home-party"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="heroes" aria-label="Heroes">
+        <div class="heroes-head">
+          <h2>Heroes</h2>
+          <span class="muted" id="hero-count"></span>
+          <div class="toolbar">
+          <div class="dd" id="filter-role" data-filter="role" data-group="heroes">
+            <button type="button" class="btn dd-btn" data-dd><span>Role: All</span></button>
+            <div class="dd-list">
+              <button type="button" data-val="all">All</button>
+              <button type="button" data-val="tank">Tank</button>
+              <button type="button" data-val="dps">DPS</button>
+              <button type="button" data-val="support">Support</button>
+            </div>
+          </div>
+          <div class="dd" id="filter-rarity" data-filter="rarity" data-group="heroes">
+            <button type="button" class="btn dd-btn" data-dd><span>Rarity: All</span></button>
+            <div class="dd-list">
+              <button type="button" data-val="all">All</button>
+              <button type="button" data-val="common">Common</button>
+              <button type="button" data-val="rare">Rare</button>
+              <button type="button" data-val="epic">Epic</button>
+              <button type="button" data-val="legendary">Legendary</button>
+            </div>
+          </div>
+          <div class="dd" id="filter-sort" data-filter="sort" data-group="heroes">
+            <button type="button" class="btn dd-btn" data-dd><span>Sort: Rarity</span></button>
+            <div class="dd-list">
+              <button type="button" data-val="rarity">Rarity</button>
+              <button type="button" data-val="level">Level</button>
+              <button type="button" data-val="role">Role</button>
+              <button type="button" data-val="name">Name</button>
+            </div>
+          </div>
+          </div>
+        </div>
+        <div class="hero-grid" id="hero-grid"></div>
+      </section>
+
+      <section class="screen" data-screen="detail" aria-label="Hero detail">
+        <div class="back-row">
+          <button type="button" class="btn lg" data-goto="heroes">Back to Heroes</button>
+          <h2>Hero</h2>
+        </div>
+        <div class="detail" id="detail-root"></div>
+      </section>
+
+      <section class="screen" data-screen="equip" aria-label="Equip">
+        <div class="back-row">
+          <button type="button" class="btn lg" data-act="equip-back">Back</button>
+          <h2>Equip</h2>
+        </div>
+        <div class="equip-layout" id="equip-root"></div>
+      </section>
+
+      <section class="screen" data-screen="formation" aria-label="Formation">
+        <div class="row" style="align-items:center;">
+          <h2>Formation</h2>
+          <span class="muted" id="form-hint">FRONT / MIDDLE / REAR. Party size 3.</span>
+        </div>
+        <div class="formation-lane" id="form-lane"></div>
+        <h3>Bench</h3>
+        <div class="bench" id="form-bench"></div>
+      </section>
+
+      <section class="screen" data-screen="gear" aria-label="Gear">
+        <div class="row" style="align-items:center;">
+          <h2>Gear</h2>
+          <div class="toolbar">
+            <div class="dd" id="gfilter-slot" data-filter="slot" data-group="gear">
+              <button type="button" class="btn dd-btn" data-dd><span>Slot: All</span></button>
+              <div class="dd-list">
+                <button type="button" data-val="all">All</button>
+                <button type="button" data-val="weapon">Weapon</button>
+                <button type="button" data-val="armor">Armor</button>
+                <button type="button" data-val="charm">Charm</button>
+              </div>
+            </div>
+            <div class="dd" id="gfilter-rarity" data-filter="rarity" data-group="gear">
+              <button type="button" class="btn dd-btn" data-dd><span>Rarity: All</span></button>
+              <div class="dd-list">
+                <button type="button" data-val="all">All</button>
+                <button type="button" data-val="common">Common</button>
+                <button type="button" data-val="rare">Rare</button>
+                <button type="button" data-val="epic">Epic</button>
+                <button type="button" data-val="legendary">Legendary</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gear-layout">
+          <div class="panel-inner" id="gear-fortune" hidden></div>
+          <div class="panel-inner">
+            <div class="gear-grid" id="gear-grid"></div>
+          </div>
+          <div class="panel-inner" id="gear-inspect"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="recruit" aria-label="Recruit">
+        <h2>Recruit</h2>
+        <div class="banners" id="recruit-banners"></div>
+        <div class="row" id="recruit-actions" style="align-items:center;flex-wrap:wrap;"></div>
+        <div class="panel-inner">
+          <h3>Recent pulls</h3>
+          <div class="history" id="recruit-history" style="margin-top:8px;"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="stages" aria-label="Stages">
+        <h2>Stages</h2>
+        <div class="chapter-rail" id="chapter-rail" role="tablist" aria-label="Chapters"></div>
+        <div class="stage-grid" id="stage-grid"></div>
+        <div class="panel-inner" id="stage-detail"></div>
+      </section>
+
+      <section class="screen" data-screen="settings" aria-label="Settings">
+        <h2>Settings</h2>
+        <div class="col" id="settings-body"></div>
+      </section>
+
+      <div class="overlay" id="overlay"></div>
+      <div class="toast" id="toast" hidden></div>
+    </main>
+  </div>
+
+  <p class="lane-note">The taskbar lane stays 640 × 160 and is not part of this window.</p>
+  <script src="app.js"></script>
+</body>
+</html>

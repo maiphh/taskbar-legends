@@ -1,0 +1,269 @@
+{
+  "key": "pvfx-treasure-glint",
+  "image": "sprites.png",
+  "imageSize": [
+    768,
+    48
+  ],
+  "cellSize": [
+    48,
+    48
+  ],
+  "anchor": {
+    "x": 24,
+    "y": 24
+  },
+  "loop": true,
+  "blend": "lighter (additive)",
+  "frames": [
+    {
+      "name": "pvfx-treasure-glint/000",
+      "index": 0,
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        8,
+        20,
+        28,
+        41
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/001",
+      "index": 1,
+      "x": 48,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        12,
+        14,
+        33,
+        38
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/002",
+      "index": 2,
+      "x": 96,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        11,
+        8,
+        38,
+        40
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/003",
+      "index": 3,
+      "x": 144,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        8,
+        4,
+        42,
+        43
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/004",
+      "index": 4,
+      "x": 192,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        6,
+        5,
+        41,
+        42
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/005",
+      "index": 5,
+      "x": 240,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        3,
+        6,
+        38,
+        39
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/006",
+      "index": 6,
+      "x": 288,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        3,
+        6,
+        39,
+        40
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/007",
+      "index": 7,
+      "x": 336,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        6,
+        9,
+        44,
+        40
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/008",
+      "index": 8,
+      "x": 384,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        7,
+        9,
+        47,
+        42
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/009",
+      "index": 9,
+      "x": 432,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        18,
+        8,
+        47,
+        41
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/010",
+      "index": 10,
+      "x": 480,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        32,
+        6,
+        44,
+        38
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/011",
+      "index": 11,
+      "x": 528,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        29,
+        3,
+        46,
+        35
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/012",
+      "index": 12,
+      "x": 576,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        29,
+        3,
+        46,
+        19
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/013",
+      "index": 13,
+      "x": 624,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        8,
+        6,
+        43,
+        41
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/014",
+      "index": 14,
+      "x": 672,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        5,
+        11,
+        39,
+        44
+      ]
+    },
+    {
+      "name": "pvfx-treasure-glint/015",
+      "index": 15,
+      "x": 720,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "durationMs": 75.0,
+      "contentBounds": [
+        5,
+        24,
+        25,
+        44
+      ]
+    }
+  ],
+  "durationMs": 1200.0,
+  "meta": {
+    "sourcePack": "pvfx-foundry",
+    "source": "raw/vfx/pvfx-foundry/unpacked/PVFX-Foundry-1.0.0/effects/ui/treasure-glint/strict/grid/sprite-sheet.png",
+    "licence": "CC0-1.0",
+    "modification": "none (re-packed as a one-row sheet)",
+    "sampling": "nearest",
+    "scale": 1
+  }
+}

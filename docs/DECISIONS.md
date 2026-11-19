@@ -99,3 +99,18 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Both config copies are byte-identical (`design/config.json` and `src/design-config.json`), SHA-256 `608614798cc81b4c4a44aa238b94cedf2a88b8d1b26fdd54a5f30dc5efd56c41`; the CI v14 smoke checks it.
 - The `balance` union accepts `'1.4.3'`, so 1.4.3 saves load under 1.4.4.
 - Goldens move because the gap is top-level and the snapshot carries `balance: '1.4.4'`: rules-off `7e9ee45a…` → `b70e3c56…`; protection-off 2-seed aggregate `85eee5f5…` → `04de8e49…`. The 1.4.3 hashes are kept and asserted as not-equal.
+
+## Normal stages have no timer (owner request, 2026-11-18)
+
+- Non-boss stages omit `timeoutSec`. A normal stage ends only when every hero is dead or every wave is cleared. The old hidden 90 s timer was sending a live push (both sides still up) back to farming the previous stage.
+- Boss stages keep `timeoutSec` (1-10 is 22 s, 2-10 is 21 s) and the visible countdown. The countdown is still wall time from `stageStartedTick`, hidden during the stage rest and the §20 boss-repeat pad.
+- `combat.lossCondition` matches that split. Balance version stays `1.4.4`; old saves still load.
+- Runtime `src/design-config.json` SHA-256 is `a21b75425011e8aa3255d1d82a5b8a0660ee5e51f6804f4dddf95c91e224c258`. The CI v1.4 smoke checks it. This copy is no longer byte-identical to the 1.4.4 designer file.
+
+## Own-turn status effects v1 (config 1.5.0)
+
+- New top-level `statusEffects` block. Absent key = legacy seconds-based `partyEffects` path for timed ATK/DEF/Guard. Present = own-turn statuses for ATK Up/Down, Guard, Regen, Armor Break, Slow, Bleed, Stun, Steadfast; shields stay 5 s.
+- Durations count the carrier's own completed turns. Stun consumes at turn start and grants Steadfast (2 turns; bosses 3). Bleed ×0.5 on bosses. Priest cleanse removes one debuff (Stun > Bleed > Slow > Armor Break > ATK Down).
+- Open questions resolved for v1: Crushed applies from the rebuilt hero-style boss cleave (`boss-ch1-cleave` / `boss-ch2-cleave`), not the retired slam; keep 2-turn durations; shields stay seconds; bomber Slow stays −20%/1 turn; T2 band is not required from effects alone.
+- Icons: 9×9 row above the unit HP bar (4 max on bosses, else 3 + overflow chip). Farm-proof revision bumped; offline still does not model statuses.
+- `balance` union accepts `'1.4.4'`. Config SHA-256 `fd58e0e31148a0eec76579f616d1fc43fdc3ee900155fbf5d156e9a49eb475a2`.

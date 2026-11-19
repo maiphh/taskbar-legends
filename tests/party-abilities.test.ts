@@ -36,8 +36,9 @@ describe('party-v2 common impact resolution', () => {
     banner.action = { state: 'windup', kind: 'heal', targetId: target.id, startTick: 0, impactTick: 5, abilityId: 'banner-buff', delivery: 'cast' };
     target.action = { state: 'windup', kind: 'attack', targetId: enemy.id, startTick: 0, impactTick: 5, abilityId: 'melee-cleave-strike', delivery: 'leap' };
     for (let i = 0; i < 5; i += 1) { state.tick += 1; partyCombatTick(state); }
-    const buff = state.partyEffects?.find(effect => effect.group === 'party-atk-buff' && effect.targetId === target.id);
-    expect(buff).toMatchObject({ sourceId: banner.id, magnitude: 0.15, expiresAtTick: 85 });
+    const buff = target.statuses?.find(status => status.id === 'atkUp');
+    // Same-tick dual impact: melee turn-end ticks the freshly applied ATK Up (2 → 1).
+    expect(buff).toMatchObject({ sourceId: banner.id, magnitude: 0.15, turnsLeft: 1 });
     expect(banner.mana).toBe(0);
     const damage = state.events.find(event => event.data.type === 'hit' && event.data.attackerId === target.id && event.data.targetId === enemy.id);
     expect(damage?.data.type === 'hit' ? damage.data.damage : 0).toBe(Math.round(target.atk * 1.15));
@@ -120,32 +121,29 @@ describe('party-v2 common impact resolution', () => {
     expect(state.events.filter(event => event.data.type === 'hit' && event.data.targetId === tank.id)).toHaveLength(2);
     expect(tank.mana).toBe(5);
   });
-  it('counts natural boss_ch2 basic cast hits and then resolves its global volley', () => {
+  it('counts natural boss_ch2 basic hits and then resolves its cleave telegraph', () => {
     const state = createState(2521), base = state.enemies[0]!;
     for (const hero of state.party) { hero.maxHp = 100_000; hero.hp = hero.maxHp; hold(hero); }
-    const boss: Unit = { ...base, id: 'boss-natural', sourceId: 'boss_ch2', hp: 1_000_000, maxHp: 1_000_000, atk: 50, def: 0, attackTicks: 30, range: 260, x: 360,
+    const boss: Unit = { ...base, id: 'boss-natural', sourceId: 'boss_ch2', hp: 1_000_000, maxHp: 1_000_000, atk: 50, def: 0, attackTicks: 30, range: 12, x: 360,
       radius: 10, speed: 55, facing: -1 as const, targetId: null, moving: false, action: { state: 'idle' as const }, specialAction: undefined, partyCooldowns: {}, procCounters: {}, gauge: 10000 };
     state.enemies = [boss];
-    let globalMark = false;
-    for (let tick = 0; tick < 400 && !globalMark; tick += 1) {
+    let cleaveMark = false;
+    for (let tick = 0; tick < 400 && !cleaveMark; tick += 1) {
       step(state);
-      globalMark = boss.specialAction?.state === 'areaMark' && boss.specialAction.global === true;
+      cleaveMark = boss.specialAction?.state === 'areaMark' && boss.specialAction.abilityId === 'boss-ch2-cleave';
     }
     expect(boss.procCounters?.basicSuccess).toBeGreaterThanOrEqual(4);
-    expect(globalMark).toBe(true);
-    if (!globalMark) return;
-    expect(boss.specialAction?.state === 'areaMark' && boss.specialAction.global).toBe(true);
+    expect(cleaveMark).toBe(true);
+    if (!cleaveMark) return;
+    expect(boss.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch2-cleave' });
     const basicContacts = state.events.filter(event =>
       (event.data.type === 'hit' || event.data.type === 'shieldAbsorb')
       && (event.data.type === 'hit' || event.data.type === 'shieldAbsorb' ? event.data.attackerId === boss.id : false));
     expect(basicContacts.length).toBeGreaterThanOrEqual(4);
     const mark = boss.specialAction;
     if (mark?.state !== 'areaMark') return;
-    // The telegraph ends before the boss's stationary cast clip begins; resolve its authored volley once at clip impact.
     step(state, mark.impactTick - state.tick + 20);
-    const impacts = state.events.filter(event => (event.data.type === 'hit' || event.data.type === 'shieldAbsorb') && (event.data.type === 'hit' ? event.data.attackerId : event.data.attackerId) === boss.id);
-    expect(new Set(impacts.map(event => event.data.type === 'hit' || event.data.type === 'shieldAbsorb' ? event.data.targetId : '')).size).toBe(3);
-    expect(state.events.some(event => event.data.type === 'guard' && event.data.guardianId === state.party[0]?.id && event.data.fromTargetId !== state.party[0]?.id)).toBe(false);
+    expect(state.events.some(event => event.data.type === 'hit' && event.data.attackerId === boss.id)).toBe(true);
   });
 
   it('cancels an unlaunched bomber area mark when the caster dies through game.step', () => {
@@ -402,10 +400,11 @@ describe('party-v2 common impact resolution', () => {
     state.enemies = [target]; target.x = weakener.x; target.hp = 10000; target.maxHp = 10000; hold(target);
     const cast = (): void => {
       weakener.mana = 60; weakener.partyCooldowns = { weaken: 0 }; weakener.action = { state: 'idle' }; weakener.statuses = []; weakener.gauge = 10000;
-      step(state); for (let i = 0; i < 100 && weakener.action?.state !== 'idle'; i += 1) step(state);
+      step(state); for (let i = 0; i < 100 && !target.statuses?.some(status => status.id === 'atkDown'); i += 1) step(state);
     };
     cast();
-    expect(state.partyEffects?.some(effect => effect.targetId === target.id && effect.group === 'enemy-atk-weaken')).toBe(true);
+    expect(target.statuses?.some(status => status.id === 'atkDown')).toBe(true);
+    expect(target.statuses?.some(status => status.id === 'defDown')).toBe(true);
     expect(target.procCounters?.firstWeakenShield).toBeUndefined();
     expect(weakener.shield).toBe(0);
     expect(state.events.filter(event => event.data.type === 'skill' && event.data.unitId === weakener.id && event.data.skill === 'weaken')).toHaveLength(1);
@@ -470,43 +469,36 @@ describe('party-v2 common impact resolution', () => {
     expect(bomber.specialAction).toBeUndefined();
   });
 
-  it('applies chapter-one local slam after its fifth basic and chapter-two global volley to all heroes', () => {
-    const first = createState(253); first.highestCleared = 9; first.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 1, bossLosses: 0 }; first.wave = 3; spawnWave(first);
+  it('applies chapter-one local cleave after its fourth basic', () => {
+    const first = createState(253); first.highestCleared = 9; first.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 1, bossLosses: 0 }; first.wave = 1; spawnWave(first);
     const boss = first.enemies.find(unit => unit.sourceId === 'boss_ch1')!, tank = first.party.find(unit => unit.sourceId === 'mw2')!, priest = first.party.find(unit => unit.sourceId === 'priest')!;
     first.enemies = [boss]; first.party.forEach(hold); first.party.forEach(unit => { unit.speed = 0; });
-    boss.moving = false; boss.x = tank.x + radiusForTest(boss, tank); boss.atk = 10; boss.procCounters = { basicSuccess: 4, bossPattern: 0 }; boss.action = { state: 'windup', kind: 'attack', targetId: tank.id, startTick: 0, impactTick: 1, delivery: 'leap' };
-    step(first); expect(boss.procCounters?.basicSuccess).toBe(5);
+    boss.moving = false; boss.x = tank.x + radiusForTest(boss, tank); boss.atk = 10; boss.procCounters = { basicSuccess: 3, bossPattern: 0 }; boss.action = { state: 'windup', kind: 'attack', targetId: tank.id, startTick: 0, impactTick: 1, delivery: 'leap' };
+    step(first); expect(boss.procCounters?.basicSuccess).toBe(4);
     boss.action = { state: 'idle' }; boss.gauge = 10000; step(first);
-    expect(boss.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch1-slam', radius: 64, centerX: tank.x });
+    expect(boss.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch1-cleave', radius: 56, centerX: tank.x });
     expect(boss.procCounters?.bossPattern).toBe(1);
     const priorHits = first.events.filter(event => event.data.type === 'hit' && event.data.attackerId === boss.id).length;
-    // Lock the boss after the slam starts so the telegraph wait cannot land another basic.
+    const tankHpBefore = tank.hp, priestHpBefore = priest.hp;
     hold(boss);
     step(first, PARTY_V2.timing.windupTicks * 5);
     const slamHits = first.events.filter(event => event.data.type === 'hit' && event.data.attackerId === boss.id).slice(priorHits);
+    expect(slamHits.some(event => event.data.type === 'hit' && event.data.targetId === tank.id)).toBe(true);
     expect(slamHits.some(event => event.data.type === 'hit' && event.data.targetId === priest.id)).toBe(false);
-    expect(boss.procCounters?.basicSuccess).toBe(5);
-
-    const second = createState(254); second.highestCleared = 19; second.progress = { kind: 'BOSS_FIGHT', stage: 20, failedPower: 1, bossLosses: 0 }; second.wave = 3; spawnWave(second);
-    const boss2 = second.enemies.find(unit => unit.sourceId === 'boss_ch2')!;
-    second.enemies = [boss2]; second.party.forEach(hold); boss2.moving = false; boss2.x = 200; boss2.atk = 20; boss2.procCounters = { basicSuccess: 4, bossPattern: 0 }; boss2.action = { state: 'idle' }; boss2.gauge = 10000;
-    step(second);
-    expect(boss2.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch2-volley', global: true });
-    const before = second.party.map(unit => unit.hp), atMark = second.events.filter(event => event.data.type === 'hit' && event.data.attackerId === boss2.id).length;
-    hold(boss2);
-    step(second, PARTY_V2.timing.windupTicks * 5);
-    expect(second.party.every((unit, i) => unit.hp < (before[i] ?? unit.hp))).toBe(true);
-    expect(second.events.filter(event => event.data.type === 'guard')).toHaveLength(0);
-    expect(boss2.procCounters?.basicSuccess).toBe(4);
-    expect(second.events.filter(event => event.data.type === 'hit' && event.data.attackerId === boss2.id).length).toBeGreaterThan(atMark);
+    expect(tank.hp).toBeLessThan(tankHpBefore);
+    expect(priest.hp).toBe(priestHpBefore);
+    expect(boss.procCounters?.basicSuccess).toBe(4);
   });
 
-  it('enrages bosses once at sixty native seconds without mutating their base attack', () => {
-    const state = createState(255), boss = state.enemies[0]!;
-    boss.sourceId = 'boss_ch1'; boss.atk = 100; boss.bornTick = 0; state.tick = 0;
+  it('enrages a boss once below 30% HP without mutating base attack', () => {
+    const state = createState(255); state.highestCleared = 9; state.progress = { kind: 'BOSS_FIGHT', stage: 10, failedPower: 1, bossLosses: 0 }; state.wave = 1; spawnWave(state);
+    const boss = state.enemies.find(unit => unit.sourceId === 'boss_ch1')!, tank = state.party.find(unit => unit.sourceId === 'mw2')!;
+    state.enemies = [boss]; state.party.forEach(hold); boss.moving = false; boss.x = tank.x + 40; boss.atk = 100;
+    boss.hp = Math.floor(boss.maxHp * 0.3); boss.action = { state: 'idle' }; boss.gauge = 10000;
     expect(effectiveAttack(state, boss)).toBe(100);
-    state.tick = CONFIG.sim.ticksPerSecond * 60;
-    expect(effectiveAttack(state, boss)).toBe(150);
+    step(state);
+    expect(boss.procCounters?.enraged).toBe(1);
+    expect(boss.specialAction).toMatchObject({ state: 'areaMark', abilityId: 'boss-ch1-enrage', global: true });
     expect(effectiveAttack(state, boss)).toBe(150);
     expect(boss.atk).toBe(100);
   });

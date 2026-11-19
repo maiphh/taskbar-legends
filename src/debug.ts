@@ -18,6 +18,7 @@ export interface GameDebug {
   /** Compact preview: the gacha reveal playing inside the PARTY CAMP Recruit tab, or null. */
   getManagementReveal?(): ReturnType<PixelUI['revealState']>;
   getLayout(): ReturnType<Renderer['getLayout']>;
+  setShowcaseZoom(zoom: 1 | 2): void;
   getCombatProjection(state?: GameState): ReturnType<Renderer['getCombatProjection']>;
   openPanel(tab: PanelTab | null): void;
   whenReady(): Promise<void>;
@@ -29,6 +30,8 @@ export interface GameDebug {
   getSalvageRules(): SalvageRules;
   /** Pins the reveal / welcome presentation clock to an absolute ms value; null = live performance.now(). */
   freezeClock(ms: number | null): void;
+  debugShowcase(kind: 'skill' | 'drop', slot?: 'weapon' | 'armor' | 'charm'): void;
+  debugShowcaseSeek(ms: number): void;
   getAudio(): ReturnType<AudioAdapter['debug']>;
   /** Applies an offline absence to the running state (like a restore) and shows the welcome-back panel. */
   away(ms: number): Record<string, unknown>;

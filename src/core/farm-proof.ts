@@ -16,8 +16,9 @@ export interface OfflineFarmContext {
   reason: 'no-earned-clear' | 'formation-or-combat-changed' | null;
 }
 
-// Bump when targeting, movement, gauge, timing, or resolver semantics change outside the fingerprinted data below.
-const PARTY_FARM_RESOLVER_REVISION = 'party-v2-farm-proof-resolver-1';
+// Bump when targeting, movement, gauge, timing, statuses, or resolver semantics change outside the fingerprinted data below.
+// Offline/farm-proof does not model own-turn statuses; online clear times may shift with statusEffects on.
+const PARTY_FARM_RESOLVER_REVISION = 'party-v2-farm-proof-resolver-2';
 const enemyIds = ['grunt', 'archer', 'brute', 'boss_ch1', 'boss_ch2', 'assassin', 'bomber'] as const;
 function stableHash(value: string): string {
   let hash = 0x811c9dc5;
@@ -30,7 +31,8 @@ export function currentFarmRulesSignature(): string {
     return partyWaveKinds(value.index, index + 1, original, value.isBoss);
   }) }));
   const fingerprint = { revision: PARTY_FARM_RESOLVER_REVISION, version: CONFIG.version, combat: CONFIG.combat, sim: CONFIG.sim,
-    enemies: CONFIG.enemies, waves, party: getPartyHeroDefinitions(), enemySpecials: enemyIds.map(id => getPartyEnemyDefinition(id)) };
+    enemies: CONFIG.enemies, statusEffects: CONFIG.statusEffects, waves, party: getPartyHeroDefinitions(),
+    enemySpecials: enemyIds.map(id => getPartyEnemyDefinition(id)) };
   return `${PARTY_FARM_RESOLVER_REVISION}-${stableHash(JSON.stringify(fingerprint))}`;
 }
 export const PARTY_FARM_RULES_SIGNATURE = currentFarmRulesSignature();

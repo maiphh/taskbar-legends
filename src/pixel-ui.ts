@@ -8,8 +8,10 @@ import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
 import { campaignPresentation } from './core/selectors';
+import { getPartyHeroDefinition } from './core/party-definitions';
 import { welcomeLayout } from './welcome-layout';
 import { ellipsize } from './text-fit';
+import { drawRoleIcon } from './management/role-icons';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
@@ -37,7 +39,18 @@ export interface TextOptions { exactY?: boolean }
 const rootUrl = (): URL => new URL(`${import.meta.env.BASE_URL}ui/`, window.location.href);
 /** Round half to even, as the designer's rect tables do (e.g. banner x 894.5 -> 894, 887.5 -> 888). */
 export function roundHalfEven(value: number): number { const floor = Math.floor(value); return value - floor !== 0.5 ? Math.round(value) : floor % 2 === 0 ? floor : floor + 1; }
+const REDUCED_MOTION_KEY = 'taskbar-legends:reduced-motion:v1';
+export function presentationReducedMotionPreference(): boolean { try { return localStorage.getItem(REDUCED_MOTION_KEY) === 'true'; } catch { return false; } }
+export function setPresentationReducedMotionPreference(enabled: boolean): void {
+  try { localStorage.setItem(REDUCED_MOTION_KEY, String(enabled)); } catch { /* in-memory setting is reflected by the event below */ }
+  document.body.dataset.reducedMotion = String(enabled);
+  window.dispatchEvent(new CustomEvent('presentation-reduced-motion-change', { detail: enabled }));
+}
 export class PixelUI {
+  /** Management-only reveal typography; the taskbar lane keeps its original catalog-name layout. */
+  managementReveal = false;
+  /** Shared low-rate management idle clock; reveal transition timing continues on `clock`. */
+  managementIdleClock: (() => number) | null = null;
   panel: PanelTab | null = null;
   onPanelRequest: (tab: PanelTab) => void = () => undefined;
   private coreY = 0;
@@ -49,7 +62,7 @@ export class PixelUI {
   private measureContext: CanvasRenderingContext2D | null = null;
   private readonly badgeMemory = new Map<string, { on: boolean; pulseTick: number; seen: boolean }>();
   private readonly badgesDrawn = new Set<string>();
-  readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  get reducedMotion(): boolean { return (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
   private readonly buttons = new Map<string, HTMLButtonElement>();
   private readonly surfaces = new Map<string, HTMLDivElement>();
   private pressed = '';
@@ -110,6 +123,13 @@ export class PixelUI {
       await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
     } catch (error) { this.errors.push(String(error)); }
+  }
+  private drawManagementRole(ctx: CanvasRenderingContext2D, role: string, x: number, y: number): void {
+    // Integer-pixel plate + authored sword/shield/plus glyphs (no PNG load for roles).
+    const left = Math.round(x), top = Math.round(y);
+    ctx.fillStyle = '#17212d'; ctx.fillRect(left, top, 18, 18);
+    ctx.fillStyle = '#101820'; ctx.fillRect(left + 1, top + 1, 16, 16);
+    drawRoleIcon(ctx, role, left + 1, top + 1, 1);
   }
   setPanel(tab: PanelTab | null): void {
     if (tab) { this.onPanelRequest(tab); return; }
@@ -397,10 +417,11 @@ export class PixelUI {
     if (key && face === 'silhouette') {
       const mask = document.createElement('canvas'); mask.width = rect.width; mask.height = artHeight;
       const m = mask.getContext('2d');
-      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
-    } else if (key) this.atlas.draw(ctx, key, 'idle', 0, cx, floorY, false, 1);
+      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
+    } else if (key) this.atlas.draw(ctx, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, cx, floorY, false, 1);
     ctx.restore();
   }
+  private managementIdleAge(): number { return this.reducedMotion ? 0 : this.managementIdleClock ? Math.max(0, this.managementIdleClock()) : Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())); }
   private drawRim(ctx: CanvasRenderingContext2D, rect: Rect, color: string, alpha: number): void {
     if (alpha <= 0) return;
     ctx.save(); ctx.globalAlpha = alpha / 255; ctx.fillStyle = color;
@@ -421,10 +442,11 @@ export class PixelUI {
     const cost = CONFIG.gacha.costTickets * reveal.count, short10 = tickets < cost;
     if (reveal.count === 1) this.text(ctx, 'Click a button or press Enter', x + 16, 368, palette.muted, BODY, false, 370);
     else this.text(ctx, `Tickets ${tickets}${short10 ? ` · Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
-    const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144, oh = 28] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
-    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: ay, width: aw, height: ah }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
+    const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
+    const actionY = this.managementReveal ? 348 : ay, actionH = this.managementReveal ? 40 : ah;
+    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: actionY, width: aw, height: actionH }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
       { icon: 'chest', disabled: short10, tooltip: short10 ? `Need ${cost} ticket${cost === 1 ? '' : 's'}` : `Recruit x${reveal.count} again: ${cost} ticket${cost === 1 ? '' : 's'}` });
-    this.button(ctx, 'reveal-ok', 'OK', { x: x + ox, y: oy, width: ow, height: oh }, () => this.finishReveal(true), { primary: true, bold: true, tooltip: 'Back to Recruit (Enter)' });
+    this.button(ctx, 'reveal-ok', 'OK', { x: x + ox, y: this.managementReveal ? actionY : oy, width: ow, height: actionH }, () => this.finishReveal(true), { primary: true, bold: true, tooltip: 'Back to Recruit (Enter)' });
   }
   private drawSingle(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number): void {
     const pull = reveal.pulls[0]; if (!pull) return;
@@ -449,6 +471,7 @@ export class PixelUI {
     const name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
     if (frame.showName) this.text(ctx, name, x + sx + Math.floor((sw - this.measureText(name, BODY, true)) / 2), spec.nameY, palette.text, BODY, true);
     if (frame.showRarity) { const label = pull.rarity.toUpperCase(); this.text(ctx, label, x + sx + Math.floor((sw - this.measureText(label, BODY, true)) / 2), spec.rarityY, tier.label, BODY, true); }
+    if (this.managementReveal && frame.done) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, x + sx + 8, sy + sh - 18);
     ctx.restore();
   }
   private drawTen(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number, compact = false): void {
@@ -472,11 +495,12 @@ export class PixelUI {
       ctx.fillStyle = tier.fill; ctx.fillRect(rect.x + 1, rect.y + 85, rect.width - 2, 35); ctx.fillStyle = tier.frame; ctx.fillRect(rect.x, rect.y + 84, rect.width, 1);
       if (rect.width < 128) return;
       if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + 64 + dot.x, rect.y + 42 + dot.y, dot.size, dot.size); }
-      let name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-      name = ellipsize(name, 124, value => this.measureText(value));
-      this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY);
+      let name = this.managementReveal ? shortHeroName(pull.heroId) : heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
+      if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + 84, 128);
+      else { name = ellipsize(name, 124, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY); }
       const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
       this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
+      if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + 66);
       if (frame.badges) {
         this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
         if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
@@ -498,14 +522,21 @@ export class PixelUI {
     if (!full) return;
     if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + rw / 2 + dot.x, rect.y + artH / 2 + dot.y, dot.size, dot.size); }
     let name = shortHeroName(pull.heroId);
-    name = ellipsize(name, small.nameMaxPx, value => this.measureText(value));
-    this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY);
+    if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + small.nameYInCard, rw);
+    else { name = ellipsize(name, small.nameMaxPx, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY); }
     const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
     this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
+    if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + artH - 16);
     if (frame.badges) {
       this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
       if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
     }
+  }
+  private drawManagementRevealName(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, width: number): void {
+    ctx.save(); ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = palette.text;
+    ctx.font = '12px GamePixel, GameSymbols, monospace';
+    if (ctx.measureText(name).width > width - 8) ctx.font = '10px GameMeta, GameSymbols, monospace';
+    ctx.fillText(name, Math.round(x + width / 2), Math.round(y)); ctx.restore();
   }
   /** Welcome back (ui/offline-rewards.md): rewards are already in the save; Collect acknowledges. */
   drawWelcome(ctx: CanvasRenderingContext2D, state: GameState, data: WelcomeData): void {

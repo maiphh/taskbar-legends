@@ -5,6 +5,7 @@ import { captureFarmClock, combatTime } from './clock';
 import { partyCombatTick, partyUnitFields } from './party-combat';
 import { getPartyEnemyDefinition, partyWaveKinds } from './party-enemies';
 import { captureEncounterFarmContext } from './farm-proof';
+import { clearUnitStatuses } from './status-effects';
 import type { GameState, Unit } from './model';
 
 export function damage(atk: number, def: number): number { return Math.max(1, Math.round(atk * 100 / (100 + def))); }
@@ -40,7 +41,10 @@ export function spawnWave(state: GameState): void {
       return unit;
     });
     emit(state, { type: 'wave', stage: stage.index, wave: state.wave });
-    for (const hero of state.party) { hero.targetId = null; hero.moving = false; hero.action = { state: 'idle' }; }
+    for (const hero of state.party) {
+      hero.targetId = null; hero.moving = false; hero.action = { state: 'idle' }; delete hero.specialAction;
+      hero.statuses = [];
+    }
     state.phase = { kind: 'battle' };
   }
 }
@@ -48,6 +52,7 @@ export function beginEncounter(state: GameState): void {
   // Timed party effects and projectile deadlines use the old native clock; none
   // may carry across the clock reset into a fresh encounter.
   state.partyEffects = []; state.projectiles = [];
+  clearUnitStatuses(state.party, state.enemies);
   state.encounter += 1; state.wave = 1; state.stageStartedTick = state.tick;
   captureFarmClock(state);
   state.attemptPower = partyPower(state);

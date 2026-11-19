@@ -30,9 +30,9 @@
   ],
   "trialCount": 105,
   "aggregate": {
-    "clearCount": 83,
-    "heroLosses": 10,
-    "censored120sStress": 12
+    "clearCount": 102,
+    "heroLosses": 3,
+    "censored120sStress": 0
   },
   "cases": [
     {
@@ -98,7 +98,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 417,
+        "ticks": 160,
         "heroHp": 847,
         "enemyHp": 0,
         "hits": 12,
@@ -170,7 +170,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 271,
+        "ticks": 105,
         "heroHp": 858,
         "enemyHp": 0,
         "hits": 8,
@@ -242,7 +242,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 599,
+        "ticks": 234,
         "heroHp": 799,
         "enemyHp": 0,
         "hits": 14,
@@ -314,7 +314,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 261,
+        "ticks": 113,
         "heroHp": 460,
         "enemyHp": 0,
         "hits": 9,
@@ -386,11 +386,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 639,
-        "heroHp": 607,
+        "ticks": 304,
+        "heroHp": 616,
         "enemyHp": 0,
         "hits": 18,
-        "damage": 313,
+        "damage": 304,
         "marks": 0
       },
       "outcome": "win"
@@ -458,7 +458,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 504,
+        "ticks": 219,
         "heroHp": 656,
         "enemyHp": 0,
         "hits": 15,
@@ -530,7 +530,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 529,
+        "ticks": 228,
         "heroHp": 722,
         "enemyHp": 0,
         "hits": 14,
@@ -602,7 +602,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 223,
+        "ticks": 95,
         "heroHp": 879,
         "enemyHp": 0,
         "hits": 8,
@@ -674,7 +674,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 142,
+        "ticks": 66,
         "heroHp": 885,
         "enemyHp": 0,
         "hits": 5,
@@ -746,7 +746,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 231,
+        "ticks": 100,
         "heroHp": 792,
         "enemyHp": 0,
         "hits": 8,
@@ -818,7 +818,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 134,
+        "ticks": 68,
         "heroHp": 497,
         "enemyHp": 0,
         "hits": 6,
@@ -890,7 +890,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 360,
+        "ticks": 195,
         "heroHp": 614,
         "enemyHp": 0,
         "hits": 12,
@@ -962,7 +962,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 188,
+        "ticks": 93,
         "heroHp": 715,
         "enemyHp": 0,
         "hits": 8,
@@ -1034,7 +1034,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 243,
+        "ticks": 118,
         "heroHp": 735,
         "enemyHp": 0,
         "hits": 9,
@@ -1106,12 +1106,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 468,
-        "heroHp": 600,
+        "ticks": 223,
+        "heroHp": 625,
         "enemyHp": 0,
         "hits": 14,
-        "damage": 564,
-        "marks": 3
+        "damage": 539,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -1178,12 +1178,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 301,
-        "heroHp": 646,
+        "ticks": 133,
+        "heroHp": 720,
         "enemyHp": 0,
-        "hits": 11,
-        "damage": 436,
-        "marks": 2
+        "hits": 10,
+        "damage": 362,
+        "marks": 1
       },
       "outcome": "win"
     },
@@ -1250,12 +1250,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 771,
-        "heroHp": 300,
+        "ticks": 381,
+        "heroHp": 462,
         "enemyHp": 0,
-        "hits": 21,
-        "damage": 891,
-        "marks": 5
+        "hits": 20,
+        "damage": 776,
+        "marks": 3
       },
       "outcome": "win"
     },
@@ -1322,10 +1322,10 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 251,
+        "ticks": 125,
         "heroHp": 292,
         "enemyHp": 0,
-        "hits": 11,
+        "hits": 10,
         "damage": 408,
         "marks": 1
       },
@@ -1394,14 +1394,14 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 565,
-        "heroHp": 0,
-        "enemyHp": 29,
-        "hits": 21,
-        "damage": 820,
-        "marks": 4
+        "ticks": 358,
+        "heroHp": 51,
+        "enemyHp": 0,
+        "hits": 22,
+        "damage": 798,
+        "marks": 3
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "intro",
@@ -1466,12 +1466,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 511,
-        "heroHp": 280,
+        "ticks": 248,
+        "heroHp": 410,
         "enemyHp": 0,
-        "hits": 19,
-        "damage": 703,
-        "marks": 4
+        "hits": 17,
+        "damage": 573,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -1538,12 +1538,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 595,
-        "heroHp": 243,
+        "ticks": 294,
+        "heroHp": 449,
         "enemyHp": 0,
-        "hits": 20,
-        "damage": 780,
-        "marks": 4
+        "hits": 17,
+        "damage": 661,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -1610,11 +1610,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 437,
-        "heroHp": 720,
+        "ticks": 198,
+        "heroHp": 613,
         "enemyHp": 0,
-        "hits": 9,
-        "damage": 363,
+        "hits": 11,
+        "damage": 450,
         "marks": 3
       },
       "outcome": "win"
@@ -1682,10 +1682,10 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 293,
+        "ticks": 137,
         "heroHp": 720,
         "enemyHp": 0,
-        "hits": 7,
+        "hits": 8,
         "damage": 312,
         "marks": 2
       },
@@ -1754,11 +1754,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 605,
-        "heroHp": 551,
+        "ticks": 279,
+        "heroHp": 450,
         "enemyHp": 0,
-        "hits": 12,
-        "damage": 451,
+        "hits": 14,
+        "damage": 532,
         "marks": 4
       },
       "outcome": "win"
@@ -1826,11 +1826,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 345,
-        "heroHp": 273,
+        "ticks": 178,
+        "heroHp": 267,
         "enemyHp": 0,
-        "hits": 9,
-        "damage": 377,
+        "hits": 11,
+        "damage": 383,
         "marks": 3
       },
       "outcome": "win"
@@ -1898,14 +1898,14 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 624,
-        "heroHp": 281,
-        "enemyHp": 0,
-        "hits": 15,
-        "damage": 569,
-        "marks": 5
+        "ticks": 417,
+        "heroHp": 0,
+        "enemyHp": 9,
+        "hits": 19,
+        "damage": 841,
+        "marks": 7
       },
-      "outcome": "win"
+      "outcome": "loss"
     },
     {
       "band": "intro",
@@ -1970,11 +1970,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 331,
-        "heroHp": 549,
+        "ticks": 168,
+        "heroHp": 520,
         "enemyHp": 0,
-        "hits": 10,
-        "damage": 336,
+        "hits": 12,
+        "damage": 365,
         "marks": 2
       },
       "outcome": "win"
@@ -2042,10 +2042,10 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 460,
+        "ticks": 231,
         "heroHp": 512,
         "enemyHp": 0,
-        "hits": 11,
+        "hits": 13,
         "damage": 413,
         "marks": 3
       },
@@ -2102,26 +2102,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 3100,
-            "atk": 72,
-            "def": 20,
-            "attackTicks": 30,
+            "hp": 600,
+            "atk": 52,
+            "def": 12,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 523,
-        "enemyHp": 2440,
-        "hits": 43,
-        "damage": 1434,
-        "marks": 2
+        "ticks": 652,
+        "heroHp": 680,
+        "enemyHp": 0,
+        "hits": 39,
+        "damage": 1095,
+        "marks": 3
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "intro",
@@ -2174,26 +2174,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 3100,
-            "atk": 72,
-            "def": 20,
-            "attackTicks": 30,
+            "hp": 600,
+            "atk": 52,
+            "def": 12,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2266,
-        "heroHp": 0,
-        "enemyHp": 1998,
-        "hits": 57,
-        "damage": 2004,
+        "ticks": 402,
+        "heroHp": 522,
+        "enemyHp": 0,
+        "hits": 32,
+        "damage": 980,
         "marks": 2
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "intro",
@@ -2246,26 +2246,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 3100,
-            "atk": 72,
-            "def": 20,
-            "attackTicks": 30,
+            "hp": 600,
+            "atk": 52,
+            "def": 12,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 272,
-        "enemyHp": 2728,
-        "hits": 41,
-        "damage": 1463,
-        "marks": 2
+        "ticks": 1220,
+        "heroHp": 394,
+        "enemyHp": 0,
+        "hits": 60,
+        "damage": 1808,
+        "marks": 5
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "intro",
@@ -2318,24 +2318,24 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 3100,
-            "atk": 72,
-            "def": 20,
-            "attackTicks": 30,
+            "hp": 600,
+            "atk": 52,
+            "def": 12,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 998,
+        "ticks": 361,
         "heroHp": 0,
-        "enemyHp": 2603,
-        "hits": 30,
-        "damage": 1017,
-        "marks": 1
+        "enemyHp": 58,
+        "hits": 32,
+        "damage": 1062,
+        "marks": 2
       },
       "outcome": "loss"
     },
@@ -2390,24 +2390,24 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 3100,
-            "atk": 72,
-            "def": 20,
-            "attackTicks": 30,
+            "hp": 600,
+            "atk": 52,
+            "def": 12,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 1449,
+        "ticks": 974,
         "heroHp": 0,
-        "enemyHp": 2841,
-        "hits": 36,
-        "damage": 1019,
-        "marks": 2
+        "enemyHp": 147,
+        "hits": 56,
+        "damage": 1375,
+        "marks": 4
       },
       "outcome": "loss"
     },
@@ -2462,26 +2462,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 3100,
-            "atk": 72,
-            "def": 20,
-            "attackTicks": 30,
+            "hp": 600,
+            "atk": 52,
+            "def": 12,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 1567,
-        "heroHp": 0,
-        "enemyHp": 2725,
-        "hits": 41,
-        "damage": 1178,
-        "marks": 2
+        "ticks": 854,
+        "heroHp": 186,
+        "enemyHp": 0,
+        "hits": 58,
+        "damage": 1393,
+        "marks": 3
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "intro",
@@ -2534,26 +2534,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 3100,
-            "atk": 72,
-            "def": 20,
-            "attackTicks": 30,
+            "hp": 600,
+            "atk": 52,
+            "def": 12,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2026,
-        "heroHp": 0,
-        "enemyHp": 2715,
-        "hits": 43,
-        "damage": 1549,
-        "marks": 2
+        "ticks": 1089,
+        "heroHp": 346,
+        "enemyHp": 0,
+        "hits": 58,
+        "damage": 1744,
+        "marks": 4
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "middle",
@@ -2618,7 +2618,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 281,
+        "ticks": 111,
         "heroHp": 2227,
         "enemyHp": 0,
         "hits": 8,
@@ -2690,7 +2690,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 198,
+        "ticks": 84,
         "heroHp": 2231,
         "enemyHp": 0,
         "hits": 6,
@@ -2762,7 +2762,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 430,
+        "ticks": 168,
         "heroHp": 1792,
         "enemyHp": 0,
         "hits": 11,
@@ -2834,7 +2834,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 183,
+        "ticks": 82,
         "heroHp": 1146,
         "enemyHp": 0,
         "hits": 7,
@@ -2906,10 +2906,10 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 501,
+        "ticks": 223,
         "heroHp": 1379,
         "enemyHp": 0,
-        "hits": 15,
+        "hits": 14,
         "damage": 473,
         "marks": 0
       },
@@ -2978,7 +2978,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 366,
+        "ticks": 158,
         "heroHp": 1579,
         "enemyHp": 0,
         "hits": 12,
@@ -3050,7 +3050,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 400,
+        "ticks": 171,
         "heroHp": 1628,
         "enemyHp": 0,
         "hits": 12,
@@ -3122,7 +3122,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 144,
+        "ticks": 66,
         "heroHp": 2258,
         "enemyHp": 0,
         "hits": 5,
@@ -3194,7 +3194,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 107,
+        "ticks": 49,
         "heroHp": 2236,
         "enemyHp": 0,
         "hits": 4,
@@ -3266,7 +3266,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 193,
+        "ticks": 89,
         "heroHp": 1795,
         "enemyHp": 0,
         "hits": 7,
@@ -3338,7 +3338,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 116,
+        "ticks": 60,
         "heroHp": 1155,
         "enemyHp": 0,
         "hits": 5,
@@ -3410,7 +3410,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 199,
+        "ticks": 110,
         "heroHp": 1391,
         "enemyHp": 0,
         "hits": 9,
@@ -3482,7 +3482,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 188,
+        "ticks": 93,
         "heroHp": 1631,
         "enemyHp": 0,
         "hits": 8,
@@ -3554,7 +3554,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 188,
+        "ticks": 93,
         "heroHp": 1631,
         "enemyHp": 0,
         "hits": 8,
@@ -3626,12 +3626,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 339,
-        "heroHp": 2057,
+        "ticks": 162,
+        "heroHp": 2083,
         "enemyHp": 0,
         "hits": 10,
-        "damage": 642,
-        "marks": 2
+        "damage": 616,
+        "marks": 1
       },
       "outcome": "win"
     },
@@ -3698,11 +3698,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 194,
-        "heroHp": 2097,
+        "ticks": 110,
+        "heroHp": 2030,
         "enemyHp": 0,
-        "hits": 7,
-        "damage": 482,
+        "hits": 8,
+        "damage": 549,
         "marks": 1
       },
       "outcome": "win"
@@ -3770,12 +3770,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 559,
-        "heroHp": 1376,
+        "ticks": 251,
+        "heroHp": 1544,
         "enemyHp": 0,
-        "hits": 16,
-        "damage": 1018,
-        "marks": 4
+        "hits": 14,
+        "damage": 850,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -3842,11 +3842,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 179,
-        "heroHp": 954,
+        "ticks": 107,
+        "heroHp": 846,
         "enemyHp": 0,
-        "hits": 8,
-        "damage": 557,
+        "hits": 9,
+        "damage": 665,
         "marks": 1
       },
       "outcome": "win"
@@ -3914,12 +3914,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 517,
-        "heroHp": 736,
+        "ticks": 289,
+        "heroHp": 914,
         "enemyHp": 0,
-        "hits": 19,
-        "damage": 1274,
-        "marks": 3
+        "hits": 18,
+        "damage": 1096,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -3986,12 +3986,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 354,
-        "heroHp": 1045,
+        "ticks": 164,
+        "heroHp": 1293,
         "enemyHp": 0,
-        "hits": 15,
-        "damage": 964,
-        "marks": 3
+        "hits": 13,
+        "damage": 716,
+        "marks": 1
       },
       "outcome": "win"
     },
@@ -4058,12 +4058,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 566,
-        "heroHp": 1117,
+        "ticks": 241,
+        "heroHp": 1260,
         "enemyHp": 0,
-        "hits": 18,
-        "damage": 1268,
-        "marks": 4
+        "hits": 15,
+        "damage": 921,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -4130,11 +4130,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 280,
-        "heroHp": 1998,
+        "ticks": 137,
+        "heroHp": 1981,
         "enemyHp": 0,
-        "hits": 6,
-        "damage": 563,
+        "hits": 7,
+        "damage": 580,
         "marks": 2
       },
       "outcome": "win"
@@ -4202,11 +4202,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 253,
-        "heroHp": 1899,
+        "ticks": 127,
+        "heroHp": 1849,
         "enemyHp": 0,
-        "hits": 6,
-        "damage": 591,
+        "hits": 8,
+        "damage": 641,
         "marks": 2
       },
       "outcome": "win"
@@ -4274,11 +4274,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 452,
-        "heroHp": 1454,
+        "ticks": 217,
+        "heroHp": 1414,
         "enemyHp": 0,
-        "hits": 9,
-        "damage": 728,
+        "hits": 11,
+        "damage": 768,
         "marks": 3
       },
       "outcome": "win"
@@ -4346,10 +4346,10 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 246,
+        "ticks": 126,
         "heroHp": 864,
         "enemyHp": 0,
-        "hits": 7,
+        "hits": 8,
         "damage": 558,
         "marks": 2
       },
@@ -4418,12 +4418,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 519,
+        "ticks": 219,
         "heroHp": 981,
         "enemyHp": 0,
-        "hits": 12,
-        "damage": 842,
-        "marks": 4
+        "hits": 13,
+        "damage": 768,
+        "marks": 3
       },
       "outcome": "win"
     },
@@ -4490,11 +4490,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 314,
-        "heroHp": 1369,
+        "ticks": 160,
+        "heroHp": 1347,
         "enemyHp": 0,
-        "hits": 9,
-        "damage": 551,
+        "hits": 10,
+        "damage": 573,
         "marks": 2
       },
       "outcome": "win"
@@ -4562,11 +4562,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 426,
-        "heroHp": 1308,
+        "ticks": 218,
+        "heroHp": 1242,
         "enemyHp": 0,
-        "hits": 10,
-        "damage": 710,
+        "hits": 12,
+        "damage": 776,
         "marks": 3
       },
       "outcome": "win"
@@ -4622,26 +4622,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 5552,
-            "atk": 129,
-            "def": 36,
-            "attackTicks": 30,
+            "hp": 1075,
+            "atk": 93,
+            "def": 21,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 1905,
-        "enemyHp": 3717,
-        "hits": 46,
-        "damage": 2871,
+        "ticks": 444,
+        "heroHp": 1959,
+        "enemyHp": 0,
+        "hits": 29,
+        "damage": 1567,
         "marks": 2
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "middle",
@@ -4694,26 +4694,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 5552,
-            "atk": 129,
-            "def": 36,
-            "attackTicks": 30,
+            "hp": 1075,
+            "atk": 93,
+            "def": 21,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 1221,
-        "enemyHp": 2746,
-        "hits": 58,
-        "damage": 3842,
-        "marks": 2
+        "ticks": 297,
+        "heroHp": 1938,
+        "enemyHp": 0,
+        "hits": 21,
+        "damage": 1394,
+        "marks": 1
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "middle",
@@ -4766,26 +4766,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 5552,
-            "atk": 129,
-            "def": 36,
-            "attackTicks": 30,
+            "hp": 1075,
+            "atk": 93,
+            "def": 21,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 1494,
-        "enemyHp": 4636,
-        "hits": 43,
-        "damage": 2442,
-        "marks": 2
+        "ticks": 794,
+        "heroHp": 1504,
+        "enemyHp": 0,
+        "hits": 44,
+        "damage": 2084,
+        "marks": 3
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "middle",
@@ -4838,26 +4838,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 5552,
-            "atk": 129,
-            "def": 36,
-            "attackTicks": 30,
+            "hp": 1075,
+            "atk": 93,
+            "def": 21,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 1290,
-        "heroHp": 0,
-        "enemyHp": 4165,
-        "hits": 39,
-        "damage": 2576,
+        "ticks": 301,
+        "heroHp": 667,
+        "enemyHp": 0,
+        "hits": 28,
+        "damage": 1597,
         "marks": 1
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "middle",
@@ -4910,26 +4910,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 5552,
-            "atk": 129,
-            "def": 36,
-            "attackTicks": 30,
+            "hp": 1075,
+            "atk": 93,
+            "def": 21,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2114,
-        "heroHp": 0,
-        "enemyHp": 4769,
-        "hits": 51,
-        "damage": 2864,
-        "marks": 3
+        "ticks": 1054,
+        "heroHp": 865,
+        "enemyHp": 0,
+        "hits": 59,
+        "damage": 2829,
+        "marks": 4
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "middle",
@@ -4982,26 +4982,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 5552,
-            "atk": 129,
-            "def": 36,
-            "attackTicks": 30,
+            "hp": 1075,
+            "atk": 93,
+            "def": 21,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2224,
-        "heroHp": 0,
-        "enemyHp": 4463,
-        "hits": 57,
-        "damage": 2988,
+        "ticks": 660,
+        "heroHp": 1038,
+        "enemyHp": 0,
+        "hits": 46,
+        "damage": 2076,
         "marks": 3
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "middle",
@@ -5054,26 +5054,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 5552,
-            "atk": 129,
-            "def": 36,
-            "attackTicks": 30,
+            "hp": 1075,
+            "atk": 93,
+            "def": 21,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 1242,
-        "enemyHp": 4540,
-        "hits": 48,
-        "damage": 2700,
-        "marks": 2
+        "ticks": 826,
+        "heroHp": 1379,
+        "enemyHp": 0,
+        "hits": 47,
+        "damage": 2320,
+        "marks": 3
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "late",
@@ -5138,7 +5138,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 281,
+        "ticks": 111,
         "heroHp": 4229,
         "enemyHp": 0,
         "hits": 8,
@@ -5210,7 +5210,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 198,
+        "ticks": 84,
         "heroHp": 4216,
         "enemyHp": 0,
         "hits": 6,
@@ -5282,7 +5282,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 392,
+        "ticks": 157,
         "heroHp": 3369,
         "enemyHp": 0,
         "hits": 11,
@@ -5354,7 +5354,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 183,
+        "ticks": 82,
         "heroHp": 2210,
         "enemyHp": 0,
         "hits": 7,
@@ -5426,7 +5426,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 456,
+        "ticks": 215,
         "heroHp": 2630,
         "enemyHp": 0,
         "hits": 14,
@@ -5498,7 +5498,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 291,
+        "ticks": 128,
         "heroHp": 3106,
         "enemyHp": 0,
         "hits": 10,
@@ -5570,7 +5570,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 366,
+        "ticks": 158,
         "heroHp": 3065,
         "enemyHp": 0,
         "hits": 12,
@@ -5642,7 +5642,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 107,
+        "ticks": 49,
         "heroHp": 4263,
         "enemyHp": 0,
         "hits": 4,
@@ -5714,7 +5714,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 107,
+        "ticks": 49,
         "heroHp": 4222,
         "enemyHp": 0,
         "hits": 4,
@@ -5786,7 +5786,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 193,
+        "ticks": 89,
         "heroHp": 3428,
         "enemyHp": 0,
         "hits": 7,
@@ -5858,7 +5858,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 61,
+        "ticks": 33,
         "heroHp": 2264,
         "enemyHp": 0,
         "hits": 3,
@@ -5930,7 +5930,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 135,
+        "ticks": 75,
         "heroHp": 2638,
         "enemyHp": 0,
         "hits": 7,
@@ -6002,7 +6002,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 140,
+        "ticks": 71,
         "heroHp": 3156,
         "enemyHp": 0,
         "hits": 6,
@@ -6074,7 +6074,7 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 140,
+        "ticks": 71,
         "heroHp": 3156,
         "enemyHp": 0,
         "hits": 6,
@@ -6146,12 +6146,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 273,
-        "heroHp": 3929,
+        "ticks": 122,
+        "heroHp": 4037,
         "enemyHp": 0,
-        "hits": 10,
-        "damage": 870,
-        "marks": 2
+        "hits": 9,
+        "damage": 762,
+        "marks": 1
       },
       "outcome": "win"
     },
@@ -6218,11 +6218,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 194,
-        "heroHp": 4066,
+        "ticks": 110,
+        "heroHp": 3996,
         "enemyHp": 0,
-        "hits": 7,
-        "damage": 692,
+        "hits": 8,
+        "damage": 762,
         "marks": 1
       },
       "outcome": "win"
@@ -6290,12 +6290,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 418,
-        "heroHp": 2992,
+        "ticks": 204,
+        "heroHp": 3181,
         "enemyHp": 0,
-        "hits": 14,
-        "damage": 1108,
-        "marks": 3
+        "hits": 13,
+        "damage": 1013,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -6362,11 +6362,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 179,
-        "heroHp": 1961,
+        "ticks": 107,
+        "heroHp": 1827,
         "enemyHp": 0,
-        "hits": 8,
-        "damage": 817,
+        "hits": 9,
+        "damage": 951,
         "marks": 1
       },
       "outcome": "win"
@@ -6434,12 +6434,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 500,
-        "heroHp": 1958,
+        "ticks": 247,
+        "heroHp": 2226,
         "enemyHp": 0,
-        "hits": 18,
-        "damage": 1761,
-        "marks": 3
+        "hits": 15,
+        "damage": 1399,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -6506,12 +6506,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 283,
-        "heroHp": 2656,
+        "ticks": 138,
+        "heroHp": 2819,
         "enemyHp": 0,
-        "hits": 12,
-        "damage": 1046,
-        "marks": 2
+        "hits": 11,
+        "damage": 883,
+        "marks": 1
       },
       "outcome": "win"
     },
@@ -6578,12 +6578,12 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 488,
-        "heroHp": 2546,
+        "ticks": 230,
+        "heroHp": 2732,
         "enemyHp": 0,
-        "hits": 16,
-        "damage": 1578,
-        "marks": 4
+        "hits": 14,
+        "damage": 1252,
+        "marks": 2
       },
       "outcome": "win"
     },
@@ -6650,11 +6650,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 280,
-        "heroHp": 3945,
+        "ticks": 137,
+        "heroHp": 3912,
         "enemyHp": 0,
-        "hits": 6,
-        "damage": 805,
+        "hits": 7,
+        "damage": 838,
         "marks": 2
       },
       "outcome": "win"
@@ -6703,6 +6703,78 @@
             "def": 40,
             "attackTicks": 19,
             "moveSpeed": 80,
+            "range": 260,
+            "x": 38
+          }
+        ],
+        "enemy": [
+          {
+            "id": "assassin",
+            "hp": 371,
+            "atk": 343,
+            "def": 14,
+            "attackTicks": 24,
+            "moveSpeed": 110,
+            "range": 12,
+            "x": 400
+          }
+        ],
+        "pressureMultiplier": 2
+      },
+      "result": {
+        "ticks": 73,
+        "heroHp": 3967,
+        "enemyHp": 0,
+        "hits": 5,
+        "damage": 648,
+        "marks": 1
+      },
+      "outcome": "win"
+    },
+    {
+      "band": "late",
+      "stage": 19,
+      "team": "defensive",
+      "teamIds": [
+        "mw2",
+        "hk1",
+        "priest"
+      ],
+      "enemy": "assassin",
+      "input": {
+        "teamIds": [
+          "mw2",
+          "hk1",
+          "priest"
+        ],
+        "party": [
+          {
+            "id": "mw2",
+            "hp": 1333,
+            "atk": 79,
+            "def": 171,
+            "attackTicks": 19,
+            "moveSpeed": 65,
+            "range": 12,
+            "x": 128
+          },
+          {
+            "id": "hk1",
+            "hp": 1329,
+            "atk": 106,
+            "def": 149,
+            "attackTicks": 18,
+            "moveSpeed": 65,
+            "range": 12,
+            "x": 83
+          },
+          {
+            "id": "priest",
+            "hp": 830,
+            "atk": 78,
+            "def": 58,
+            "attackTicks": 24,
+            "moveSpeed": 65,
             "range": 260,
             "x": 38
           }
@@ -6723,82 +6795,10 @@
       },
       "result": {
         "ticks": 150,
-        "heroHp": 3999,
+        "heroHp": 3119,
         "enemyHp": 0,
-        "hits": 4,
-        "damage": 616,
-        "marks": 1
-      },
-      "outcome": "win"
-    },
-    {
-      "band": "late",
-      "stage": 19,
-      "team": "defensive",
-      "teamIds": [
-        "mw2",
-        "hk1",
-        "priest"
-      ],
-      "enemy": "assassin",
-      "input": {
-        "teamIds": [
-          "mw2",
-          "hk1",
-          "priest"
-        ],
-        "party": [
-          {
-            "id": "mw2",
-            "hp": 1333,
-            "atk": 79,
-            "def": 171,
-            "attackTicks": 19,
-            "moveSpeed": 65,
-            "range": 12,
-            "x": 128
-          },
-          {
-            "id": "hk1",
-            "hp": 1329,
-            "atk": 106,
-            "def": 149,
-            "attackTicks": 18,
-            "moveSpeed": 65,
-            "range": 12,
-            "x": 83
-          },
-          {
-            "id": "priest",
-            "hp": 830,
-            "atk": 78,
-            "def": 58,
-            "attackTicks": 24,
-            "moveSpeed": 65,
-            "range": 260,
-            "x": 38
-          }
-        ],
-        "enemy": [
-          {
-            "id": "assassin",
-            "hp": 371,
-            "atk": 343,
-            "def": 14,
-            "attackTicks": 24,
-            "moveSpeed": 110,
-            "range": 12,
-            "x": 400
-          }
-        ],
-        "pressureMultiplier": 2
-      },
-      "result": {
-        "ticks": 319,
-        "heroHp": 3152,
-        "enemyHp": 0,
-        "hits": 7,
-        "damage": 805,
+        "hits": 8,
+        "damage": 838,
         "marks": 2
       },
       "outcome": "win"
@@ -6866,11 +6866,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 222,
-        "heroHp": 1748,
+        "ticks": 118,
+        "heroHp": 1723,
         "enemyHp": 0,
-        "hits": 6,
-        "damage": 887,
+        "hits": 7,
+        "damage": 912,
         "marks": 2
       },
       "outcome": "win"
@@ -6938,11 +6938,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 304,
-        "heroHp": 2443,
+        "ticks": 168,
+        "heroHp": 2344,
         "enemyHp": 0,
-        "hits": 9,
-        "damage": 805,
+        "hits": 11,
+        "damage": 904,
         "marks": 2
       },
       "outcome": "win"
@@ -7010,11 +7010,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 276,
-        "heroHp": 2774,
+        "ticks": 143,
+        "heroHp": 2733,
         "enemyHp": 0,
-        "hits": 8,
-        "damage": 785,
+        "hits": 9,
+        "damage": 826,
         "marks": 2
       },
       "outcome": "win"
@@ -7082,11 +7082,11 @@
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 331,
-        "heroHp": 2962,
+        "ticks": 168,
+        "heroHp": 2839,
         "enemyHp": 0,
-        "hits": 8,
-        "damage": 785,
+        "hits": 10,
+        "damage": 908,
         "marks": 2
       },
       "outcome": "win"
@@ -7142,26 +7142,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 8848,
-            "atk": 206,
-            "def": 57,
-            "attackTicks": 30,
+            "hp": 1713,
+            "atk": 148,
+            "def": 34,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 3920,
-        "enemyHp": 5686,
-        "hits": 51,
-        "damage": 4279,
+        "ticks": 389,
+        "heroHp": 3934,
+        "enemyHp": 0,
+        "hits": 26,
+        "damage": 2252,
         "marks": 2
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "late",
@@ -7214,26 +7214,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 8848,
-            "atk": 206,
-            "def": 57,
-            "attackTicks": 30,
+            "hp": 1713,
+            "atk": 148,
+            "def": 34,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 3127,
-        "enemyHp": 4287,
-        "hits": 58,
-        "damage": 5678,
-        "marks": 2
+        "ticks": 286,
+        "heroHp": 3855,
+        "enemyHp": 0,
+        "hits": 20,
+        "damage": 2102,
+        "marks": 1
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "late",
@@ -7286,26 +7286,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 8848,
-            "atk": 206,
-            "def": 57,
-            "attackTicks": 30,
+            "hp": 1713,
+            "atk": 148,
+            "def": 34,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 3091,
-        "enemyHp": 7106,
-        "hits": 48,
-        "damage": 3505,
-        "marks": 2
+        "ticks": 685,
+        "heroHp": 3140,
+        "enemyHp": 0,
+        "hits": 43,
+        "damage": 2817,
+        "marks": 3
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "late",
@@ -7358,26 +7358,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 8848,
-            "atk": 206,
-            "def": 57,
-            "attackTicks": 30,
+            "hp": 1713,
+            "atk": 148,
+            "def": 34,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 1710,
-        "heroHp": 0,
-        "enemyHp": 5741,
-        "hits": 53,
-        "damage": 5371,
-        "marks": 2
+        "ticks": 284,
+        "heroHp": 1592,
+        "enemyHp": 0,
+        "hits": 27,
+        "damage": 2385,
+        "marks": 1
       },
-      "outcome": "loss"
+      "outcome": "win"
     },
     {
       "band": "late",
@@ -7430,26 +7430,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 8848,
-            "atk": 206,
-            "def": 57,
-            "attackTicks": 30,
+            "hp": 1713,
+            "atk": 148,
+            "def": 34,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 1635,
-        "enemyHp": 7367,
-        "hits": 57,
-        "damage": 4739,
+        "ticks": 874,
+        "heroHp": 2377,
+        "enemyHp": 0,
+        "hits": 53,
+        "damage": 3560,
         "marks": 3
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "late",
@@ -7502,26 +7502,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 8848,
-            "atk": 206,
-            "def": 57,
-            "attackTicks": 30,
+            "hp": 1713,
+            "atk": 148,
+            "def": 34,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 1738,
-        "enemyHp": 6685,
-        "hits": 62,
-        "damage": 4210,
+        "ticks": 595,
+        "heroHp": 2533,
+        "enemyHp": 0,
+        "hits": 41,
+        "damage": 2699,
         "marks": 2
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     },
     {
       "band": "late",
@@ -7574,26 +7574,26 @@
         "enemy": [
           {
             "id": "boss_ch1",
-            "hp": 8848,
-            "atk": 206,
-            "def": 57,
-            "attackTicks": 30,
+            "hp": 1713,
+            "atk": 148,
+            "def": 34,
+            "attackTicks": 28,
             "moveSpeed": 70,
-            "range": 12,
+            "range": 40,
             "x": 400
           }
         ],
         "pressureMultiplier": 2
       },
       "result": {
-        "ticks": 2400,
-        "heroHp": 2802,
-        "enemyHp": 6940,
-        "hits": 53,
-        "damage": 3890,
-        "marks": 2
+        "ticks": 670,
+        "heroHp": 2819,
+        "enemyHp": 0,
+        "hits": 42,
+        "damage": 2974,
+        "marks": 3
       },
-      "outcome": "censored-120s-stress"
+      "outcome": "win"
     }
   ],
   "censoredStressCase": {
@@ -7605,15 +7605,15 @@
     "inputLimitTicks": 2400,
     "result": {
       "ticks": 2400,
-      "heroHp": 3091,
-      "enemyHp": 86738,
-      "hits": 48,
-      "damage": 3505,
-      "marks": 2
+      "heroHp": 3313,
+      "enemyHp": 11166,
+      "hits": 142,
+      "damage": 8963,
+      "marks": 8
     },
     "interpretation": "A helper-capped stress run only; not an engine timeout."
   },
-  "engineTimeoutCases": [
+  "normalStagePastOldTimer": [
     {
       "team": "supportStack",
       "teamIds": [
@@ -7622,19 +7622,18 @@
         "ew1"
       ],
       "stage": 1,
-      "timeoutTicks": 1800,
-      "elapsedTicks": 1808,
-      "losses": 1,
+      "elapsedTicks": 1900,
+      "losses": 0,
       "clears": 0,
       "survivingHeroes": [
         {
           "id": "priest",
-          "hp": 179,
+          "hp": 180,
           "maxHp": 193
         },
         {
           "id": "mk1",
-          "hp": 241,
+          "hp": 237,
           "maxHp": 243
         },
         {
@@ -7643,7 +7642,7 @@
           "maxHp": 193
         }
       ],
-      "enemyHp": 999999959
+      "enemyHp": 999999898
     },
     {
       "team": "defensive",
@@ -7653,19 +7652,18 @@
         "priest"
       ],
       "stage": 1,
-      "timeoutTicks": 1800,
-      "elapsedTicks": 1819,
-      "losses": 1,
+      "elapsedTicks": 1900,
+      "losses": 0,
       "clears": 0,
       "survivingHeroes": [
         {
           "id": "mw2",
-          "hp": 319,
+          "hp": 316,
           "maxHp": 320
         },
         {
           "id": "hk1",
-          "hp": 308,
+          "hp": 307,
           "maxHp": 319
         },
         {
@@ -7674,7 +7672,7 @@
           "maxHp": 193
         }
       ],
-      "enemyHp": 999999966
+      "enemyHp": 999999907
     }
   ],
   "clusteredFrontlineComparison": [
@@ -7710,11 +7708,11 @@
       ],
       "startHp": 480,
       "result": {
-        "ticks": 1839,
-        "heroHp": 794,
+        "ticks": 666,
+        "heroHp": 827,
         "enemyHp": 0,
-        "hits": 38,
-        "damage": 852,
+        "hits": 37,
+        "damage": 808,
         "marks": 0
       },
       "outcome": "win"
@@ -7751,11 +7749,11 @@
       ],
       "startHp": 480,
       "result": {
-        "ticks": 1077,
-        "heroHp": 660,
+        "ticks": 398,
+        "heroHp": 682,
         "enemyHp": 0,
         "hits": 30,
-        "damage": 722,
+        "damage": 700,
         "marks": 0
       },
       "outcome": "win"
@@ -7773,21 +7771,21 @@
         "hp": 1000000,
         "atk": 1,
         "def": 250,
-        "attackTicks": 30,
+        "attackTicks": 28,
         "moveSpeed": 70,
         "x": 400
       },
       "result": {
         "ticks": 1200,
-        "heroHp": 1678,
-        "enemyHp": 999720,
-        "hits": 33,
-        "damage": 289,
-        "marks": 1
+        "heroHp": 1662,
+        "enemyHp": 999241,
+        "hits": 82,
+        "damage": 784,
+        "marks": 4
       },
-      "hpDamage": 280,
-      "bossHits": 24,
-      "damagePerBossHit": 11.666666666666666
+      "hpDamage": 759,
+      "bossHits": 57,
+      "damagePerBossHit": 13.31578947368421
     },
     {
       "team": "healingBruiser",
@@ -7800,21 +7798,21 @@
         "hp": 1000000,
         "atk": 1,
         "def": 250,
-        "attackTicks": 30,
+        "attackTicks": 28,
         "moveSpeed": 70,
         "x": 400
       },
       "result": {
         "ticks": 1200,
-        "heroHp": 1678,
-        "enemyHp": 999712,
-        "hits": 35,
-        "damage": 297,
-        "marks": 1
+        "heroHp": 1662,
+        "enemyHp": 999284,
+        "hits": 88,
+        "damage": 741,
+        "marks": 4
       },
-      "hpDamage": 288,
-      "bossHits": 26,
-      "damagePerBossHit": 11.076923076923077
+      "hpDamage": 716,
+      "bossHits": 63,
+      "damagePerBossHit": 11.365079365079366
     }
   ]
 }

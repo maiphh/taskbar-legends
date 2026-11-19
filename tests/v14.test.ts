@@ -16,7 +16,7 @@ describe('v14 config block', () => {
   it('ships the designer block inert: no rule on by default, Â§18 defaults, designer values parsed', () => {
     expect(activeV14Rules()).toEqual([]);
     expect(CONFIG.v14).toMatchObject({ chestChoice: { options: 1, fromStage: 1 }, farmChest: null, recruit: { legendaryPityEvery: 0, newHeroGuaranteeEvery: 0 }, fortune: { legendaryEvery: 0 } });
-    expect(design.version).toBe('1.4.4'); expect(design.v14.targetVersion).toBe('1.4.0');
+    expect(design.version).toBe('1.5.0'); expect(design.v14.targetVersion).toBe('1.4.0');
     expect(V14_DESIGN.chestChoice).toMatchObject({ options: 2, fromStage: 9 });
     expect(V14_DESIGN.farmChest).toMatchObject({ baseChance: 0.03, guaranteeEvery: 7, fromStage: 9 });
     setV14Rules(['chestChoice', 'farmChest']); expect(activeV14Rules()).toEqual(['chestChoice', 'farmChest']);
@@ -168,12 +168,13 @@ describe('saves (CR-14-11)', () => {
     expect(load({ ...raw, balance: '1.4.1' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.2' }).balance).toBe(CONFIG.version);
     expect(load({ ...raw, balance: '1.4.3' }).balance).toBe(CONFIG.version);
+    expect(load({ ...raw, balance: '1.4.4' }).balance).toBe(CONFIG.version);
   });
-  it('a 1.4.3 save loads under 1.4.4 and continues tick-for-tick; a 1.4.3 COMPLETE boss repeat picks up the Â§20 pad on its next encounter', () => {
-    expect(CONFIG.version).toBe('1.4.4');
+  it('a 1.4.3 save loads under 1.5.0 and continues tick-for-tick; a 1.4.3 COMPLETE boss repeat picks up the Â§20 pad on its next encounter', () => {
+    expect(CONFIG.version).toBe('1.5.0');
     const state = createState(3); step(state, 2_000);
     const raw = { ...(JSON.parse(snapshot(state)) as Record<string, unknown>), balance: '1.4.3' };
-    const restored = load(raw); expect(restored.balance).toBe('1.4.4'); expect(snapshot(restored)).toBe(snapshot(state));
+    const restored = load(raw); expect(restored.balance).toBe('1.5.0'); expect(snapshot(restored)).toBe(snapshot(state));
     step(state, 4_000); step(restored, 4_000); expect(snapshot(restored)).toBe(snapshot(state));
     // 1.4.3 had no boss-stage clock, so a mid-fight COMPLETE save carries none; the next boss repeat gets the scale-1 pad clock.
     const done = createState(4); done.highestCleared = CONFIG.stages.length; done.progress = { kind: 'COMPLETE', stage: CONFIG.stages.length };

@@ -1,8 +1,12 @@
 export const ANIMATION_TICK_MS = 50;
 export const ANIMATION_FRAME_MS = 90;
-export const APPROACH_TICKS = 10;
-export const RETURN_TICKS = 14;
-export const SETTLE_TICKS = 4;
+/** Compressed simulation frame duration; the renderer scales age to show every atlas frame. */
+export const PRESENTATION_FRAME_MS = 50;
+// Keep the turn lane responsive: animation frames are about 50 ms, while a
+// leap's approach, return, and settle fit inside a compact visual beat.
+export const APPROACH_TICKS = 2;
+export const RETURN_TICKS = 3;
+export const SETTLE_TICKS = 1;
 
 export interface ClipTiming { asset: string; attackFrames: number; castFrames: number; frameMs: number }
 export const PARTY_CLIPS: Readonly<Record<string, ClipTiming>> = Object.freeze({
@@ -29,8 +33,9 @@ export const PARTY_CLIPS: Readonly<Record<string, ClipTiming>> = Object.freeze({
   archer: { asset: 'skeleton', attackFrames: 8, castFrames: 8, frameMs: 90 },
   brute: { asset: 'mushroom', attackFrames: 8, castFrames: 8, frameMs: 90 },
   bomber: { asset: 'mushroom', attackFrames: 8, castFrames: 8, frameMs: 90 },
-  boss_ch1: { asset: 'fire-worm', attackFrames: 16, castFrames: 16, frameMs: 90 },
-  boss_ch2: { asset: 'mimic', attackFrames: 14, castFrames: 13, frameMs: 90 },
+  // Hero-as-boss: reuse menacing hero clip lengths (fantasy-warrior / evil-wizard-2).
+  boss_ch1: { asset: 'fantasy-warrior', attackFrames: 7, castFrames: 7, frameMs: 90 },
+  boss_ch2: { asset: 'evil-wizard-2', attackFrames: 8, castFrames: 8, frameMs: 90 },
 });
 
 export type ActionDelivery = 'leap' | 'cast';
@@ -44,11 +49,11 @@ export function clipFor(sourceId: string, delivery: ActionDelivery): { animation
   const clip = PARTY_CLIPS[sourceId] ?? PARTY_CLIPS.grunt!;
   const animation = delivery === 'cast' ? 'cast' : 'attack';
   const frames = animation === 'cast' ? clip.castFrames : clip.attackFrames;
-  const fullMs = frames * clip.frameMs;
-  // Ensure the final frame receives a complete frame interval on the 20Hz simulation clock.
-  const ticks = Math.max(Math.ceil(fullMs / ANIMATION_TICK_MS), Math.ceil((frames - 1) * clip.frameMs / ANIMATION_TICK_MS) + Math.ceil(clip.frameMs / ANIMATION_TICK_MS));
+  const fullMs = frames * PRESENTATION_FRAME_MS;
+  // Every atlas frame still plays, at 50 ms per frame instead of 90 ms.
+  const ticks = Math.max(Math.ceil(fullMs / ANIMATION_TICK_MS), Math.ceil((frames - 1) * PRESENTATION_FRAME_MS / ANIMATION_TICK_MS) + Math.ceil(PRESENTATION_FRAME_MS / ANIMATION_TICK_MS));
   const impactFrame = Math.floor(frames / 2);
-  return { animation, frames, frameMs: clip.frameMs, ticks, impactOffsetTicks: Math.ceil(impactFrame * clip.frameMs / ANIMATION_TICK_MS) };
+  return { animation, frames, frameMs: clip.frameMs, ticks, impactOffsetTicks: Math.ceil(impactFrame * PRESENTATION_FRAME_MS / ANIMATION_TICK_MS) };
 }
 
 export function createActionTimeline(sourceId: string, delivery: ActionDelivery, startTick: number): ActionTimeline {
@@ -80,7 +85,8 @@ export function sampleActionPresentation(delivery: ActionDelivery, timeline: Act
     return { phase: 'approach', animation: 'run', ageMs: Math.max(0, now - timeline.startTick) * ANIMATION_TICK_MS,
       progress: Math.max(0, Math.min(1, (now - timeline.startTick) / approachTicks)) };
   }
-  if (now < timeline.attackEndTick) return { phase: 'attack', animation: delivery === 'cast' ? 'cast' : 'attack', ageMs: (now - timeline.contactTick) * ANIMATION_TICK_MS, progress: 1 };
+  if (now < timeline.attackEndTick) return { phase: 'attack', animation: delivery === 'cast' ? 'cast' : 'attack',
+    ageMs: (now - timeline.contactTick) * ANIMATION_TICK_MS * ANIMATION_FRAME_MS / PRESENTATION_FRAME_MS, progress: 1 };
   if (now < timeline.returnEndTick) return { phase: 'return', animation: 'run', ageMs: (now - timeline.attackEndTick) * ANIMATION_TICK_MS, progress: Math.max(0, Math.min(1, (now - timeline.attackEndTick) / Math.max(1, timeline.returnEndTick - timeline.attackEndTick))) };
   if (now < timeline.readyTick) return { phase: 'settle', animation: 'idle', ageMs: (now - timeline.returnEndTick) * ANIMATION_TICK_MS, progress: 1 };
   return { phase: 'done', animation: 'idle', ageMs: 0, progress: 1 };

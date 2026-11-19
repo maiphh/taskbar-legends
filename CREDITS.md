@@ -38,6 +38,7 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 | books | https://merchant-shade.itch.io/16x16-mixed-rpg-icons | CC0-1.0 |
 | chests | https://merchant-shade.itch.io/16x16-mixed-rpg-icons | CC0-1.0 |
 | iron-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |
+| icon-role-tank, icon-role-dps, icon-role-support | original pixel art made for Taskbar Legends, CC0 1.0 |
 | steel-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |
 | bronze-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |
 | gold-weapons | https://merchant-shade.itch.io/free-16x16-weapon-rpg-icons | CC0-1.0 |
@@ -48,6 +49,9 @@ Sprites by LuizMelo, with icons by Merchant-Shade (Kurt Gabriel Sotelo). The sup
 - Noto Sans Regular and SemiBold, The Noto Project Authors (Copyright 2018; upstream project at https://github.com/notofonts/noto-fonts) — SIL Open Font License 1.1, full notice in `public/fonts/OFL-1.1-Noto.txt` and `LICENSES/OFL-1.1-Noto.txt`. Unmodified static hinted TTFs from `https://raw.githubusercontent.com/notofonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf` (SHA-256 `b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5`) and `.../NotoSans-SemiBold.ttf` (SHA-256 `87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5`).
 - Kenney Pixel UI Pack, Kenney Vleugels with Lynn Evers — CC0. `public/ui/*-9slice.png` are supplied navy/brass recolors of `Ancient/grey.png`. Source: https://opengameart.org/content/pixel-ui-pack-750-assets ; author: https://kenney.nl/assets/pixel-ui-pack . License retained in `public/ui/KENNEY-LICENSE.txt`.
 - `public/ui/icon-sword.png`, armor, chest and potion are supplied 16px crops from the credited Merchant-Shade packs; gold mark is original UI-handoff geometry.
+- `public/ui/icon-scroll-more.png` is an original pixel down-caret by the project's graphic designer, released under CC0-1.0.
+- `public/ui/button-gold-9slice.png`, `public/ui/equip-plate-common.png`, `equip-plate-rare.png`, `equip-plate-epic.png`, `equip-plate-legendary.png`, and `icon-scroll-more.png` are original pixel art made for Taskbar Legends and released under CC0 1.0.
+- Status effect icons (9×9 atlas) authored in-repo for buff/debuff display.
 - Research references, Steam/wiki art, mockups, previews, archives, Silkscreen and unused vendor font alternates are **not** shipped in `public/`.
 
 ## Redistribution verification
@@ -57,6 +61,14 @@ Original vendor notices, the Galmuri OFL-1.1 text and complete CC0 legal code ar
 Original game code is proprietary: Copyright (c) 2026 Mai Gia Phu. All rights reserved. See the root LICENSE. The asset licences above remain CC0, except the Galmuri fonts (OFL-1.1).
 
 ## Audio (M3)
+
+## Legendary presentation VFX
+
+| Files | Source | Licence |
+|---|---|---|
+| `public/assets/vfx/pvfx-holy-smite/*`, `pvfx-treasure-glint/*`, `pvfx-crit-hit-gold/*` | PVFX Foundry 1.0.0, legacy sheets (Pixel VFX Studio / nerijs) | CC0-1.0; licence retained at `public/assets/vfx/PVFX-Foundry-LICENSE.txt` and alongside copied crit-hit sheet |
+| `public/assets/vfx/cs5475-explosion-gold-48/*` | CS5475 Free Pixel Effects | CC0-1.0; licence retained at `public/assets/vfx/CS5475-LICENSE.txt` |
+
 
 All shipped clips in `public/audio/` come from the art handoff (`game-assets/idle-battler/audio/manifest.json`, sha256 in `src/audio-manifest.json`).
 

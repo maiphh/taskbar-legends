@@ -16,4 +16,8 @@ describe('ui tokens', () => {
     expect(feedback.stepMs).toBe(40);
     expect(drop).toBeTypeOf('object');
   });
+  it('defines the UI layout v2 window and hit-target presets', () => {
+    expect(CONFIG.ui.managementV2).toMatchObject({ preset1280: [1280, 720], preset960: [960, 640], min: [960, 600], topbarHeight: 56, navRailWidth: 80, navBottomHeight: 64 });
+    expect(CONFIG.ui.managementV2.hit).toEqual({ primary: 48, default: 40, min: 32 });
+  });
 });

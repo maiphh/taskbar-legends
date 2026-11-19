@@ -1,4 +1,4 @@
-import { CONFIG, stageConfig, ticksForSeconds } from '../config';
+import { CONFIG, stageConfig, stageTimeoutSec, ticksForSeconds } from '../config';
 import { beginEncounter, combatTick, spawnWave } from './combat';
 import { cancelPartyEncounterEffects, expireFriendlyDeadTargetProjectiles, hasPendingActionPresentation, hasPendingHostileImpact } from './party-combat';
 import { autoEquip, autoParty, blankEquipment, chest, chooseChest, equip, farmChestRoll, grantXp, partyPower, pull, setLocked, setParty, upgrade, togglePartyLock } from './economy';
@@ -175,8 +175,9 @@ function encounterSubstep(state: GameState): void {
     if (!hasPendingHostileImpact(state) && !hasPendingActionPresentation(state)) win(state);
     return;
   }
+  const timeoutSec = stageTimeoutSec(state.progress.stage);
   const elapsed = state.farmClock?.elapsedTicks ?? state.tick - state.stageStartedTick;
-  const timedOut = elapsed >= ticksForSeconds(stageConfig(state.progress.stage).timeoutSec);
+  const timedOut = timeoutSec !== null && elapsed >= ticksForSeconds(timeoutSec);
   if (timedOut && !hasPendingActionPresentation(state)) { lose(state); return; }
   combatTick(state, !timedOut);
   if (state.party.every(hero => hero.hp <= 0)) { cancelPartyEncounterEffects(state); lose(state); }
@@ -228,8 +229,9 @@ export function load(snapshotValue: unknown): GameState {
 }
 export function bossSecondsRemaining(state: GameState): number | null {
   // farmPad only reaches a boss stage via the §20 COMPLETE repeat pad; like the stage rest, it shows no countdown.
-  if (!isBoss(state.progress.stage) || state.phase.kind === 'farmPad' || (state.phase.kind === 'rest' && state.phase.next === 'encounter')) return null;
-  return Math.max(0, Math.ceil(stageConfig(state.progress.stage).timeoutSec - (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond));
+  const timeoutSec = stageTimeoutSec(state.progress.stage);
+  if (timeoutSec === null || state.phase.kind === 'farmPad' || (state.phase.kind === 'rest' && state.phase.next === 'encounter')) return null;
+  return Math.max(0, Math.ceil(timeoutSec - (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond));
 }
 export function statusText(state: GameState): string {
   const progress = state.progress;

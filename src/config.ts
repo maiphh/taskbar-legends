@@ -15,12 +15,47 @@ const heroDefinition = z.object({
   mod: z.object({ hp: z.number().optional(), atk: z.number().optional(), def: z.number().optional(),
     attackIntervalTicks: z.number().optional(), splashRadiusPx: z.number().optional() }),
 });
+const mobEnemy = z.object({
+  hp: z.number().positive(), atk: z.number().positive(), def: z.number().nonnegative(),
+  attackIntervalTicks: z.number().int().positive(), rangePx: z.number().positive(),
+  speedPxPerSec: z.number().positive(), gold: z.number().nonnegative(), xp: z.number().nonnegative(),
+}).strict();
+const bossCleaveSkill = z.object({
+  id: z.string().min(1), everyNthAttack: z.number().int().positive(), coefficient: z.number().positive(),
+  radius: z.number().positive(), telegraphTicks: z.number().int().positive(), telegraphLabel: z.string().min(1),
+}).strict();
+const bossEnrageSkill = z.object({
+  id: z.string().min(1), hpPct: z.number().gt(0).lte(1), atkMult: z.number().positive(),
+  telegraphTicks: z.number().int().positive(), telegraphLabel: z.string().min(1),
+  burstCoefficient: z.number().positive(), burstGlobal: z.boolean(),
+}).strict();
+const bossEnemy = z.object({
+  name: z.string().min(1), displayName: z.string().min(1), title: z.string().min(1),
+  heroSprite: z.string().min(1), scale: z.number().int().min(1).max(4),
+  tint: z.string().min(1), outline: z.string().min(1),
+  hp: z.number().positive(), atk: z.number().positive(), def: z.number().nonnegative(),
+  attackIntervalTicks: z.number().int().positive(), rangePx: z.number().positive(),
+  speedPxPerSec: z.number().positive(),
+  skills: z.object({ cleave: bossCleaveSkill, enrage: bossEnrageSkill }).strict(),
+  gold: z.number().nonnegative(), xp: z.number().nonnegative(),
+}).strict();
+export type BossEnemyConfig = z.infer<typeof bossEnemy>;
+const enemiesConfig = z.object({
+  scalingPerStage: z.number().positive(), scalingFormula: z.string(),
+  grunt: mobEnemy, archer: mobEnemy, brute: mobEnemy,
+  boss_ch1: bossEnemy, boss_ch2: bossEnemy,
+}).strict();
 const wave = z.union([
   z.object({ enemies: z.array(enemyKindSchema).nonempty() }),
-  z.object({ boss: enemyKindSchema, adds: z.array(enemyKindSchema) }),
+  z.object({ boss: enemyKindSchema, adds: z.array(enemyKindSchema).max(2) }),
 ]);
-const stageDefinition = z.object({ id: z.string(), index: z.number().int().positive(), chapter: z.number().int().positive(),
-  isBoss: z.boolean(), timeoutSec: z.number().positive(), firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() });
+const stageCommon = { id: z.string(), index: z.number().int().positive(), chapter: z.number().int().positive(),
+  firstClearTickets: z.number().int().nonnegative(), waves: z.array(wave).nonempty() };
+// Normal stages omit timeoutSec and end only on a wipe or a clear. Bosses require a positive timeoutSec.
+const stageDefinition = z.discriminatedUnion('isBoss', [
+  z.strictObject({ ...stageCommon, isBoss: z.literal(false) }),
+  z.strictObject({ ...stageCommon, isBoss: z.literal(true), timeoutSec: z.number().positive() }),
+]);
 // Replace design-config.json with the designer's next delivery; config.json wins over prose.
 // Only underspecified implementation/presentation constants are added here.
 export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0),
@@ -70,8 +105,55 @@ export function setSalvageRules(rules: SalvageRules | 'design' | 'default'): Sal
   return { ...CONFIG.gear.salvage };
 }
 export function activeSalvageRules(): SalvageRules { return { ...CONFIG.gear.salvage }; }
+
+const statusPolarity = z.enum(['buff', 'debuff']);
+const statusStack = z.enum(['refresh', 'strongest', 'add']);
+const statusEffectEntry = z.object({
+  polarity: statusPolarity, stack: statusStack, maxStacks: z.number().int().positive(),
+  turns: z.number().int().positive(), magnitude: z.number().nonnegative().optional(),
+  bossScale: z.number().positive().optional(), control: z.boolean().optional(),
+  bossTurns: z.number().int().positive().optional(), grantedOnStunEnd: z.boolean().optional(),
+  cleansable: z.boolean().optional(),
+}).strict();
+const statusApplyRule = z.object({
+  status: z.string().min(1), target: z.enum(['abilityTarget', 'self', 'primaryHit', 'everyHit']),
+  when: z.enum(['healed']).optional(), turns: z.number().int().positive().optional(),
+  magnitude: z.number().nonnegative().optional(), display: z.string().min(1).optional(),
+  on: z.string().min(1).optional(),
+}).strict();
+export const statusEffectsSchema = z.object({
+  durationUnit: z.literal('ownTurns'),
+  caps: z.object({
+    atkUp: z.number().nonnegative(), atkDown: z.number().nonnegative(), defDown: z.number().nonnegative(),
+    dmgReduction: z.number().nonnegative(), spdUp: z.number().nonnegative(), spdDown: z.number().nonnegative(),
+  }).strict(),
+  display: z.object({
+    iconPx: z.number().int().positive(), gapPx: z.number().int().nonnegative(),
+    maxVisible: z.number().int().positive(), maxVisibleBoss: z.number().int().positive(),
+    rowOffsetAboveHpPx: z.number().int().positive(),
+    frame: z.object({
+      buff: z.string().min(1), debuff: z.string().min(1), control: z.string().min(1),
+      bossDebuff: z.string().min(1), overflow: z.string().min(1),
+    }).strict(),
+    dotNumber: z.string().min(1), hotNumber: z.string().min(1), lastTurnDigit: z.string().min(1),
+  }).strict(),
+  effects: z.record(z.string(), statusEffectEntry),
+  cleanse: z.record(z.string(), z.object({ count: z.number().int().positive(), order: z.array(z.string().min(1)).nonempty() }).strict()),
+  apply: z.object({
+    heroes: z.record(z.string(), z.array(statusApplyRule)),
+    enemies: z.record(z.string(), z.array(statusApplyRule)),
+  }).strict(),
+}).strict();
+export type StatusEffectsConfig = z.infer<typeof statusEffectsSchema>;
+const parsedStatusEffects = statusEffectsSchema.optional().parse(
+  (design as { statusEffects?: unknown }).statusEffects,
+) ?? null;
+
+const parsedEnemies = enemiesConfig.parse(design.enemies);
 export const CONFIG = {
   ...design,
+  enemies: parsedEnemies,
+  statusEffects: parsedStatusEffects,
   gear: { ...design.gear, salvage: { ...SALVAGE_DEFAULTS } },
   v14: v14Defaults(),
   combat: { ...design.combat, ...farmTempoSchema.parse(design.combat) },
@@ -98,11 +180,20 @@ export const CONFIG = {
     upgradePopupSeconds: 1.2, stageCueSeconds: 2,
     background: '#101c27', floor: '#253b43', line: '#355253', text: '#e8eee5', muted: '#8babb0', gold: '#f0cf7f',
     heroAssets: { mw2: 'medieval-warrior-pack-2', hu1: 'huntress', wiz: 'wizard-pack', mw1: 'medieval-warrior-pack', mw3: 'medieval-warrior-pack-3', mh1: 'martial-hero', hk1: 'hero-knight', mh2: 'martial-hero-2', hu2: 'huntress-2', ew1: 'evil-wizard', priest: 'priest', hk2: 'hero-knight-2', mk1: 'medieval-king-pack', fw: 'fantasy-warrior', ew2: 'evil-wizard-2', mk2: 'medieval-king-pack-2', mh3: 'martial-hero-3', ew3: 'evil-wizard-3' } satisfies Record<string, string>,
-    enemyAssets: { grunt: 'goblin', archer: 'skeleton', brute: 'mushroom', boss_ch1: 'fire-worm', boss_ch2: 'mimic' },
+    enemyAssets: {
+      grunt: 'goblin', archer: 'skeleton', brute: 'mushroom',
+      boss_ch1: parsedEnemies.boss_ch1.heroSprite, boss_ch2: parsedEnemies.boss_ch2.heroSprite,
+    },
     roleColors: { tank: '#74baf4', warrior: '#e9b678', ranger: '#9cdea5', mage: '#c3a0f0', support: '#83dccc' },
-    enemyColors: { grunt: '#e39a79', archer: '#e6b76e', brute: '#c97a91', boss_ch1: '#e0806c', boss_ch2: '#d383d4' },
+    enemyColors: { grunt: '#e39a79', archer: '#e6b76e', brute: '#c97a91', boss_ch1: parsedEnemies.boss_ch1.tint, boss_ch2: parsedEnemies.boss_ch2.tint },
   },
 };
+export function bossConfig(kind: 'boss_ch1' | 'boss_ch2'): BossEnemyConfig {
+  return CONFIG.enemies[kind];
+}
+export function isBossEnemyId(id: string): id is 'boss_ch1' | 'boss_ch2' {
+  return id === 'boss_ch1' || id === 'boss_ch2';
+}
 /** UI tokens (M3 adds rarity, badges, gacha, offlineRewards); typed from the JSON, no UI consumes the M3 blocks yet. */
 export type UiTokens = typeof uiTokens;
 export type RarityTokens = UiTokens['rarity'];
@@ -145,8 +236,20 @@ export function stageConfig(stage: number) {
   if (!value) throw new Error(`Unknown stage: ${stage}`);
   return value;
 }
+/** Boss countdown length. Normal stages have no timer. */
+export function stageTimeoutSec(stage: number): number | null {
+  const value = stageConfig(stage);
+  return value.isBoss ? value.timeoutSec : null;
+}
 export function heroConfig(id: string) {
   const value = CONFIG.heroes.find(hero => hero.id === id);
   if (!value) throw new Error(`Unknown hero: ${id}`);
   return value;
+}
+/** Absent `statusEffects` keeps the legacy seconds-based partyEffects path. */
+export function statusEffectsEnabled(): boolean {
+  return CONFIG.statusEffects !== null;
+}
+export function statusEffectsConfig(): StatusEffectsConfig | null {
+  return CONFIG.statusEffects;
 }

@@ -8,7 +8,7 @@ import type { HeroGearComparison } from './management/authority';
 import type { CompactPrefs } from './platform/desktop/compact-geometry';
 import type { Action } from './core/model';
 import { NativeRpc } from './management/native-rpc';
-import { CONFIG } from './config';
+import { presentationReducedMotionPreference, setPresentationReducedMotionPreference } from './pixel-ui';
 
 type AudioValue = Awaited<ReturnType<ManagementClient['getAudio']>>;
 interface ReplyEnvelope { requestId: string; accepted: boolean; snapshot?: unknown; result?: unknown; reason?: string }
@@ -49,6 +49,8 @@ class NativeManagementClient implements ManagementClient {
   cue(key: string): void { void this.request('cue', { cue: key }).catch(() => undefined); }
   async getCompactPrefs(): Promise<CompactPrefs> { const result = await this.request('compact-get'); return result.result as CompactPrefs; }
   async setCompactPrefs(value: CompactPrefs): Promise<void> { await this.request('compact-set', { prefs: value }); }
+  async getReducedMotion(): Promise<boolean> { return presentationReducedMotionPreference(); }
+  async setReducedMotion(value: boolean): Promise<void> { setPresentationReducedMotionPreference(value); }
   close(): void {
     this.rpc.close();
     void invoke('hide_management').catch(() => undefined);
@@ -58,17 +60,35 @@ class NativeManagementClient implements ManagementClient {
 
 const root = document.getElementById('management-app');
 if (!root) throw new Error('Management root is missing');
+document.body.dataset.reducedMotion = String(presentationReducedMotionPreference());
+window.addEventListener('storage', event => {
+  if (event.key !== 'taskbar-legends:reduced-motion:v1') return;
+  const enabled = event.newValue === 'true'; document.body.dataset.reducedMotion = String(enabled);
+  for (const toast of document.querySelectorAll<HTMLElement>('.px-legendary-toast')) toast.dataset.reducedMotion = String(enabled || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches));
+});
 const client = new NativeManagementClient();
 const view = new ManagementView(root, client, () => { root.hidden = true; }, { variant: 'native' });
-// Native resize (Game Lead answer 3): the 760×560 panel scales by whole integers and letterboxes; below 760×560 it scrolls.
-const [panelWidth = 760, panelHeight = 560] = CONFIG.ui.compactMenu.native.client;
-const fit = (): void => { root.style.setProperty('--px-scale', String(Math.max(1, Math.floor(Math.min(window.innerWidth / panelWidth, window.innerHeight / panelHeight))))); };
+// UI v2 uses only the two approved presets and whole-number zoom.
+const fit = (): void => {
+  const wide = window.innerWidth >= 1280 && window.innerHeight >= 720, width = wide ? 1280 : 960, height = wide ? 720 : Math.min(640, Math.max(600, window.innerHeight));
+  const scale = window.innerWidth >= width * 2 && window.innerHeight >= height * 2 ? 2 : 1;
+  root.style.setProperty('--px-v2-scale', String(scale));
+  root.style.setProperty('--px-v2-height', `${height}px`);
+  root.dataset.preset = wide ? '1280' : '960';
+  view.setLayoutPreset(root.dataset.preset);
+  root.style.left = `${Math.floor((window.innerWidth - width * scale) / 2)}px`;
+  root.style.top = `${Math.floor((window.innerHeight - height * scale) / 2)}px`;
+};
 window.addEventListener('resize', fit); fit();
 let stopOpen: (() => void) | undefined, stopClose: (() => void) | undefined;
+let stopLegendary: (() => void) | undefined;
 const onVisibility = (): void => { if (document.hidden) view.close(); else void view.open(); };
 document.addEventListener('visibilitychange', onVisibility);
 void Promise.all([
   listen('management://open', () => { void view.open(); }),
   listen('management://native-close', () => view.close()),
-]).then(([open, close]) => { stopOpen = open; stopClose = close; });
-window.addEventListener('pagehide', () => { document.removeEventListener('visibilitychange', onVisibility); stopOpen?.(); stopClose?.(); view.dispose(); client.dispose(); }, { once: true });
+  listen<{ seq: number; message: string; slot?: 'weapon' | 'armor' | 'charm' }>('management://legendary-drop', event => {
+    const value = event.payload; if (Number.isSafeInteger(value?.seq) && typeof value.message === 'string') view.presentLegendaryDrop(value.seq, value.message, value.slot);
+  }),
+]).then(([open, close, legendary]) => { stopOpen = open; stopClose = close; stopLegendary = legendary; });
+window.addEventListener('pagehide', () => { document.removeEventListener('visibilitychange', onVisibility); stopOpen?.(); stopClose?.(); stopLegendary?.(); view.dispose(); client.dispose(); }, { once: true });

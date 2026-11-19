@@ -56,8 +56,9 @@ describe('status catalog', () => {
     expect(STATUS_CATALOG.spdUp).toMatchObject({ polarity: 'buff', stack: 'strongest', maxStacks: 1 });
     expect(STATUS_CATALOG.spdDown).toMatchObject({ polarity: 'debuff', stack: 'strongest', maxStacks: 1 });
     expect(STATUS_CATALOG.shield).toMatchObject({ polarity: 'buff', stack: 'strongest', maxStacks: 1 });
-    expect(STATUS_CATALOG.hot).toMatchObject({ polarity: 'buff', stack: 'add', maxStacks: 5 });
-    expect(STATUS_CATALOG.dot).toMatchObject({ polarity: 'debuff', stack: 'add', maxStacks: 5 });
+    expect(STATUS_CATALOG.hot).toMatchObject({ polarity: 'buff', stack: 'refresh', maxStacks: 1 });
+    expect(STATUS_CATALOG.dot).toMatchObject({ polarity: 'debuff', stack: 'add', maxStacks: 3 });
+    expect(STATUS_CATALOG.steadfast).toMatchObject({ polarity: 'buff', stack: 'refresh', maxStacks: 1, cleansable: false });
     expect(STATUS_CATALOG.stun).toMatchObject({
       polarity: 'debuff', stack: 'refresh', maxStacks: 1, preventsAction: true, freezesCooldown: true, breaksOnHit: false,
     });
@@ -115,7 +116,7 @@ describe('status stacking and caps', () => {
     dots = applyStatus(dots, { id: 'dot', sourceId: 'a', targetId: 't', turns: 3, magnitude: 0.05 });
     expect(dots[0]).toMatchObject({ id: 'dot', stacks: 3, turnsLeft: 3, magnitude: 0.05 });
     for (let i = 0; i < 5; i += 1) dots = applyStatus(dots, { id: 'dot', sourceId: 'a', targetId: 't', turns: 1, magnitude: 0.05 });
-    expect(dots[0]?.stacks).toBe(5);
+    expect(dots[0]?.stacks).toBe(3);
   });
 });
 
@@ -169,10 +170,11 @@ describe('onTurnStart hot/dot and duration ticks', () => {
       ],
     });
     const result = onTurnStart(u);
-    // hot 0.1*2*1000 = 200, dot 0.05*1*1000 = 50 → hp 650
+    // hot 0.1*2*1000 = 200, dot 0.05*1*1000 = 50 → hp 650; stun expiry grants Steadfast
     expect(result.unit.hp).toBe(650);
     expect(result.unit.statuses.map(s => ({ id: s.id, turnsLeft: s.turnsLeft }))).toEqual([
       { id: 'dot', turnsLeft: 1 },
+      { id: 'steadfast', turnsLeft: 2 },
     ]);
   });
 

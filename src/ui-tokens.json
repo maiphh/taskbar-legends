@@ -1772,9 +1772,9 @@
       "statsGapBelowHpBarPx": 8,
       "footerButtonsH": 36,
       "clearanceAboveFooterPx": 8,
-      "hpAtkDef": "HP {hp} \u00b7 ATK {atk} \u00b7 DEF {def}",
-      "dpsCycle": "DPS {basic} \u00b7 Cycle {ticks}",
-      "doNotRender": "basic {n} DPS \u00b7 realized cycle {t} ticks",
+      "hpAtkDef": "HP {hp} · ATK {atk} · DEF {def}",
+      "dpsCycle": "DPS {basic} · Cycle {ticks}",
+      "doNotRender": "basic {n} DPS · realized cycle {t} ticks",
       "browserStatLines": [
         "hpAtkDef",
         "dpsCycle"
@@ -1786,7 +1786,7 @@
         "Passive"
       ],
       "roleLine": "{ROLE}",
-      "levelLine": "Lv {n} \u00b7 {xp} XP",
+      "levelLine": "Lv {n} · {xp} XP",
       "sideColumnMaxBrowser": 100,
       "maxTextWidthBrowser": 192,
       "maxTextWidthNative": 256
@@ -1926,10 +1926,51 @@
     },
     "shortName": {
       "okOnCards": true,
-      "rule": "heroName with leading 'Medieval ' stripped and 'Martial Hero' \u2192 'Martial'; ellipsis if still wider than maxPx",
+      "rule": "heroName with leading 'Medieval ' stripped and 'Martial Hero' → 'Martial'; ellipsis if still wider than maxPx",
       "rosterMaxPx": 80,
       "compactTenPullMaxPx": 96,
       "fullNameOn": "gacha.tenPull 128x120 cards (max 124 px) and stash compare dropdowns"
+    }
+  },
+  "managementV2": {
+    "preset1280": [
+      1280,
+      720
+    ],
+    "preset960": [
+      960,
+      640
+    ],
+    "min": [
+      960,
+      600
+    ],
+    "topbarHeight": 56,
+    "navRailWidth": 80,
+    "navBottomHeight": 64,
+    "gutter": 16,
+    "safe": 16,
+    "hit": {
+      "primary": 48,
+      "default": 40,
+      "min": 32
+    },
+    "roster": {
+      "columns1280": 6,
+      "columns960": 5,
+      "artWell": [
+        128,
+        128
+      ]
+    },
+    "gearCell": [
+      48,
+      48
+    ],
+    "stageGrid": {
+      "columns": 5,
+      "rows": 2,
+      "nodesPerChapter": 10
     }
   }
 }

@@ -1,0 +1,13 @@
+Free Pixel Effects, by cs5475 (https://cs5475.itch.io)
+
+CC0 1.0 Universal (Public Domain Dedication)
+
+To the extent possible under law, the author has waived all copyright
+and related or neighboring rights to the images and JSON files in this
+pack. You can copy, modify, distribute and use them, including for
+commercial purposes, all without asking permission or giving credit.
+
+Full legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+The CC0 dedication covers the files in this pack only, not the Puff
+tool used to make them.
