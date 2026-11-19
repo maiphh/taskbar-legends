@@ -113,4 +113,4 @@ The exact 1920px layout is implemented and compared to the supplied mockups. A c
 - Durations count the carrier's own completed turns. Stun consumes at turn start and grants Steadfast (2 turns; bosses 3). Bleed ×0.5 on bosses. Priest cleanse removes one debuff (Stun > Bleed > Slow > Armor Break > ATK Down).
 - Open questions resolved for v1: Crushed applies from the rebuilt hero-style boss cleave (`boss-ch1-cleave` / `boss-ch2-cleave`), not the retired slam; keep 2-turn durations; shields stay seconds; bomber Slow stays −20%/1 turn; T2 band is not required from effects alone.
 - Icons: 9×9 row above the unit HP bar (4 max on bosses, else 3 + overflow chip). Farm-proof revision bumped; offline still does not model statuses.
-- `balance` union accepts `'1.4.4'`. Config SHA-256 `fd58e0e31148a0eec76579f616d1fc43fdc3ee900155fbf5d156e9a49eb475a2`.
+- `balance` union accepts `'1.4.4'`. Config SHA-256 `0db90e1aefd88c9996dd20738d81b39b63ee43a0b46c34cae6963a9eabc31204` (includes `progression.openTicketMilestones`).

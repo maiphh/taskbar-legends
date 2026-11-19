@@ -199,6 +199,56 @@ describe('progression, retry and boss gates', () => {
     for (let i = 0; i < ticksForSeconds(60) && state.stats.bossFailures === 0; i += 1) step(state);
     expect(state.stats.bossFailures).toBe(1); expect(state.tick).toBeLessThan(ticksForSeconds(60));
   });
+  it('crossing open hour 6 grants 8 tickets once; a second tick does not', () => {
+    const milestones = CONFIG.progression.openTicketMilestones;
+    expect(milestones).toEqual([
+      { openHour: 6, tickets: 8 },
+      { openHour: 24, tickets: 8 },
+      { openHour: 36, tickets: 8 },
+    ]);
+    const state = fixtureState();
+    step(state);
+    expect(state.ticketsAwardedThroughHour).toBeDefined();
+    expect(state.ticketsAwardedThroughHour!).toBeLessThan(6);
+    const before = state.tickets;
+    const hour6 = ticksForSeconds(6 * 3600);
+    state.tick = hour6 - 1;
+    state.phase = { kind: 'rest', next: 'encounter', remainingTicks: ticksForSeconds(10) };
+    step(state);
+    expect(state.tick).toBe(hour6);
+    expect(state.tickets).toBe(before + 8);
+    expect(state.ticketsAwardedThroughHour).toBe(6);
+    const ticketEvents = state.events.filter(event => event.data.type === 'tickets' && event.data.amount === 8);
+    expect(ticketEvents).toHaveLength(1);
+    expect(ticketEvents[0]?.tick).toBe(hour6);
+    step(state);
+    expect(state.tickets).toBe(before + 8);
+    expect(state.events.filter(event => event.data.type === 'tickets' && event.data.amount === 8)).toHaveLength(1);
+  });
+  it('a save from open hour 7 does not grant the hour-6 milestone', () => {
+    const state = fixtureState();
+    const hour7 = ticksForSeconds(7 * 3600);
+    state.tick = hour7;
+    state.phase = { kind: 'rest', next: 'encounter', remainingTicks: ticksForSeconds(10) };
+    expect(state.ticketsAwardedThroughHour).toBeUndefined();
+    const before = state.tickets;
+    const restored = load(snapshot(state));
+    expect(restored.ticketsAwardedThroughHour).toBeUndefined();
+    step(restored);
+    expect(restored.tickets).toBe(before);
+    expect(restored.ticketsAwardedThroughHour).toBeCloseTo(
+      restored.tick / (CONFIG.sim.ticksPerSecond * 3600), 10);
+    expect(restored.ticketsAwardedThroughHour!).toBeGreaterThanOrEqual(7);
+    expect(restored.ticketsAwardedThroughHour!).toBeLessThan(8);
+    expect(restored.events.some(event => event.data.type === 'tickets')).toBe(false);
+    // Later milestones still grant once open play reaches them.
+    const before24 = restored.tickets;
+    restored.tick = ticksForSeconds(24 * 3600) - 1;
+    restored.phase = { kind: 'rest', next: 'encounter', remainingTicks: ticksForSeconds(10) };
+    step(restored);
+    expect(restored.tickets).toBe(before24 + 8);
+    expect(restored.ticketsAwardedThroughHour).toBe(24);
+  });
 });
 
 describe('economy and policy', () => {

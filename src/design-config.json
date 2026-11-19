@@ -1195,7 +1195,12 @@
       "BOSS_READY": "Boss {stage} ready, click to fight",
       "BOSS_FIGHT": "Boss {stage}!"
     },
-    "powerGainRetryMinSec": 30
+    "powerGainRetryMinSec": 30,
+    "openTicketMilestones": [
+      { "openHour": 6, "tickets": 8 },
+      { "openHour": 24, "tickets": 8 },
+      { "openHour": 36, "tickets": 8 }
+    ]
   },
   "referencePlayer": {
     "openHoursPerDay": 6,

@@ -186,8 +186,28 @@ function encounterSubstep(state: GameState): void {
     if (!hasPendingHostileImpact(state) && !hasPendingActionPresentation(state)) win(state);
   }
 }
+/** Grant once-per-openHour ticket milestones. Missing `ticketsAwardedThroughHour` migrates to current open hours without retroactive grants. */
+function grantOpenTicketMilestones(state: GameState): void {
+  const milestones = CONFIG.progression.openTicketMilestones;
+  if (!milestones.length) return;
+  const openHours = state.tick / (CONFIG.sim.ticksPerSecond * 3600);
+  if (state.ticketsAwardedThroughHour === undefined) {
+    state.ticketsAwardedThroughHour = openHours;
+    return;
+  }
+  let through = state.ticketsAwardedThroughHour;
+  for (const milestone of milestones) {
+    if (milestone.openHour <= through || openHours < milestone.openHour) continue;
+    state.tickets += milestone.tickets;
+    state.economyRevision += 1;
+    emit(state, { type: 'tickets', amount: milestone.tickets, total: state.tickets });
+    through = milestone.openHour;
+  }
+  state.ticketsAwardedThroughHour = through;
+}
 function tick(state: GameState): void {
   state.tick += 1;
+  grantOpenTicketMilestones(state);
   const progress = state.progress;
   if (progress.kind === 'FARMING' && state.tick >= progress.retryAtTick) retry(state, false);
   powerRetry(state);

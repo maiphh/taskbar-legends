@@ -177,6 +177,8 @@ export const stateSchema = z.object({
   gearLegendaryFound: z.boolean().optional(),
   // v1.4 CR-14-05, optional: the owed fraction of an offline ticket carried to the next absence (0 ≤ x < 1).
   offlineTicketFrac: finite.nonnegative().lt(1).optional(),
+  // Open-hour ticket milestones: highest openHour already granted. Missing on old saves → migrate without retroactive grants.
+  ticketsAwardedThroughHour: finite.nonnegative().optional(),
   // Earned offline-rate evidence is absent on older saves and is never inferred from historical metrics.
   encounterFarmContext: encounterFarmContextSchema.optional(),
   farmProofs: z.array(farmProofSchema).max(CONFIG.stages.length).optional(),
