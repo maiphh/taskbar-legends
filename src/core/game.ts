@@ -9,6 +9,69 @@ import { normalizeSeed, random } from './rng';
 import { stageClearReward } from './rewards';
 import { recordSettledFarmClear } from './farm-proof';
 
+/** Wall-tick budget for advancing the scale-1 native twin (same cap as a visible frame). */
+function nativeReplayBudget(): number {
+  return Math.max(1, Math.floor(CONFIG.runtime.maxFrameDeltaSeconds * CONFIG.sim.ticksPerSecond));
+}
+
+function asNativeReplay(state: GameState): GameState | undefined {
+  const replay = state.nativeReplay;
+  return replay && typeof replay === 'object' ? replay as GameState : undefined;
+}
+
+function nativeReplayFinished(replay: GameState): boolean {
+  return replay.phase.kind === 'farmPad' || !replay.farmClock;
+}
+
+/** Snapshot the live board as a scale-1 full-clip twin for offline native payout length. */
+export function captureNativeReplay(state: GameState): void {
+  if (!state.farmClock || state.farmClock.scale <= 1) {
+    delete state.nativeReplay;
+    return;
+  }
+  const replay = cloneState(state);
+  delete replay.nativeReplay;
+  if (replay.farmClock) {
+    replay.farmClock.scale = 1;
+    replay.farmClock.remainder = 0;
+  }
+  replay.events = [];
+  state.nativeReplay = replay;
+}
+
+function ensureNativeReplay(state: GameState): void {
+  if (state.nativeReplay || !state.farmClock || state.farmClock.scale <= 1) return;
+  // Capture only at the opening of a scaled encounter, before the first substep mutates the board.
+  if (state.farmClock.elapsedTicks !== 0) return;
+  if (state.phase.kind !== 'battle' && !(state.phase.kind === 'rest' && state.phase.next === 'wave')) return;
+  captureNativeReplay(state);
+}
+
+function advanceNativeReplay(state: GameState, maxTicks: number): void {
+  const replay = asNativeReplay(state);
+  if (!replay || nativeReplayFinished(replay) || maxTicks <= 0) return;
+  for (let i = 0; i < maxTicks && !nativeReplayFinished(replay); i += 1) tick(replay);
+}
+
+/** Finish the scale-1 twin if needed and return nativeDurationTicks (combat + stage gap). */
+function resolveNativeDurationTicks(state: GameState): number {
+  const clock = state.farmClock!;
+  const gapTicks = ticksForSeconds(CONFIG.sim.stageGapSec);
+  if (clock.scale <= 1) {
+    delete state.nativeReplay;
+    return clock.elapsedTicks + gapTicks;
+  }
+  advanceNativeReplay(state, CONFIG.runtime.maxStepTicks);
+  const replay = asNativeReplay(state);
+  if (replay?.phase.kind === 'farmPad') {
+    const ticks = replay.phase.nativeDurationTicks;
+    delete state.nativeReplay;
+    return ticks;
+  }
+  delete state.nativeReplay;
+  return clock.elapsedTicks + gapTicks;
+}
+
 export function stageName(stage: number): string { return stageConfig(stage).id; }
 export function isBoss(stage: number): boolean { return stageConfig(stage).isBoss; }
 export function createState(seed = 1, options: { starterGear?: boolean } = {}): GameState {
@@ -79,6 +142,7 @@ function lose(state: GameState): void {
       retryAtTick: state.tick + ticksForSeconds(backoff), failTick: state.tick, failedPower: state.attemptPower, failures: state.retryFailures };
   }
   delete state.farmClock;
+  delete state.nativeReplay;
   delete state.encounterFarmContext;
   rest(state, 'encounter');
 }
@@ -128,8 +192,21 @@ function win(state: GameState): void {
   const clock = state.farmClock;
   if (clock) {
     const gapTicks = ticksForSeconds(CONFIG.sim.stageGapSec);
+    // Prefer a finished scale-1 twin; otherwise keep dripping across the pad and finalize before awardClear.
+    advanceNativeReplay(state, nativeReplayBudget());
+    const replay = asNativeReplay(state);
+    let nativeDurationTicks: number;
+    if (clock.scale > 1 && replay && nativeReplayFinished(replay) && replay.phase.kind === 'farmPad') {
+      nativeDurationTicks = replay.phase.nativeDurationTicks;
+      delete state.nativeReplay;
+    } else if (clock.scale > 1 && replay && !nativeReplayFinished(replay)) {
+      nativeDurationTicks = clock.elapsedTicks + gapTicks;
+    } else {
+      nativeDurationTicks = clock.elapsedTicks + gapTicks;
+      delete state.nativeReplay;
+    }
     state.phase = { kind: 'farmPad', settleAtTick: Math.max(state.tick + gapTicks, state.stageStartedTick + clock.minCycleTicks),
-      nativeDurationTicks: clock.elapsedTicks + gapTicks, presentationStartedAtTick: state.tick };
+      nativeDurationTicks, presentationStartedAtTick: state.tick };
     return;
   }
   awardClear(state, (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond + CONFIG.sim.stageGapSec);
@@ -192,7 +269,14 @@ function tick(state: GameState): void {
   if (progress.kind === 'FARMING' && state.tick >= progress.retryAtTick) retry(state, false);
   powerRetry(state);
   if (state.phase.kind === 'farmPad') {
+    // Budgeted drip of the scale-1 twin across the pad; finish before payout if the pad ends first.
+    advanceNativeReplay(state, nativeReplayBudget());
     if (state.tick >= state.phase.settleAtTick) {
+      if (state.farmClock && state.farmClock.scale > 1 && state.nativeReplay) {
+        state.phase.nativeDurationTicks = resolveNativeDurationTicks(state);
+      } else {
+        delete state.nativeReplay;
+      }
       const nativeSeconds = state.phase.nativeDurationTicks / CONFIG.sim.ticksPerSecond;
       awardClear(state, (state.tick - state.stageStartedTick) / CONFIG.sim.ticksPerSecond, nativeSeconds);
       powerRetry(state);
@@ -206,14 +290,17 @@ function tick(state: GameState): void {
     if (state.phase.remainingTicks <= 0) beginEncounter(state);
     return;
   }
-  const farmScale = state.farmClock?.scale ?? 1;
-  const readableBeat = state.phase.kind === 'battle' || (state.phase.kind === 'rest' && state.phase.next === 'wave');
-  const scale = readableBeat ? 1 : farmScale;
+  // Farm repeats consume farmClock.scale during battle and between-wave rests (idea 2).
+  // Pushes and boss fights have no clock; boss-repeat pads stay at scale 1. Boss timers stay on wall ticks.
+  ensureNativeReplay(state);
+  const scale = state.farmClock?.scale ?? 1;
   for (let substep = 0; substep < scale; substep += 1) {
     if (state.farmClock) { state.farmClock.remainder = scale - substep - 1; state.farmClock.elapsedTicks += 1; }
     encounterSubstep(state);
     if (state.phase.kind !== 'battle' && !(state.phase.kind === 'rest' && state.phase.next === 'wave')) break;
   }
+  // Drip-advance the scale-1 twin so most of the native length is ready before win/pad.
+  advanceNativeReplay(state, nativeReplayBudget());
   powerRetry(state);
 }
 // Mutates only the provided JSON state; never reads a clock, DOM, asset or global RNG.

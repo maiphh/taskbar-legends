@@ -141,9 +141,10 @@ describe('Â§19.6 overflow protection', () => {
     expect(JSON.parse(snapshot(from141)).inventory.every((item: { locked?: unknown }) => !('locked' in item))).toBe(true);
   });
 
+  // Idea 2 densifies full open days; a 1 h open window still farms and is enough to prove replay equality.
   it('7. rules-off current simulations and offline rewards repeat for the same seed', { timeout: 60_000 }, () => {
     setV14Rules([]); setSalvageRules('default');
-    const a = runReference(3, 1), b = runReference(3, 1);
+    const a = runReference(3, 1, 3600), b = runReference(3, 1, 3600);
     applyOffline(a.state, 9 * 3600 * 1000); applyOffline(b.state, 9 * 3600 * 1000);
     expect(snapshot(a.state)).toBe(snapshot(b.state));
     expect(a.state.combatRules).toBe('party-v2');

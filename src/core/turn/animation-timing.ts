@@ -56,7 +56,25 @@ export function clipFor(sourceId: string, delivery: ActionDelivery): { animation
   return { animation, frames, frameMs: clip.frameMs, ticks, impactOffsetTicks: Math.ceil(impactFrame * PRESENTATION_FRAME_MS / ANIMATION_TICK_MS) };
 }
 
-export function createActionTimeline(sourceId: string, delivery: ActionDelivery, startTick: number): ActionTimeline {
+export function createActionTimeline(
+  sourceId: string,
+  delivery: ActionDelivery,
+  startTick: number,
+  options?: { farmFast?: boolean },
+): ActionTimeline {
+  // Farm clock scale > 1: impact next tick, ready two ticks later; leap return fits in that window.
+  // Pushes, boss fights, and scale-1 boss repeats keep the full atlas clip.
+  if (options?.farmFast) {
+    const impactTick = startTick + 1, readyTick = startTick + 2;
+    return {
+      startTick,
+      contactTick: startTick,
+      impactTick,
+      attackEndTick: impactTick,
+      returnEndTick: delivery === 'leap' ? readyTick : impactTick,
+      readyTick,
+    };
+  }
   const clip = clipFor(sourceId, delivery), contactTick = startTick + (delivery === 'leap' ? APPROACH_TICKS : 0);
   const attackEndTick = contactTick + clip.ticks;
   const returnEndTick = attackEndTick + (delivery === 'leap' ? RETURN_TICKS : 0);

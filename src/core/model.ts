@@ -149,6 +149,9 @@ export const stateSchema = z.object({
     z.object({ kind: z.literal('rest'), remainingTicks: natural, next: z.enum(['encounter', 'wave']) }).strict(),
   ]),
   farmClock: z.object({ scale: positive.max(4), minCycleTicks: natural, elapsedTicks: natural, remainder: natural.max(3) }).strict().refine(clock => clock.remainder < clock.scale, 'Invalid unused substep budget').optional(),
+  // Scale-1 full-clip twin of a scaled farm encounter; advanced across the fight/pad for native offline payout length.
+  // Nested state is opaque to avoid a circular zod schema; captureNativeReplay always writes a structuredClone.
+  nativeReplay: z.unknown().optional(),
   wave: positive.max(CONFIG.runtime.maxCampaignWaves), encounter: positive, stageStartedTick: natural, attemptPower: natural,
   roster: z.array(ownedHeroSchema).max(CONFIG.heroes.length), partyIds: z.array(z.string()).length(CONFIG.sim.partySize),
   inventory: z.array(gearSchema).max(CONFIG.gear.inventoryCap), nextGearId: positive,
@@ -219,6 +222,7 @@ export const stateSchema = z.object({
   if (progress.kind === 'COMPLETE' && state.highestCleared !== CONFIG.stages.length) invalid('Campaign incomplete');
   if (progress.kind === 'FARMING' && progress.failTick !== undefined && progress.failTick > state.tick) invalid('Failure tick cannot be in the future');
   if (state.phase.kind === 'farmPad' && !state.farmClock) invalid('Padding needs a native encounter clock');
+  if (state.nativeReplay !== undefined && !(state.farmClock && state.farmClock.scale > 1)) invalid('Native replay requires a scaled farm clock');
   if (state.encounterFarmContext && (state.encounterFarmContext.encounter !== state.encounter
     || state.encounterFarmContext.startedTick > state.tick)) invalid('Pending farm context does not match the current encounter');
   const proofStages = (state.farmProofs ?? []).map(proof => proof.stage);

@@ -30,9 +30,10 @@ describe('v14 config block', () => {
 });
 
 describe('CR-14-08 chest pick-1-of-2', () => {
+  // Idea 2 densifies full open days; a 1 h open window still farms and is enough to prove replay equality.
   it('options = 1 keeps same-seed current rules-off accounts deterministic', { timeout: 60_000 }, () => {
     setV14Rules([]);
-    const a = runReference(3, 1), b = runReference(3, 1);
+    const a = runReference(3, 1, 3600), b = runReference(3, 1, 3600);
     applyOffline(a.state, 9 * 3600 * 1000); applyOffline(b.state, 9 * 3600 * 1000);
     expect(snapshot(a.state)).toBe(snapshot(b.state));
     expect(a.state.combatRules).toBe('party-v2');

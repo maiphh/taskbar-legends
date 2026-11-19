@@ -205,7 +205,15 @@ export class PixelUI {
     const campaign = campaignPresentation(state.progress, _paused);
     const color = campaign.tone === 'boss' ? palette.red : campaign.tone === 'complete' ? palette.green : palette.gold;
     // Sit above the bottom-lane health bars; the battlefield is empty at this height.
-    this.text(ctx, campaign.lane, 8, Math.max(0, coreY - 40), color, BODY, true, Math.max(0, width - 16), { exactY: true });
+    const laneY = Math.max(0, coreY - 40);
+    this.text(ctx, campaign.lane, 8, laneY, color, BODY, true, Math.max(0, width - 16), { exactY: true });
+    // Idea 2: small ×N token while a scaled farm clock is driving the fight.
+    const farmScale = state.farmClock?.scale ?? 1;
+    if (farmScale > 1) {
+      const token = `×${farmScale}`;
+      const laneWidth = this.measureText(campaign.lane, BODY, true);
+      this.text(ctx, token, 8 + laneWidth + 6, laneY, palette.gold, BODY, true, undefined, { exactY: true });
+    }
     if (this.compactEditing) {
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameInk; ctx.fillRect(0, coreY, width, 1); ctx.fillRect(0, coreY + 79, width, 1); ctx.fillRect(0, coreY, 1, 80); ctx.fillRect(width - 1, coreY, 1, 80);
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameColor; ctx.fillRect(1, coreY + 1, width - 2, 1); ctx.fillRect(1, coreY + 78, width - 2, 1); ctx.fillRect(1, coreY + 1, 1, 78); ctx.fillRect(width - 2, coreY + 1, 1, 78);

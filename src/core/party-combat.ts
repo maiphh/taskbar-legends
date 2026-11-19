@@ -2,6 +2,7 @@ import { CONFIG, ticksForSeconds } from '../config';
 import { grantXp } from './economy';
 import { combatTime } from './clock';
 import { emit, goldChange } from './events';
+import { farmDamageRampMultiplier } from './farm-damage-ramp';
 import { applyPartyEffect, effectiveAttack, effectiveDamageReduction, effectiveDefense, effectActive, prunePartyEffects } from './party-effects';
 import { getPartyHeroDefinition } from './party-definitions';
 import { getPartyEnemyDefinition } from './party-enemies';
@@ -300,7 +301,7 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
     busy.add(source.id);
     if (action.state === 'areaMark') {
       if (action.impactTick > now) continue;
-      const timeline = createActionTimeline(source.sourceId, 'cast', now);
+      const timeline = createActionTimeline(source.sourceId, 'cast', now, { farmFast: farmFastTimeline(state) });
       const target = state.party.find(unit => unit.id === action.targetId);
       source.action = { state: 'recovery', kind: 'attack', targetId: action.targetId, targetSide: 'hero', targetSlot: target?.slot ?? 0,
         targetCount: state.enemies.length, ...timeline, abilityId: action.abilityId, delivery: 'cast' };
@@ -332,7 +333,7 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       }
       source.facing = aimDirection(source, target);
       source.targetId = target.id;
-      const timeline = createActionTimeline(source.sourceId, 'leap', now);
+      const timeline = createActionTimeline(source.sourceId, 'leap', now, { farmFast: farmFastTimeline(state) });
       source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, ...timeline, delivery: 'leap' };
       emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick: timeline.impactTick }, now);
       continue;
@@ -356,7 +357,7 @@ function advanceEnemySpecials(state: GameState, now: number): { busy: Set<string
       source.moving = false;
       source.facing = aimDirection(source, target);
       source.targetId = target.id;
-      const timeline = createActionTimeline(source.sourceId, 'leap', now);
+      const timeline = createActionTimeline(source.sourceId, 'leap', now, { farmFast: farmFastTimeline(state) });
       source.action = { state: 'windup', kind: 'attack', targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount: state.enemies.length, ...timeline, delivery: 'leap' };
       emit(state, { type: 'actionStart', unitId: source.id, targetId: target.id, kind: 'attack', startTick: now, impactTick: timeline.impactTick }, now);
     }
@@ -446,7 +447,12 @@ function commitAbility(state: GameState, impact: Impact, now: number): boolean {
 }
 function damageAmount(state: GameState, source: Unit, target: Unit, coefficient: number, snapAtk?: number): number {
   const atk = snapAtk ?? effectiveAttack(state, source), def = effectiveDefense(state, target), dr = effectiveDamageReduction(state, target);
-  return Math.max(1, Math.round(atk * coefficient * 100 / (100 + def) * (1 - dr)));
+  const base = Math.max(1, Math.round(atk * coefficient * 100 / (100 + def) * (1 - dr)));
+  const ramp = farmDamageRampMultiplier(state, source);
+  return ramp === 1 ? base : Math.max(1, Math.round(base * ramp));
+}
+function farmFastTimeline(state: GameState): boolean {
+  return (state.farmClock?.scale ?? 1) > 1;
 }
 interface DamageResult { intent: DamageIntent; total: number; hpDamage: number; absorbed: number }
 function applyDamageBatch(state: GameState, intents: DamageIntent[], now: number): DamageResult[] {
@@ -600,7 +606,7 @@ function beginActorTurn(state: GameState, unit: Unit, now: number): void {
   if (direction !== 0) unit.facing = direction as -1 | 1;
   unit.targetId = target.id;
   const delivery = skillDelivery(unit, choice.abilityId);
-  const timeline = createActionTimeline(unit.sourceId, delivery, now);
+  const timeline = createActionTimeline(unit.sourceId, delivery, now, { farmFast: farmFastTimeline(state) });
   const targetCount = state.enemies.length;
   unit.action = {
     state: 'windup', kind: choice.kind, targetId: target.id, targetSide: target.side, targetSlot: target.slot, targetCount, ...timeline, delivery,

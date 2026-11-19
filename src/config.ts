@@ -60,7 +60,10 @@ const stageDefinition = z.discriminatedUnion('isBoss', [
 // Only underspecified implementation/presentation constants are added here.
 export const farmTempoSchema = z.object({ nonBossFarmTimeScale: z.number().int().min(1).max(4).default(1), nonBossFarmMinCycleSec: z.number().finite().nonnegative().default(0),
   // design.md §20: pad COMPLETE boss repeats to the farm floor at native speed. Absent = no pad (the 1.4.3 behaviour).
-  bossRepeatMinCycle: z.boolean().optional() });
+  bossRepeatMinCycle: z.boolean().optional(),
+  // Idea 2: after this many farm-clock combat seconds on a scaled farm, hero damage × mult for the rest of the encounter.
+  farmDamageRampAfterSec: z.number().finite().nonnegative().optional(),
+  farmDamageRampMult: z.number().finite().positive().optional() });
 /**
  * v1.4 code requests (design.md §18). config.json → `v14` carries the designer's *target* values; the game reads them only
  * for rules switched on with setV14Rules(). With no rules on, every rule takes its §18 default.

@@ -44,13 +44,14 @@ describe('§20 boss repeat min-cycle pad', () => {
     // The next repeat gets a fresh scale-1 clock.
     expect(state.farmClock).toMatchObject({ scale: 1, elapsedTicks: 0 });
   });
+  // Idea 2 densifies full open days; a 1 h open window still farms and is enough to prove replay equality.
   it('2. with the key absent the boss repeat is unpadded (fight + stageGapSec), and current rules-off replay stays deterministic', { timeout: 60_000 }, () => {
     key(false); const state = bossRepeat(); expect(state.farmClock).toBeUndefined();
     untilClear(state);
     expect(last(state.metrics.farmClearSeconds)).toBeLessThan(CONFIG.combat.nonBossFarmMinCycleSec);
     expect(state.metrics.nativeFarmClearSeconds).toBeUndefined();
     setV14Rules([]); setSalvageRules('default');
-    const runA = runReference(3, 1), runB = runReference(3, 1);
+    const runA = runReference(3, 1, 3600), runB = runReference(3, 1, 3600);
     applyOffline(runA.state, 9 * 3600 * 1000); applyOffline(runB.state, 9 * 3600 * 1000);
     expect(snapshot(runA.state)).toBe(snapshot(runB.state));
   });

@@ -18,7 +18,7 @@ export interface OfflineFarmContext {
 
 // Bump when targeting, movement, gauge, timing, statuses, or resolver semantics change outside the fingerprinted data below.
 // Offline/farm-proof does not model own-turn statuses; online clear times may shift with statusEffects on.
-const PARTY_FARM_RESOLVER_REVISION = 'party-v2-farm-proof-resolver-2';
+const PARTY_FARM_RESOLVER_REVISION = 'party-v2-farm-proof-resolver-4';
 const enemyIds = ['grunt', 'archer', 'brute', 'boss_ch1', 'boss_ch2', 'assassin', 'bomber'] as const;
 function stableHash(value: string): string {
   let hash = 0x811c9dc5;
