@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bannerFrame, popupFrame, pulseGrowPx } from '../src/motion';
+import { bannerFrame, FLOAT_NUMBER_LIFE_MS, FLOAT_NUMBER_RISE_PX, floatNumberFrame, popupFrame, pulseGrowPx } from '../src/motion';
 
 /** Timing tables from review-core-loop-feedback.md Q1–Q3 (40 ms clock). */
 describe('core-loop feedback motion', () => {
@@ -18,5 +18,22 @@ describe('core-loop feedback motion', () => {
     expect([959, 960, 1040, 1120].map(ms => Math.round((popupFrame(ms, false)?.alpha ?? 0) * 255))).toEqual([255, 192, 128, 64]);
     expect(popupFrame(1200, false)).toBeNull();
     expect(popupFrame(500, false, true)).toEqual({ rise: 0, alpha: 1 });
+  });
+});
+
+describe('floating damage / heal numbers', () => {
+  it('age 0 is fully opaque at the anchor, age 700 ms is gone', () => {
+    expect(floatNumberFrame(0)).toEqual({ rise: 0, alpha: 1 });
+    expect(floatNumberFrame(FLOAT_NUMBER_LIFE_MS / 2)).toEqual({
+      rise: Math.round(FLOAT_NUMBER_RISE_PX / 2),
+      alpha: 0.5,
+    });
+    expect(floatNumberFrame(FLOAT_NUMBER_LIFE_MS)).toBeNull();
+    expect(floatNumberFrame(FLOAT_NUMBER_LIFE_MS + 1)).toBeNull();
+  });
+  it('reduced motion shows one frame at the end position', () => {
+    expect(floatNumberFrame(0, true)).toEqual({ rise: FLOAT_NUMBER_RISE_PX, alpha: 1 });
+    expect(floatNumberFrame(1, true)).toBeNull();
+    expect(floatNumberFrame(350, true)).toBeNull();
   });
 });
