@@ -26,3 +26,21 @@ export function popupFrame(ms: number, chip: boolean, reducedMotion = false): { 
   const total = chip ? popup.panelChip.risePx : popup.risePx;
   return { rise: Math.min(total, Math.floor(steps(ms) * popup.risePx / (popup.riseMs / spec.stepMs))), alpha: stepAlpha(ms, popup.fadeStepsMs, popup.fadeAlpha) };
 }
+
+/** Floating hit/heal numbers (design.md §11 / idea 9): cream damage, green heal; lifetime/rise from runtime config. */
+export const FLOAT_NUMBER_LIFE_MS = CONFIG.runtime.damageLabelSeconds * 1000;
+export const FLOAT_NUMBER_RISE_PX = CONFIG.runtime.damageRisePx;
+export const FLOAT_NUMBER_DAMAGE = '#f2e9cf';
+/** Age 0 is opaque at the anchor; age lifeMs is gone. Reduced motion: one frame at the risen end position. */
+export function floatNumberFrame(
+  ageMs: number,
+  reducedMotion = false,
+  lifeMs = FLOAT_NUMBER_LIFE_MS,
+  risePx = FLOAT_NUMBER_RISE_PX,
+): { rise: number; alpha: number } | null {
+  if (ageMs < 0) return null;
+  if (reducedMotion) return ageMs === 0 ? { rise: risePx, alpha: 1 } : null;
+  if (ageMs >= lifeMs) return null;
+  const t = ageMs / lifeMs;
+  return { rise: Math.round(risePx * t), alpha: 1 - t };
+}

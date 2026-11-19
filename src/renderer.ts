@@ -2,8 +2,8 @@ import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, stageConfig, statusEffectsC
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
-import { BODY, loadFonts } from './font';
-import { bannerFrame, popupFrame } from './motion';
+import { BODY, SMALL, loadFonts } from './font';
+import { bannerFrame, FLOAT_NUMBER_DAMAGE, floatNumberFrame, popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { bossHpBar, stageCue, upgradePopups } from './core/selectors';
@@ -462,36 +462,74 @@ export class Renderer {
         ctx.fillStyle = '#f4d37e'; ctx.fillRect(targetX - 2, coreY + 11, 4, 2); ctx.fillRect(targetX - 1, coreY + 13, 2, 2);
       }
     }
-    const lifetime = ticksForSeconds(CONFIG.runtime.damageLabelSeconds), bucket = ticksForSeconds(CONFIG.runtime.damageCoalesceSeconds);
+    // Floating hit/heal integers (idea 9): current encounter, under label life, cap 3/unit newest-first.
     const labelClock = this.lanePresentationTime(state);
-    const statusDisplay = statusEffectsConfig()?.display;
-    const groups = new Map<string, { targetId: string; tick: number; amount: number; heal: boolean; dot: boolean }>();
+    const statusRowOffset = statusEffectsConfig()?.display.rowOffsetAboveHpPx ?? 13;
+    const floatLifeMs = CONFIG.runtime.damageLabelSeconds * 1000;
+    const floatRisePx = CONFIG.runtime.damageRisePx;
+    const floatLifeTicks = ticksForSeconds(CONFIG.runtime.damageLabelSeconds);
+    const floatMax = CONFIG.runtime.damageLabelMaxPerTarget;
+    const reducedFloats = this.ui.reducedMotion;
+    const narrowLane = this.width <= 480;
+    type FloatLabel = { targetId: string; tick: number; seq: number; amount: number; heal: boolean };
+    const floats: FloatLabel[] = [];
     for (const event of state.events) {
       const data = event.data;
+      if (data.type !== 'hit' && data.type !== 'heal') continue;
       const ageTicks = event.combatEncounter === state.encounter ? labelClock - (event.combatTick ?? event.tick) : null;
-      if (ageTicks === null || ageTicks > lifetime || (data.type !== 'hit' && data.type !== 'heal')) continue;
-      const eventTick = labelClock - ageTicks;
-      const isDot = data.type === 'hit' && Boolean(data.dot);
-      const key = data.type === 'hit'
-        ? (isDot ? `${data.targetId}:dot:${Math.floor(eventTick / bucket)}` : `${data.targetId}:hit:${Math.floor(eventTick / bucket)}`)
-        : `${data.targetId}:heal:${Math.floor(eventTick / bucket)}`;
-      const old = groups.get(key);
-      const amount = data.type === 'hit' ? data.damage : data.amount;
-      if (old) old.amount += amount; else groups.set(key, { targetId: data.targetId, tick: eventTick, amount, heal: data.type === 'heal', dot: isDot });
+      if (ageTicks === null || ageTicks < 0 || ageTicks > floatLifeTicks) continue;
+      floats.push({
+        targetId: data.targetId,
+        tick: event.combatTick ?? event.tick,
+        seq: event.seq,
+        amount: data.type === 'hit' ? data.damage : data.amount,
+        heal: data.type === 'heal',
+      });
     }
-    const counts = new Map<string, number>();
-    for (const group of [...groups.values()].sort((a, b) => b.tick - a.tick)) {
-      const count = counts.get(group.targetId) ?? 0; if (count >= CONFIG.runtime.damageLabelMaxPerTarget) continue;
-      counts.set(group.targetId, count + 1);
-      const unit = units.find(unit => unit.id === group.targetId); if (!unit) continue;
-      const age = labelClock - group.tick, x = this.position(unit, state) - 10 + count * 6;
-      const y = Math.max(8, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
-      const label = `${group.heal ? '+' : '-'}${group.amount}`;
-      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, BODY, true);
-      const color = group.heal
-        ? (statusDisplay?.hotNumber ?? palette.green)
-        : group.dot ? (statusDisplay?.dotNumber ?? '#de7c80') : palette.gold;
-      this.ui.text(ctx, label, x, y, color, BODY, true);
+    floats.sort((a, b) => b.seq - a.seq);
+    const perUnit = new Map<string, number>();
+    const usedSnapX = new Map<number, string>();
+    const statusIconPx = 9;
+    for (const float of floats) {
+      const count = perUnit.get(float.targetId) ?? 0;
+      if (count >= floatMax) continue;
+      const unit = units.find(candidate => candidate.id === float.targetId);
+      // Keep floats on corpses (killing hit + earlier numbers still inside life).
+      if (!unit) continue;
+      const ageMs = (labelClock - float.tick) * TICK_MS;
+      const frame = floatNumberFrame(ageMs, reducedFloats, floatLifeMs, floatRisePx);
+      if (!frame) continue;
+      const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
+      const depth = unit.side === 'hero' ? unit.slot * 4 : 0;
+      const hpY = isLaneBoss ? bossPlateBottom + statusRowOffset + 2 : unitHpBaseY - depth;
+      const iconRowTop = hpY - statusRowOffset;
+      // Party: above the icon row (stack up). Lane boss: below the 9 px icon row (clear of plate).
+      const anchorY = isLaneBoss
+        ? iconRowTop + statusIconPx + 1 + count * 8
+        : iconRowTop - SMALL - 1 - count * 8;
+      let y = anchorY - frame.rise;
+      // Rising party numbers park under the boss HP plate instead of vanishing.
+      if (bossBar) y = Math.max(y, bossPlateBottom + 1);
+      let x = this.position(unit, state);
+      if (narrowLane) {
+        x = Math.round(x / 8) * 8;
+        const owner = usedSnapX.get(x);
+        if (owner !== undefined && owner !== float.targetId) continue;
+        usedSnapX.set(x, float.targetId);
+      }
+      perUnit.set(float.targetId, count + 1);
+      const label = `${float.heal ? '+' : '-'}${float.amount}`;
+      const color = float.heal ? palette.green : FLOAT_NUMBER_DAMAGE;
+      ctx.save();
+      ctx.globalAlpha = frame.alpha;
+      ctx.font = `700 ${SMALL}px "Galmuri11", monospace`;
+      ctx.textBaseline = 'top';
+      const drawX = Math.round(x - ctx.measureText(label).width / 2);
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as const) {
+        ctx.fillStyle = palette.ink; ctx.fillText(label, drawX + dx, y + dy);
+      }
+      ctx.fillStyle = color; ctx.fillText(label, drawX, y);
+      ctx.restore();
     }
     // STUN / RESIST floating labels from presentation status events.
     for (const event of state.events) {

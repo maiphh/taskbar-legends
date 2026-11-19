@@ -169,7 +169,7 @@ export const CONFIG = {
     percentPrecision: 1000, rewardRounding: 'nearest',
     gearSecondaryPower: 100, maxCampaignWaves: Math.max(...design.stages.map(stage => stage.waves.length)),
     maxEnemiesPerWave: 10,
-    textCacheLimit: 512, damageLabelMaxPerTarget: 3, damageCoalesceSeconds: 0.25, damageLabelSeconds: 0.65, damageRisePx: 32,
+    textCacheLimit: 512, damageLabelMaxPerTarget: 3, damageLabelSeconds: 0.7, damageRisePx: 10,
   },
   desktop: { closedLogicalHeight: uiTokens.closed.height, expandedLogicalHeight: uiTokens.expanded.height, cursorPollMs: 16, monitorPollMs: 500, errorLimit: 30 },
   view: {
