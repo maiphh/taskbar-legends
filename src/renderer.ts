@@ -23,6 +23,7 @@ import { easeReturn } from './core/turn/presentation';
 import { gaugeRatio } from './core/turn/action-bar';
 import { stepCombatCamera, type CombatCameraInput } from './party-camera';
 import { compactLaneLayout } from './compact-lane-layout';
+import { DungeonEffects } from './dungeon-effects';
 import { LegendaryEffects } from './legendary-effects';
 import { consumeNewEvents, triggerLegendaryEvent } from './legendary-events';
 import { effectRandom } from './legendary-effects';
@@ -50,9 +51,13 @@ export class Renderer {
   readonly atlases = new AtlasLibrary();
   readonly ui: PixelUI;
   readonly legendaryEffects = new LegendaryEffects();
+  private readonly bursts = new DungeonEffects();
+  private marchOffset = 0;
+  private previousTick = 0;
+  private marching = false;
   private effectEventSeq = 0;
   private effectEventsInitialized = false;
-  baselineLegendaryEvents(seq: number): void { this.effectEventSeq = seq; this.effectEventsInitialized = true; this.legendaryEffects.clear(); this.laneClock.reset(); this.lanePositions.reset(); }
+  baselineLegendaryEvents(seq: number): void { this.effectEventSeq = seq; this.effectEventsInitialized = true; this.legendaryEffects.clear(); this.bursts.clear(); this.previousTick = 0; this.marchOffset = 0; this.laneClock.reset(); this.lanePositions.reset(); }
   private holySheet: HTMLImageElement | null = null;
   private signatureSheet: HTMLImageElement | null = null;
   private treasureSheet: HTMLImageElement | null = null;
@@ -261,7 +266,7 @@ export class Renderer {
     }
     const hurt = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
     if (age(hurt) < (key ? this.atlases.durationMs(key, 'hit') ?? CONFIG.view.hurtFallbackMs : CONFIG.view.hurtFallbackMs)) return { name: 'hit', ageMs: age(hurt) };
-    return { name: unit.moving ? 'run' : 'idle', ageMs: Math.max(0, now - (unit.nativeBornTick ?? unit.bornTick)) * TICK_MS };
+    return { name: unit.moving || (this.marching && unit.side === 'hero') ? 'run' : 'idle', ageMs: Math.max(0, now - (unit.nativeBornTick ?? unit.bornTick)) * TICK_MS };
   }
   render(state: GameState, paused = false): void {
     this.rendering = true;
@@ -271,24 +276,52 @@ export class Renderer {
     this.lanePositions.beginFrame();
     this.lanePresentationTime(state);
     const ctx = this.ctx, view = CONFIG.view, palette = CONFIG.ui.palette, height = this.ui.height();
+    const still = this.ui.reducedMotion;
+    const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
+    this.marching = !still && (state.phase.kind === 'rest' || state.enemies.some(unit => unit.moving && unit.hp > 0));
+    if (this.marching) this.marchOffset = (this.marchOffset + Math.min(3, Math.max(0, state.tick - this.previousTick))) % 256;
+    this.previousTick = state.tick;
+    if (still) this.bursts.clear();
     if (!this.effectEventsInitialized) { this.effectEventSeq = state.eventSeq; this.effectEventsInitialized = true; }
     this.effectEventSeq = consumeNewEvents(state.eventSeq, this.effectEventSeq, state.events, event => {
       triggerLegendaryEvent(event, state.party, state.enemies, value => this.legendaryEffects.trigger(value.kind, performance.now(), value.label, value));
+      const data = event.data;
+      if (still || state.tick - event.tick >= 8) return;
+      if (data.type !== 'hit' && data.type !== 'death' && data.type !== 'heal' && data.type !== 'gear') return;
+      const targetId = data.type === 'gear' ? state.party[0]?.id : data.type === 'death' ? data.unitId : data.targetId;
+      const unit = state.party.find(u => u.id === targetId) ?? state.enemies.find(u => u.id === targetId);
+      if (unit) {
+        const bossHit = data.type === 'hit' && (unit.boss || state.enemies.some(u => u.boss && u.id === data.attackerId));
+        this.bursts.add(data.type, this.position(unit, state), baselineY - (data.type === 'death' ? 8 : 24),
+          event.tick, unit.side === 'hero' ? -1 : 1, Boolean(bossHit));
+      }
     });
-    const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.zoom, 0, 0, this.zoom, 0, 0);
     ctx.fillStyle = palette.base; ctx.fillRect(0, coreY, this.width, CONFIG.ui.closed.coreHeight);
     ctx.fillStyle = palette.edge; ctx.fillRect(0, coreY, this.width, 1);
     const field = this.field();
     ctx.save(); ctx.beginPath(); ctx.rect(field.x, 0, field.width, height); ctx.clip();
-    const still = this.ui.reducedMotion;
-    const march = still ? 0 : Math.floor(this.cameraLeft(state, field) / 3);
-    this.ui.drawCorridor(ctx, this.width, baselineY - 4, march, still ? 0 : state.tick);
+    ctx.translate(this.bursts.shake(state.tick), 0);
+    this.ui.drawCorridor(ctx, this.width, baselineY - 4, this.marchOffset, still ? 0 : state.tick);
     const bossBar = bossHpBar(state);
     const unitHpBaseY = coreY + CONFIG.ui.unitHpBars.coreLocalY;
     const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
+    // Paint marked floor tiles behind the party so target warnings leave the sprites and icons intact.
+    for (const enemy of enemies) {
+      const mark = enemy.specialAction;
+      if (mark?.state !== 'areaMark') continue;
+      const pulse = !still && state.tick % 8 < 4;
+      ctx.fillStyle = mark.global ? (pulse ? '#e1795f' : '#b3615c') : (pulse ? '#efbe70' : '#c18d54');
+      for (const ally of state.party) {
+        if (!mark.global && ally.id !== mark.targetId) continue;
+        const x = this.position(ally, state), radius = mark.global ? 20 : mark.radius;
+        const y = baselineY - ally.slot * 4;
+        ctx.fillRect(x - radius, y, radius * 2, 2);
+        for (let dx = -radius; dx < radius; dx += 8) ctx.fillRect(x + dx, y + 2, 3, 2);
+      }
+    }
     for (const unit of units) {
       const x = this.position(unit, state);
       const depth = unit.side === 'hero' ? unit.slot * 4 : 0;
@@ -357,11 +390,6 @@ export class Renderer {
           let telegraphLabel = special.global ? 'GLOBAL' : null;
           if (enemyDef.enrage && special.abilityId === enemyDef.enrage.abilityId) telegraphLabel = enemyDef.enrage.telegraphLabel;
           else if (enemyDef.special && (enemyDef.special.kind === 'bossLocal' || enemyDef.special.kind === 'bossGlobal')) telegraphLabel = enemyDef.special.telegraphLabel;
-          if (special.global) {
-            for (const ally of state.party.filter(unit => unit.hp > 0)) { const allyX = this.position(ally, state); ctx.beginPath(); ctx.arc(allyX, baselineY - 18, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-          } else {
-            ctx.beginPath(); ctx.arc(sx(special.centerX), baselineY - 18, special.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          }
           // Boss plate already owns the telegraph label; skip the world cue so it cannot overlap the name.
           if (telegraphLabel && !plateOwnsTelegraph) {
             const labelX = Math.max(field.x + 30, Math.min(field.x + field.width - 30, sx(special.centerX)));
@@ -426,6 +454,7 @@ export class Renderer {
         ctx.fillStyle = '#f4d37e'; ctx.fillRect(targetX - 2, coreY + 11, 4, 2); ctx.fillRect(targetX - 1, coreY + 13, 2, 2);
       }
     }
+    this.bursts.draw(ctx, state.tick);
     const lifetime = ticksForSeconds(CONFIG.runtime.damageLabelSeconds), bucket = ticksForSeconds(CONFIG.runtime.damageCoalesceSeconds);
     const labelClock = this.lanePresentationTime(state);
     const statusDisplay = statusEffectsConfig()?.display;

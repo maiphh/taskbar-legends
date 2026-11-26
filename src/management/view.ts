@@ -227,6 +227,7 @@ export class ManagementView {
     }, { signal: this.abort.signal });
     this.header.querySelector('[data-close]')?.addEventListener('click', () => this.close(), { signal: this.abort.signal });
     this.root.addEventListener('click', event => this.onClick(event), { signal: this.abort.signal });
+    matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => this.syncAnimationClock(), { signal: this.abort.signal });
     document.addEventListener('visibilitychange', () => this.syncAnimationClock(), { signal: this.abort.signal });
     this.root.addEventListener('keydown', event => this.onKey(event), { signal: this.abort.signal });
     this.root.addEventListener('scroll', event => { const list = event.target instanceof HTMLElement && event.target.matches('[data-scroll="equip-list"]') ? event.target : null; const cue = list?.parentElement?.querySelector<HTMLElement>('.px-equip-scroll-cue'); if (list && cue) cue.hidden = list.scrollTop + list.clientHeight >= list.scrollHeight - 2; }, { capture:true, signal:this.abort.signal });
@@ -252,6 +253,7 @@ export class ManagementView {
     this.client.cue?.('ui_open');
     try { [this.audioValue, this.compactPrefs, this.reducedMotionValue] = await Promise.all([this.client.getAudio(), this.client.getCompactPrefs(), this.client.getReducedMotion()]); } catch { /* window settings remain available from the main view */ }
     if (!this.isLive(generation)) return;
+    this.syncAnimationClock();
     if (!this.atlas) this.atlas = new AtlasLibrary();
     void this.atlas.ready.then(() => { this.portraits.clear(); this.contentKey = ''; this.renderContent(); });
     await this.refresh(generation);
@@ -277,7 +279,7 @@ export class ManagementView {
     if (frozen === this.animationFrozen) return;
     if (frozen) this.frozenAnimationElapsed = this.animationElapsed();
     else this.animationClockOrigin = this.animationNow() - this.frozenAnimationElapsed;
-    this.animationFrozen = frozen; this.syncAnimationClock(); this.updateAnimatedPortraits();
+    this.animationFrozen = frozen; this.root.dataset.frozen = String(frozen); if (this.revealUi) this.revealUi.animationFrozen = frozen; this.syncAnimationClock(); this.updateAnimatedPortraits();
   }
   private startAnimationClock(): void {
     this.animationClockOrigin = this.animationNow(); this.frozenAnimationElapsed = 0;
@@ -287,11 +289,11 @@ export class ManagementView {
   private animationElapsed(): number { return this.animationFrozen ? this.frozenAnimationElapsed : Math.max(0, this.animationNow() - this.animationClockOrigin); }
   private stopAnimationClock(): void { window.clearInterval(this.animationTimer); this.animationTimer = 0; }
   private syncAnimationClock(): void {
-    if (!shouldRunManagementAnimation(this.closed, document.hidden, matchMedia('(prefers-reduced-motion: reduce)').matches, this.animationFrozen)) this.stopAnimationClock();
+    if (!shouldRunManagementAnimation(this.closed, document.hidden, this.reducedMotionValue || matchMedia('(prefers-reduced-motion: reduce)').matches, this.animationFrozen)) this.stopAnimationClock();
     else if (!this.animationTimer) { this.animationTimer = window.setInterval(() => this.updateAnimatedPortraits(), 125); }
   }
   private updateAnimatedPortraits(): void {
-    if (this.closed || document.hidden || this.animationFrozen || matchMedia('(prefers-reduced-motion: reduce)').matches || !this.atlas) return;
+    if (this.closed || document.hidden || this.animationFrozen || this.reducedMotionValue || matchMedia('(prefers-reduced-motion: reduce)').matches || !this.atlas) return;
     const elapsed = this.animationElapsed();
     for (const img of this.root.querySelectorAll<HTMLImageElement>('img.px-portrait[data-atlas-key]')) {
       const key = img.dataset.atlasKey!; const index = this.atlas.idleFrameIndex(key, elapsed); const frame = this.atlas.portraitFrame(key, index);
@@ -408,7 +410,7 @@ export class ManagementView {
     if (this.revealUi) return this.revealUi;
     this.atlas ??= new AtlasLibrary();
     const ui = new PixelUI(this.atlas, this.revealHost.querySelector<HTMLElement>('.reveal-controls')!);
-    ui.managementReveal = true;
+    ui.managementReveal = true; ui.animationFrozen = this.animationFrozen;
     if (this.options.clock) { const clock = this.options.clock; ui.clock = () => clock(); }
     ui.managementIdleClock = () => this.animationElapsed();
     ui.onCue = key => this.client.cue?.(key);
@@ -684,7 +686,7 @@ export class ManagementView {
     else if (action === 'equip-upgrade' && this.equipItem) void this.command({ type:'upgrade', gearId:this.equipItem as GameState['inventory'][number]['id'] });
     else if (action === 'pause') { const generation = this.generation; void this.settingRequest(this.client.pause(!state.paused).then(() => this.refresh(generation))); }
     else if (action === 'mute') { this.audioValue = { ...this.audioValue, muted: !this.audioValue.muted }; void this.settingRequest(this.client.setAudio(this.audioValue)); this.contentKey = ''; this.renderContent(); }
-    else if (action === 'reduced-motion') { this.reducedMotionValue = !this.reducedMotionValue; void this.settingRequest(this.client.setReducedMotion(this.reducedMotionValue)); this.contentKey = ''; this.renderContent(); }
+    else if (action === 'reduced-motion') { this.reducedMotionValue = !this.reducedMotionValue; this.syncAnimationClock(); void this.settingRequest(this.client.setReducedMotion(this.reducedMotionValue)); this.contentKey = ''; this.renderContent(); }
     else if (action === 'reset-size' && this.compactPrefs) { this.compactPrefs = { ...this.compactPrefs, sourceWidth: 640, sourceHeight: 160 }; void this.settingRequest(this.client.setCompactPrefs(this.compactPrefs)); this.contentKey = ''; this.renderContent(); }
   }
   /** Dropdown commits: filters and selections re-render; the preset applies at once (as the old select did). */
