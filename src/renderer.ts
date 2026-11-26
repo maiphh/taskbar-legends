@@ -1,12 +1,12 @@
-import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, stageConfig, statusEffectsConfig, ticksForSeconds } from './config';
+import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, statusEffectsConfig, ticksForSeconds } from './config';
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
 import { BODY, loadFonts } from './font';
-import { bannerFrame, popupFrame } from './motion';
+import { popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
-import { bossHpBar, stageCue, upgradePopups } from './core/selectors';
+import { bossHpBar, upgradePopups } from './core/selectors';
 import { ellipsize } from './text-fit';
 import { enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
@@ -282,19 +282,10 @@ export class Renderer {
     ctx.fillStyle = palette.edge; ctx.fillRect(0, coreY, this.width, 1);
     const field = this.field();
     ctx.save(); ctx.beginPath(); ctx.rect(field.x, 0, field.width, height); ctx.clip();
-    ctx.fillStyle = '#293c35'; ctx.fillRect(field.x, coreY + 48, field.width, 32);
-    ctx.fillStyle = '#3f5542'; ctx.fillRect(field.x, coreY + 48, field.width, 2);
-    for (let x = field.x + 5; x < field.x + field.width; x += 28) { ctx.fillStyle = x % 3 ? '#52664a' : '#223d32'; ctx.fillRect(x, coreY + 51, 2, 2); ctx.fillRect(x + 12, coreY + 65, 3, 1); }
+    const still = this.ui.reducedMotion;
+    const march = still ? 0 : Math.floor(this.cameraLeft(state, field) / 3);
+    this.ui.drawCorridor(ctx, this.width, baselineY - 4, march, still ? 0 : state.tick);
     const bossBar = bossHpBar(state);
-    // Boss plate sits at the top of the effects ceiling so scale-2 sprites keep the core strip
-    // and party HP / status rows (around coreY - 6) never collide with the name or telegraph.
-    const bossBarX = Math.round(field.x + 24), bossBarW = Math.max(120, Math.round(field.width - 48));
-    const bossBarH = Math.max(14, BODY + 2);
-    const bossTelegraphGap = 2;
-    const bossTelegraphH = bossBar?.telegraph ? BODY + 2 : 0;
-    const bossPlateBlock = bossBarH + (bossTelegraphH > 0 ? bossTelegraphGap + bossTelegraphH : 0);
-    const bossBarY = bossBar ? 8 : coreY;
-    const bossPlateBottom = bossBar ? bossBarY + bossPlateBlock : coreY;
     const unitHpBaseY = coreY + CONFIG.ui.unitHpBars.coreLocalY;
     const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
@@ -311,7 +302,7 @@ export class Renderer {
       const anim = this.animation(state, unit, key);
       const lastHit = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
       const lastHitAge = lastHit && lastHit.combatEncounter === state.encounter ? this.lanePresentationTime(state) - (lastHit.combatTick ?? lastHit.tick) : null;
-      const flash = lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
+      const flash = !still && lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
       const flip = anim.returning ? unit.side === 'hero' : unit.facing === -1;
       const bossScale = unit.boss && enemyDef?.scale ? Math.max(1, Math.round(enemyDef.scale)) : 1;
       const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
@@ -330,9 +321,7 @@ export class Renderer {
       }
       if (unit.hp <= 0) continue;
       const hpWidth = unit.side === 'hero' ? 34 : 32;
-      // Boss status icons hang just under the plate; party bars keep their usual ceiling slot.
-      const statusClearance = (statusEffectsConfig()?.display.rowOffsetAboveHpPx ?? 13) + 2;
-      const hpY = isLaneBoss ? bossPlateBottom + statusClearance : unitHpBaseY - depth;
+      const hpY = isLaneBoss ? coreY - 22 : unitHpBaseY - depth;
       // Boss uses the top-of-lane HP plate; skip the tiny per-unit bar, but still draw status icons.
       if (!isLaneBoss) {
         ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
@@ -353,31 +342,6 @@ export class Renderer {
         if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
       }
       this.drawStatusRow(ctx, state, unit, x, hpY);
-    }
-    if (bossBar) {
-      const barX = bossBarX, barW = bossBarW, barY = bossBarY, barH = bossBarH;
-      const measure = (value: string): number => this.ui.measureText(value, BODY, true);
-      ctx.fillStyle = palette.ink; ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
-      ctx.fillStyle = '#1a1014'; ctx.fillRect(barX, barY, barW, barH);
-      ctx.fillStyle = bossBar.enraged ? '#ff6b3d' : '#d44a4a';
-      ctx.fillRect(barX, barY, Math.max(0, Math.round(barW * bossBar.ratio)), barH);
-      ctx.fillStyle = '#3a2024'; ctx.fillRect(barX, barY + barH - 2, barW, 2);
-      const hpRaw = `${bossBar.hp}/${bossBar.maxHp}${bossBar.enraged ? '  ENRAGED' : ''}`;
-      const hpText = ellipsize(hpRaw, barW, measure);
-      const hpWidth = measure(hpText);
-      const nameMax = Math.max(0, barW - hpWidth - 8);
-      const nameText = ellipsize(bossBar.name, nameMax > 0 ? nameMax : barW, measure);
-      const textY = barY + Math.round((barH - BODY) / 2);
-      this.ui.text(ctx, nameText, barX + 2, textY, '#f2e9cf', BODY, true);
-      this.ui.text(ctx, hpText, barX + barW - hpWidth - 2, textY, '#f2e9cf', BODY, true);
-      if (bossBar.telegraph) {
-        const telegraphY = barY + barH + bossTelegraphGap;
-        const telegraphWidth = measure(bossBar.telegraph);
-        const telegraphX = barX + Math.round((barW - telegraphWidth) / 2);
-        ctx.fillStyle = 'rgba(40,12,12,.92)';
-        ctx.fillRect(Math.max(barX, telegraphX - 6), telegraphY, Math.min(barW, telegraphWidth + 12), bossTelegraphH);
-        this.ui.text(ctx, bossBar.telegraph, telegraphX, telegraphY + Math.round((bossTelegraphH - BODY) / 2), '#ffd16e', BODY, true);
-      }
     }
     {
       const allUnits = [...state.party, ...state.enemies];
@@ -511,8 +475,23 @@ export class Renderer {
     }
     ctx.restore();
     this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
-    this.drawFeedback(ctx, state, units, field, coreY);
+    this.drawFeedback(ctx, state, units, coreY);
     this.drawLegendaryEffect(ctx, state, field, coreY);
+    if (bossBar && !this.ui.welcome) {
+      const x = 4, y = height - 18, w = this.width - 8;
+      const accent = bossBar.enraged ? '#ff9761' : '#ce7473';
+      ctx.fillStyle = '#151922'; ctx.fillRect(x, y, w, 18);
+      ctx.fillStyle = '#604049'; ctx.fillRect(x, y, w, 1);
+      ctx.fillStyle = '#4c333b'; ctx.fillRect(x + 2, y + 14, w - 4, 3);
+      ctx.fillStyle = accent; ctx.fillRect(x + 2, y + 14, Math.round((w - 4) * bossBar.ratio), 3);
+      const hp = `${bossBar.hp}/${bossBar.maxHp}`;
+      const hpX = this.width - 10 - Math.ceil(this.ui.measureText(hp));
+      this.ui.text(ctx, hp, hpX, y, palette.text);
+      const warning = bossBar.telegraph ?? (bossBar.enraged ? 'ENRAGED' : '');
+      const warningX = hpX - 12 - Math.ceil(this.ui.measureText(warning, BODY, true));
+      this.ui.text(ctx, warning, warningX, y, '#ffd68a', BODY, true);
+      this.ui.text(ctx, ellipsize(bossBar.name, warningX - 18, v => this.ui.measureText(v, BODY, true)), 10, y, accent, BODY, true);
+    }
     this.lanePositions.endFrame();
     this.rendering = false; this.frameLaneTime = null;
   }
@@ -623,7 +602,7 @@ export class Renderer {
     if (shake && !reducedMotion) { const cadence = Number(shake.params.cadenceMs ?? 45), offset = Math.floor(effectRandom(effect.seed, Math.floor((effect.age - shake.startMs) / cadence)) * 5) - 2; ctx.translate(offset, 0); }
     if (reducedMotion) {
       if (effect.kind === 'drop') this.drawLegendaryDropCard(ctx, anchorX, cy + 23, gold, effect.slot, 48, true);
-      this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, 4, effect.age, effect.spec.durationMs, true);
+      this.drawLegendaryBanner(ctx, effect.label, bannerX, 32, gold, 4, effect.age, effect.spec.durationMs, true);
     } else {
       if (has('flash')) {
         const age = effect.age - has('flash')!.startMs;
@@ -645,7 +624,7 @@ export class Renderer {
         const rayLayer = has('rays'), particleLayer = has('particles');
         if (rayLayer || particleLayer) this.drawLegendaryBurst(ctx, anchorX, cy, effect, gold, rayLayer, particleLayer);
         const banner = has('banner');
-        this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1120), false);
+        this.drawLegendaryBanner(ctx, effect.label, bannerX, 32, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1120), false);
       } else {
         const beam = has('beam'); if (beam) this.drawDropBeam(ctx, anchorX, effect.age - beam.startMs, beam.endMs - beam.startMs, gold, Number(beam.params.width ?? 24));
         const sheet = has('sheet');
@@ -662,7 +641,7 @@ export class Renderer {
           ctx.save(); ctx.globalAlpha = alpha; this.drawLegendaryDropCard(ctx, anchorX, cy + 23, gold, effect.slot, stage, false, effect.age); ctx.restore();
         }
         const banner = has('banner');
-        this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1450), false);
+        this.drawLegendaryBanner(ctx, effect.label, bannerX, 32, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1450), false);
       }
     }
     ctx.restore();
@@ -732,7 +711,7 @@ export class Renderer {
    * Upgrade popups and stage/boss banners (ui.md §10, ui-tokens coreLoopFeedback). Everything is derived from the event log and
    * the sim tick, so a given tick always draws the same frame. Timings are specified on a 40 ms clock; the 20 Hz sim samples it.
    */
-  private drawFeedback(ctx: CanvasRenderingContext2D, state: GameState, units: Unit[], field: { x: number; width: number }, coreY: number): void {
+  private drawFeedback(ctx: CanvasRenderingContext2D, state: GameState, units: Unit[], coreY: number): void {
     const spec = CONFIG.ui.coreLoopFeedback, still = this.ui.reducedMotion, chip = this.ui.panel !== null;
     const popups = upgradePopups(state).sort((a, b) => b.seq - a.seq).slice(0, chip ? spec.upgradePopup.panelChip.maxVisible : spec.upgradePopup.maxStacked);
     for (const [index, popup] of popups.entries()) {
@@ -746,14 +725,6 @@ export class Renderer {
         const x = Math.max(spec.upgradePopup.clampMarginPx, Math.min(this.width - spec.upgradePopup.clampMarginPx - width, roundHalfEven(centre - width / 2)));
         this.ui.drawPopupText(ctx, segments, x, coreY + spec.upgradePopup.startTopCoreLocal - frame.rise - index * spec.upgradePopup.stackGapPx);
       }
-      ctx.restore();
-    }
-    const cue = chip ? null : stageCue(state), frame = cue ? bannerFrame(cue.age * CONFIG.view.stageCueSeconds * 1000, still) : null;
-    if (cue && frame) {
-      const banner = spec.stageBanner, boss = cue.kind === 'boss', id = stageConfig(cue.stage).id;
-      ctx.save(); ctx.globalAlpha = frame.alpha;
-      // Drawn last: tall sprite effects pass behind the plate. Window y is relative to the closed overlay's top.
-      this.ui.drawBanner(ctx, (boss ? banner.boss.label : banner.stage.label).replace('{id}', id), boss, field.width > 0 ? field.x + field.width / 2 : this.width / 2, coreY - CONFIG.ui.closed.coreHeight + frame.y);
       ctx.restore();
     }
   }

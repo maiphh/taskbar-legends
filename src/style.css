@@ -946,3 +946,7 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .px-v2-hero-card .px-v2-art { width:112px; height:112px; }
 .px-menu[data-layout="v2"] .px-v2-detail .px-v2-role,.px-menu[data-layout="v2"] .px-equip-hero-meta .px-v2-role { width:32px; height:32px; padding:2px; }
 .px-menu[data-layout="v2"] .px-v2-detail .px-v2-role img,.px-menu[data-layout="v2"] .px-equip-hero-meta .px-v2-role img { width:32px; height:32px; }
+
+/* The browser Menu shares the top rail with the read-only canvas HUD. */
+body.compact-shell #compact-menu-bar { top:calc(3px * var(--z)); right:calc(4px * var(--z)); bottom:auto; }
+body.compact-shell #compact-menu-button { width:calc(48px * var(--z)); height:calc(26px * var(--z)); }

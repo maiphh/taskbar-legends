@@ -307,7 +307,7 @@ function announceCompactPresentation(): void {
 }
 function resize(): void {
   const native = '__TAURI_INTERNALS__' in window;
-  const cssWidth = !native ? compactPrefs.sourceWidth * compactPrefs.zoom / (window.devicePixelRatio || 1) : window.innerWidth;
+  const cssWidth = !native ? Math.min(window.innerWidth, compactPrefs.sourceWidth * compactPrefs.zoom / (window.devicePixelRatio || 1)) : window.innerWidth;
   if (!native) document.getElementById('app')!.style.width = `${cssWidth}px`;
   renderer.resize(cssWidth); syncCompactScale(); dockManagement(); render(); announceCompactPresentation();
 }
@@ -368,7 +368,7 @@ if (import.meta.env.DEV) window.__management = {
   snapshot: () => managementAuthority.snapshot(),
   execute: (value: unknown) => managementAuthority.execute(value),
   compare: (heroId: string, gearId: string) => managementAuthority.compareGear(heroId, gearId),
-  freezeAnimation: (frozen: boolean) => managementView?.freezeAnimation(frozen),
+  freezeAnimation: (frozen: boolean) => { renderer.ui.animationFrozen = frozen; managementView?.freezeAnimation(frozen); render(); },
 };
 void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler),
   presentationState: () => ({ welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() }) }, {

@@ -7,7 +7,7 @@ import { BODY, HEADING, LINE_BOX, fitSize, CSS_FONT_STACK, loadFonts, slotOffset
 import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
-import { campaignPresentation } from './core/selectors';
+import { stageCue } from './core/selectors';
 import { getPartyHeroDefinition } from './core/party-definitions';
 import { welcomeLayout } from './welcome-layout';
 import { ellipsize } from './text-fit';
@@ -32,6 +32,7 @@ export interface WelcomeData { seconds: number; rawSeconds: number; capped: bool
   earned: boolean; farmReason: 'no-earned-clear' | 'formation-or-combat-changed' | null;
   best: { rarity: Rarity; slot: string } | null; choices: number }
 export interface AudioControls { muted: boolean; volume: number }
+const counter = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
 const palette = CONFIG.ui.palette;
 const feedback = CONFIG.ui.coreLoopFeedback;
 /** Text options retain `exactY` for caller compatibility; active text has no optical y offset. */
@@ -62,7 +63,8 @@ export class PixelUI {
   private measureContext: CanvasRenderingContext2D | null = null;
   private readonly badgeMemory = new Map<string, { on: boolean; pulseTick: number; seen: boolean }>();
   private readonly badgesDrawn = new Set<string>();
-  get reducedMotion(): boolean { return (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
+  animationFrozen = false;
+  get reducedMotion(): boolean { return this.animationFrozen || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
   private readonly buttons = new Map<string, HTMLButtonElement>();
   private readonly surfaces = new Map<string, HTMLDivElement>();
   private pressed = '';
@@ -70,7 +72,6 @@ export class PixelUI {
   private current: GameState | null = null;
   private width = CONFIG.view.defaultWidth;
   private compactMode = true;
-  private sourceHeight = CONFIG.ui.closed.height;
   private scaleToCss = 1;
   private hovered = '';
   private focused = '';
@@ -119,8 +120,8 @@ export class PixelUI {
   private async load(): Promise<void> {
     try {
       await loadFonts();
-      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png'];
-      await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
+      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'dungeon/insignia.png', 'dungeon/corridor.png'];
+      await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file.includes('9slice') ? `dungeon/${file.replace('-9slice', '').replace('button-', '')}` : file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
     } catch (error) { this.errors.push(String(error)); }
   }
@@ -198,14 +199,63 @@ export class PixelUI {
   }
   /** Compact lane edit mode (compact-menu.md Â§2.2): the stage heading shifts right of the Move handle. */
   compactEditing = false;
-  /** Compact lane HUD: full-bleed field with a short stage id; Menu is the only DOM control. */
-  private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, _paused: boolean): void {
-    void _paused;
-    const width = this.width, coreY = this.sourceHeight - CONFIG.ui.closed.coreHeight;
-    const campaign = campaignPresentation(state.progress, _paused);
-    const color = campaign.tone === 'boss' ? palette.red : campaign.tone === 'complete' ? palette.green : palette.gold;
-    // Sit above the bottom-lane health bars; the battlefield is empty at this height.
-    this.text(ctx, campaign.lane, 8, Math.max(0, coreY - 40), color, BODY, true, Math.max(0, width - 16), { exactY: true });
+  drawCorridor(ctx: CanvasRenderingContext2D, width: number, floor: number, offset: number, tick: number): void {
+    const tile = this.images.get('dungeon/corridor.png');
+    if (!tile) return;
+    const top = floor - 103;
+    for (let x = -(offset % tile.width); x < width; x += tile.width) {
+      ctx.drawImage(tile, x, top);
+      if (tick % 7 < 3) {
+        ctx.fillStyle = '#ffd285';
+        for (const torch of [86, 214]) ctx.fillRect(x + torch, top + 33, 2, 3);
+      }
+    }
+  }
+  /** One fixed rail reserves the remaining 128px for combat and boss warnings. */
+  private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, paused: boolean): void {
+    const width = this.width, coreY = this.coreY, y = coreY - 80;
+    const tight = width < 400, slot = tight ? 18 : 26;
+    this.frame(ctx, { x: 0, y, width, height: 32 });
+    state.party.forEach((unit, i) => {
+      const x = 5 + i * (slot + 2);
+      ctx.fillStyle = '#666370'; ctx.fillRect(x, y + 3, slot, 26);
+      ctx.fillStyle = '#151b27'; ctx.fillRect(x + 1, y + 4, slot - 2, 24);
+      const key = CONFIG.view.heroAssets[unit.sourceId as keyof typeof CONFIG.view.heroAssets];
+      const portrait = key && this.atlas.portrait(key);
+      if (portrait) {
+        const w = Math.min(slot - 2, portrait.width), h = Math.min(19, portrait.height);
+        ctx.drawImage(portrait, Math.floor((portrait.width - w) / 2), 0, w, h, x + Math.floor((slot - w) / 2), y + 5, w, h);
+      }
+      ctx.fillStyle = palette.green; ctx.fillRect(x + 2, y + 25, Math.round((slot - 4) * unit.hp / unit.maxHp), 2);
+    });
+    const progress = state.progress, stage = progress.kind === 'BOSS_READY' ? progress.bossStage : progress.stage;
+    const info = stageConfig(stage), boss = info.isBoss, current = (stage - 1) % 10;
+    const start = 9 + 3 * (slot + 2), wave = state.wave;
+    const cue = stageCue(state);
+    const label = progress.kind === 'BOSS_READY' ? 'Boss ready' : progress.kind === 'BOSS_FIGHT' ? 'Boss fight'
+      : progress.kind === 'COMPLETE' ? 'Complete' : progress.kind === 'FARMING' ? 'Farming'
+      : cue?.kind === 'clear' ? 'Stage clear' : `Wave ${wave}/${info.waves.length}`;
+    this.text(ctx, `${tight ? '' : 'Stage '}${info.id}`, start, y + 4, palette.gold, BODY, true);
+    const barWidth = tight ? 4 : 8;
+    for (let i = 0; i < 10; i++) {
+      ctx.fillStyle = i === 9 ? palette.red : i <= current ? palette.gold : palette.edge;
+      ctx.fillRect(start + i * (barWidth + 2), y + 22, barWidth, 4);
+    }
+    const captionX = start + (tight ? 34 : 78);
+    this.text(ctx, label, captionX, y + 5, boss ? '#ffac8d' : palette.text, BODY);
+    if (!tight) this.text(ctx, 'Boss', start + 102, y + 18, palette.red, 11);
+    const walletX = width - (tight ? 102 : 172);
+
+    const icons = this.images.get('dungeon/insignia.png');
+    this.icon(ctx, 'gold', walletX, y + (tight ? 0 : 8));
+    this.text(ctx, counter.format(state.gold), walletX + 16, y + (tight ? 3 : 10), palette.gold);
+    const ticketX = tight ? walletX : walletX + 58, ticketY = y + (tight ? 15 : 8);
+    if (icons) ctx.drawImage(icons, 112, 0, 16, 16, ticketX, ticketY, 16, 16);
+    this.text(ctx, counter.format(state.tickets), ticketX + 16, ticketY + 2, palette.text);
+    if (paused && !tight) {
+      ctx.fillStyle = palette.muted;
+      ctx.fillRect(width - 63, y + 13, 2, 7); ctx.fillRect(width - 59, y + 13, 2, 7);
+    }
     if (this.compactEditing) {
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameInk; ctx.fillRect(0, coreY, width, 1); ctx.fillRect(0, coreY + 79, width, 1); ctx.fillRect(0, coreY, 1, 80); ctx.fillRect(width - 1, coreY, 1, 80);
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameColor; ctx.fillRect(1, coreY + 1, width - 2, 1); ctx.fillRect(1, coreY + 78, width - 2, 1); ctx.fillRect(1, coreY + 1, 1, 78); ctx.fillRect(width - 2, coreY + 1, 1, 78);
@@ -375,7 +425,7 @@ export class PixelUI {
   }
   draw(ctx: CanvasRenderingContext2D, state: GameState, width: number, coreY: number, paused: boolean, scaleToCss: number): void {
     this.badgesDrawn.clear();
-    this.current = state; this.width = width; this.coreY = coreY; this.sourceHeight = this.height(); this.scaleToCss = scaleToCss; this.controls.clear();
+    this.current = state; this.width = width; this.coreY = coreY; this.scaleToCss = scaleToCss; this.controls.clear();
     if (!this.readyFlag) { this.syncControls(); return; }
     for (const event of state.events) if (event.seq > this.lastPullSeq && event.data.type === 'pull') {
       this.history.unshift(`${heroConfig(event.data.heroId).name} · ${event.data.rarity}${event.data.duplicate ? ' · duplicate +star/gold' : ' · NEW'}`);
