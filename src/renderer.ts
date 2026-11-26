@@ -63,7 +63,7 @@ export class Renderer {
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Canvas 2D is unavailable');
     this.ctx = ctx; this.ui = new PixelUI(this.atlases, controls);
-    void loadFonts().then(() => document.fonts.load('700 16px GamePixel')).then(() => { this.pixelFontReady = true; this.ui.onRedraw?.(); }).catch(() => { /* no FontFace (tests/headless): keep fallback font */ });
+    void loadFonts().then(() => document.fonts.load('700 16px Galmuri11')).then(() => { this.pixelFontReady = true; this.ui.onRedraw?.(); }).catch(() => { /* no FontFace (tests/headless): keep fallback font */ });
     this.holySheet = this.loadVfx('holy-smite'); this.signatureSheet = this.loadVfx('pvfx-crit-hit-gold'); this.treasureSheet = this.loadVfx('treasure-glint');
     this.legendarySword = this.loadUiIcon('sword'); this.legendaryArmor = this.loadUiIcon('armor'); this.legendaryCharm = this.loadUiIcon('potion');
   }

@@ -3,7 +3,7 @@ import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
 import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
 import type { CardFace } from './reveal-timeline';
-import { BODY, HEADING, LINE_BOX, fitSize, fontFor, loadFonts, slotOffsetY } from './font';
+import { BODY, HEADING, LINE_BOX, fitSize, CSS_FONT_STACK, loadFonts, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
@@ -255,18 +255,18 @@ export class PixelUI {
   text(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, color = palette.text, size = BODY, bold = false, maxWidth?: number, options: TextOptions = {}): void {
     if (!this.readyFlag) return;
     if (maxWidth !== undefined) size = fitSize(this.measureText(value, size, bold), maxWidth, size);
-    const family = fontFor(value, size, bold);
+    const family = CSS_FONT_STACK;
     // textBaseline 'top' at whole pixels; layout slots get the per-size optical offset.
     y = Math.round(y) + (options.exactY ? 0 : slotOffsetY(size, bold));
-    const key = `${family}|${bold ? 600 : 400}|${size}|${color}|${value}`;
+    const key = `${family}|${bold ? 700 : 400}|${size}|${color}|${value}`;
     let raster = this.textCache.get(key);
     if (!raster) {
       raster = document.createElement('canvas'); const measure = raster.getContext('2d', { willReadFrequently: true }); if (!measure) return;
-      measure.font = `${bold ? 600 : 400} ${size}px ${family}`;
+      measure.font = `${bold ? 700 : 400} ${size}px ${family}`;
       const metrics = measure.measureText(value), ascent = Math.ceil(metrics.actualBoundingBoxAscent || size), descent = Math.ceil(metrics.actualBoundingBoxDescent || Math.ceil(size / 4));
       raster.width = Math.ceil(metrics.width) + 2; raster.height = ascent + descent + 2;
       // Assigning canvas dimensions resets every context property, including the font.
-      measure.font = `${bold ? 600 : 400} ${size}px ${family}`;
+      measure.font = `${bold ? 700 : 400} ${size}px ${family}`;
       measure.textBaseline = 'alphabetic'; measure.fillStyle = color; measure.fillText(value, 1, ascent + 1);
       this.textCache.set(key, raster);
       if (this.textCache.size > CONFIG.runtime.textCacheLimit) { const first = this.textCache.keys().next().value; if (first !== undefined) this.textCache.delete(first); }
@@ -279,7 +279,7 @@ export class PixelUI {
   measureText(value: string, size = BODY, bold = false): number {
     this.measureContext ??= document.createElement('canvas').getContext('2d');
     if (!this.measureContext) return 0;
-    this.measureContext.font = `${bold ? 600 : 400} ${size}px ${fontFor(value, size, bold)}`;
+    this.measureContext.font = `${bold ? 700 : 400} ${size}px ${CSS_FONT_STACK}`;
     return this.measureContext.measureText(value).width;
   }
   private icon(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, scale = 1): void {
@@ -534,8 +534,8 @@ export class PixelUI {
   }
   private drawManagementRevealName(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, width: number): void {
     ctx.save(); ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = palette.text;
-    ctx.font = '12px GamePixel, GameSymbols, monospace';
-    if (ctx.measureText(name).width > width - 8) ctx.font = '10px GameMeta, GameSymbols, monospace';
+    ctx.font = '12px Galmuri11, monospace';
+    if (ctx.measureText(name).width > width - 8) ctx.font = '10px Galmuri11, monospace';
     ctx.fillText(name, Math.round(x + width / 2), Math.round(y)); ctx.restore();
   }
   /** Welcome back (ui/offline-rewards.md): rewards are already in the save; Collect acknowledges. */
