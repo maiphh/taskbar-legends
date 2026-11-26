@@ -55,6 +55,16 @@ def corridor():
         for y in (13,57,91):
             d.rectangle((x-2,y,x+16,y+4), fill="#1a1e2c")
             d.line((x-2,y,x+16,y),fill="#535061")
+        # Three hard-edged levels of firelight on the bricks, baked once.
+        light = Image.new("RGBA", image.size)
+        glow = ImageDraw.Draw(light)
+        for radius, alpha in [(19,13), (12,20), (7,29)]:
+            cx, cy = x+7, 35
+            glow.polygon([(cx-radius,cy-4),(cx-radius+5,cy-11),(cx-4,cy-radius),
+                          (cx+4,cy-radius),(cx+radius,cy-5),(cx+radius,cy+4),
+                          (cx+5,cy+radius),(cx-5,cy+radius),(cx-radius,cy+5)],
+                         fill=(255,166,90,alpha))
+        image.paste(light, (0,0), light)
         torch(d,x+7,39)
     d.rectangle((0,99,255,102),fill="#121923")
     for row,(y,ht,bw) in enumerate([(103,6,29),(109,9,43),(118,10,63)]):

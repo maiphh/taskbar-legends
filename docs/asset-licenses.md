@@ -367,3 +367,9 @@ Page quotation:
 > Creative Commons Zero v1.0 Universal
 
 Note: no separate licence file found; explicit public page CC0 declaration retained as evidence.
+
+## Pixel dungeon interface
+
+The Taskbar Legends project dedicates the generated PNG artwork in `public/ui/dungeon/` to the public domain under CC0 1.0 Universal. This covers the keep illustration, masonry tile, torchlit corridor, navigation and ticket pictograms, and six interface plates. The source drawings are in [the reproducible Pillow generator](../scripts/dungeon-art.py). The [CC0 legal text](../LICENSES/CC0-1.0.txt) is bundled with the game. Game and generator code retain the repository code licence.
+
+The camp and strip reuse the existing character atlases, role and status art. Galmuri11 and its bold weight retain their existing SIL Open Font License. Noto Sans supplies fallback glyphs where needed.

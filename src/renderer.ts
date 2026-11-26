@@ -335,7 +335,7 @@ export class Renderer {
       const anim = this.animation(state, unit, key);
       const lastHit = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
       const lastHitAge = lastHit && lastHit.combatEncounter === state.encounter ? this.lanePresentationTime(state) - (lastHit.combatTick ?? lastHit.tick) : null;
-      const flash = !still && lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
+      const flash = !still && lastHit !== undefined && lastHitAge !== null && lastHitAge >= 0 && lastHitAge * TICK_MS < view.hitFlashMs;
       const flip = anim.returning ? unit.side === 'hero' : unit.facing === -1;
       const bossScale = unit.boss && enemyDef?.scale ? Math.max(1, Math.round(enemyDef.scale)) : 1;
       const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
@@ -346,7 +346,8 @@ export class Renderer {
       }
       // Plate is painted after units, so scale-2 bosses stay unclipped and read as large.
       const tint = isLaneBoss ? enemyDef?.tint : undefined;
-      const outline = isLaneBoss ? enemyDef?.outline : undefined;
+      const warning = isLaneBoss && bossBar && (bossBar.enraged || bossBar.telegraph);
+      const outline = warning ? (!still && state.tick % 12 < 4 ? '#ffcf82' : '#e69668') : isLaneBoss ? enemyDef?.outline : undefined;
       if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline)) {
         const w = unit.boss ? view.bossWidth * bossScale : view.heroWidth, h = unit.boss ? view.bossHeight * bossScale : view.heroHeight;
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : (enemyDef?.tint ?? color);
@@ -354,8 +355,8 @@ export class Renderer {
       }
       if (unit.hp <= 0) continue;
       const hpWidth = unit.side === 'hero' ? 34 : 32;
-      const hpY = isLaneBoss ? coreY - 22 : unitHpBaseY - depth;
-      // Boss uses the top-of-lane HP plate; skip the tiny per-unit bar, but still draw status icons.
+      const hpY = unitHpBaseY - depth;
+      // Boss uses the floor-level HP plate; skip the tiny per-unit bar, but still draw status icons.
       if (!isLaneBoss) {
         ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
         ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, hpWidth - 2, CONFIG.ui.unitHpBars.height - 2);
@@ -374,7 +375,7 @@ export class Renderer {
         }
         if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
       }
-      this.drawStatusRow(ctx, state, unit, x, hpY);
+      if (!isLaneBoss) this.drawStatusRow(ctx, state, unit, x, hpY);
     }
     {
       const allUnits = [...state.party, ...state.enemies];
@@ -503,9 +504,12 @@ export class Renderer {
       this.ui.text(ctx, text, x, y, color, BODY, true);
     }
     ctx.restore();
-    this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, coreY - 48, this.width, 128); ctx.clip();
     this.drawFeedback(ctx, state, units, coreY);
     this.drawLegendaryEffect(ctx, state, field, coreY);
+    ctx.restore();
+    this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
     if (bossBar && !this.ui.welcome) {
       const x = 4, y = height - 18, w = this.width - 8;
       const accent = bossBar.enraged ? '#ff9761' : '#ce7473';
@@ -519,14 +523,16 @@ export class Renderer {
       const warning = bossBar.telegraph ?? (bossBar.enraged ? 'ENRAGED' : '');
       const warningX = hpX - 12 - Math.ceil(this.ui.measureText(warning, BODY, true));
       this.ui.text(ctx, warning, warningX, y, '#ffd68a', BODY, true);
-      this.ui.text(ctx, ellipsize(bossBar.name, warningX - 18, v => this.ui.measureText(v, BODY, true)), 10, y, accent, BODY, true);
+      const boss = enemies.find(unit => unit.id === bossBar.unitId);
+      const nameEnd = boss ? this.drawStatusRow(ctx, state, boss, warningX - 8, y + 14, true) : warningX;
+      this.ui.text(ctx, ellipsize(bossBar.name, nameEnd - 14, v => this.ui.measureText(v, BODY, true)), 10, y, accent, BODY, true);
     }
     this.lanePositions.endFrame();
     this.rendering = false; this.frameLaneTime = null;
   }
-  private drawStatusRow(ctx: CanvasRenderingContext2D, state: GameState, unit: Unit, x: number, hpY: number): void {
+  private drawStatusRow(ctx: CanvasRenderingContext2D, state: GameState, unit: Unit, x: number, hpY: number, alignRight = false): number {
     const config = statusEffectsConfig();
-    if (!config) return;
+    if (!config) return x;
     const display = config.display;
     const iconPx = display.iconPx, gap = display.gapPx;
     const maxVisible = isStatusBoss(unit) ? display.maxVisibleBoss : display.maxVisible;
@@ -591,7 +597,7 @@ export class Renderer {
     const visible = overflow > 0 ? items.slice(0, maxVisible - 1) : items.slice(0, maxVisible);
     const chipW = overflow > 0 ? 7 : 0;
     const rowW = visible.length * iconPx + Math.max(0, visible.length - 1) * gap + (overflow > 0 ? gap + chipW : 0);
-    const rowLeft = Math.round(x - rowW / 2);
+    const rowLeft = Math.max(1, Math.min(this.width - rowW - 1, Math.round(x - (alignRight ? rowW : rowW / 2))));
     const rowTop = Math.round(hpY - display.rowOffsetAboveHpPx);
     let cursor = rowLeft;
     for (const item of visible) {
@@ -615,6 +621,7 @@ export class Renderer {
       cursor += iconPx + gap;
     }
     if (overflow > 0) drawOverflowChip(ctx, overflow, cursor, rowTop);
+    return rowLeft;
   }
 
   private drawLegendaryEffect(ctx: CanvasRenderingContext2D, state: GameState, field: { x: number; width: number }, coreY: number): void {
@@ -678,15 +685,15 @@ export class Renderer {
   private bannerScale(age: number, stepMs: number, entranceMs: number): number { return age < entranceMs ? [0, 1, 2, 3, 4][Math.min(4, Math.floor(age / stepMs))]! : 4; }
   private drawLegendaryBanner(ctx: CanvasRenderingContext2D, label: string, cx: number, y: number, gold: string, stage: number, age: number, holdMs: number, staticMode: boolean): void {
     if (!this.pixelFontReady) return;
-    const width = Math.min(340, Math.max(208, label.length * 9 + 42)), height = 34, visibleWidth = Math.floor(width * stage / 4), x = Math.floor(cx - visibleWidth / 2);
+    const width = Math.min(340, Math.max(208, label.length * 9 + 42)), height = 16, visibleWidth = Math.floor(width * stage / 4), x = Math.floor(cx - visibleWidth / 2);
     if (!visibleWidth) return;
     ctx.save(); ctx.globalAlpha = staticMode ? 1 : age <= holdMs ? 1 : age < holdMs + 180 ? 0.5 : 0;
     ctx.beginPath(); ctx.rect(x, y, visibleWidth, height); ctx.clip();
     ctx.fillStyle = '#101c27'; ctx.fillRect(x, y, width, height); ctx.fillStyle = '#735329'; ctx.fillRect(x + 3, y + 3, width - 6, height - 6);
     ctx.fillStyle = '#202c39'; ctx.fillRect(x + 5, y + 5, width - 10, height - 10); ctx.fillStyle = gold; ctx.fillRect(x, y, width, 3); ctx.fillRect(x, y + height - 3, width, 3); ctx.fillRect(x, y, 3, height); ctx.fillRect(x + width - 3, y, 3, height);
     ctx.fillStyle = '#fff4bf'; ctx.fillRect(x + 8, y + 8, 3, 3); ctx.fillRect(x + width - 11, y + 8, 3, 3);
-    ctx.font = '700 9px "Galmuri11", monospace'; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff4bf'; ctx.fillText('LEGENDARY', x + 12, y + 5);
-    ctx.font = '700 12px "Galmuri11", monospace'; const text = label.toUpperCase(), textWidth = ctx.measureText(text).width, tx = Math.floor(cx - textWidth / 2), ty = y + 17;
+    ctx.font = '700 12px "Galmuri11", monospace'; ctx.textBaseline = 'top';
+    const text = label.toUpperCase(), tx = Math.floor(cx - ctx.measureText(text).width / 2), ty = y + 1;
     ctx.fillStyle = '#101720'; for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) ctx.fillText(text, tx + dx!, ty + dy!);
     ctx.fillStyle = '#fff0b1'; ctx.fillText(text, tx, ty);
     if (!staticMode && age < 920) { ctx.globalAlpha = 0.8; ctx.fillStyle = '#fff'; const shineX = x + 8 + Math.floor((age % 460) / 460 * (width - 16)); ctx.fillRect(shineX, y + 5, 3, height - 10); }

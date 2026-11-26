@@ -1015,7 +1015,7 @@ body.compact-shell #compact-menu-button { width:calc(48px * var(--z)); height:ca
 .px-menu[data-layout="v2"] .px-home-hero { background:#202431; justify-content:flex-start; gap:4px; }
 .px-menu[data-layout="v2"] .camp-portrait {
   display:flex; flex:1; align-self:stretch; min-height:0; align-items:flex-end; justify-content:center;
-  border:2px solid #363947; background:#202433 url("/ui/dungeon/corridor.png") 40% bottom;
+  border:2px solid #363947; background:#252938 url("/ui/dungeon/corridor.png") 40% bottom repeat-x;
 }
 .px-menu[data-layout="v2"] .camp-reserves { display:flex; align-items:flex-end; gap:12px; height:64px; margin:16px 0 8px; padding:2px 10px; border-bottom:3px double #68606a; }
 .px-menu[data-layout="v2"] .camp-reserves:empty { display:none; }
@@ -1030,3 +1030,8 @@ body.compact-shell #compact-menu-button { width:calc(48px * var(--z)); height:ca
 }
 .px-menu[data-layout="v2"] .px-v2-roster > button { scroll-snap-align:start; }
 .px-menu[data-layout="v2"] .px-nav .px-pip { top:6px; right:6px; }
+
+@media (max-height:620px) {
+  .px-menu[data-layout="v2"][data-preset="960"] main[data-view="home"] .px-home-layout { grid-template-rows:170px minmax(0,1fr); }
+  .px-menu[data-layout="v2"][data-preset="960"] .campaign-scene { padding:8px 12px; }
+}
