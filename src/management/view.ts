@@ -209,10 +209,10 @@ export class ManagementView {
     this.tooltip = new ManagementTooltip(this.root);
     for (const [key, value] of Object.entries(CONFIG.ui.palette)) this.root.style.setProperty(`--px-${key}`, value);
     for (const tier of raritySchema.options) this.root.style.setProperty(`--px-rarity-${tier}`, CONFIG.ui.rarity[tier].label);
-    for (const [name, file] of [['panel', 'panel-9slice'], ['button', 'button-9slice'], ['hover', 'button-hover-9slice'], ['pressed', 'button-pressed-9slice'], ['disabled', 'button-disabled-9slice'], ['gold', 'button-gold-9slice']] as const) {
-      this.root.style.setProperty(`--px-${name}-9slice`, `url("${asset(`ui/${file}.png`)}")`);
+    for (const name of ['panel', 'button', 'hover', 'pressed', 'disabled', 'gold']) {
+      this.root.style.setProperty(`--px-${name}-9slice`, `url("${asset(`ui/dungeon/${name}.png`)}")`);
     }
-    this.root.innerHTML = `<header class="management-header"><h1>TASKBAR LEGENDS</h1><span class="px-run" data-run></span><span class="px-wallet" data-wallet></span>${button('menu-close', 'X', 'data-close', { aria: 'Close management', className: 'px-close' })}</header>`
+    this.root.innerHTML = `<header class="management-header"><h1>Taskbar Legends</h1><span class="px-run" data-run></span><span class="px-wallet" data-wallet></span>${button('menu-close', 'X', 'data-close', { aria: 'Close management', className: 'px-close' })}</header>`
       + `<nav aria-label="Management tabs"></nav><div class="campaign-row"><span class="campaign-status" data-campaign></span><span data-campaign-action></span></div><div class="management-status" role="status" aria-live="polite"></div><div class="px-legendary-toast" role="status" aria-live="polite" hidden></div><main></main><div class="px-divider"></div><footer class="px-footer"></footer>`
       + `<section class="reveal-stage" aria-label="Recruit reveal" hidden><canvas width="${REVEAL_STAGE.width}" height="${REVEAL_STAGE.height}" role="img" aria-label="Recruit results" aria-describedby="recruit-result-description"></canvas><ul id="recruit-result-description" class="px-sr" aria-label="Recruit results"></ul><div class="reveal-controls"></div></section>`;
     this.header = this.root.querySelector('.management-header')!; this.nav = this.root.querySelector('nav')!;
@@ -334,7 +334,7 @@ export class ManagementView {
   private renderHeader(): void {
     const state = this.snapshotValue; if (!state) return;
     const wallet = this.root.querySelector<HTMLElement>('[data-wallet]'), run = this.header.querySelector<HTMLElement>('[data-run]');
-    if (wallet) wallet.innerHTML = `${icon('gold')}<span class="px-gold">${shortGold(state.gold)}</span><span class="px-gold">${state.tickets} tix</span>`;
+    if (wallet) wallet.innerHTML = `<span class="camp-wallet" aria-label="${state.gold} gold">${icon('gold')}${shortGold(state.gold)}</span><span class="camp-wallet" aria-label="${state.tickets} tickets"><i class="ticket-icon"></i>${state.tickets}</span>`;
     if (run) { run.textContent = state.paused ? 'BATTLE PAUSED' : 'BATTLE CONTINUES'; run.dataset.paused = String(state.paused); }
     const campaign = campaignPresentation(state.progress, state.paused), label = this.root.querySelector<HTMLElement>('[data-campaign]'), actionHost = this.root.querySelector<HTMLElement>('[data-campaign-action]');
     if (label) { label.textContent = campaign.management; label.dataset.tone = campaign.tone; label.title = campaign.management; }
@@ -357,8 +357,7 @@ export class ManagementView {
       ...(state.tickets >= state.recruit.cost ? { recruit: 'gold' as const } : {}),
       ...(state.inventory.some(item => state.roster.some(hero => Object.values(hero.equipment).includes(item.id)) && item.level < CONFIG.gear.upgrade.maxLevel && upgradeCost(item) <= state.gold) ? { gear: 'gold' as const } : {}),
     };
-    const navArt: Record<Tab,string> = { home:icon('chest'), heroes:icon('armor'), formation:icon('sword'), gear:icon('armor'), recruit:icon('chest'), stages:icon('gold'), settings:'<span aria-hidden="true">#</span>' };
-    const html = TABS.map(tab => `<button type="button" class="px-btn px-nav${tab === this.tab ? ' is-selected' : ''}" data-tab="${tab}" aria-current="${tab === this.tab ? 'page' : 'false'}"><span class="nav-icon" aria-hidden="true">${navArt[tab]}</span><span>${TAB_LABEL[tab]}</span>${pips[tab] ? `<i class="px-pip" data-pip="${pips[tab]}"></i>` : ''}</button>`).join('');
+    const html = TABS.map((tab, index) => `<button type="button" class="px-btn px-nav${tab === this.tab ? ' is-selected' : ''}" data-tab="${tab}" aria-current="${tab === this.tab ? 'page' : 'false'}"><span class="nav-icon" aria-hidden="true" style="--icon-x:${-index * 32}px"></span><span>${TAB_LABEL[tab]}</span>${pips[tab] ? `<i class="px-pip" data-pip="${pips[tab]}"></i>` : ''}</button>`).join('');
     if (this.nav.dataset.html === html) return;
     const focused = document.activeElement instanceof HTMLElement && this.nav.contains(document.activeElement) ? document.activeElement.dataset.tab : undefined;
     this.nav.innerHTML = html; this.nav.dataset.html = html;
@@ -746,9 +745,34 @@ export class ManagementView {
   private home(state: ManagementSnapshot): [string, string] {
     const progress = state.progress, stage = progress.kind === 'BOSS_READY' ? progress.bossStage : progress.stage;
     const label = progress.kind === 'BOSS_READY' ? 'Boss ready' : progress.kind === 'BOSS_FIGHT' ? 'Boss fight' : progress.kind === 'FARMING' ? `Farming ${CONFIG.stages[progress.stage - 1]?.id ?? ''}` : progress.kind === 'COMPLETE' ? 'Campaign complete' : `Pushing ${CONFIG.stages[stage - 1]?.id ?? ''}`;
-    const party = state.partyIds.map((id, i) => { const hero = state.roster.find(h => h.id === id), role = getPartyHeroDefinition(id).role, hp = state.heroStats[id]?.maxHp ?? 0; return `<button class="px-home-hero" data-open-hero="${esc(id)}" ${control(`home-hero-${id}`)} aria-label="Open ${esc(shortName(id))}"><span>${['FRONT','MIDDLE','REAR'][i]}</span>${this.portrait(id, this.root.dataset.preset === '960' ? 1 : this.portraitScale(id, 96, 150))}<b>${esc(shortName(id))}</b><small>Lv ${hero?.level ?? 1} · ${hero?.stars ?? 1}★ · HP ${fmt(hp)}</small>${roleBadge(role)}</button>`; }).join('');
+    const party = state.partyIds.map((id, i) => {
+      const hero = state.roster.find(h => h.id === id), hp = state.heroStats[id]?.maxHp ?? 0;
+      const scale = this.root.dataset.preset === '960' ? 1 : this.portraitScale(id, 96, 125);
+      return `<button class="px-home-hero" data-open-hero="${esc(id)}" ${control(`home-hero-${id}`)} aria-label="Open ${esc(shortName(id))}">
+        <span>${['FRONT','MIDDLE','REAR'][i]}</span><span class="camp-portrait">${this.portrait(id, scale)}</span>
+        <b>${esc(shortName(id))}</b><small>Lv ${hero?.level ?? 1} · ${hero?.stars ?? 1}★ · HP ${fmt(hp)}</small>${roleBadge(getPartyHeroDefinition(id).role)}</button>`;
+    }).join('');
+    const reserves = state.roster.filter(hero => !state.partyIds.includes(hero.id));
+    const bench = reserves.slice(0, 5).map(hero => this.portrait(hero.id)).join('');
     const campaignAction = progress.kind === 'BOSS_READY' ? button('home-fight-boss', 'Fight boss', 'data-action="retry"', { primary: true, className: 'px-large-action' }) : '';
-    return [`<h2>Home</h2><div class="px-home-layout"><section class="px-home-campaign"><h3>Current stage</h3><strong>Stage ${esc(CONFIG.stages[stage - 1]?.id ?? '1-1')}</strong><p>${esc(label)}</p><p class="px-muted">3 waves · ${CONFIG.stages[stage - 1]?.isBoss ? 'Boss encounter' : 'no stage timer'} · chapter ${Math.ceil(stage / 10)}</p><div class="px-home-actions">${button('home-stages', 'Open Stages', 'data-tab="stages"', { primary: true, className: 'px-large-action' })}${button('home-formation', 'Edit formation', 'data-tab="formation"')}${campaignAction}</div></section><section class="px-home-offline"><h3>Offline progress</h3><p>Farm ${esc(state.offline.stageId)} · ~${fmt(state.offline.goldPerHour)} gold/h · ~${fmt(state.offline.xpPerHour)} XP/h per hero</p><p class="px-muted">Cap ${state.offline.capHours} hours · next chest progress carries across visits.</p></section><section class="px-home-formation"><h3>Formation</h3><div class="px-home-party">${party}</div></section><section class="px-home-roster"><h3>Roster</h3><p>${state.roster.length} heroes owned · ${state.tickets} tickets</p><div>${button('home-recruit', 'Recruit', 'data-tab="recruit"')}${button('home-heroes', 'Heroes', 'data-tab="heroes"')}</div></section></div>`, ''];
+    const chapter = Math.ceil(stage / 10), info = CONFIG.stages[stage - 1];
+    const steps = Array.from({ length: 10 }, (_, i) => `<i class="${i === 9 ? 'boss-step ' : ''}${i < (stage - 1) % 10 ? 'cleared' : i === (stage - 1) % 10 ? 'current' : ''}"></i>`).join('');
+    return [`<h2>Dungeon camp</h2><div class="px-home-layout">
+      <section class="px-home-campaign"><div class="campaign-scene">
+        <h3>Chapter ${chapter} · Campaign</h3><strong>Stage ${esc(info?.id ?? '1-1')}</strong>
+        <p>${esc(label)} · ${info?.isBoss ? 'Boss encounter' : `${info?.waves.length ?? 3} waves`}</p>
+      </div><div class="campaign-route" aria-label="Chapter ${chapter}, boss at stage 10">${steps}<span>Boss ${chapter}-10</span></div>
+      <div class="px-home-actions">${button('home-stages', 'Open Stages', 'data-tab="stages"', { primary: !campaignAction, className: 'px-large-action' })}${button('home-formation', 'Edit formation', 'data-tab="formation"')}${campaignAction}</div></section>
+      <section class="px-home-offline"><h3>Offline progress</h3><p class="camp-sub">Farm ${esc(state.offline.stageId)} · ${state.offline.capHours} hour cap</p>
+        <dl class="camp-yields"><div><dt>Gold / hour</dt><dd>${fmt(state.offline.goldPerHour)}</dd></div><div><dt>XP / hero / hour</dt><dd>${fmt(state.offline.xpPerHour)}</dd></div></dl>
+        <p class="camp-note">Estimated earnings. Chest progress carries over.</p></section>
+      <section class="px-home-formation"><h3>Formation</h3><div class="px-home-party">${party}</div></section>
+      <section class="px-home-roster"><h3>Roster</h3><div class="roster-count"><b>${state.roster.length}</b> / ${CONFIG.heroes.length} heroes owned</div>
+        <div class="roster-meter" aria-hidden="true">${CONFIG.heroes.map((_, i) => `<i class="${i < state.roster.length ? 'owned' : ''}"></i>`).join('')}</div>
+        <p class="camp-sub"><i class="ticket-icon"></i> ${state.tickets} recruit tickets</p>
+        <div class="camp-reserves" aria-label="${reserves.length} reserve heroes">${bench}</div>
+        <div class="roster-actions">${button('home-recruit', 'Recruit', 'data-tab="recruit"')}${button('home-heroes', 'Heroes', 'data-tab="heroes"')}</div></section>
+      </div>`, ''];
   }
   private lockedHero(state: ManagementSnapshot): [string, string] {
     const definition = CONFIG.heroes.find(hero => hero.id === this.lockedHeroId);

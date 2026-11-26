@@ -1,4 +1,4 @@
-:root { --game-font: "Galmuri11", monospace; }
+:root { --game-font: "Galmuri11", "GameFallback", monospace; }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-width: 0; background: transparent; }
 body.shot { background: repeating-conic-gradient(#26323d 0 25%, #1e2a34 0 50%) 0 / 16px 16px; }
@@ -373,7 +373,7 @@ body.management-window #management-app.px-menu[data-layout="v2"], #management.px
 }
 #management.px-menu[data-layout="v2"][data-preset="960"], body.management-window #management-app.px-menu[data-layout="v2"][data-preset="960"] { --px-panel-w:960px; --px-body-h:calc(var(--px-v2-height,640px) - 132px); width:960px; height:var(--px-v2-height,640px); }
 .px-menu[data-layout="v2"]::before { border: 2px solid #536276; }
-.px-menu[data-layout="v2"] { --game-font:"Galmuri11", monospace; }
+.px-menu[data-layout="v2"] { --game-font:"Galmuri11", "GameFallback", monospace; }
 .px-menu[data-layout="v2"] h1 { left: 24px; top: 14px; font: 700 24px/28px var(--game-font); }
 .px-menu[data-layout="v2"] .management-header { position:absolute; inset:0 0 auto; height:56px; border-bottom:1px solid #536276; }
 .px-menu[data-layout="v2"] .px-wallet { position:absolute; right:64px; top:18px; gap:14px; font:12px/20px var(--game-font); }
@@ -472,7 +472,7 @@ body.management-window #management-app.px-menu[data-layout="v2"], #management.px
 .px-v2-detail-head { height:48px; display:flex; align-items:center; gap:12px; }.px-v2-detail-head h2 { color:#e9bd68; }.px-v2-detail-head small { color:#b0bcc8; font:10px/14px var(--game-font); }
 .px-v2-detail { height:510px; display:grid; grid-template-columns:280px minmax(0,1fr) 260px; gap:16px; }
 .px-v2-hero-summary,.px-v2-stats,.px-v2-skill { background:#202c39; border:1px solid #536276; padding:12px; }
-.px-v2-hero-summary { display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }.px-v2-detail-art { width:240px; height:260px; display:flex; justify-content:center; align-items:flex-end; overflow:hidden; background:radial-gradient(ellipse at 50% 80%,#2a3a4c,#121820 72%); box-shadow:inset 0 0 0 2px var(--px-rarity-common); }.px-v2-detail-art img { max-height:208px; width:auto; image-rendering:pixelated; }.px-v2-hero-summary h3 { font:700 20px/26px var(--game-font); }.px-v2-hero-summary small { color:#b0bcc8; font:10px/14px var(--game-font); }.px-v2-hero-summary p { font:10px/14px var(--game-font); }
+.px-v2-hero-summary { display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }.px-v2-detail-art { width:240px; height:260px; display:flex; justify-content:center; align-items:flex-end; overflow:hidden; background:#1b1e2c url("/ui/dungeon/masonry.png"); box-shadow:inset 0 0 0 2px var(--px-rarity-common); }.px-v2-detail-art img { max-height:208px; width:auto; image-rendering:pixelated; }.px-v2-hero-summary h3 { font:700 20px/26px var(--game-font); }.px-v2-hero-summary small { color:#b0bcc8; font:10px/14px var(--game-font); }.px-v2-hero-summary p { font:10px/14px var(--game-font); }
 .px-v2-detail-center { display:flex; flex-direction:column; gap:8px; min-width:0; }.px-v2-stats { display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; }.px-v2-stats p { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #293948; }.px-v2-skill { min-height:96px; display:grid; grid-template-columns:48px 1fr; gap:10px; }.px-v2-skill > i { height:48px; display:grid; place-items:center; border:1px solid #e9bd68; color:#e9bd68; font:700 16px var(--game-font); font-style:normal; }.px-v2-skill b,.px-v2-skill small,.px-v2-skill label { display:block; }.px-v2-skill small,.px-v2-skill label { color:#b0bcc8; font:10px/14px var(--game-font); }.px-v2-skill p { margin:2px 0; line-height:16px; }
 .px-v2-gear { display:flex; flex-direction:column; gap:10px; }.px-v2-detail-slot { min-height:64px; display:flex; align-items:center; gap:8px; padding:8px; text-align:left; background:#293948; color:#f2e9cf; border:1px solid #536276; }.px-v2-detail-slot .px-icon { width:32px;height:32px; }.px-v2-detail-slot span { flex:1; }.px-v2-detail-slot small { display:block; color:#b0bcc8; font:10px/14px var(--game-font); }
 .px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-view { position:relative; height:100%; padding:0 0 36px; display:flex; flex-direction:column; gap:8px; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-toolbar { position:absolute; top:-40px; right:0; flex:none; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-tools:last-child { display:none; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-help-row { display:none; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formations-large { height:240px; min-height:240px; gap:12px; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-wide-formation { height:240px; display:flex; flex-direction:column; justify-content:center; gap:4px; background:#202c39; border:1px solid #536276; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-wide-formation .px-portrait { width:auto; height:112px; max-width:112px; object-fit:contain; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-slot-name { font:12px/16px var(--game-font); }.px-menu[data-layout="v2"] main[data-view="formation"] .px-v2-slot-equip { z-index:2; min-width:160px; height:32px; margin-top:4px; padding:6px; background:#293948; box-shadow:inset 0 0 0 1px #7a7568; color:#f2e9cf; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-roster { grid-template-columns:repeat(6,minmax(0,1fr)); grid-auto-rows:104px; gap:8px; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-roster .px-card { height:104px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-roster .px-portrait { max-height:68px; width:auto; }.px-menu[data-layout="v2"] main[data-view="formation"] .px-formation-assign { position:absolute; right:0; bottom:42px; z-index:3; }
@@ -580,7 +580,7 @@ body.management-window { margin: 0; min-width: 0; min-height: 100vh; background:
 .px-equip-drawer { position:absolute; z-index:3; right:0; top:0; bottom:0; width:376px; padding:12px; display:grid; grid-template-rows:minmax(0,1fr) auto; gap:8px; background:#202c39; border:1px solid #7a7568; }
 .px-equip-list { min-height:0; position:relative; display:flex; flex-direction:column; }.px-equip-list h3,.px-equip-compare h3 { flex:none; margin:0 0 6px; color:#e9bd68; font:12px/16px var(--game-font); }.px-equip-rows { min-height:0; flex:1; overflow:auto; display:flex; flex-direction:column; gap:6px; padding:0 3px 12px 0; scrollbar-width:thin; scrollbar-color:#7a8793 #17212d; scroll-snap-type:y mandatory; }.px-equip-rows::-webkit-scrollbar { width:6px; }.px-equip-rows::-webkit-scrollbar-track { background:#17212d; }.px-equip-rows::-webkit-scrollbar-thumb { background:#7a8793; }
 .px-equip-row { position:relative; height:48px; min-height:48px; flex:none; padding:5px 8px; display:flex; align-items:center; gap:8px; text-align:left; color:#f2e9cf; background:#17212d; border:2px solid var(--px-rarity-common); cursor:pointer; scroll-snap-align:start; }.px-equip-row[data-rarity="rare"] { border-color:var(--px-rarity-rare); }.px-equip-row[data-rarity="epic"] { border-color:var(--px-rarity-epic); }.px-equip-row[data-rarity="legendary"] { border-color:var(--px-rarity-legendary); }.px-equip-row.is-selected { background:#354a59; outline:2px solid #e9bd68; outline-offset:-3px; }.px-equip-row-icon { position:relative; width:28px; flex:none; display:grid; place-items:center; }.px-equip-row-icon .px-icon { width:24px;height:24px; }.px-equip-row-text { min-width:0; flex:1; }.px-equip-row-text b,.px-equip-row-text small { display:block; overflow:visible; white-space:nowrap; font:12px/16px var(--game-font); }.px-equip-row-text small { color:#b0bcc8; font:10px/13px var(--game-font); }.px-equip-row .px-lock { flex:none; }
-.px-equip-scroll-cue { position:absolute; right:12px; bottom:0; width:40px; height:22px; display:grid; place-items:center; background:linear-gradient(transparent,#202c39 45%); pointer-events:none; }.px-equip-scroll-cue[hidden] { display:none; }.px-equip-scroll-cue img { width:22px;height:14px;image-rendering:pixelated; }.px-equip-compare { min-height:126px; padding-top:8px; border-top:1px solid #536276; }.px-equip-deltas p { display:flex; justify-content:space-between; margin:2px 0; font:12px/16px var(--game-font); }.px-equip-deltas p span { color:#b0bcc8; }.px-equip-note { margin:3px 0; color:#e9bd68; font:10px/13px var(--game-font); }.px-equip-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }.px-equip-actions>.px-btn { min-height:40px; }.px-equip-actions .px-equip-primary { width:100%; height:48px; }
+.px-equip-scroll-cue { position:absolute; right:12px; bottom:0; width:40px; height:22px; display:grid; place-items:center; background:#343949; pointer-events:none; }.px-equip-scroll-cue[hidden] { display:none; }.px-equip-scroll-cue img { width:22px;height:14px;image-rendering:pixelated; }.px-equip-compare { min-height:126px; padding-top:8px; border-top:1px solid #536276; }.px-equip-deltas p { display:flex; justify-content:space-between; margin:2px 0; font:12px/16px var(--game-font); }.px-equip-deltas p span { color:#b0bcc8; }.px-equip-note { margin:3px 0; color:#e9bd68; font:10px/13px var(--game-font); }.px-equip-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }.px-equip-actions>.px-btn { min-height:40px; }.px-equip-actions .px-equip-primary { width:100%; height:48px; }
 @media (max-width:1199px) {
  .px-menu[data-layout="v2"] main[data-view="equip"] { left:16px; top:64px; width:928px; height:500px; }
  .px-equip-stage { left:0; right:0; top:44px; bottom:208px; }.px-equip-plate { width:160px; height:160px; top:56%; }.px-equip-plate img { max-width:132px; max-height:156px; }
@@ -609,7 +609,7 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .px-v2-hero-card, .px-menu[data-layout="v2"] .px-v2-hero-summary,
 .px-menu[data-layout="v2"] .px-v2-stats, .px-menu[data-layout="v2"] .px-v2-skill,
 .px-menu[data-layout="v2"] .px-equip-drawer, .px-menu[data-layout="v2"] .px-howto-card {
-  border:0; border-image-source:var(--px-panel-9slice); border-image-slice:4 fill; border-image-width:8px; border-image-repeat:stretch;
+  border:0; border-image-source:var(--px-panel-9slice); border-image-slice:8 fill; border-image-width:8px; border-image-repeat:stretch;
 }
 .px-menu[data-layout="v2"] .px-equip-actions .px-equip-primary { height:48px; min-height:48px; }
 .px-menu[data-layout="v2"] .px-equip-prev,.px-menu[data-layout="v2"] .px-equip-next { width:48px; min-width:48px; height:48px; }
@@ -681,7 +681,7 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .px-howto-overlay .px-howto-card { margin:0; }
 .px-menu[data-layout="v2"] .px-howto-portrait img { filter:grayscale(1) brightness(.3); }
 .px-menu[data-layout="v2"] main[data-view="settings"] .px-v2-settings { display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:min-content; align-content:start; gap:10px 16px; }
-.px-menu[data-layout="v2"] .px-setting-group { min-width:0; padding:10px 12px; background:#202c39; border-image-source:var(--px-panel-9slice); border-image-slice:4 fill; border-image-width:8px; }
+.px-menu[data-layout="v2"] .px-setting-group { min-width:0; padding:10px 12px; background:#202c39; border-image-source:var(--px-panel-9slice); border-image-slice:8 fill; border-image-width:8px; }
 .px-menu[data-layout="v2"] .px-setting-group > h3 { margin:0 0 6px; color:#e9bd68; font:12px/16px var(--game-font); }
 .px-menu[data-layout="v2"] .px-setting-group .px-slider-row { min-height:40px; }
 .px-menu[data-layout="v2"] .px-setting-group .px-srow { min-height:40px; }
@@ -826,7 +826,7 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .px-v2-skill small,.px-menu[data-layout="v2"] .px-v2-skill label,
 .px-menu[data-layout="v2"] .px-howto-odds small,.px-menu[data-layout="v2"] .px-recruit-rates,
 .px-menu[data-layout="v2"] .px-recruit-rules,.px-menu[data-layout="v2"] .px-home-hero small { font-family:var(--game-meta); }
-.px-menu[data-layout="v2"] .px-equip-scroll-cue { background:linear-gradient(180deg,transparent 0%,#202c39 70%); }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue { background:#343949; }
 .px-menu[data-layout="v2"] .px-equip-slot-position { z-index:1; }
 .px-menu[data-layout="v2"] .px-equip-prev,.px-menu[data-layout="v2"] .px-equip-next { z-index:4; }
 .px-menu[data-layout="v2"] .px-equip-slot-position.left { left:calc(50% - 420px); }
@@ -936,7 +936,7 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="epic"]::after { border-color:var(--px-rarity-epic); }
 .px-menu[data-layout="v2"] .px-v2-hero-card[data-rarity="legendary"]::after { border-color:var(--px-rarity-legendary); }
 .px-menu[data-layout="v2"] .px-v2-hero-card .px-v2-art { width:120px; height:120px; }
-.px-menu[data-layout="v2"] .px-equip-scroll-cue { background:linear-gradient(180deg,transparent 0%,#293948 100%); }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue { background:#343949; }
 .px-menu[data-layout="v2"] .px-formation-roster .px-v2-role { position:absolute; left:2px; bottom:2px; z-index:1; }
 .px-menu[data-layout="v2"] .px-formation-roster .px-card { position:relative; padding-bottom:16px; }
 .px-menu[data-layout="v2"] .px-v2-role { display:inline-flex; box-sizing:content-box; width:16px; height:16px; padding:1px; line-height:16px; opacity:1; border:1px solid currentColor; background:#17212d; image-rendering:pixelated; }
@@ -950,3 +950,83 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 /* The browser Menu shares the top rail with the read-only canvas HUD. */
 body.compact-shell #compact-menu-bar { top:calc(3px * var(--z)); right:calc(4px * var(--z)); bottom:auto; }
 body.compact-shell #compact-menu-button { width:calc(48px * var(--z)); height:calc(26px * var(--z)); }
+
+/* Dungeon masonry stays at source resolution. The plates use fixed eight-pixel corners. */
+:root {
+  --px-button-9slice:url("/ui/dungeon/button.png"); --px-hover-9slice:url("/ui/dungeon/hover.png");
+  --px-pressed-9slice:url("/ui/dungeon/pressed.png"); --px-disabled-9slice:url("/ui/dungeon/disabled.png");
+}
+.px-menu[data-layout="v2"] { image-rendering:pixelated; }
+.px-menu[data-layout="v2"]::before { border:2px solid #494851; border-image:none; background:#191c28 url("/ui/dungeon/masonry.png"); }
+.px-menu[data-layout="v2"] .management-header { background:#191c28; border-bottom:3px double #65606a; }
+.px-menu[data-layout="v2"] h1 { left:20px; display:flex; gap:12px; align-items:center; top:11px; color:#f4d59c; }
+.px-menu[data-layout="v2"] h1::before, .px-menu[data-layout="v2"] .nav-icon {
+  content:""; display:block; width:32px; height:32px; background:url("/ui/dungeon/insignia.png") var(--icon-x,0px) 0 / 256px 32px no-repeat;
+}
+.px-menu[data-layout="v2"] nav { background:#181b26; }
+.px-menu[data-layout="v2"] nav .px-nav { gap:3px; }
+.px-menu[data-layout="v2"] nav .px-nav.is-selected { background:#373440; color:#ffe1a1; }
+.px-menu[data-layout="v2"] .px-run[data-paused="true"] { left:320px; color:#e1b39e; font:11px/20px var(--game-font); }
+.px-menu[data-layout="v2"] .px-wallet { top:12px; gap:8px; }
+.camp-wallet { display:inline-flex; align-items:center; gap:8px; min-height:30px; padding:2px 10px; border:2px solid #514b53; background:#212430; color:#efcf93; }
+.ticket-icon { display:inline-block; vertical-align:middle; width:16px; height:16px; background:url("/ui/dungeon/insignia.png") -112px 0; image-rendering:pixelated; }
+.px-menu[data-layout="v2"] main > h2:not(.px-sr) { color:#f6dcad; }
+.px-menu[data-layout="v2"] main[data-view="home"] .px-home-layout { grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); grid-template-rows:230px minmax(0,1fr); height:calc(100% - 44px); gap:14px; }
+.px-menu[data-layout="v2"] .px-home-layout section { padding:20px; border-image:var(--px-panel-9slice) 8 fill / 8px; background:none; }
+.px-menu[data-layout="v2"] .px-home-layout h3 { margin:0; color:#e8cb99; font:700 16px/20px var(--game-font); }
+.px-menu[data-layout="v2"] main[data-view="home"] .px-home-campaign { padding:7px; min-height:0; display:flex; flex-direction:column; }
+.campaign-scene {
+  flex:1; min-height:0; padding:14px; background:#272b40 url("/ui/dungeon/keep.png") right center / 496px 220px no-repeat;
+  border-bottom:2px solid #151923; text-shadow:2px 2px #211f2c;
+}
+.px-menu[data-layout="v2"] .campaign-scene h3 { font:12px/16px var(--game-font); color:#e3c58e; }
+.px-menu[data-layout="v2"] .campaign-scene strong { color:#ffe3ae; font:700 32px/40px var(--game-font); }
+.px-menu[data-layout="v2"] .campaign-scene p { display:table; margin:2px 0; padding:2px 6px; background:#202331; color:#e5e4da; font:12px/16px var(--game-font); }
+.campaign-route { display:flex; gap:3px; align-items:center; padding:8px 10px 0; color:#e6b19b; font:12px/14px var(--game-font); }
+.campaign-route i { width:12px; height:5px; background:#464656; }
+.campaign-route .cleared { background:#8fae9f; }.campaign-route .current { background:#ffcf81; }
+.campaign-route .boss-step { box-shadow:inset 0 0 0 1px #d88e7f; }.campaign-route span { margin-left:5px; }
+.px-menu[data-layout="v2"] main[data-view="home"] .px-home-actions { margin:6px 6px 4px; flex-wrap:nowrap; }
+.px-menu[data-layout="v2"] .px-home-actions .px-btn { min-width:0; min-height:36px; height:36px; }
+.px-menu[data-layout="v2"] .px-home-party { height:calc(100% - 32px); margin:10px 0 0; gap:8px; }
+.px-menu[data-layout="v2"] .px-home-hero { flex:1; min-width:0; min-height:0; padding:8px; justify-content:center; gap:5px; border:2px solid #454756; background:#1b1f2b url("/ui/dungeon/masonry.png"); }
+.px-menu[data-layout="v2"] .px-home-hero > span:first-child { color:#d7b88a; font:11px/16px var(--game-font); letter-spacing:1px; }
+.px-menu[data-layout="v2"] .px-home-hero b { font:700 12px/16px var(--game-font); }
+.px-menu[data-layout="v2"] .px-home-hero small { color:#d0ccd0; font:11px/16px var(--game-font); }
+.camp-sub, .camp-note { margin:8px 0; color:#c2bec4; font:12px/18px var(--game-font); }
+.camp-yields { display:grid; grid-template-columns:1fr 1fr; margin:14px 0; gap:6px; }
+.camp-yields div { padding:10px; background:#191d29; border-left:3px solid #c29b68; }
+.camp-yields div + div { border-color:#84ac9e; }.camp-yields dt { color:#cdc6c5; }
+.camp-yields dd { margin:4px 0 0; font:700 22px/26px var(--game-font); color:#f1ca8c; }
+.camp-yields div + div dd { color:#a5ccb8; }
+.roster-count { margin-top:16px; color:#c7c1c3; }.roster-count b { font:700 26px/32px var(--game-font); color:#f3d29d; }
+.roster-meter { display:flex; gap:2px; margin:8px 0 12px; max-width:290px; }.roster-meter i { height:6px; flex:1; background:#444451; }.roster-meter .owned { background:#c5a472; }
+.roster-actions { display:flex; gap:8px; margin-top:12px; }
+.px-menu[data-layout="v2"] .px-v2-art { background:#1b1f2a url("/ui/dungeon/masonry.png"); }
+.px-menu[data-layout="v2"] .px-equip-scroll-cue { background:#343949; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="home"] .px-home-layout { grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); grid-template-rows:208px minmax(0,1fr); gap:10px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-layout section { padding:14px; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="home"] .px-home-campaign { padding:7px; min-height:0; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-home-hero { min-height:0; gap:2px; }
+.px-menu[data-layout="v2"][data-preset="960"] .campaign-scene { background-size:248px 110px; background-position:right bottom; }
+.px-menu[data-layout="v2"][data-preset="960"] .camp-yields { margin:10px 0; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="settings"] .px-settings .px-srow { min-height:32px; }
+.px-menu[data-layout="v2"][data-preset="960"] main[data-view="settings"] .px-toggle { min-height:32px; }
+.px-menu[data-layout="v2"] .px-home-hero { background:#202431; justify-content:flex-start; gap:4px; }
+.px-menu[data-layout="v2"] .camp-portrait {
+  display:flex; flex:1; align-self:stretch; min-height:0; align-items:flex-end; justify-content:center;
+  border:2px solid #363947; background:#202433 url("/ui/dungeon/corridor.png") 40% bottom;
+}
+.px-menu[data-layout="v2"] .camp-reserves { display:flex; align-items:flex-end; gap:12px; height:64px; margin:16px 0 8px; padding:2px 10px; border-bottom:3px double #68606a; }
+.px-menu[data-layout="v2"] .camp-reserves:empty { display:none; }
+.px-menu[data-layout="v2"][data-preset="960"] .camp-reserves { display:none; }
+.px-menu[data-layout="v2"] .px-v2-hero-card.is-locked { opacity:1; color:#b4adb5; }
+.px-menu[data-layout="v2"] .px-v2-hero-card.is-locked::after { opacity:.55; }
+.px-menu[data-layout="v2"] .px-v2-hero-card.is-locked .px-v2-art img { filter:grayscale(1) brightness(.42); }
+.px-menu[data-layout="v2"] .px-v2-roster { grid-auto-rows:184px; }
+.px-menu[data-layout="v2"][data-preset="960"] .px-v2-roster {
+  grid-auto-rows:184px; max-height:376px; overflow-y:auto; scrollbar-color:#686371 #191c27;
+  scroll-snap-type:y proximity;
+}
+.px-menu[data-layout="v2"] .px-v2-roster > button { scroll-snap-align:start; }
+.px-menu[data-layout="v2"] .px-nav .px-pip { top:6px; right:6px; }

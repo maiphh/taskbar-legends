@@ -120,8 +120,8 @@ export class PixelUI {
   private async load(): Promise<void> {
     try {
       await loadFonts();
-      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'dungeon/insignia.png', 'dungeon/corridor.png'];
-      await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file.includes('9slice') ? `dungeon/${file.replace('-9slice', '').replace('button-', '')}` : file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
+      const files = ['dungeon/panel.png', 'dungeon/button.png', 'dungeon/hover.png', 'dungeon/pressed.png', 'dungeon/disabled.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'dungeon/insignia.png', 'dungeon/corridor.png'];
+      await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
     } catch (error) { this.errors.push(String(error)); }
   }
@@ -241,9 +241,13 @@ export class PixelUI {
       ctx.fillStyle = i === 9 ? palette.red : i <= current ? palette.gold : palette.edge;
       ctx.fillRect(start + i * (barWidth + 2), y + 22, barWidth, 4);
     }
+    if (!boss) {
+      ctx.fillStyle = '#b5d7bc';
+      ctx.fillRect(start + current * (barWidth + 2), y + 25, Math.ceil(barWidth * wave / info.waves.length), 2);
+    }
     const captionX = start + (tight ? 34 : 78);
     this.text(ctx, label, captionX, y + 5, boss ? '#ffac8d' : palette.text, BODY);
-    if (!tight) this.text(ctx, 'Boss', start + 102, y + 18, palette.red, 11);
+    if (!boss && !tight) this.text(ctx, 'Boss 10', start + 102, y + 18, palette.red, 11);
     const walletX = width - (tight ? 102 : 172);
 
     const icons = this.images.get('dungeon/insignia.png');
@@ -290,7 +294,7 @@ export class PixelUI {
     if (this.isOpen()) regions.push({ ...this.panelRect(), kind: 'panel', id: 'management' });
     return regions;
   }
-  private frame(ctx: CanvasRenderingContext2D, rect: Rect, file = 'panel-9slice.png'): void {
+  private frame(ctx: CanvasRenderingContext2D, rect: Rect, file = 'dungeon/panel.png'): void {
     const image = this.images.get(file);
     if (!image) { ctx.fillStyle = palette.panel; ctx.fillRect(rect.x, rect.y, rect.width, rect.height); return; }
     const corner = CONFIG.ui.nineSlice.insets.left, source = CONFIG.ui.nineSlice.sourceSize[0] ?? 48;
@@ -339,7 +343,7 @@ export class PixelUI {
     const disabled = options.disabled ?? false;
     const hover = this.hovered === id, focus = this.focused === id;
     this.controls.set(id, { ...rect, id, label, disabled, click, tooltip: options.tooltip ?? label, ...(options.cardIndex === undefined ? {} : { cardIndex: options.cardIndex }) });
-    this.frame(ctx, rect, disabled ? 'button-disabled-9slice.png' : this.pressed === id ? 'button-pressed-9slice.png' : hover ? 'button-hover-9slice.png' : 'button-9slice.png');
+    this.frame(ctx, rect, disabled ? 'dungeon/disabled.png' : this.pressed === id ? 'dungeon/pressed.png' : hover ? 'dungeon/hover.png' : 'dungeon/button.png');
     if (options.selected) { ctx.fillStyle = palette.gold; ctx.fillRect(rect.x + 3, rect.y + rect.height - 3, rect.width - 6, 2); }
     if (options.badge) this.badge(ctx, id, rect, options.badge, hover || focus);
     if (options.icon) this.icon(ctx, options.icon, rect.x + 6, rect.y + Math.floor((rect.height - 16) / 2));
@@ -454,7 +458,7 @@ export class PixelUI {
     if (rect.width <= 0) return;
     const colors = CONFIG.ui.rarity[tier];
     if (face === 'back') {
-      if (rect.width >= 24) this.frame(ctx, rect, 'button-9slice.png'); else { ctx.fillStyle = palette.edge; ctx.fillRect(rect.x, rect.y, rect.width, rect.height); }
+      if (rect.width >= 24) this.frame(ctx, rect, 'dungeon/button.png'); else { ctx.fillStyle = palette.edge; ctx.fillRect(rect.x, rect.y, rect.width, rect.height); }
       if (rect.width >= 20) { const px = rect.x + Math.floor(rect.width / 2) - 8, py = rect.y + Math.floor(artHeight / 2) - 8; ctx.fillStyle = palette.ink; ctx.fillRect(px, py, 16, 16); this.text(ctx, '?', px + 5, py + 1, palette.gold, BODY, true, undefined, { exactY: true }); }
       return;
     }
@@ -606,7 +610,7 @@ export class PixelUI {
     ctx.fillStyle = palette.gold; ctx.fillRect(x + layout.capBar.x + 1, layout.capBar.y + 1, Math.round((layout.capBar.width - 2) * Math.min(1, data.seconds / (capH * 3600))), layout.capBar.height - 2);
 
     const row = (area: Rect, icon: string, label: string, value: string, color: string): void => {
-      this.frame(ctx, { ...area, x: x + area.x }, 'button-9slice.png');
+      this.frame(ctx, { ...area, x: x + area.x }, 'dungeon/button.png');
       const iconX = area.x + (layout.compact ? 8 : 16), labelX = area.x + (layout.compact ? 34 : 64);
       this.icon(ctx, icon, x + iconX, area.y + (layout.compact ? 8 : 16), layout.compact ? 1 : 2);
       const textWidth = area.width - (labelX - area.x) - 8;
@@ -618,7 +622,7 @@ export class PixelUI {
 
     const expedition = data.expeditionChests !== undefined;
     const chest = layout.chest, title = expedition ? `EXPEDITION ${data.chests}/${max}` : `CHESTS ${data.chests}/${max}`;
-    this.frame(ctx, { ...chest, x: x + chest.x }, 'button-9slice.png');
+    this.frame(ctx, { ...chest, x: x + chest.x }, 'dungeon/button.png');
     this.text(ctx, title, x + layout.chestTitle.x, layout.chestTitle.y, palette.text, BODY, true);
     const titleWidth = this.measureText(title, BODY, true);
     const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour · max ${max} · best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h · max ${max}`;
@@ -636,7 +640,7 @@ export class PixelUI {
         continue;
       }
       const lift = shown.pop ? -1 : 0, iconScale = grid.size >= 32 ? 2 : 1;
-      this.frame(ctx, { x: sxp, y: syp + lift, width: grid.size, height: grid.size }, 'button-9slice.png');
+      this.frame(ctx, { x: sxp, y: syp + lift, width: grid.size, height: grid.size }, 'dungeon/button.png');
       this.icon(ctx, 'chest', sxp + Math.floor((grid.size - 16 * iconScale) / 2), syp + lift + Math.floor((grid.size - 16 * iconScale) / 2), iconScale);
     }
     const sent = data.choices > 0 ? `${data.choices} pick-1-of-2 waiting in Gear` : 'Gear sent to inventory';

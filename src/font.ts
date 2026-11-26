@@ -4,8 +4,10 @@ import { CONFIG } from './config';
 export const FONT_FILES = [
   ['Galmuri11', 'Galmuri11.ttf', '400'],
   ['Galmuri11', 'Galmuri11-Bold.ttf', '700'],
+  ['GameFallback', 'NotoSans-Regular.ttf', '400'],
+  ['GameFallback', 'NotoSans-SemiBold.ttf', '600'],
 ] as const;
-export const CSS_FONT_STACK = 'Galmuri11, monospace';
+export const CSS_FONT_STACK = 'Galmuri11, GameFallback, monospace';
 export const CSS_SEMIBOLD_STACK = CSS_FONT_STACK;
 const font = CONFIG.ui.font;
 export const BODY = font.body.cssPx, HEADING = 22, SMALL = 11;
