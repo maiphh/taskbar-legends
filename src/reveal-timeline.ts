@@ -27,7 +27,9 @@ export function tierTotalMs(tier: Rarity): number { return tiers[tier].totalMs; 
 export function burstStartMs(tier: Rarity): number { return span(tier, 'burst')?.[0] ?? 0; }
 /** Single reveal frame at `ms` from the click. A skip is `ms = Infinity`. */
 export function singleFrame(tier: Rarity, ms: number, reducedMotion = false): SingleFrame {
-  const total = tierTotalMs(tier), done = ms >= total;
+  const total = tierTotalMs(tier);
+  if (reducedMotion) ms = total;
+  const done = ms >= total;
   const t = Math.min(ms, total), card = gacha.single.cardRect[2] ?? 96;
   const pull = span(tier, 'pull') ?? [0, 120], anticipation = span(tier, 'anticipation') ?? [120, 360], flip = span(tier, 'flip') ?? [360, 520];
   const burst = span(tier, 'burst') ?? [520, 640], labels = span(tier, 'labels') ?? [640, total];
@@ -53,7 +55,7 @@ export function singleFrame(tier: Rarity, ms: number, reducedMotion = false): Si
   const motes = !reducedMotion && !done && 'motes' in legendary && t >= anticipation[0] && t < burst[0];
   return { dropY, cardWidth, face, rimAlpha, flash, shakeX, motes, burstAge: done ? null : burstAge, showName: t >= labels[0], showRarity: t >= labels[0] + gacha.labelRarityDelayMs, done };
 }
-export interface TenCard { index: number; rarity: Rarity }
+export const SUMMON_GATE_MS = 640;
 /** Index of the highest-rarity card (ties: first), the card that plays the burst cue and gets the highlight hold. */
 export function highestCard(rarities: readonly Rarity[]): number {
   const order = CONFIG.ui.rarity.order;
@@ -66,10 +68,12 @@ export function tenSchedule(rarities: readonly Rarity[]): { flipAt: number[]; hi
   const ten = gacha.tenPull, highlight = highestCard(rarities), epicPlus = ['epic', 'legendary'].includes(rarities[highlight] ?? 'common');
   const hold = epicPlus ? ten.highlightHoldMs : 0;
   const flipAt = rarities.map((_, index) => ten.backsInMs + index * ten.staggerMs + (index > highlight ? hold : 0));
-  return { flipAt, highlight, hold, badgesAt: (flipAt.at(-1) ?? 0) + ten.flipMs };
+  return { flipAt, highlight, hold, badgesAt: (flipAt.at(-1) ?? 0) + ten.flipMs + (highlight === rarities.length - 1 ? hold : 0) };
 }
 export function tenFrame(rarities: readonly Rarity[], ms: number, reducedMotion = false): TenFrame {
-  const ten = gacha.tenPull, schedule = tenSchedule(rarities), done = ms >= schedule.badgesAt;
+  const ten = gacha.tenPull, schedule = tenSchedule(rarities);
+  if (reducedMotion) ms = schedule.badgesAt;
+  const done = ms >= schedule.badgesAt;
   const dropOffsets = [-8, -4, 0];
   const cards = rarities.map((_, index) => {
     const at = schedule.flipAt[index] ?? 0, f = frames(ms - at), widths = [64, 0, 64, 128];

@@ -406,7 +406,7 @@ export class ManagementView {
       if (!pulls.length || this.closed || this.tab !== 'recruit') return;
       const ui = this.ensureRevealUi();
       this.revealHost.hidden = false; this.root.classList.add('reveal-active');
-      ui.playReveal(count, pulls); this.drawReveal();
+      ui.playReveal(count, pulls); this.updateRevealDescription(pulls); this.drawReveal();
       this.revealHost.querySelector<HTMLButtonElement>('[data-control="reveal-skip"], [data-control="reveal-ok"]')?.focus({ preventScroll: true });
     } finally { this.pulling = false; }
   }
@@ -414,7 +414,7 @@ export class ManagementView {
     if (this.revealUi) return this.revealUi;
     this.atlas ??= new AtlasLibrary();
     const ui = new PixelUI(this.atlas, this.revealHost.querySelector<HTMLElement>('.reveal-controls')!);
-    ui.managementReveal = true; ui.animationFrozen = this.animationFrozen;
+    ui.animationFrozen = this.animationFrozen;
     if (this.options.clock) { const clock = this.options.clock; ui.clock = () => clock(); }
     ui.managementIdleClock = () => this.animationElapsed();
     ui.onCue = key => this.client.cue?.(key);
@@ -427,22 +427,19 @@ export class ManagementView {
   private drawReveal(): void {
     const ui = this.revealUi, ctx = this.revealCanvas.getContext('2d'); if (!ui || !ctx || this.revealHost.hidden) return;
     ctx.imageSmoothingEnabled = false;
-    const width = this.stageWidth(); this.revealHost.dataset.compact = String(width < REVEAL_STAGE.width);
-    ui.drawRevealStage(ctx, this.snapshotValue?.tickets ?? 0, 1, width);
-    this.updateRevealDescription(ui.revealState());
+    ui.managementReducedMotion = this.reducedMotionValue;
+    ui.drawRevealStage(ctx, this.snapshotValue?.tickets ?? 0);
     window.cancelAnimationFrame(this.revealFrame);
     if (ui.revealState()) this.revealFrame = window.requestAnimationFrame(() => this.drawReveal());
   }
-  private updateRevealDescription(reveal: ReturnType<PixelUI['revealState']>): void {
+  private updateRevealDescription(pulls: RevealPull[]): void {
     const list = this.revealHost.querySelector<HTMLUListElement>('#recruit-result-description'); if (!list) return;
-    if (!reveal) { list.replaceChildren(); return; }
-    list.innerHTML = reveal.pulls.map(pull => {
+    list.innerHTML = pulls.map(pull => {
       const hero = CONFIG.heroes.find(value => value.id === pull.heroId), role = hero ? getPartyHeroDefinition(hero.id).role : 'unknown';
-      return `<li>${esc(shortName(pull.heroId))}, ${esc(pull.rarity)}, ${esc(role)}</li>`;
+      const outcome = pull.badge === 'new' ? 'New hero' : pull.badge === 'star' ? 'Duplicate, +1 star' : `Duplicate, +${pull.gold} gold`;
+      return `<li>${esc(shortName(pull.heroId))}, ${esc(pull.rarity)}, ${esc(role)}, ${outcome}${pull.pity ? ', pity' : ''}</li>`;
     }).join('');
   }
-  /** 624-wide docked panel → compactMenu.tenPullCompact; 720 panels and the native window keep the 720 gacha layout. */
-  private stageWidth(): number { return this.variant === 'browser' && this.root.getBoundingClientRect().width < REVEAL_STAGE.width ? MENU.tenPullCompact.panelW : REVEAL_STAGE.width; }
   private stopReveal(): void {
     window.cancelAnimationFrame(this.revealFrame); this.revealFrame = 0;
     this.revealUi?.clearReveal();
@@ -1085,7 +1082,7 @@ export class ManagementView {
     const odds = Object.entries(state.recruit.rates).map(([rarity, value]) => `${rarity}: ${Number((value * 100).toFixed(2))}%`).join(' · ');
     const history = [...state.recentPulls].reverse().map(result => `<li data-rarity="${esc(result.rarity)}">${shape(result.rarity)}${esc(shortName(result.heroId))}${result.duplicate ? ' <span class="px-badge">+1★</span>' : ' <span class="px-badge px-green">NEW</span>'}${result.pity ? ' <span class="px-badge px-gold">PITY</span>' : ''}</li>`).join('') || '<li class="px-muted">No pulls yet.</li>';
     const cost = state.recruit.cost;
-    return [`<h2>Recruit</h2><div class="px-banners px-recruit-layout"><section class="px-banner" aria-label="All heroes banner"><h3>ALL HEROES</h3><span class="px-pview">${this.portrait(featured, 2)}</span><p class="px-gold px-b">${cost} TICKET${cost === 1 ? '' : 'S'}</p><p class="px-muted">${state.tickets} tickets · ${state.roster.length}/${CONFIG.heroes.length} owned</p></section>
+    return [`<h2>Recruit</h2><div class="px-banners px-recruit-layout"><section class="px-banner" aria-label="All heroes banner"><h3>Summoning Hall</h3><span class="px-pview">${this.portrait(featured, Math.min(2, this.portraitScale(featured, 140, this.layoutPreset === '960' ? 110 : 142)) as 1 | 2)}</span><p class="summon-cost"><b>${cost} TICKET${cost === 1 ? '' : 'S'} / PULL</b><span>${state.roster.length}/${CONFIG.heroes.length} owned</span></p></section>
       <section class="px-odds" aria-label="Recruit odds"><h3>RECRUIT INFO</h3><div class="px-recruit-rates"><b>Rates</b> ${odds}</div><p class="px-recruit-rules">Duplicates add +1★ up to ${CONFIG.growth.starMax}★, then grant ${CONFIG.runtime.duplicateGold} × rarity gold. Owned heroes remain in the pool.</p>${button('recruit-help', 'Odds & pity details', `data-help-toggle data-help="${esc(`Epic+ guaranteed every ${EPIC_PITY_PULLS} pulls.${pityEnabled ? ` Legend guaranteed every ${CONFIG.v14.recruit.legendaryPityEvery} pulls; new hero every ${CONFIG.v14.recruit.newHeroGuaranteeEvery} pulls.` : ''} Duplicate rules: +1 star up to ${CONFIG.growth.starMax}, then rarity-scaled gold.`)}"`, { aria: 'Show recruit pity details' })}</section></div><section class="px-recruit-pity" aria-label="Pity meters">${pity}</section>`
       + `<section class="px-history"><div class="px-heading px-heading-left"><h3>HISTORY</h3><span class="px-muted">${state.stats.pulls} PULLS</span></div><ol class="px-list" data-scroll="history">${history}</ol></section>`,
       `<span></span><div class="px-row">${button('pull-one', 'Recruit x1', 'data-action="pull-one" style="width:132px"', { disabled: state.tickets < cost, primary: true })}${button('pull-ten', 'Recruit x10', 'data-action="pull-ten" style="width:140px"', { disabled: state.tickets < cost * 10, primary: true })}</div>`];

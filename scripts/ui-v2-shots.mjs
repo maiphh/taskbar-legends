@@ -104,7 +104,6 @@ try {
     await page.evaluate(() => window.__game.openPanel('recruit'));
     await page.locator('[data-action="pull-one"]').click();
     await page.locator('.reveal-stage:not([hidden])').waitFor();
-    await page.locator('[data-control="reveal-skip"]').click();
     await page.locator('[data-control="reveal-ok"]').waitFor();
     const x1Descriptions = await page.locator('#recruit-result-description li').allTextContents();
     if (x1Descriptions.length !== 1 || x1Descriptions[0].split(',').length < 3) throw new Error(`x1 recruit result lacks accessible name, rarity, and role: ${JSON.stringify(x1Descriptions)}`);
@@ -119,7 +118,6 @@ try {
     await page.waitForFunction(() => document.querySelector('.reveal-stage')?.hidden === true);
     await page.locator('[data-action="pull-ten"]').click();
     await page.locator('.reveal-stage:not([hidden])').waitFor();
-    await page.locator('[data-control="reveal-skip"]').click();
     await page.locator('[data-control="reveal-ok"]').waitFor();
     const x10Descriptions = await page.locator('#recruit-result-description li').allTextContents();
     if (x10Descriptions.length !== 10 || x10Descriptions.some(description => description.split(',').length < 3)) throw new Error(`x10 recruit results lack accessible name, rarity, and role: ${JSON.stringify(x10Descriptions)}`);

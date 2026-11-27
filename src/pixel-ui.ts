@@ -1,8 +1,9 @@
-﻿import { CONFIG, TICK_MS, heroConfig, raritySchema, stageConfig } from './config';
+﻿import { CONFIG, TICK_MS, heroConfig, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
-import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
+import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, particles, SUMMON_GATE_MS, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
 import type { CardFace } from './reveal-timeline';
+import { drawGate, spark } from './summoning-gate';
 import { BODY, HEADING, LINE_BOX, fitSize, CSS_FONT_STACK, loadFonts, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
@@ -15,12 +16,11 @@ import { drawRoleIcon } from './management/role-icons';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
-/** Standalone reveal canvas: the expanded Recruit panel size (ui.md Â§4). */
 /** compactMenu.shortName: drop a leading 'Medieval ' and 'Martial Hero' â†’ 'Martial' (cards and compact pull cards). */
 export function shortHeroName(heroId: string): string {
   return heroConfig(heroId).name.replace(' (recolored Wizard)', '').replace(/\s*\([^)]*\)/g, '').trim().replace(/^Medieval /, '').replace(/^Martial Hero\b/, 'Martial');
 }
-export const REVEAL_STAGE = { width: CONFIG.ui.expanded.panelWidth, height: CONFIG.ui.expanded.panelHeight, top: 72 } as const;
+export const REVEAL_STAGE = { width: 896, height: 452 } as const;
 export interface SourceHitRegion extends Rect { kind: 'hud' | 'panel'; id: string }
 interface Control extends Rect { id: string; label: string; disabled: boolean; click(): void; tooltip: string; cardIndex?: number; layer?: number }
 /** One recruit result as the reveal shows it (gacha.md Â§9: badge kind from the post-pull star count, pity from the event). */
@@ -58,8 +58,7 @@ export function setPresentationReducedMotionPreference(enabled: boolean): void {
   window.dispatchEvent(new CustomEvent('presentation-reduced-motion-change', { detail: enabled }));
 }
 export class PixelUI {
-  /** Management-only reveal typography; the taskbar lane keeps its original catalog-name layout. */
-  managementReveal = false;
+  managementReducedMotion = false;
   /** Shared low-rate management idle clock; reveal transition timing continues on `clock`. */
   managementIdleClock: (() => number) | null = null;
   panel: PanelTab | null = null;
@@ -74,7 +73,7 @@ export class PixelUI {
   private readonly badgeMemory = new Map<string, { on: boolean; pulseTick: number; seen: boolean }>();
   private readonly badgesDrawn = new Set<string>();
   animationFrozen = false;
-  get reducedMotion(): boolean { return this.animationFrozen || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
+  get reducedMotion(): boolean { return this.animationFrozen || this.managementReducedMotion || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
   private readonly buttons = new Map<string, HTMLButtonElement>();
   private readonly surfaces = new Map<string, HTMLDivElement>();
   private pressed = '';
@@ -90,7 +89,6 @@ export class PixelUI {
   private reveal: Reveal | null = null;
   /** Standalone reveal (the DOM management menu hosts its own PixelUI that only draws the reveal for pulls it committed). */
   private standalone = false;
-  private revealStageWidth: number = REVEAL_STAGE.width;
   onRevealAgain: (count: 1 | 10) => void = () => undefined;
   onRevealClose: () => void = () => undefined;
   welcome: WelcomeData | null = null;
@@ -121,6 +119,7 @@ export class PixelUI {
     window.addEventListener('keydown', event => {
       if (this.welcome && (event.code === 'Escape' || event.code === 'Enter')) { event.preventDefault(); this.collect(); return; }
       if (this.reveal && (this.panel === 'recruit' || this.standalone) && (event.code === 'Enter' || event.code === 'Space' || event.code === 'NumpadEnter')) {
+        if (event.target instanceof HTMLElement && event.target.closest('[data-control^="reveal-"]')) return;
         event.preventDefault(); event.stopImmediatePropagation();
         if (this.revealMs() < Infinity && !this.revealDone()) this.skipReveal(); else if (event.code !== 'Space') this.finishReveal(true);
         return;
@@ -130,7 +129,7 @@ export class PixelUI {
   private async load(): Promise<void> {
     try {
       await loadFonts();
-      const files = ['dungeon/panel.png', 'dungeon/button.png', 'dungeon/hover.png', 'dungeon/pressed.png', 'dungeon/disabled.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'dungeon/insignia.png', 'dungeon/corridor.png'];
+      const files = ['dungeon/panel.png', 'dungeon/button.png', 'dungeon/hover.png', 'dungeon/pressed.png', 'dungeon/disabled.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'dungeon/insignia.png', 'dungeon/corridor.png', 'dungeon/summoning-hall.png'];
       await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
     } catch (error) { this.errors.push(String(error)); }
@@ -169,13 +168,12 @@ export class PixelUI {
   private revealDone(): boolean {
     const reveal = this.reveal; if (!reveal) return true;
     const ms = this.revealMs(), first = reveal.pulls[0];
-    return reveal.count === 1 ? !!first && singleFrame(first.rarity, ms, this.reducedMotion).done : tenFrame(reveal.pulls.map(pull => pull.rarity), ms, this.reducedMotion).done;
+    return reveal.count === 1 ? !!first && singleFrame(first.rarity, ms, this.reducedMotion).done : tenFrame(reveal.pulls.map(pull => pull.rarity), ms - SUMMON_GATE_MS, this.reducedMotion).done;
   }
   /** The pull that plays the burst cue: the single card, or the highest-rarity card of a 10-pull (ties: first). */
   private cuePull(): RevealPull | undefined { const reveal = this.reveal; return reveal ? reveal.pulls[reveal.count === 1 ? 0 : highestCard(reveal.pulls.map(pull => pull.rarity))] : undefined; }
   private skipReveal(silent = false): void {
     const reveal = this.reveal; if (!reveal || reveal.skipped) return;
-    if (this.clock() - reveal.startedAt < CONFIG.ui.gacha.skipGuardMs) return;
     reveal.skipped = true;
     if (!silent) this.onCue(CONFIG.ui.gacha.audio.click);
     // The rarity is still heard once: a skip before the burst plays the deferred burst cue, never the flash or shake.
@@ -192,19 +190,10 @@ export class PixelUI {
   /** Standalone: drop the reveal without cues (tab change, menu close). */
   clearReveal(): void { if (this.reveal && !this.revealDone()) this.skipReveal(true); this.reveal = null; this.syncControls(); }
   revealState(): { count: 1 | 10; done: boolean; pulls: RevealPull[] } | null { const reveal = this.reveal; return reveal ? { count: reveal.count, done: this.revealDone(), pulls: structuredClone(reveal.pulls) } : null; }
-  /** Standalone: the 720Ã—400 Recruit panel's reveal (same layout, tokens and timings as the lane panel), drawn from y=72 down. */
-  /**
-   * `stageWidth` 624 = the docked browser panel at W=640: the 10-pull uses compactMenu.tenPullCompact (5Ã—2 of 104Ã—96) and
-   * the single reveal keeps its standard card, centred; 720 (and the native window) keep gacha.tenPull / gacha.single.
-   */
-  drawRevealStage(ctx: CanvasRenderingContext2D, tickets: number, scaleToCss: number, stageWidth: number = REVEAL_STAGE.width): void {
-    this.standalone = true; this.revealStageWidth = stageWidth; this.width = stageWidth; this.scaleToCss = scaleToCss; this.controls.clear();
+  drawRevealStage(ctx: CanvasRenderingContext2D, tickets: number): void {
+    this.standalone = true; this.scaleToCss = 1; this.controls.clear();
     ctx.clearRect(0, 0, REVEAL_STAGE.width, REVEAL_STAGE.height);
-    if (!this.readyFlag) { this.syncControls(); return; }
-    const panel = { x: 0, y: 0, ...REVEAL_STAGE, width: stageWidth };
-    // The host's PARTY CAMP header and tabs stay visible above y=72; the reveal owns the rest of the panel.
-    ctx.fillStyle = palette.panel; ctx.fillRect(0, REVEAL_STAGE.top, stageWidth, REVEAL_STAGE.height - REVEAL_STAGE.top);
-    if (this.reveal) this.drawReveal(ctx, tickets, panel, this.reveal);
+    if (this.readyFlag && this.reveal) this.drawReveal(ctx, tickets, this.reveal);
     this.syncControls();
   }
   /** Compact lane edit mode (compact-menu.md Â§2.2): the stage heading shifts right of the Move handle. */
@@ -303,7 +292,7 @@ export class PixelUI {
     return { x: Math.max(8, this.width - width - CONFIG.ui.expanded.panelRightInset), y: 0, width, height: CONFIG.ui.expanded.panelHeight };
   }
   sourceRegions(): SourceHitRegion[] {
-    if (this.standalone) return [{ kind: 'panel', id: 'reveal-stage', x: 0, y: REVEAL_STAGE.top, width: this.revealStageWidth, height: REVEAL_STAGE.height - REVEAL_STAGE.top }];
+    if (this.standalone) return [{ kind: 'panel', id: 'reveal-stage', x: 0, y: 0, ...REVEAL_STAGE }];
     if (this.welcome) return [{ kind: 'panel', id: 'welcome', ...this.panelRect() }];
     if (this.compactMode) {
       const dy = this.height() - CONFIG.ui.closed.coreHeight - CONFIG.ui.closed.coreY, layout = compactLaneLayout(this.width);
@@ -476,148 +465,156 @@ export class PixelUI {
     for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) { const cell = map[y]?.[x]; if (cell && cell !== '.') { ctx.fillStyle = colors[cell] ?? '#ffffff'; ctx.fillRect(x0 + x, y0 + y, 1, 1); } }
   }
   private drawBadge(ctx: CanvasRenderingContext2D, kind: 'new' | 'duplicateStar' | 'duplicateGold' | 'pity', x: number, y: number, gold = 0, alignRight = false): void {
-    const spec = CONFIG.ui.badges[kind], label = spec.label.replace('{gold}', String(gold)), width = this.measureText(label, BODY, true) + 8, left = alignRight ? x - width : x;
+    const spec = CONFIG.ui.badges[kind], label = (kind === 'duplicateStar' || kind === 'duplicateGold' ? 'DUPE ' : '') + spec.label.replace('{gold}', String(gold)), width = this.measureText(label, BODY, true) + 8, left = alignRight ? x - width : x;
     ctx.fillStyle = spec.fill; ctx.fillRect(left, y, width, CONFIG.ui.badges.heightPx);
     this.text(ctx, label, left + 4, y + 1, spec.ink, BODY, true, undefined, { exactY: true });
   }
-  /** Card face (gacha.md Â§3): back = raised 9-slice with a "?" plate; front = 2 px rarity frame, fill and 16 px floor band. */
-  private drawCard(ctx: CanvasRenderingContext2D, face: CardFace, tier: Rarity, heroId: string, rect: Rect, artHeight: number, floorY: number): void {
-    if (rect.width <= 0) return;
-    const colors = CONFIG.ui.rarity[tier];
-    if (face === 'back') {
-      if (rect.width >= 24) this.frame(ctx, rect, 'dungeon/button.png'); else { ctx.fillStyle = palette.edge; ctx.fillRect(rect.x, rect.y, rect.width, rect.height); }
-      if (rect.width >= 20) { const px = rect.x + Math.floor(rect.width / 2) - 8, py = rect.y + Math.floor(artHeight / 2) - 8; ctx.fillStyle = palette.ink; ctx.fillRect(px, py, 16, 16); this.text(ctx, '?', px + 5, py + 1, palette.gold, BODY, true, undefined, { exactY: true }); }
+  private readonly silhouettes = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+
+  private drawSummonedHero(ctx: CanvasRenderingContext2D, pull: RevealPull, face: CardFace, cx: number, floor: number, width: number, height: number, flip = 1): void {
+    const key = Object.entries(CONFIG.view.heroAssets).find(([id]) => id === pull.heroId)?.[1];
+    if (!key || face === 'back') return;
+    const age = this.reducedMotion ? 0 : this.managementIdleClock?.() ?? 0;
+    const sprite = this.atlas.portraitFrame(key, this.atlas.idleFrameIndex(key, age));
+    if (!sprite) return;
+    const scale = Math.max(1, Math.min(4, Math.floor(width / sprite.width), Math.floor(height / sprite.height)));
+    let art = sprite;
+    if (face === 'silhouette') {
+      let mask = this.silhouettes.get(sprite);
+      if (!mask) {
+        mask = document.createElement('canvas'); mask.width = sprite.width; mask.height = sprite.height;
+        const ink = mask.getContext('2d'); if (!ink) return;
+        ink.drawImage(sprite, 0, 0); ink.globalCompositeOperation = 'source-in';
+        ink.fillStyle = CONFIG.ui.rarity[pull.rarity].frame; ink.fillRect(0, 0, mask.width, mask.height);
+        this.silhouettes.set(sprite, mask);
+      }
+      art = mask;
+    }
+    const w = Math.round(sprite.width * scale * flip), h = sprite.height * scale;
+    if (w > 0) ctx.drawImage(art, cx - Math.floor(w / 2), floor - h, w, h);
+  }
+
+  private drawOutcome(ctx: CanvasRenderingContext2D, pull: RevealPull, right: number, y: number): void {
+    this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', right, y, pull.gold, true);
+  }
+
+  private drawReveal(ctx: CanvasRenderingContext2D, tickets: number, reveal: Reveal): void {
+    const ms = this.reducedMotion ? Infinity : this.revealMs();
+    const group = reveal.count === 10, gridMs = ms - SUMMON_GATE_MS;
+    const rarities = reveal.pulls.map(pull => pull.rarity);
+    const single = singleFrame(rarities[0]!, ms, this.reducedMotion);
+    const grid = group ? tenFrame(rarities, Math.max(0, gridMs), this.reducedMotion) : null;
+    const cue = reveal.pulls[grid?.highlight ?? 0]!;
+    const cueAt = grid ? SUMMON_GATE_MS + grid.burstCueAt : burstStartMs(cue.rarity);
+    const done = grid?.done ?? single.done;
+    if (!reveal.cued && ms >= cueAt && !reveal.skipped) {
+      reveal.cued = true; this.onCue(burstCue(cue.rarity, cue.pity));
+    }
+    if (this.reducedMotion) reveal.skipped = true;
+    if (reveal.flash === null && cue.rarity === 'legendary' && ms >= cueAt && !done) reveal.flash = this.flashes.request(this.clock());
+
+    this.frame(ctx, { x: 0, y: 0, ...REVEAL_STAGE });
+    const inGrid = grid !== null && gridMs >= 0;
+    this.text(ctx, inGrid && done ? 'Recruited heroes' : 'Summoning Hall', 22, 14, '#f6dcad', 24, true);
+    const newCount = reveal.pulls.filter(pull => pull.badge === 'new').length;
+    const header = group && done ? `${newCount} NEW   /   ${reveal.pulls.length - newCount} DUPLICATES` : `RECRUIT  ×${reveal.count}`;
+    this.text(ctx, header, 872 - this.measureText(header, BODY, true), 23, palette.gold, BODY, true);
+
+    if (inGrid) this.drawTen(ctx, reveal, grid);
+    else {
+      const hall = this.images.get('dungeon/summoning-hall.png');
+      if (hall) ctx.drawImage(hall, 12, 56, 872, 304);
+      ctx.save();
+      ctx.beginPath(); ctx.rect(12, 56, 872, 304); ctx.clip();
+      if (reveal.flash && !group) ctx.translate(single.shakeX, 0);
+      if (group || single.face === 'back') {
+        const length = group ? SUMMON_GATE_MS : burstStartMs(cue.rarity);
+        drawGate(ctx, 448, 186, cue.rarity, ms, Math.min(1, ms / length));
+      } else {
+        this.drawSummonedHero(ctx, cue, single.face, 448, 294, 232, 202, single.cardWidth / CONFIG.ui.gacha.single.cardRect[2]!);
+        if (single.burstAge !== null) {
+          for (const dot of particles(cue.rarity, 0, single.burstAge)) {
+            spark(ctx, 448 + dot.x * 3, 186 + dot.y * 2, dot.size * 2 + 1, dot.color);
+          }
+        }
+      }
+      ctx.restore();
+    }
+    const status = group ? done ? 'Pull breakdown' : inGrid ? 'Revealing heroes…' : 'Opening the gate…'
+      : single.showName ? shortHeroName(cue.heroId) : single.face === 'back' ? 'Opening the gate…' : 'A hero approaches…';
+    this.text(ctx, status, 22, 382, palette.text, HEADING, true);
+    if (!group && single.showRarity) {
+      const role = getPartyHeroDefinition(cue.heroId).role;
+      this.drawShape(ctx, cue.rarity, 30, 424);
+      this.text(ctx, cue.rarity.toUpperCase(), 44, 417, CONFIG.ui.rarity[cue.rarity].label, BODY, true);
+      this.drawManagementRole(ctx, role, 146, 414);
+      this.text(ctx, role.toUpperCase(), 170, 417, palette.text, BODY);
+      this.drawOutcome(ctx, cue, 330, 414);
+      if (cue.pity) this.drawBadge(ctx, 'pity', 342, 414);
+    } else if (group && done) {
+      const tally = [...CONFIG.ui.rarity.order].reverse().map(tier => {
+        const n = rarities.filter(rarity => rarity === tier).length;
+        return n ? `${n} ${tier}` : '';
+      }).filter(Boolean).join('  ·  ');
+      this.text(ctx, tally, 22, 418, palette.muted);
+    } else if (inGrid) {
+      const count = grid.cards.filter(card => card.face === 'front').length;
+      this.text(ctx, `${count} of ${reveal.pulls.length}`, 22, 418, palette.muted);
+    }
+    const buttonY = 390;
+    if (!done) {
+      this.hotspot(ctx, 'reveal-stage-skip', { x: 12, y: 56, width: 872, height: 306 }, () => this.skipReveal(), 'Skip reveal', 0);
+      this.button(ctx, 'reveal-skip', 'Skip reveal', { x: 732, y: buttonY, width: 142, height: 40 }, () => this.skipReveal());
       return;
     }
-    ctx.fillStyle = colors.frame; ctx.fillRect(rect.x, rect.y, rect.width, artHeight);
-    ctx.fillStyle = colors.fill; ctx.fillRect(rect.x + 2, rect.y + 2, rect.width - 4, artHeight - 4);
-    ctx.fillStyle = colors.floor; ctx.fillRect(rect.x + 2, rect.y + artHeight - 18, rect.width - 4, 16);
-    if (rect.width < 64) return;
-    ctx.save(); ctx.beginPath(); ctx.rect(rect.x + 2, rect.y + 2, rect.width - 4, artHeight - 4); ctx.clip();
-    const key = Object.entries(CONFIG.view.heroAssets).find(([id]) => id === heroId)?.[1], cx = rect.x + Math.floor(rect.width / 2);
-    if (key && face === 'silhouette') {
-      const mask = document.createElement('canvas'); mask.width = rect.width; mask.height = artHeight;
-      const m = mask.getContext('2d');
-      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
-    } else if (key) this.atlas.draw(ctx, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, cx, floorY, false, 1);
-    ctx.restore();
+    const cost = CONFIG.gacha.costTickets * reveal.count;
+    if (tickets < cost) this.text(ctx, `Tickets ${tickets} · Again needs ${cost}`, 562, 430, palette.muted);
+    this.button(ctx, 'reveal-again', `Again ×${reveal.count}`, { x: 562, y: buttonY, width: 164, height: 40 }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
+      { icon: 'chest', disabled: tickets < cost, tooltip: `Recruit ×${reveal.count} for ${cost} ticket${cost === 1 ? '' : 's'}` });
+    this.button(ctx, 'reveal-ok', 'Back to Recruit', { x: 732, y: buttonY, width: 142, height: 40 }, () => this.finishReveal(true), { primary: true, bold: true });
   }
-  private managementIdleAge(): number { return this.reducedMotion ? 0 : this.managementIdleClock ? Math.max(0, this.managementIdleClock()) : Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())); }
-  private drawRim(ctx: CanvasRenderingContext2D, rect: Rect, color: string, alpha: number): void {
-    if (alpha <= 0) return;
-    ctx.save(); ctx.globalAlpha = alpha / 255; ctx.fillStyle = color;
-    ctx.fillRect(rect.x - 2, rect.y - 2, rect.width + 4, 2); ctx.fillRect(rect.x - 2, rect.y + rect.height, rect.width + 4, 2);
-    ctx.fillRect(rect.x - 2, rect.y, 2, rect.height); ctx.fillRect(rect.x + rect.width, rect.y, 2, rect.height); ctx.restore();
-  }
-  /** Gacha reveal (ui/gacha.md): single at the stage, or the 10-card summary. The legendary beam is PR (5). */
-  private drawReveal(ctx: CanvasRenderingContext2D, tickets: number, panel: Rect, reveal: Reveal): void {
-    const x = panel.x, ms = this.revealMs(), spec = CONFIG.ui.gacha, done = this.revealDone(), now = this.clock();
-    const cue = this.cuePull(), cueAt = reveal.count === 1 ? burstStartMs(cue?.rarity ?? 'common') : tenFrame(reveal.pulls.map(pull => pull.rarity), 0).burstCueAt;
-    if (!reveal.cued && cue && ms >= cueAt && !reveal.skipped) { reveal.cued = true; this.onCue(burstCue(cue.rarity, cue.pity)); }
-    if (reveal.flash === null && cue?.rarity === 'legendary' && ms >= cueAt && !reveal.skipped && !this.reducedMotion) reveal.flash = this.flashes.request(now);
-    if (!done) this.hotspot(ctx, 'reveal-skip', { x: x + 8, y: 72, width: panel.width - 16, height: 320 }, () => this.skipReveal(), 'Click anywhere to skip', 0);
-    const compact = this.standalone && panel.width < REVEAL_STAGE.width, small = CONFIG.ui.compactMenu.tenPullCompact;
-    // Compact: the 720-wide single stage is centred in the 624 body (it fits), the 10-pull switches to the 104Ã—96 grid.
-    if (reveal.count === 1) this.drawSingle(ctx, compact ? { ...panel, x: x + Math.floor((panel.width - REVEAL_STAGE.width) / 2) } : panel, reveal, ms); else this.drawTen(ctx, panel, reveal, ms, compact);
-    if (!done) { this.text(ctx, 'Click anywhere to skip', x + 16, 368, palette.muted, BODY); return; }
-    const cost = CONFIG.gacha.costTickets * reveal.count, short10 = tickets < cost;
-    if (reveal.count === 1) this.text(ctx, 'Click a button or press Enter', x + 16, 368, palette.muted, BODY, false, 370);
-    else this.text(ctx, `Tickets ${tickets}${short10 ? ` · Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
-    const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
-    const actionY = this.managementReveal ? 348 : ay, actionH = this.managementReveal ? 40 : ah;
-    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: actionY, width: aw, height: actionH }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
-      { icon: 'chest', disabled: short10, tooltip: short10 ? `Need ${cost} ticket${cost === 1 ? '' : 's'}` : `Recruit x${reveal.count} again: ${cost} ticket${cost === 1 ? '' : 's'}` });
-    this.button(ctx, 'reveal-ok', 'OK', { x: x + ox, y: this.managementReveal ? actionY : oy, width: ow, height: actionH }, () => this.finishReveal(true), { primary: true, bold: true, tooltip: 'Back to Recruit (Enter)' });
-  }
-  private drawSingle(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number): void {
-    const pull = reveal.pulls[0]; if (!pull) return;
-    const x = panel.x, spec = CONFIG.ui.gacha.single, frame = singleFrame(pull.rarity, ms, this.reducedMotion), tier = CONFIG.ui.rarity[pull.rarity];
-    const [sx = 176, sy = 84, sw = 368, sh = 212] = spec.stageRect, [cx0 = 312, cy0 = 160, cw = 96, ch = 128] = spec.cardRect;
-    this.text(ctx, 'RECRUIT x1', x + 16, 80, palette.text, BODY, true);
-    ctx.save(); ctx.translate(frame.flash || frame.shakeX ? (reveal.flash ? frame.shakeX : 0) : 0, 0);
-    const stage = { x: x + sx, y: sy, width: sw, height: sh };
-    ctx.fillStyle = '#141c26'; ctx.fillRect(stage.x, stage.y, stage.width, stage.height);
-    ctx.save(); ctx.beginPath(); ctx.rect(stage.x, stage.y, stage.width, stage.height); ctx.clip();
-    const card = { x: x + cx0 + Math.floor((cw - frame.cardWidth) / 2), y: cy0 + frame.dropY, width: frame.cardWidth, height: ch };
-    if (frame.motes) { ctx.fillStyle = tier.frame; for (const mote of motes(pull.rarity, ms, cw + 40)) ctx.fillRect(x + cx0 - 20 + mote.x, cy0 + ch - 8 + mote.y, mote.size, mote.size); }
-    this.drawRim(ctx, card, frame.flash && reveal.flash ? '#fff0ac' : tier.frame, frame.flash && reveal.flash ? 255 : frame.rimAlpha);
-    this.drawCard(ctx, frame.face, pull.rarity, pull.heroId, card, ch, card.y + 112);
-    if (frame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, 0, frame.burstAge)) { ctx.fillStyle = dot.color; ctx.fillRect(x + cx0 + cw / 2 + dot.x, cy0 + ch / 2 + dot.y, dot.size, dot.size); }
-    ctx.restore();
-    if (frame.burstAge !== null || frame.done) {
-      const [shx = 360, shy = 152] = spec.shapeSlotCenter;
-      this.drawShape(ctx, pull.rarity, x + shx, shy, pull.rarity === 'rare' && !this.reducedMotion && frame.burstAge !== null && frame.burstAge < 40);
-      if (pull.pity) this.drawBadge(ctx, 'pity', card.x + 4, card.y + 4);
-    }
-    const name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-    if (frame.showName) this.text(ctx, name, x + sx + Math.floor((sw - this.measureText(name, BODY, true)) / 2), spec.nameY, palette.text, BODY, true);
-    if (frame.showRarity) { const label = pull.rarity.toUpperCase(); this.text(ctx, label, x + sx + Math.floor((sw - this.measureText(label, BODY, true)) / 2), spec.rarityY, tier.label, BODY, true); }
-    if (this.managementReveal && frame.done) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, x + sx + 8, sy + sh - 18);
-    ctx.restore();
-  }
-  private drawTen(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number, compact = false): void {
-    const x = panel.x, spec = CONFIG.ui.gacha.tenPull, small = CONFIG.ui.compactMenu.tenPullCompact, rarities = reveal.pulls.map(pull => pull.rarity), frame = tenFrame(rarities, ms, this.reducedMotion);
-    const [hx = 16, hy = 88] = small.header;
-    this.text(ctx, 'RECRUIT x10 RESULTS', x + 16, compact ? hy : 80, palette.text, BODY, true);
-    const tally = [...raritySchema.options].reverse().map(tier => [tier, rarities.filter(r => r === tier).length] as const).filter(([, n]) => n > 0).map(([tier, n]) => `${n} ${tier.toUpperCase()}`).join(' ');
-    if (frame.done) this.text(ctx, tally, x + (compact ? small.tallyMaxX : 704) - this.measureText(tally), compact ? hy : 80, palette.muted, BODY);
-    void hx;
-    ctx.save(); ctx.translate(reveal.flash ? frame.shakeX : 0, 0);
-    reveal.pulls.forEach((pull, index) => {
-      const cardFrame = frame.cards[index]; if (!cardFrame) return;
-      if (compact) { this.drawTenCompactCard(ctx, x, pull, index, cardFrame, frame); return; }
-      const [rx = 24, ry = 100, rw = 128, rh = 120] = spec.cardRects[index] ?? [];
-      const tier = CONFIG.ui.rarity[pull.rarity], rect = { x: x + rx + Math.floor((rw - cardFrame.width) / 2), y: ry + cardFrame.dropY, width: cardFrame.width, height: rh };
-      const highlight = index === frame.highlight && (cardFrame.rimAlpha > 0 || frame.done) && ['epic', 'legendary'].includes(pull.rarity);
-      if (highlight) this.drawRim(ctx, rect, frame.flash && reveal.flash ? '#fff0ac' : tier.frame, 255);
-      if (cardFrame.face === 'back') { this.drawCard(ctx, 'back', pull.rarity, pull.heroId, rect, rh, rect.y + 80); return; }
-      this.drawCard(ctx, cardFrame.face, pull.rarity, pull.heroId, { ...rect, height: 84 }, 84, rect.y + 80);
-      ctx.fillStyle = palette.ink; ctx.fillRect(rect.x, rect.y + 84, rect.width, 36);
-      ctx.fillStyle = tier.fill; ctx.fillRect(rect.x + 1, rect.y + 85, rect.width - 2, 35); ctx.fillStyle = tier.frame; ctx.fillRect(rect.x, rect.y + 84, rect.width, 1);
-      if (rect.width < 128) return;
-      if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + 64 + dot.x, rect.y + 42 + dot.y, dot.size, dot.size); }
-      let name = this.managementReveal ? shortHeroName(pull.heroId) : heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-      if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + 84, 128);
-      else { name = ellipsize(name, 124, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY); }
-      const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
-      this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
-      if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + 66);
-      if (frame.badges) {
-        this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
-        if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
+
+  private drawTen(ctx: CanvasRenderingContext2D, reveal: Reveal, frame: ReturnType<typeof tenFrame>): void {
+    const hall = this.images.get('dungeon/summoning-hall.png');
+    const cardW = 168, cardH = 150;
+    reveal.pulls.forEach((pull, i) => {
+      const card = frame.cards[i]; if (!card) return;
+      const cx = 100 + (i % 5) * 174, y = 56 + Math.floor(i / 5) * 156 + card.dropY;
+      const width = Math.round(cardW * card.width / 128), x = cx - Math.floor(width / 2);
+      if (!width) return;
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, width, cardH); ctx.clip();
+      const tier = CONFIG.ui.rarity[pull.rarity];
+      if (card.face === 'back') {
+        this.frame(ctx, { x, y, width, height: cardH }, 'dungeon/button.png');
+        ctx.fillStyle = '#574a50'; ctx.fillRect(x + 8, y + 8, width - 16, cardH - 16);
+        ctx.fillStyle = '#302b39'; ctx.fillRect(x + 10, y + 10, width - 20, cardH - 20);
+        spark(ctx, cx, y + 74, 20, '#a77d57'); spark(ctx, cx, y + 74, 10, '#f2cf90');
+      } else {
+        ctx.fillStyle = tier.frame; ctx.fillRect(x, y, width, cardH);
+        ctx.fillStyle = tier.fill; ctx.fillRect(x + 2, y + 2, width - 4, 100);
+        if (hall) {
+          ctx.globalAlpha = 0.48;
+          ctx.drawImage(hall, 136, 17, 164, 100, cx - 82, y + 2, 164, 100);
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = '#201f2c'; ctx.fillRect(x + 2, y + 104, width - 4, 44);
+        this.drawSummonedHero(ctx, pull, card.face, cx, y + 102, 144, 82);
+        if (card.burstAge !== null) {
+          for (const dot of particles(pull.rarity, i, card.burstAge, i === frame.highlight ? 1 : 0.25)) {
+            spark(ctx, cx + dot.x, y + 60 + dot.y, dot.size + 1, dot.color);
+          }
+        }
+        if (width === cardW && card.face === 'front') {
+          this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, x + 8, y + 112);
+          this.text(ctx, shortHeroName(pull.heroId), x + 30, y + 113, palette.text, BODY, true);
+          this.drawShape(ctx, pull.rarity, x + 17, y + 138);
+          this.text(ctx, pull.rarity.toUpperCase(), x + 30, y + 131, tier.label);
+          this.drawOutcome(ctx, pull, x + width - 6, y + 6);
+          if (pull.pity) this.drawBadge(ctx, 'pity', x + 6, y + 6);
+        }
       }
+      ctx.restore();
     });
-    ctx.restore();
-  }
-  /** compactMenu.tenPullCompact card: 104Ã—96, art (0,0,104,68), label strip (0,68,104,28), short name â‰¤ 96 px. */
-  private drawTenCompactCard(ctx: CanvasRenderingContext2D, x: number, pull: RevealPull, index: number, cardFrame: ReturnType<typeof tenFrame>['cards'][number], frame: ReturnType<typeof tenFrame>): void {
-    const small = CONFIG.ui.compactMenu.tenPullCompact, [rx = 36, ry = 108, rw = 104, rh = 96] = small.cardRects[index] ?? [], [, , , artH = 68] = small.artArea;
-    const tier = CONFIG.ui.rarity[pull.rarity], width = Math.round(cardFrame.width * rw / 128), full = cardFrame.width >= 128;
-    const rect = { x: x + rx + Math.floor((rw - width) / 2), y: ry + cardFrame.dropY, width, height: rh };
-    const highlight = index === frame.highlight && (cardFrame.rimAlpha > 0 || frame.done) && ['epic', 'legendary'].includes(pull.rarity);
-    if (highlight) this.drawRim(ctx, rect, tier.frame, 255);
-    if (cardFrame.face === 'back') { this.drawCard(ctx, 'back', pull.rarity, pull.heroId, rect, rh, rect.y + artH - 4); return; }
-    this.drawCard(ctx, cardFrame.face, pull.rarity, pull.heroId, { ...rect, height: artH }, artH, rect.y + artH - 4);
-    ctx.fillStyle = palette.ink; ctx.fillRect(rect.x, rect.y + artH, rect.width, rh - artH);
-    ctx.fillStyle = tier.fill; ctx.fillRect(rect.x + 1, rect.y + artH + 1, rect.width - 2, rh - artH - 1); ctx.fillStyle = tier.frame; ctx.fillRect(rect.x, rect.y + artH, rect.width, 1);
-    if (!full) return;
-    if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + rw / 2 + dot.x, rect.y + artH / 2 + dot.y, dot.size, dot.size); }
-    let name = shortHeroName(pull.heroId);
-    if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + small.nameYInCard, rw);
-    else { name = ellipsize(name, small.nameMaxPx, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY); }
-    const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
-    this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
-    if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + artH - 16);
-    if (frame.badges) {
-      this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
-      if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
-    }
-  }
-  private drawManagementRevealName(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, width: number): void {
-    ctx.save(); ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = palette.text;
-    ctx.font = '12px Galmuri11, monospace';
-    if (ctx.measureText(name).width > width - 8) ctx.font = '10px Galmuri11, monospace';
-    ctx.fillText(name, Math.round(x + width / 2), Math.round(y)); ctx.restore();
   }
   /** Welcome back (ui/offline-rewards.md): rewards are already in the save; Collect acknowledges. */
   drawWelcome(ctx: CanvasRenderingContext2D, state: GameState, data: WelcomeData): void {

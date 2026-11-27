@@ -133,11 +133,10 @@ body.control-window button { position: absolute; top: 4px; width: 56px; }
 .px-footer { position: absolute; left: 16px; right: 16px; top: calc(var(--px-body-h) + 128px); height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .px-menu.reveal-active main, .px-menu.reveal-active .px-footer, .px-menu.reveal-active .px-divider { visibility: hidden; }
 @media (max-width: 639px) { .px-menu[data-variant="browser"] { --px-panel-w: calc(100vw - 16px); } }
-.reveal-stage { position: absolute; left: calc((var(--px-panel-w) - 720px) / 2); top: 0; width: 720px; height: 400px; pointer-events: none; }
-.px-menu[data-variant="native"] .reveal-stage { left: 20px; top: 80px; }
-.reveal-stage[hidden] { display: none; }
-.reveal-stage[data-compact="true"] { left: 0; }
-.reveal-stage canvas { position: absolute; inset: 0; width: 720px; height: 400px; }
+.px-menu .reveal-stage { position:absolute; width:896px; height:452px; left:calc(50% - 408px); top:calc(50% - 198px); pointer-events:none; }
+.px-menu[data-preset="960"] .reveal-stage { left:32px; top:calc(50% - 230px); }
+.reveal-stage[hidden] { display:none; }
+.reveal-stage canvas { position:absolute; inset:0; image-rendering:pixelated; }
 .reveal-controls { position: absolute; inset: 0; }
 .reveal-controls .pixel-hit { pointer-events: auto; }
 .px-icon { width: 16px; height: 16px; image-rendering: pixelated; flex: none; }
@@ -1036,3 +1035,16 @@ body.compact-shell #compact-menu-button { width:calc(48px * var(--z)); height:ca
 .gear-collection .gear-stash-inspector h3 { font-size:16px; }
 .gear-collection .px-urows > button + button { margin:0; }
 body.management-window #management-app[data-layout="v2"][data-preset="960"] main:has(.gear-collection) { height:calc(var(--px-v2-height,640px) - 184px); }
+
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner {
+  background:#242330; border:2px solid #76615b; padding:0; overflow:hidden;
+}
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner h3 {
+  margin:0; padding:4px 8px; color:#f6dcad; font:700 12px/16px var(--game-font);
+}
+.px-menu[data-layout="v2"] main[data-view="recruit"] .px-banner .px-pview {
+  width:100%; min-height:32px; max-height:none; padding-bottom:4px; overflow:hidden;
+  background:#292738 url("/ui/dungeon/summoning-hall.png") center 65% / 436px 152px no-repeat;
+}
+.px-menu .summon-cost { display:flex; align-items:center; justify-content:space-between; padding:2px 8px; }
+.px-menu .summon-cost b { color:#f6dcad; }

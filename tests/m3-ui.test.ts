@@ -42,6 +42,12 @@ describe('gacha 10-pull', () => {
     const schedule = tenSchedule(plain); expect(schedule.flipAt).toEqual([120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200]); expect(schedule.badgesAt).toBe(1360);
     expect(tenFrame(plain, 1360).done).toBe(true); expect(tenFrame(plain, 1359).badges).toBe(false);
   });
+  it('holds a legendary last card and settles both reduced-motion flows immediately', () => {
+    const lastLegend = [...plain.slice(0, 9), 'legendary'] as const;
+    expect(tenFrame(lastLegend, 1400)).toMatchObject({ done: false, highlight: 9 });
+    expect(tenFrame(lastLegend, 0, true)).toEqual(tenFrame(lastLegend, Infinity));
+    expect(singleFrame('legendary', 0, true)).toEqual(singleFrame('legendary', Infinity));
+  });
   it('holds 400 ms after the highest Epic+ card (ties: first); only a legendary highest card flashes/shakes', () => {
     const rarities = ['common', 'epic', 'rare', 'legendary', 'rare', 'legendary', 'common', 'common', 'common', 'common'] as const;
     expect(highestCard(rarities)).toBe(3);
