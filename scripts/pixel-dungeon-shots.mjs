@@ -44,6 +44,7 @@ function desktopHost({ width, height }) {
   const origin = { x: 0, y: 0 }, size = { width: window.innerWidth, height: window.innerHeight };
   const monitor = { name: 'Fixture', scaleFactor: 1, position: origin, size, workArea: { position: origin, size } };
   window.isTauri = true;
+  window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener: () => {} };
   window.__TAURI_INTERNALS__ = {
     metadata: { currentWindow: { label: 'main' } },
     transformCallback: () => 1,
@@ -124,8 +125,8 @@ try {
       const filename = view === 'home' ? `${width}.png` : `${desktop ? 'desktop-' : ''}${view}-${width}${zoom === 2 ? '-2x' : ''}.png`;
       await page.screenshot({ path: join(output, filename) });
     }
-    assert.deepEqual(errors, []);
     await page.close();
+    assert.deepEqual(errors, []);
   }
 } finally {
   await browser.close();
