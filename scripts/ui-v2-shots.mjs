@@ -74,14 +74,14 @@ try {
     await page.waitForSelector('#management .px-v2-detail');
     await page.locator('#management .px-v2-detail [data-loadout-slot="weapon"]').first().click();
     await page.waitForSelector('#management [data-view="equip"] .px-equip-screen');
-    await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-slot[data-equip-slot="weapon"]')?.classList.contains('is-empty'));
+    await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] [data-equip-slot="weapon"]')?.classList.contains('is-empty'));
     await page.screenshot({ path: `artifacts/ui-v2/equip-empty-slot-${width}.png` });
     await page.locator('#management [data-view="equip"] [data-equip-back]').click();
     await page.locator('#management [data-details-close]').click();
     await page.locator('#management [data-view="heroes"] [data-hero="mw1"]').click();
     await page.locator('#management .px-v2-detail [data-loadout-slot="charm"]').click();
     await page.locator(`#management [data-view="equip"] [data-equip-item="${await page.evaluate(() => window.__uiShotItems.weakerCharm)}"]`).click();
-    await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-deltas')?.innerText.includes('SPD'));
+    await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-deltas')?.innerText.includes('ATK interval'));
     await page.screenshot({ path: `artifacts/ui-v2/equip-speed-loss-${width}.png` });
     await page.locator('#management [data-view="equip"] [data-equip-back]').click();
     await page.locator('#management [data-details-close]').click();
@@ -159,10 +159,15 @@ try {
       await page.locator('#management [data-view="equip"] [data-equip-item]').first().click();
       await page.waitForFunction(() => document.querySelector('#management [data-view="equip"] .px-equip-deltas')?.innerText.includes('ATK'));
       const minEquip = await page.evaluate(() => {
-        const rect = selector => { const el = document.querySelector(selector), r = el?.getBoundingClientRect(); return r ? [r.left,r.top,r.right,r.bottom] : null; };
-        return { drawer: rect('#management .px-equip-drawer'), meta: rect('#management .px-equip-hero-meta'), compare: rect('#management .px-equip-compare'), actions: [...document.querySelectorAll('#management .px-equip-actions > .px-btn')].map(el => { const r = el.getBoundingClientRect(); return [r.top,r.bottom,r.height]; }) };
+        const panel = document.querySelector('#management .gear-inspection').getBoundingClientRect();
+        const nav = document.querySelector('#management nav').getBoundingClientRect();
+        const actions = [...document.querySelectorAll('#management .gear-actions button')].map(el => el.getBoundingClientRect().toJSON());
+        return { panel: panel.toJSON(), navTop: nav.top, actions };
       });
-      if (!minEquip.drawer || !minEquip.meta || !minEquip.compare || minEquip.meta[3] > minEquip.drawer[1] + 1 || !minEquip.actions.length || minEquip.actions.some(([top,bottom,height]) => top < minEquip.compare[1] || bottom > minEquip.compare[3] || bottom > 600 || height < 40)) throw new Error(`Equip compare clipped at 960x600: ${JSON.stringify(minEquip)}`);
+      if (!minEquip.actions.length || minEquip.panel.bottom > minEquip.navTop || minEquip.actions.some(rect =>
+        rect.top < minEquip.panel.top || rect.bottom > minEquip.panel.bottom || rect.height < 40)) {
+        throw new Error(`Equip actions clipped at 960x600: ${JSON.stringify(minEquip)}`);
+      }
       for (const viewport of [{ width: 1200, height: 720 }, { width: 1280, height: 640 }, { width: 2560, height: 1440 }]) {
         await page.setViewportSize(viewport); await page.waitForTimeout(50);
         const box = await page.locator('#management').boundingBox();

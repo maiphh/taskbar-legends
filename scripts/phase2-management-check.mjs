@@ -123,6 +123,7 @@ try {
   await page.locator('#management main ol li').first().waitFor();
 
   await page.locator('nav [data-tab="gear"]').click();
+  await page.locator('[data-gear-page="stash"]').click();
   await pick(page, 'slot', 'weapon');
   const filter = page.locator('[data-dd-toggle="slot"]');
   await filter.focus();
@@ -133,19 +134,20 @@ try {
   assert.notEqual(await page.evaluate(() => document.activeElement?.getAttribute('data-dd-toggle')), 'slot', 'keyboard navigation advances from the persistent filter');
 
   await page.locator(`[data-gear="${gearId}"]`).click();
-  assert.match(await page.locator('#management main').innerText(), /HP% 5 · ATK% 10 · speed 15%/, 'fractional gear percentages display as percent points');
-  await pick(page, 'hero', 'mw2');
-  await page.locator('main .px-deltas p', { hasText: /^ATK\s*\d+ → \d+/ }).waitFor();
-  await page.locator('main').getByText(/Party utility gain/).waitFor();
+  assert.match(await page.locator('#management main').innerText(), /HP \+5% · ATK \+10% · SPD \+15%/, 'fractional gear percentages display as percent points');
+  await page.locator('[data-action="manage-item"]').click();
+  await pick(page, 'equip-hero', 'mw2');
+  await page.locator('.gear-deltas').getByText('ATK', { exact: true }).waitFor();
+  await page.locator('main').getByText(/Party utility/).waitFor();
   const compareDps = await page.evaluate(async id => {
     const value = window.__management.compare('mw2', id);
     const { partyBasicDpsForStats } = await import('/src/core/economy.ts');
     return { delta: value.delta.basicDps, expected: partyBasicDpsForStats('mw2', value.after) - partyBasicDpsForStats('mw2', value.before) };
   }, gearId);
   assert.ok(Math.abs(compareDps.delta - compareDps.expected) < 1e-9, 'gear comparison and Party panel share the same damage coefficient and realized cycle');
-  await page.locator('[data-action="equip"]').click();
+  await page.locator('[data-action="equip-selected"]').click();
   await page.waitForFunction(id => window.__game.getState().roster.find(hero => hero.id === 'mw2').equipment.weapon === id, gearId);
-  await page.locator('[data-action="upgrade"]').click();
+  await page.locator('[data-action="equip-upgrade"]').click();
   await page.waitForFunction(id => window.__game.getState().inventory.find(item => item.id === id).level === 1, gearId);
   await page.locator('nav [data-tab="gear"]').click();
   await page.locator('[data-action="gear-upgrades"]').click();
@@ -191,10 +193,12 @@ try {
   assert.equal(await page.evaluate(() => window.__management.snapshot().revision), revisionBeforeSecondAction + 1, 'reopened view has one active click handler');
 
   await page.locator('nav [data-tab="gear"]').click();
-  if (!(await page.locator('[data-dd-toggle="owner"]').count())) await page.locator('[data-action="gear-upgrades"]').click();
+  await page.locator('[data-gear-page="stash"]').click();
   await pick(page, 'owner', 'mw1');
   assert.equal(await picked(page, 'owner'), 'mw1', 'owner filter retains its own selected value');
-  assert.equal(await picked(page, 'hero'), 'mw2', 'comparison target remains independent from the owner filter');
+  await page.locator('[data-action="manage-item"]').click();
+  assert.equal(await picked(page, 'equip-hero'), 'mw2', 'comparison target remains independent from the owner filter');
+  await page.locator('[data-equip-back]').click();
   await pick(page, 'owner', 'mw2');
   assert.equal(await picked(page, 'owner'), 'mw2');
   await root.locator('[data-close]').click();
