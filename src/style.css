@@ -740,7 +740,6 @@ body.management-window #management-app.px-menu[data-layout="v2"][data-preset="96
 .px-menu[data-layout="v2"] .management-status:not(:empty) { display:block; position:absolute; z-index:30; left:96px; right:16px; top:auto; bottom:64px; width:auto; height:auto; min-height:32px; padding:8px 12px; overflow:visible; white-space:normal; background:#202c39; border:1px solid #536276; pointer-events:none; }
 .px-menu[data-layout="v2"] .management-status[data-quiet="true"] { position:absolute; width:1px; height:1px; min-height:0; left:-10000px; right:auto; bottom:auto; padding:0; border:0; clip:rect(0,0,0,0); overflow:hidden; white-space:nowrap; }
 .px-menu[data-layout="v2"] .px-legendary-toast:not([hidden]) { position:absolute; z-index:40; top:64px; right:16px; max-width:360px; min-height:54px; padding:6px 10px; display:flex; align-items:center; gap:8px; color:#ffe38c; background:#202c39; border:4px solid var(--px-gold,#e9bd68); box-shadow:inset 0 0 0 3px #735329,2px 2px 0 #101820; font:12px/16px "Galmuri11",monospace; image-rendering:pixelated; overflow:hidden; pointer-events:none; }
-.px-legendary-toast.legendary-pop { animation:legendary-pop-in 360ms steps(6,end),legendary-border-pulse 680ms steps(2,end) infinite; }
 .px-legendary-toast.legendary-pop::after { content:""; position:absolute; z-index:3; top:4px; bottom:4px; left:-24px; width:8px; background:#fff; box-shadow:4px 0 #fff4bf,8px 0 #e9bd68,12px 0 #735329; animation:legendary-sweep 560ms steps(8,end) 1 both; pointer-events:none; }
 .px-menu[data-layout="v2"][data-frozen="true"] .px-legendary-toast,
 .px-menu[data-layout="v2"] .px-legendary-toast[data-reduced-motion="true"] { animation:none !important; transform:none !important; }
@@ -997,11 +996,15 @@ body.compact-shell #compact-menu-button { width:calc(48px * var(--z)); height:ca
 .campaign-route .boss-step { box-shadow:inset 0 0 0 1px #d88e7f; }.campaign-route span { margin-left:5px; }
 .px-menu[data-layout="v2"] main[data-view="home"] .px-home-actions { margin:6px 6px 4px; flex-wrap:nowrap; }
 .px-menu[data-layout="v2"] .px-home-actions .px-btn { min-width:0; min-height:36px; height:36px; }
-.px-menu[data-layout="v2"] .px-home-party { height:calc(100% - 32px); margin:10px 0 0; gap:8px; }
-.px-menu[data-layout="v2"] .px-home-hero { flex:1; min-width:0; min-height:0; padding:8px; justify-content:center; gap:5px; border:2px solid #454756; background:#1b1f2b url("/ui/dungeon/masonry.png"); }
+.px-menu[data-layout="v2"] .px-home-party { display:grid; grid-template-columns:repeat(3, round(down, calc((100% - 16px) / 3), 1px)); height:calc(100% - 32px); margin:10px 0 0; gap:8px; }
+.px-menu[data-layout="v2"] .px-home-hero { width:auto; min-width:0; min-height:0; padding:8px; justify-content:center; gap:5px; border:2px solid #454756; background:#1b1f2b url("/ui/dungeon/masonry.png"); }
 .px-menu[data-layout="v2"] .px-home-hero > span:first-child { color:#d7b88a; font:12px/16px var(--game-font); letter-spacing:1px; }
 .px-menu[data-layout="v2"] .px-home-hero b { font:700 12px/16px var(--game-font); }
 .px-menu[data-layout="v2"] .px-home-hero small { color:#d0ccd0; font:12px/16px var(--game-font); }
+/* Center each caption on a source pixel, including cards and glyph runs of odd width. */
+.px-menu[data-layout="v2"] .px-home-hero > :is(span:first-child, b, small) {
+  align-self:flex-start; position:relative; left:round(down, 50%, 1px); translate:round(down, -50%, 1px) 0;
+}
 .camp-sub, .camp-note { margin:8px 0; color:#c2bec4; font:12px/18px var(--game-font); }
 .camp-yields { display:grid; grid-template-columns:round(down, calc((100% - 6px) / 2), 1px) 1fr; margin:14px 0; gap:6px; }
 .camp-yields div { padding:10px; background:#191d29; border-left:3px solid #c29b68; }
