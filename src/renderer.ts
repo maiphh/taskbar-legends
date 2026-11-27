@@ -8,7 +8,7 @@ import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
 import { bossHpBar, upgradePopups } from './core/selectors';
 import { ellipsize } from './text-fit';
-import { enemyFormationX, presentationCombatTime } from './core/party-combat';
+import { PARTY_V2, enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
 import { isStatusBoss } from './core/status-effects';
@@ -305,6 +305,7 @@ export class Renderer {
     ctx.translate(this.bursts.shake(state.tick), 0);
     this.ui.drawCorridor(ctx, this.width, baselineY - 4, this.marchOffset, still ? 0 : state.tick);
     const bossBar = bossHpBar(state);
+    const arena = { top: coreY - 32, bottom: height - (bossBar ? 18 : 0) };
     const unitHpBaseY = coreY + CONFIG.ui.unitHpBars.coreLocalY;
     const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
@@ -315,8 +316,9 @@ export class Renderer {
       const pulse = !still && state.tick % 8 < 4;
       ctx.fillStyle = mark.global ? (pulse ? '#e1795f' : '#b3615c') : (pulse ? '#efbe70' : '#c18d54');
       for (const ally of state.party) {
-        if (!mark.global && ally.id !== mark.targetId) continue;
-        const x = this.position(ally, state), radius = mark.global ? 20 : mark.radius;
+        if (ally.hp <= 0) continue;
+        if (!mark.global && Math.abs(ally.x - mark.centerX) > mark.radius + (ally.radius ?? PARTY_V2.radius.normal)) continue;
+        const x = this.position(ally, state), radius = 20;
         const y = baselineY - ally.slot * 4;
         ctx.fillRect(x - radius, y, radius * 2, 2);
         for (let dx = -radius; dx < radius; dx += 8) ctx.fillRect(x + dx, y + 2, 3, 2);
@@ -344,11 +346,10 @@ export class Renderer {
         ctx.fillStyle = enemyDef.outline;
         ctx.fillRect(Math.round(x - 18 * bossScale), unitBaseline - 2, Math.round(36 * bossScale), 3);
       }
-      // Plate is painted after units, so scale-2 bosses stay unclipped and read as large.
       const tint = isLaneBoss ? enemyDef?.tint : undefined;
       const warning = isLaneBoss && bossBar && (bossBar.enraged || bossBar.telegraph);
       const outline = warning ? (!still && state.tick % 12 < 4 ? '#ffcf82' : '#e69668') : isLaneBoss ? enemyDef?.outline : undefined;
-      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline)) {
+      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline, arena)) {
         const w = unit.boss ? view.bossWidth * bossScale : view.heroWidth, h = unit.boss ? view.bossHeight * bossScale : view.heroHeight;
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : (enemyDef?.tint ?? color);
         ctx.fillRect(x - w / 2, unitBaseline - h, w, h);
@@ -479,7 +480,7 @@ export class Renderer {
       counts.set(group.targetId, count + 1);
       const unit = units.find(unit => unit.id === group.targetId); if (!unit) continue;
       const age = labelClock - group.tick, x = this.position(unit, state) - 10 + count * 6;
-      const y = Math.max(8, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
+      const y = Math.max(arena.top + 1, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
       const label = `${group.heal ? '+' : '-'}${group.amount}`;
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, BODY, true);
       const color = group.heal
@@ -626,7 +627,7 @@ export class Renderer {
 
   private drawLegendaryEffect(ctx: CanvasRenderingContext2D, state: GameState, field: { x: number; width: number }, coreY: number): void {
     const reducedMotion = this.ui.reducedMotion;
-    const effect = this.legendaryEffects.current(performance.now(), reducedMotion); if (!effect) return;
+    const effect = this.legendaryEffects.current(performance.now(), reducedMotion); if (!effect || (this.compact && effect.kind === 'drop')) return;
     const gold = CONFIG.ui.rarity.legendary.frame;
     const bannerX = Math.floor(field.x + field.width / 2);
     const anchor = effect.anchorId ? [...state.party, ...state.enemies].find(unit => unit.id === effect.anchorId) : undefined;
@@ -759,7 +760,9 @@ export class Renderer {
         const hero = units.find(unit => unit.side === 'hero' && unit.sourceId === popup.delta.heroId);
         const width = this.ui.popupWidth(segments), centre = hero ? this.position(hero, state) : this.ui.feedbackAnchorX(popup.delta.heroId ? 'heroes' : 'gear');
         const x = Math.max(spec.upgradePopup.clampMarginPx, Math.min(this.width - spec.upgradePopup.clampMarginPx - width, roundHalfEven(centre - width / 2)));
-        this.ui.drawPopupText(ctx, segments, x, coreY + spec.upgradePopup.startTopCoreLocal - frame.rise - index * spec.upgradePopup.stackGapPx);
+        const stackTop = coreY - 32 + 1 + (popups.length - 1) * spec.upgradePopup.stackGapPx;
+        const newestY = Math.max(stackTop, coreY + spec.upgradePopup.startTopCoreLocal - frame.rise);
+        this.ui.drawPopupText(ctx, segments, x, newestY - index * spec.upgradePopup.stackGapPx);
       }
       ctx.restore();
     }

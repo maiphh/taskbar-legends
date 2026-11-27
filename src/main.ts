@@ -41,16 +41,16 @@ const canvas = element('game'); if (!(canvas instanceof HTMLCanvasElement)) thro
 const notice = element('notice'), liveStatus = element('live-status');
 const legendaryToast = element('legendary-toast');
 let legendaryToastTimer = 0;
-function showLegendaryToast(message: string, slot?: 'weapon' | 'armor' | 'charm'): void {
-  legendaryToast.replaceChildren();
+function showLegendaryToast(message: string, slot: 'weapon' | 'armor' | 'charm'): void {
+  if (!managementRoot.hidden) return;
+  const icon = document.createElement('img');
+  icon.src = `${import.meta.env.BASE_URL}ui/icon-${slot === 'weapon' ? 'sword' : slot === 'charm' ? 'potion' : 'armor'}.png`;
+  icon.alt = ''; icon.width = 16; icon.height = 16;
+  legendaryToast.replaceChildren(icon, message);
   legendaryToast.dataset.reducedMotion = String(renderer.ui.reducedMotion);
-  const itemSlot = slot ?? (/\b(armor|charm|weapon)\b/i.exec(message)?.[1]?.toLowerCase() as 'weapon' | 'armor' | 'charm' | undefined) ?? 'weapon';
-  const icon = document.createElement('img'); icon.src = `${import.meta.env.BASE_URL}ui/icon-${itemSlot === 'weapon' ? 'sword' : itemSlot === 'charm' ? 'potion' : 'armor'}.png`; icon.alt = ''; icon.width = 32; icon.height = 32; icon.className = 'legendary-toast-icon';
-  const copy = document.createElement('span'); copy.className = 'legendary-toast-copy';
-  const title = document.createElement('b'); title.textContent = 'LEGENDARY DROP';
-  const name = document.createElement('span'); name.textContent = message.replace(/^Legendary drop:\s*/i, '');
-  copy.append(title, name); legendaryToast.append(icon, copy); legendaryToast.hidden = false; legendaryToast.classList.remove('legendary-pop'); void legendaryToast.offsetWidth; legendaryToast.classList.add('legendary-pop');
-  window.clearTimeout(legendaryToastTimer); legendaryToastTimer = window.setTimeout(() => { legendaryToast.hidden = true; }, 4000);
+  legendaryToast.hidden = false;
+  window.clearTimeout(legendaryToastTimer);
+  legendaryToastTimer = window.setTimeout(() => { legendaryToast.hidden = true; }, 4000);
 }
 const recovery = element('save-recovery'), exportFailed = element('export-failed-save') as HTMLButtonElement, discardFailed = element('discard-failed-save') as HTMLButtonElement;
 const recoveryTitle = element('save-recovery-title'), recoveryDescription = element('recovery-description'), recoveryStatus = element('recovery-status');
@@ -60,7 +60,7 @@ document.body.dataset.reducedMotion = String(presentationReducedMotionPreference
 window.addEventListener('storage', event => {
   if (event.key !== 'taskbar-legends:reduced-motion:v1') return;
   const enabled = event.newValue === 'true'; document.body.dataset.reducedMotion = String(enabled);
-  for (const toast of document.querySelectorAll<HTMLElement>('.legendary-pop,.px-legendary-toast')) toast.dataset.reducedMotion = String(enabled || matchMedia('(prefers-reduced-motion: reduce)').matches);
+  for (const toast of document.querySelectorAll<HTMLElement>('#legendary-toast,.px-legendary-toast')) toast.dataset.reducedMotion = String(enabled || matchMedia('(prefers-reduced-motion: reduce)').matches);
 });
 let compactPrefs: CompactPrefs = readCompactPrefs();
 document.body.classList.add('compact-shell'); renderer.setCompactViewport(true, compactPrefs.zoom);
@@ -148,7 +148,7 @@ function domHitRegions(): HitRegion[] {
 function openManagement(tab: 'home' | 'heroes' | 'formation' | 'gear' | 'recruit' | 'stages' | 'settings' | 'party' | 'stash' | 'upgrades' = 'home'): void {
   if (!managementView) managementView = new ManagementView(managementRoot, managementClient(), () => { managementRoot.hidden = true; element('compact-menu-button').setAttribute('aria-expanded', 'false'); element('compact-menu-button').focus(); }, { variant: nativeMenuShot ? 'native' : 'browser', atlas: renderer.atlases, clock: () => renderer.ui.clock() });
   const destination = tab === 'party' ? 'heroes' : tab === 'stash' || tab === 'upgrades' ? 'gear' : tab;
-  dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open(destination);
+  legendaryToast.hidden = true; dockManagement(); managementRoot.hidden = false; element('compact-menu-button').setAttribute('aria-expanded', 'true'); void managementView.open(destination);
 }
 renderer.ui.onPanelRequest = tab => openManagement(tab === 'heroes' ? 'heroes' : tab === 'gear' ? 'gear' : tab === 'recruit' ? 'recruit' : 'home');
 function setEditing(value: boolean): void {
@@ -275,13 +275,12 @@ function render(): void {
       const item = state.inventory.find(value => value.id === data.gearId);
       const name = item ? `Legendary ${item.slot}` : `Legendary ${data.slot}`;
       const notificationSeq = ++legendaryNotificationSeq;
-      showNotice(`Legendary drop: ${name}`); noticeUntil = performance.now() + 4000; notice.classList.add('legendary-notice'); audio.play('gacha_legendary_sting');
-      showLegendaryToast(`Legendary drop: ${name}`, data.slot);
+      audio.play('gacha_legendary_sting');
+      showLegendaryToast(name, data.slot);
       managementView?.presentLegendaryDrop(notificationSeq, `Legendary drop: ${name}`, data.slot);
       if ('__TAURI_INTERNALS__' in window) void emit('management://legendary-drop', { seq: notificationSeq, message: `Legendary drop: ${name}`, slot: data.slot }).catch(() => undefined);
     }
   });
-  if (performance.now() > noticeUntil) notice.classList.remove('legendary-notice');
   renderer.render(state, paused);
   const status = statusText(state); if (liveStatus.textContent !== status) liveStatus.textContent = status;
   if (performance.now() > noticeUntil) notice.textContent = '';
@@ -363,7 +362,7 @@ const debug: GameDebug = {
   setSalvageRules: rules => { const next = setSalvageRules(rules); render(); return next; }, getSalvageRules: () => activeSalvageRules(),
   // M3 presentation hooks for shots/tests: freeze the reveal/welcome clock, read audio state, simulate an absence.
   freezeClock: ms => { renderer.ui.clock = ms === null ? () => performance.now() : () => ms; render(); },
-  debugShowcase: (kind, slot = 'weapon') => { renderer.debugLegendaryShowcase(kind, state, slot); if (kind === 'drop') { const message = `Legendary drop: Legendary ${slot[0]!.toUpperCase()}${slot.slice(1)}`; showNotice(message); showLegendaryToast(message, slot); managementView?.presentLegendaryDrop(++legendaryNotificationSeq, message, slot); audio.play('gacha_legendary_sting'); } render(); },
+  debugShowcase: (kind, slot = 'weapon') => { renderer.debugLegendaryShowcase(kind, state, slot); if (kind === 'drop') { const message = `Legendary drop: Legendary ${slot[0]!.toUpperCase()}${slot.slice(1)}`; showLegendaryToast(`Legendary ${slot}`, slot); managementView?.presentLegendaryDrop(++legendaryNotificationSeq, message, slot); audio.play('gacha_legendary_sting'); } render(); },
   debugShowcaseSeek: ms => { renderer.seekLegendaryShowcase(ms); render(); },
   getAudio: () => audio.debug(),
   away: ms => { if (hidden || restoring || checkpointBlocked || failedSave) throw new Error('Hidden state or save restoration blocks state changes'); const beforeSeq = state.eventSeq, result = applyOffline(state, ms); renderer.ui.showWelcome(welcomeData(result, beforeSeq)); render(); return { ...result }; },

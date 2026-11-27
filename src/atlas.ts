@@ -1,20 +1,21 @@
 import { z } from 'zod';
 import { CONFIG } from './config';
 import { idleFrameAt } from './management/animation';
-const rect = z.object({ x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive(), durationMs: z.number().positive() });
+const rect = z.object({ outlinedContentBounds: z.tuple([z.number(), z.number(), z.number(), z.number()]), x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive(), durationMs: z.number().positive() });
 const animation = z.object({ frames: z.array(z.number().int().nonnegative()).nonempty(), durationMs: z.number().positive(), loop: z.boolean(), aliasOf: z.string().optional() });
 const atlasSchema = z.object({ image: z.string(), anchor: z.object({ x: z.number(), y: z.number() }), frames: z.array(rect), animations: z.record(z.string(), animation) });
 const assetSchema = z.object({ key: z.string(), path: z.string(), outlined: z.string(), atlasPath: z.string() });
 const manifestSchema = z.object({ heroes: z.array(assetSchema), enemies: z.array(assetSchema) });
 type Atlas = z.infer<typeof atlasSchema>;
 export type AnimationName = 'idle' | 'run' | 'attack' | 'cast' | 'hit' | 'death';
-interface LoadedAtlas { atlas: Atlas; image: HTMLImageElement; white: HTMLCanvasElement }
+interface LoadedAtlas { atlas: Atlas; image: HTMLImageElement; white: HTMLCanvasElement; inkTop: number; inkBottom: number }
 async function json(url: URL): Promise<unknown> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`${url.pathname}: ${response.status}`);
   return response.json();
 }
 export class AtlasLibrary {
+  private readonly variants = new Map<string, HTMLCanvasElement>();
   private readonly loaded = new Map<string, LoadedAtlas>();
   private readonly portraitCache = new Map<string, Map<number, HTMLCanvasElement | null>>();
   readonly errors: string[] = [];
@@ -41,7 +42,11 @@ export class AtlasLibrary {
           tint.imageSmoothingEnabled = false; tint.drawImage(image, 0, 0);
           tint.globalCompositeOperation = 'source-atop'; tint.fillStyle = CONFIG.view.hitFlashColor; tint.fillRect(0, 0, white.width, white.height);
           tint.globalCompositeOperation = 'source-over';
-          this.loaded.set(asset.key, { atlas, image, white });
+          const frames = atlas.frames;
+          this.loaded.set(asset.key, { atlas, image, white,
+            inkTop: Math.min(...frames.map(f => f.outlinedContentBounds[1])),
+            inkBottom: Math.max(...frames.map(f => f.outlinedContentBounds[3])),
+          });
         } catch (error) { this.errors.push(`${asset.key}: ${String(error)}`); }
       }));
     } catch (error) { this.errors.push(`manifest: ${String(error)}`); }
@@ -115,7 +120,7 @@ export class AtlasLibrary {
     const tag = this.animation(key, name);
     return tag ? tag.frames.length * tag.durationMs : undefined;
   }
-  draw(ctx: CanvasRenderingContext2D, key: string, name: AnimationName, ageMs: number, x: number, baseline: number, flip: boolean, zoom = 1, flash = false, tint?: string, outline?: string): boolean {
+  draw(ctx: CanvasRenderingContext2D, key: string, name: AnimationName, ageMs: number, x: number, baseline: number, flip: boolean, zoom = 1, flash = false, tint?: string, outline?: string, lane?: { top: number; bottom: number }): boolean {
     const loaded = this.loaded.get(key);
     if (!loaded) return false;
     const { atlas, image } = loaded;
@@ -126,21 +131,40 @@ export class AtlasLibrary {
     const frame = index === undefined ? undefined : atlas.frames[index];
     if (!frame) return false;
     const source = flash ? loaded.white : image;
-    ctx.save(); ctx.translate(Math.round(x), Math.round(baseline));
-    ctx.scale(flip ? -zoom : zoom, zoom);
-    // Atlas has already been scaled to its documented 44..52px body. Never scale the image again.
-    if (!tint && !outline) {
-      ctx.drawImage(source, frame.x, frame.y, frame.w, frame.h, -atlas.anchor.x, -atlas.anchor.y, frame.w, frame.h);
-      ctx.restore();
-      return true;
-    }
     const pad = outline ? 1 : 0;
+    // Bosses use a single scale and foot anchor across their entire animation set.
+    // A particularly tall atlas gets a nearest-neighbor compact raster before screen zoom.
+    let scale = zoom;
+    if (lane) {
+      const top = (outline ? loaded.inkTop : frame.outlinedContentBounds[1]) - atlas.anchor.y - pad;
+      const bottom = (outline ? loaded.inkBottom : frame.outlinedContentBounds[3]) - atlas.anchor.y + pad;
+      const fit = (lane.bottom - lane.top) / Math.max(1, bottom - top);
+      scale = Math.min(scale, fit >= 1 ? Math.floor(fit) : fit);
+      baseline = Math.min(lane.bottom - Math.round(bottom * scale), Math.max(baseline, lane.top - Math.round(top * scale)));
+    }
+    ctx.save(); ctx.translate(Math.round(x), Math.round(baseline));
+    ctx.scale(flip ? -1 : 1, 1);
+    const left = -Math.round((atlas.anchor.x + pad) * scale), top = -Math.round((atlas.anchor.y + pad) * scale);
+    if (!tint && !outline && scale >= 1) {
+      ctx.drawImage(source, frame.x, frame.y, frame.w, frame.h, left, top, frame.w * scale, frame.h * scale);
+    } else {
+      const variantKey = `${key}|${index}|${tint}|${outline}|${flash}|${scale}`;
+      let variant = this.variants.get(variantKey);
+      if (!variant) {
+        variant = this.variant(source, frame, pad, scale, tint, outline);
+        if (this.variants.size >= 128) this.variants.delete(this.variants.keys().next().value!);
+        this.variants.set(variantKey, variant);
+      }
+      ctx.drawImage(variant, left, top);
+    }
+    ctx.restore();
+    return true;
+  }
+  private variant(source: CanvasImageSource, frame: Atlas['frames'][number], pad: number, scale: number, tint?: string, outline?: string): HTMLCanvasElement {
     const buffer = document.createElement('canvas');
     buffer.width = frame.w + pad * 2;
     buffer.height = frame.h + pad * 2;
-    const bctx = buffer.getContext('2d');
-    if (!bctx) { ctx.restore(); return false; }
-    bctx.imageSmoothingEnabled = false;
+    const bctx = buffer.getContext('2d')!;
     bctx.drawImage(source, frame.x, frame.y, frame.w, frame.h, pad, pad, frame.w, frame.h);
     if (tint) {
       bctx.globalCompositeOperation = 'source-atop';
@@ -174,8 +198,12 @@ export class AtlasLibrary {
       }
       bctx.putImageData(out, 0, 0);
     }
-    ctx.drawImage(buffer, -atlas.anchor.x - pad, -atlas.anchor.y - pad);
-    ctx.restore();
-    return true;
+    if (scale === 1) return buffer;
+    const compact = document.createElement('canvas');
+    compact.width = Math.round(buffer.width * scale); compact.height = Math.round(buffer.height * scale);
+    const ctx = compact.getContext('2d')!;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(buffer, 0, 0, compact.width, compact.height);
+    return compact;
   }
 }
