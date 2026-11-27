@@ -349,7 +349,9 @@ export class Renderer {
       const tint = isLaneBoss ? enemyDef?.tint : undefined;
       const warning = isLaneBoss && bossBar && (bossBar.enraged || bossBar.telegraph);
       const outline = warning ? (!still && state.tick % 12 < 4 ? '#ffcf82' : '#e69668') : isLaneBoss ? enemyDef?.outline : undefined;
-      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline, arena)) {
+      // Boss art can extend behind the HUD rail at its configured scale.
+      const lane = unit.boss ? undefined : arena;
+      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline, lane)) {
         const w = unit.boss ? view.bossWidth * bossScale : view.heroWidth, h = unit.boss ? view.bossHeight * bossScale : view.heroHeight;
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : (enemyDef?.tint ?? color);
         ctx.fillRect(x - w / 2, unitBaseline - h, w, h);

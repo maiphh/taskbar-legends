@@ -8,7 +8,7 @@ const assetSchema = z.object({ key: z.string(), path: z.string(), outlined: z.st
 const manifestSchema = z.object({ heroes: z.array(assetSchema), enemies: z.array(assetSchema) });
 type Atlas = z.infer<typeof atlasSchema>;
 export type AnimationName = 'idle' | 'run' | 'attack' | 'cast' | 'hit' | 'death';
-interface LoadedAtlas { atlas: Atlas; image: HTMLImageElement; white: HTMLCanvasElement; inkTop: number; inkBottom: number }
+interface LoadedAtlas { atlas: Atlas; image: HTMLImageElement; white: HTMLCanvasElement }
 async function json(url: URL): Promise<unknown> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`${url.pathname}: ${response.status}`);
@@ -42,11 +42,7 @@ export class AtlasLibrary {
           tint.imageSmoothingEnabled = false; tint.drawImage(image, 0, 0);
           tint.globalCompositeOperation = 'source-atop'; tint.fillStyle = CONFIG.view.hitFlashColor; tint.fillRect(0, 0, white.width, white.height);
           tint.globalCompositeOperation = 'source-over';
-          const frames = atlas.frames;
-          this.loaded.set(asset.key, { atlas, image, white,
-            inkTop: Math.min(...frames.map(f => f.outlinedContentBounds[1])),
-            inkBottom: Math.max(...frames.map(f => f.outlinedContentBounds[3])),
-          });
+          this.loaded.set(asset.key, { atlas, image, white });
         } catch (error) { this.errors.push(`${asset.key}: ${String(error)}`); }
       }));
     } catch (error) { this.errors.push(`manifest: ${String(error)}`); }
@@ -132,12 +128,10 @@ export class AtlasLibrary {
     if (!frame) return false;
     const source = flash ? loaded.white : image;
     const pad = outline ? 1 : 0;
-    // Bosses use a single scale and foot anchor across their entire animation set.
-    // A particularly tall atlas gets a nearest-neighbor compact raster before screen zoom.
     let scale = zoom;
     if (lane) {
-      const top = (outline ? loaded.inkTop : frame.outlinedContentBounds[1]) - atlas.anchor.y - pad;
-      const bottom = (outline ? loaded.inkBottom : frame.outlinedContentBounds[3]) - atlas.anchor.y + pad;
+      const top = frame.outlinedContentBounds[1] - atlas.anchor.y - pad;
+      const bottom = frame.outlinedContentBounds[3] - atlas.anchor.y + pad;
       const fit = (lane.bottom - lane.top) / Math.max(1, bottom - top);
       scale = Math.min(scale, fit >= 1 ? Math.floor(fit) : fit);
       baseline = Math.min(lane.bottom - Math.round(bottom * scale), Math.max(baseline, lane.top - Math.round(top * scale)));
