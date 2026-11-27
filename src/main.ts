@@ -305,11 +305,16 @@ function announceCompactPresentation(): void {
   lastCompactPresentationKey = key;
   window.dispatchEvent(new CustomEvent('compact-presentation-change', { detail }));
 }
+let nativeControlInset = 0;
 function resize(): void {
   const native = '__TAURI_INTERNALS__' in window;
   const cssWidth = !native ? Math.min(window.innerWidth, compactPrefs.sourceWidth * compactPrefs.zoom / (window.devicePixelRatio || 1)) : window.innerWidth;
   if (!native) document.getElementById('app')!.style.width = `${cssWidth}px`;
-  renderer.resize(cssWidth); syncCompactScale(); dockManagement(); render(); announceCompactPresentation();
+  renderer.resize(cssWidth); syncCompactScale();
+  const dpr = window.devicePixelRatio || 1;
+  const inset = native ? nativeControlInset : (canvas.getBoundingClientRect().right - compactMenu.getBoundingClientRect().left) * dpr;
+  renderer.ui.compactControlInset = Math.ceil(inset / compactPrefs.zoom);
+  dockManagement(); render(); announceCompactPresentation();
 }
 renderer.ui.onAction = action; renderer.ui.onPause = togglePause; renderer.ui.onLayoutChange = resize; renderer.ui.onRedraw = render;
 renderer.ui.onCue = key => { audio.play(key); };
@@ -373,6 +378,7 @@ if (import.meta.env.DEV) window.__management = {
 void startDesktop({ flushSave: () => { if (!hidden) save(); }, setQuit: handler => renderer.ui.setQuitHandler(handler),
   presentationState: () => ({ welcomeOpen: renderer.ui.welcome !== null, sourceHeight: renderer.ui.height() }) }, {
   setEditing,
+  setControlInset: value => { nativeControlInset = value; resize(); },
 }).catch(error => showNotice(`Desktop shell failed: ${String(error)}`));
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
 void debug.whenReady().then(() => { if (debug.getAssetErrors().length) showNotice('Some UI/art unavailable; see __game.getAssetErrors().'); });

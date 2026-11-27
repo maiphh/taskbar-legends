@@ -199,6 +199,8 @@ export class PixelUI {
   }
   /** Compact lane edit mode (compact-menu.md Â§2.2): the stage heading shifts right of the Move handle. */
   compactEditing = false;
+  /** Source pixels occupied by the controls and their trailing inset. */
+  compactControlInset = 52;
   drawCorridor(ctx: CanvasRenderingContext2D, width: number, floor: number, offset: number, tick: number): void {
     const tile = this.images.get('dungeon/corridor.png');
     if (!tile) return;
@@ -214,7 +216,8 @@ export class PixelUI {
   /** One fixed rail reserves the remaining 128px for combat and boss warnings. */
   private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, paused: boolean): void {
     const width = this.width, coreY = this.coreY, y = coreY - 80;
-    const tight = width < 400, slot = tight ? 18 : 26;
+    const railEnd = width - this.compactControlInset - 5;
+    const slot = railEnd < 240 ? 18 : 26;
     this.frame(ctx, { x: 0, y, width, height: 32 });
     state.party.forEach((unit, i) => {
       const x = 5 + i * (slot + 2);
@@ -224,41 +227,55 @@ export class PixelUI {
       const portrait = key && this.atlas.portrait(key);
       if (portrait) {
         const w = Math.min(slot - 2, portrait.width), h = Math.min(19, portrait.height);
-        ctx.drawImage(portrait, Math.floor((portrait.width - w) / 2), 0, w, h, x + Math.floor((slot - w) / 2), y + 5, w, h);
+        // The tall staff and its particles sit above and right of this wizard's hood.
+        const faceX = key === 'evil-wizard-2' ? 16 : Math.floor(portrait.width / 2);
+        const top = key === 'evil-wizard-2' ? 44 : key === 'martial-hero' ? 10 : 0;
+        ctx.drawImage(portrait, Math.max(0, faceX - Math.floor(w / 2)), top, w, h, x + Math.floor((slot - w) / 2), y + 5, w, h);
       }
       ctx.fillStyle = palette.green; ctx.fillRect(x + 2, y + 25, Math.round((slot - 4) * unit.hp / unit.maxHp), 2);
     });
-    const progress = state.progress, stage = progress.kind === 'BOSS_READY' ? progress.bossStage : progress.stage;
-    const info = stageConfig(stage), boss = info.isBoss, current = (stage - 1) % 10;
-    const start = 9 + 3 * (slot + 2), wave = state.wave;
-    const cue = stageCue(state);
-    const label = progress.kind === 'BOSS_READY' ? 'Boss ready' : progress.kind === 'BOSS_FIGHT' ? 'Boss fight'
-      : progress.kind === 'COMPLETE' ? 'Complete' : progress.kind === 'FARMING' ? 'Farming'
-      : cue?.kind === 'clear' ? 'Stage clear' : `Wave ${wave}/${info.waves.length}`;
-    this.text(ctx, `${tight ? '' : 'Stage '}${info.id}`, start, y + 4, palette.gold, BODY, true);
-    const barWidth = tight ? 4 : 8;
+    const gold = counter.format(state.gold), tickets = counter.format(state.tickets);
+    const goldWidth = 18 + Math.ceil(this.measureText(gold));
+    const ticketWidth = 18 + Math.ceil(this.measureText(tickets));
+    const start = 7 + 3 * (slot + 2);
+    const stackedWallet = railEnd - start - goldWidth - ticketWidth < 166;
+    const walletX = railEnd - (stackedWallet ? Math.max(goldWidth, ticketWidth) : goldWidth + 8 + ticketWidth);
+    const ticketX = stackedWallet ? walletX : railEnd - ticketWidth;
+    const goldY = y + (stackedWallet ? 0 : 8), ticketY = y + (stackedWallet ? 15 : 8);
+    this.icon(ctx, 'gold', walletX, goldY);
+    this.text(ctx, gold, walletX + 16, goldY + 2, palette.gold);
+    const icons = this.images.get('dungeon/insignia.png');
+    if (icons) ctx.drawImage(icons, 112, 0, 16, 16, ticketX, ticketY, 16, 16);
+    this.text(ctx, tickets, ticketX + 16, ticketY + 2);
+
+    const progress = state.progress, cue = stageCue(state);
+    const betweenStages = state.phase.kind === 'rest' && state.phase.next === 'encounter';
+    const cleared = betweenStages && cue?.kind === 'clear';
+    const stage = cleared ? cue.stage : progress.kind === 'BOSS_READY' ? progress.bossStage : progress.stage;
+    const info = stageConfig(stage), current = (stage - 1) % 10;
+    const space = walletX - start - 5, narrow = space < 152;
+    const wave = `${state.wave}/${info.waves.length}`;
+    const label = cleared ? (narrow ? 'Clear' : 'Stage clear') : progress.kind === 'BOSS_READY' ? (narrow ? 'Ready' : 'Boss ready')
+      : progress.kind === 'BOSS_FIGHT' ? (narrow ? 'Boss' : 'Boss fight') : progress.kind === 'COMPLETE' ? (narrow ? 'Done' : 'Complete')
+      : betweenStages ? (narrow ? 'Next' : 'Up next') : progress.kind === 'FARMING' ? (narrow ? 'Farm' : 'Farming') : `${narrow ? 'W' : 'Wave'} ${wave}`;
+    const heading = narrow ? info.id : `Stage ${info.id}`;
+    this.text(ctx, heading, start, y + 2, palette.gold, BODY, true);
+    this.text(ctx, label, narrow ? start : start + Math.ceil(this.measureText(heading, BODY, true)) + 10,
+      y + (narrow ? 15 : 2), info.isBoss ? '#ffac8d' : palette.text);
+    const barWidth = narrow ? Math.max(1, Math.min(5, Math.floor(space / 10) - 1)) : 8;
+    const gap = narrow ? 1 : 2, barY = y + (narrow ? 28 : 22);
     for (let i = 0; i < 10; i++) {
       ctx.fillStyle = i === 9 ? palette.red : i <= current ? palette.gold : palette.edge;
-      ctx.fillRect(start + i * (barWidth + 2), y + 22, barWidth, 4);
+      ctx.fillRect(start + i * (barWidth + gap), barY, barWidth, narrow ? 2 : 4);
     }
-    if (!boss) {
+    if (!betweenStages && !info.isBoss && !narrow) {
       ctx.fillStyle = '#b5d7bc';
-      ctx.fillRect(start + current * (barWidth + 2), y + 25, Math.ceil(barWidth * wave / info.waves.length), 2);
+      ctx.fillRect(start + current * (barWidth + gap), barY + 3, Math.ceil(barWidth * state.wave / info.waves.length), 2);
     }
-    const captionX = start + (tight ? 34 : 78);
-    this.text(ctx, label, captionX, y + 5, boss ? '#ffac8d' : palette.text, BODY);
-    if (!boss && !tight) this.text(ctx, 'Boss 10', start + 102, y + 18, palette.red, 11);
-    const walletX = width - (tight ? 102 : 172);
-
-    const icons = this.images.get('dungeon/insignia.png');
-    this.icon(ctx, 'gold', walletX, y + (tight ? 0 : 8));
-    this.text(ctx, counter.format(state.gold), walletX + 16, y + (tight ? 3 : 10), palette.gold);
-    const ticketX = tight ? walletX : walletX + 58, ticketY = y + (tight ? 15 : 8);
-    if (icons) ctx.drawImage(icons, 112, 0, 16, 16, ticketX, ticketY, 16, 16);
-    this.text(ctx, counter.format(state.tickets), ticketX + 16, ticketY + 2, palette.text);
-    if (paused && !tight) {
+    if (!narrow && !info.isBoss) this.text(ctx, 'Boss 10', start + 102, y + 16, palette.red);
+    if (paused && space >= 164) {
       ctx.fillStyle = palette.muted;
-      ctx.fillRect(width - 63, y + 13, 2, 7); ctx.fillRect(width - 59, y + 13, 2, 7);
+      ctx.fillRect(walletX - 10, y + 13, 2, 7); ctx.fillRect(walletX - 6, y + 13, 2, 7);
     }
     if (this.compactEditing) {
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameInk; ctx.fillRect(0, coreY, width, 1); ctx.fillRect(0, coreY + 79, width, 1); ctx.fillRect(0, coreY, 1, 80); ctx.fillRect(width - 1, coreY, 1, 80);

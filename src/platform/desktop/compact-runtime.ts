@@ -29,7 +29,7 @@ function safePrefs(): CompactPrefs { return readCompactPrefs(); }
 
 /** Party-preview native placement. Geometry in this module is always physical client-area geometry. */
 export interface CompactPresentationState { welcomeOpen: boolean; sourceHeight: number }
-export interface CompactRuntimeHooks { flushSave(): void; setQuit(handler: (() => void) | null): void; setEditing(value: boolean): void; presentationState?(): CompactPresentationState }
+export interface CompactRuntimeHooks { setControlInset?(physicalPixels: number): void; flushSave(): void; setQuit(handler: (() => void) | null): void; setEditing(value: boolean): void; presentationState?(): CompactPresentationState }
 export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<() => void> {
   const win = getCurrentWindow(), views = await getAllWebviewWindows(), controls = views.find(value => value.label === 'controls');
   if (!controls) throw new Error('Native compact control surface is not configured.');
@@ -67,6 +67,7 @@ export async function startCompactDesktop(hooks: CompactRuntimeHooks): Promise<(
     if (!isCurrent(observed)) return false;
     const x = Math.round(clientRect.x + clientRect.width - size.width - 8), y = Math.round(clientRect.y + 4);
     if (!isCurrent(observed)) return false;
+    hooks.setControlInset?.(clientRect.x + clientRect.width - x);
     await invoke('set_control_bounds', { bounds: { x, y, width: size.width, height: size.height } });
     return isCurrent(observed);
   };
