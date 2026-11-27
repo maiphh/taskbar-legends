@@ -6,8 +6,8 @@ import { PixelUI, REVEAL_STAGE, shortHeroName, type RevealPull } from '../pixel-
 import { upgradeCost } from '../core/economy';
 import { campaignPresentation } from '../core/selectors';
 import { getPartyHeroDefinition } from '../core/party-definitions';
-import type { Action, GameState } from '../core/model';
-import type { HeroGearComparison, ManagementReply, ManagementSnapshot } from './authority';
+import type { GameState } from '../core/model';
+import type { HeroGearComparison, ManagementCommand, ManagementReply, ManagementSnapshot } from './authority';
 import type { CompactPrefs } from '../platform/desktop/compact-geometry';
 import { formationDrop } from './formation';
 import { ManagementTooltip } from './tooltip';
@@ -17,7 +17,7 @@ import { roleIconName } from './role-icons';
 
 export interface ManagementClient {
   snapshot(): Promise<ManagementSnapshot>;
-  execute(action: Action | { type: 'pullMany'; count: 1 | 10 }, revision: number, requestId: string): Promise<ManagementReply>;
+  execute(action: ManagementCommand, revision: number, requestId: string): Promise<ManagementReply>;
   compare(heroId: string, gearId: string): Promise<HeroGearComparison | null>;
   pause(paused: boolean): Promise<void>;
   getAudio(): Promise<{ muted: boolean; volume: number; buses?: { music: number; sfx: number; ui: number } }>;
@@ -369,7 +369,7 @@ export class ManagementView {
     try { await operation; }
     catch (error) { if (this.isLive(generation)) { this.message = `Setting could not be saved: ${String(error)}`; this.renderStatus(); } }
   }
-  private async command(action: Action | { type: 'pullMany'; count: 1 | 10 }, expectedRevision?: number): Promise<ManagementReply | null> {
+  private async command(action: ManagementCommand, expectedRevision?: number): Promise<ManagementReply | null> {
     const generation = this.generation, current = this.snapshotValue; if (!current || !this.isLive(generation)) return null;
     try {
       const reply = await this.client.execute(action, expectedRevision ?? current.revision, `${this.clientId}:${++this.sequence}`);

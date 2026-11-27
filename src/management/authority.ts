@@ -1,13 +1,22 @@
 import { z } from 'zod';
 import { activeSalvageRules, CONFIG } from '../config';
-import { heroStats, partyBasicDpsForStats, partyGearUtilityGain, upgradeCost } from '../core/economy';
+import { heroStats, isEquipped, salvageGold, partyBasicDpsForStats, partyGearUtilityGain, upgradeCost } from '../core/economy';
+import { goldChange } from '../core/events';
 import { input } from '../core/game';
 import { offlineProjection } from '../core/save';
 import type { OfflineProjection } from '../core/save';
-import { cloneState, parseAction, parseState } from '../core/model';
-import type { Action, GameState } from '../core/model';
+import { actionSchema, cloneState, itemIdSchema, parseState } from '../core/model';
+import type { GameState } from '../core/model';
 
 const requestSchema = z.object({ clientId: z.string().min(1).max(80), requestId: z.string().min(1).max(120), expectedRevision: z.number().int().nonnegative(), action: z.unknown() }).strict();
+// Explicit player commands share the management revision/replay boundary.
+const managementActionSchema = z.union([
+  actionSchema,
+  z.object({ type: z.literal('unequip'), heroId: z.string(), gearId: itemIdSchema }).strict(),
+  z.object({ type: z.literal('salvage'), gearId: itemIdSchema }).strict(),
+]);
+type ManagementAction = z.infer<typeof managementActionSchema>;
+export type ManagementCommand = ManagementAction | { type: 'pullMany'; count: 1 | 10 };
 export interface ManagementSnapshot {
   revision: number; paused: boolean; tick: number; gold: number; tickets: number; pity: number; lockMax: number; combatRules: GameState['combatRules']; progress: GameState['progress']; phase: GameState['phase'];
   offline: OfflineProjection;
@@ -55,8 +64,8 @@ export class ManagementAuthority {
   }
   execute(value: unknown): ManagementReply {
     const partial = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {};
-    let raw: z.infer<typeof requestSchema>, action: Action;
-    try { raw = requestSchema.parse(value); action = parseAction(raw.action); }
+    let raw: z.infer<typeof requestSchema>, action: ManagementAction;
+    try { raw = requestSchema.parse(value); action = managementActionSchema.parse(raw.action); }
     catch (error) { return this.reply(false, typeof partial.requestId === 'string' ? partial.requestId.slice(0, 120) : '', `Invalid management request: ${error instanceof Error ? error.message : String(error)}`); }
     if (!this.available) return this.reply(false, raw.requestId, 'Game commands are paused while the game is hidden or save restoration is in progress.');
     const fingerprint = JSON.stringify(action), key = `${raw.clientId}:${raw.requestId}`;
@@ -69,7 +78,18 @@ export class ManagementAuthority {
       if (reason) reply = this.reply(false, raw.requestId, reason);
       else {
         const draft = cloneState(this.state), before = JSON.stringify(draft);
-        input(draft, action);
+        if (action.type === 'unequip') {
+          const hero = draft.roster.find(value => value.id === action.heroId)!;
+          const item = draft.inventory.find(value => value.id === action.gearId)!;
+          hero.equipment[item.slot] = null;
+          draft.economyRevision += 1;
+        } else if (action.type === 'salvage') {
+          const index = draft.inventory.findIndex(item => item.id === action.gearId);
+          const item = draft.inventory.splice(index, 1)[0]!;
+          goldChange(draft, salvageGold(item), 'salvage');
+        } else {
+          input(draft, action);
+        }
         const parsed = parseState(draft);
         if (JSON.stringify(parsed) === before) reply = this.reply(false, raw.requestId, 'That action is no longer available.');
         else { this.state = parsed; this.revision += 1; this.onCommit?.(this.state); reply = this.reply(true, raw.requestId); }
@@ -101,7 +121,7 @@ export class ManagementAuthority {
     while (this.replay.size > 256) this.replay.delete(this.replay.keys().next().value as string);
     return reply;
   }
-  private validate(action: Action): string | undefined {
+  private validate(action: ManagementAction): string | undefined {
     const state = this.state;
     switch (action.type) {
       case 'pull': return state.tickets < CONFIG.gacha.costTickets ? `Recruiting requires ${CONFIG.gacha.costTickets} ticket.` : undefined;
@@ -110,6 +130,16 @@ export class ManagementAuthority {
         if (!item) return 'That item is no longer in the stash.';
         if (item.level >= CONFIG.gear.upgrade.maxLevel) return 'That item is already at maximum level.';
         const cost = upgradeCost(item); return state.gold < cost ? `Upgrade requires ${cost} gold.` : undefined;
+      }
+      case 'unequip': {
+        const hero = state.roster.find(value => value.id === action.heroId);
+        return hero && Object.values(hero.equipment).includes(action.gearId) ? undefined : 'That item is no longer equipped on this hero.';
+      }
+      case 'salvage': {
+        const item = state.inventory.find(value => value.id === action.gearId);
+        if (!item) return 'That item is no longer in the stash.';
+        if (item.locked) return 'Unlock the item before salvaging it.';
+        return isEquipped(state, item.id) ? 'Unequip the item before salvaging it.' : undefined;
       }
       case 'equip':
         if (!state.roster.some(hero => hero.id === action.heroId)) return 'That hero is not owned.';
