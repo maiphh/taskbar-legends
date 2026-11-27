@@ -36,9 +36,9 @@ try {
       }, gameTime + ms);
       await page.screenshot({ path: `${output}/gacha-${width}-${name}.png` });
     };
-    const pull = async count => {
+    const pull = async (count, instant = false) => {
       await page.locator(`[data-action="pull-${count === 1 ? 'one' : 'ten'}"]`).click();
-      await page.locator('[data-control="reveal-skip"]').waitFor();
+      await page.locator(instant ? '[data-control="reveal-ok"]' : '[data-control="reveal-skip"]').waitFor();
       const state = await page.evaluate(() => window.__game.getManagementReveal());
       assert.equal(state.pulls.length, count);
       return state.pulls;
@@ -65,6 +65,38 @@ try {
     await capture('skip-summary', 320);
     assert.deepEqual(await page.evaluate(() => window.__game.getManagementReveal().pulls), ten);
     assert.equal(await page.evaluate(() => window.__game.getState().tickets), 10);
+    if (phase === 'after') {
+      await close();
+      // Reduced motion and frozen animation must settle immediately, even with the clock parked on the click.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await prepare(10);
+      assert.deepEqual(await pull(10, true), ten);
+      assert.equal(await page.locator('#recruit-result-description li').count(), 10);
+      assert.equal(await page.locator('[data-control="reveal-skip"]').count(), 0);
+      await capture('reduced-summary', 0);
+      const canvas = page.locator('.reveal-stage canvas');
+      const still = await canvas.evaluate(node => node.toDataURL());
+      await page.evaluate(time => window.__game.freezeClock(time), gameTime + 600);
+      await page.waitForTimeout(150);
+      assert.equal(await canvas.evaluate(node => node.toDataURL()), still);
+      await page.locator('[data-control="reveal-again"]').press('Enter');
+      await page.waitForFunction(() => window.__game.getState().tickets === 0);
+      assert.ok(await page.locator('[data-control="reveal-again"]').isDisabled());
+      await close();
+
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await prepare(1);
+      await page.evaluate(() => window.__management.freezeAnimation(true));
+      assert.deepEqual(await pull(1, true), one);
+      await close();
+
+      await prepare(1);
+      await page.locator('[data-tab="settings"]').click();
+      await page.locator('[data-action="reduced-motion"]').click();
+      await page.locator('[data-tab="recruit"]').click();
+      assert.deepEqual(await pull(1, true), one);
+      await close();
+    }
     assert.deepEqual(errors, []);
     await page.close();
   }
