@@ -84,3 +84,5 @@ Not shipped: `crit` (skipped by design) and the `ultimate_*` clips (held for ult
 Keep illustration, corridor, flagstones, torches, interface frames and navigation pictograms by the Taskbar Legends project. The generated PNGs are dedicated to CC0 1.0 Universal. [Art source](scripts/dungeon-art.py) · [Asset licence](docs/asset-licenses.md#pixel-dungeon-interface).
 
 The gear paper doll uses the project’s CC0 equipment plate and dungeon masonry, LuizMelo hero sprites, and Merchant-Shade’s sword, armor, and potion icons for the three slots.
+
+Recruit’s Summoning Hall scenery was drawn for Taskbar Legends. The generated artwork is CC0. [Drawing source](scripts/summoning-hall.py) · [Asset licence](docs/asset-licenses.md#summoning-hall)
