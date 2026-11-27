@@ -35,6 +35,11 @@ body.native-shell #management { display:none !important; }
 #save-recovery h1 { margin-top: 0; font-size: 24px; }
 #save-recovery p { line-height: 1.45; }
 #save-recovery button { font:inherit; margin: 8px 8px 0 0; min-height: 36px; padding: 6px 12px; color: #17212d; background: #f2e9cf; border: 1px solid #fff; cursor: pointer; }
+@media (max-height:320px) {
+  #save-recovery:not([hidden]) { padding:6px 12px; }
+  #save-recovery h1, #save-recovery p { margin:0 0 4px; }
+  #save-recovery button { margin-top:2px; }
+}
 #save-recovery button:focus-visible { outline: 3px solid #79d7e8; outline-offset: 2px; }
 #legacy-save-notice:not([hidden]) { position: fixed; z-index: 30; inset: auto 8px 8px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #17212d; border: 2px solid #f2e9cf; color: #f2e9cf; font: 12px var(--game-font); }
 #legacy-save-notice button { font:inherit; flex: none; min-height: 32px; padding: 4px 10px; color: #17212d; background: #f2e9cf; border: 1px solid #fff; cursor: pointer; }

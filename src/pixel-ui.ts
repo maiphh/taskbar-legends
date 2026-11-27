@@ -32,6 +32,16 @@ export interface WelcomeData { seconds: number; rawSeconds: number; capped: bool
   earned: boolean; farmReason: 'no-earned-clear' | 'formation-or-combat-changed' | null;
   best: { rarity: Rarity; slot: string } | null; choices: number }
 export interface AudioControls { muted: boolean; volume: number }
+// Face centers in the padded idle portraits. Weapons and spell particles contribute
+// to the atlas bounds, so the geometric center often misses the face in a 16px crop.
+const portraitFocus: Readonly<Record<string, readonly [number, number]>> = {
+  'hero-knight': [25, 16], 'hero-knight-2': [22, 10],
+  'medieval-king-pack': [15, 9], 'medieval-king-pack-2': [22, 10],
+  'medieval-warrior-pack': [12, 9], 'medieval-warrior-pack-2': [22, 9], 'medieval-warrior-pack-3': [25, 9],
+  'fantasy-warrior': [18, 9], 'martial-hero': [25, 24], 'martial-hero-2': [21, 10], 'martial-hero-3': [22, 13],
+  huntress: [18, 11], 'huntress-2': [29, 11], 'wizard-pack': [17, 12], priest: [17, 12],
+  'evil-wizard': [17, 17], 'evil-wizard-2': [16, 55], 'evil-wizard-3': [10, 10],
+};
 const counter = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
 const palette = CONFIG.ui.palette;
 const feedback = CONFIG.ui.coreLoopFeedback;
@@ -227,10 +237,10 @@ export class PixelUI {
       const portrait = key && this.atlas.portrait(key);
       if (portrait) {
         const w = Math.min(slot - 2, portrait.width), h = Math.min(19, portrait.height);
-        // The tall staff and its particles sit above and right of this wizard's hood.
-        const faceX = key === 'evil-wizard-2' ? 16 : Math.floor(portrait.width / 2);
-        const top = key === 'evil-wizard-2' ? 44 : key === 'martial-hero' ? 10 : 0;
-        ctx.drawImage(portrait, Math.max(0, faceX - Math.floor(w / 2)), top, w, h, x + Math.floor((slot - w) / 2), y + 5, w, h);
+        const [faceX, faceY] = portraitFocus[key] ?? [Math.floor(portrait.width / 2), 9];
+        const left = Math.max(0, Math.min(portrait.width - w, faceX - Math.floor(w / 2)));
+        const top = Math.max(0, Math.min(portrait.height - h, faceY - Math.floor(h / 2)));
+        ctx.drawImage(portrait, left, top, w, h, x + Math.floor((slot - w) / 2), y + 5, w, h);
       }
       ctx.fillStyle = palette.green; ctx.fillRect(x + 2, y + 25, Math.round((slot - 4) * unit.hp / unit.maxHp), 2);
     });
