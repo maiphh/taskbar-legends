@@ -42,6 +42,14 @@ describe('Summoning Hall reveal', () => {
           expect(revealFrame(plan, ms).color).toBe(ms < plan.leakAt ? plan.preview : plan.best);
         }
       }
+      const outcomes = new Set();
+      for (let index = 0; index < 20; index++) {
+        const pulls = [roll('legendary', 'ew3')];
+        const plan = revealSchedule(pulls, index);
+        expect(revealSchedule(pulls, index)).toEqual(plan);
+        outcomes.add(plan.preview);
+      }
+      expect(outcomes).toEqual(new Set([null, 'rare', 'epic']));
       expect(draws).not.toHaveBeenCalled(); expect(cosmeticDraws).not.toHaveBeenCalled();
     } finally { draws.mockRestore(); cosmeticDraws.mockRestore(); }
   });

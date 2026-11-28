@@ -9,7 +9,7 @@ export type RevealPhase = 'charge' | 'leak' | 'open' | 'silhouette' | 'burst' | 
 interface RolledHero { heroId: string; rarity: Rarity }
 
 /** All times are measured from the click, including the ten-card flight and individual flips. */
-export function revealSchedule(pulls: readonly RolledHero[]) {
+export function revealSchedule(pulls: readonly RolledHero[], firstPullIndex = 0) {
   if (!pulls.length) throw new Error('A reveal needs at least one rolled hero');
   const rarities = pulls.map(pull => pull.rarity);
   const order = CONFIG.ui.rarity.order;
@@ -18,7 +18,7 @@ export function revealSchedule(pulls: readonly RolledHero[]) {
   let preview: 'rare' | 'epic' | null = null;
   if (best === 'legendary') {
     // Hash the ordered hero IDs, including boundaries between IDs. No game or cosmetic RNG draws.
-    let hash = 2166136261;
+    let hash = 2166136261 ^ firstPullIndex;
     for (const char of pulls.map(pull => pull.heroId).join('|')) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0;
     if (hash % 3 === 0) preview = hash % 2 === 0 ? 'rare' : 'epic';
   }
@@ -60,8 +60,10 @@ export function revealFrame(plan: RevealSchedule, elapsed: number, reducedMotion
     phase = 'charge'; color = null; amount = progress(ms, gacha.chargeMs);
   } else if (ms < plan.openAt) {
     phase = 'leak';
-    if (ms < plan.leakAt) color = plan.preview;
-    amount = progress(ms - (ms < plan.leakAt ? gacha.chargeMs : plan.leakAt), ms < plan.leakAt ? gacha.fakeoutMs : gacha.leakMs);
+    if (ms < plan.leakAt) {
+      color = plan.preview;
+      amount = progress(ms - gacha.chargeMs, gacha.fakeoutMs);
+    } else amount = progress(ms - plan.leakAt, gacha.leakMs);
   } else if (ms < plan.openedAt) {
     phase = 'open'; amount = progress(ms - plan.openAt, gacha.openMs);
   } else if (group) phase = ms < plan.landedAt ? 'flight' : 'cards';

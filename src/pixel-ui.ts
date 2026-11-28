@@ -179,9 +179,9 @@ export class PixelUI {
   }
   private finishReveal(ok: boolean): void { if (ok) { this.onCue(CONFIG.ui.gacha.audio.click); } this.reveal = null; this.onRedraw(); if (this.standalone) this.onRevealClose(); }
   /** Standalone: play the reveal for pulls the caller already committed (badges from the pre-pull star counts). */
-  playReveal(count: 1 | 10, pulls: RevealPull[]): void {
+  playReveal(count: 1 | 10, pulls: RevealPull[], firstPullIndex: number): void {
     this.standalone = true; if (!pulls.length) return;
-    this.reveal = { plan: revealSchedule(pulls), count, pulls, startedAt: this.clock(), skipped: false, cued: false, flash: null };
+    this.reveal = { plan: revealSchedule(pulls, firstPullIndex), count, pulls, startedAt: this.clock(), skipped: false, cued: false, flash: null };
     this.onCue(CONFIG.ui.gacha.audio.pull); this.onRedraw();
   }
   /** Standalone: drop the reveal without cues (tab change, menu close). */
@@ -190,7 +190,7 @@ export class PixelUI {
   drawRevealStage(ctx: CanvasRenderingContext2D, tickets: number): void {
     this.standalone = true; this.scaleToCss = 1; this.controls.clear();
     ctx.clearRect(0, 0, REVEAL_STAGE.width, REVEAL_STAGE.height);
-    if (this.readyFlag && this.reveal) this.drawReveal(ctx, tickets, this.reveal);
+    if (this.reveal) this.drawReveal(ctx, tickets, this.reveal);
     this.syncControls();
   }
   /** Compact lane edit mode (compact-menu.md Â§2.2): the stage heading shifts right of the Move handle. */

@@ -407,7 +407,7 @@ export class ManagementView {
       const ui = this.ensureRevealUi();
       this.revealHost.hidden = false; this.root.classList.add('reveal-active');
       this.updateRevealDescription([]);
-      ui.playReveal(count, pulls); this.drawReveal();
+      ui.playReveal(count, pulls, reply.snapshot.stats.pulls - pulls.length); this.drawReveal();
       this.revealHost.querySelector<HTMLButtonElement>('[data-control="reveal-skip"], [data-control="reveal-ok"]')?.focus({ preventScroll: true });
     } finally { this.pulling = false; }
   }
