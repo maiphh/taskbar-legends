@@ -3,10 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { ManagementView } from './management/view';
 import type { ManagementClient } from './management/view';
-import type { ManagementReply } from './management/authority';
+import type { ManagementCommand, ManagementReply } from './management/authority';
 import type { HeroGearComparison } from './management/authority';
 import type { CompactPrefs } from './platform/desktop/compact-geometry';
-import type { Action } from './core/model';
 import { NativeRpc } from './management/native-rpc';
 import { presentationReducedMotionPreference, setPresentationReducedMotionPreference } from './pixel-ui';
 
@@ -34,7 +33,7 @@ class NativeManagementClient implements ManagementClient {
     const result = await this.request('snapshot'); if (!result.accepted || !result.snapshot) throw new Error(result.reason ?? 'Could not read current game state.');
     return result.snapshot as Awaited<ReturnType<ManagementClient['snapshot']>>;
   }
-  async execute(action: Action | { type: 'pullMany'; count: 1 | 10 }, revision: number, requestId: string): Promise<ManagementReply> {
+  async execute(action: ManagementCommand, revision: number, requestId: string): Promise<ManagementReply> {
     const result = await this.request('command', { commandRequestId: requestId, expectedRevision: revision, action });
     if (!result.snapshot) throw new Error(result.reason ?? 'Command returned no state.');
     return { accepted: result.accepted, requestId, revision: (result.snapshot as { revision: number }).revision, snapshot: result.snapshot as ManagementReply['snapshot'], ...(result.reason ? { reason: result.reason } : {}) };

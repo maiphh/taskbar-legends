@@ -108,3 +108,30 @@ describe('management authority', () => {
     expect(authority.execute(request(1, 'locks:3', { type: 'lockHero', heroId: 'priest', locked: true })).accepted).toBe(false);
   });
 });
+
+it('requires the exact wearer for removal and salvages a free unlocked item once', () => {
+  const state = createState(71);
+  const item = sampleGear(state);
+  item.spent = 100;
+  const protectedItem = sampleGear(state);
+  protectedItem.locked = true;
+  state.inventory.push(protectedItem);
+  const hero = state.roster[0]!;
+  state.inventory.push(item);
+  hero.equipment.weapon = item.id;
+  const authority = new ManagementAuthority(state);
+  const salvage = { type: 'salvage', gearId: item.id };
+  expect(authority.execute(request(0, 'worn', salvage)).accepted).toBe(false);
+  expect(authority.execute(request(0, 'other', { type: 'unequip', heroId: state.roster[1]!.id, gearId: item.id })).accepted).toBe(false);
+  const removed = authority.execute(request(0, 'remove', { type: 'unequip', heroId: hero.id, gearId: item.id }));
+  expect(removed.snapshot.roster[0]!.equipment.weapon).toBeNull();
+  expect(removed.snapshot.inventory).toContainEqual(item);
+  expect(authority.execute(request(1, 'protected', { ...salvage, gearId: protectedItem.id })).accepted).toBe(false);
+  expect(authority.execute(request(0, 'stale', salvage)).accepted).toBe(false);
+  const sold = authority.execute(request(1, 'confirm', salvage));
+  expect(sold.accepted).toBe(true);
+  expect(sold.snapshot.inventory.some(value => value.id === item.id)).toBe(false);
+  const gold = Math.round(item.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[item.rarity]);
+  expect(sold.snapshot.gold).toBe(state.gold + gold);
+  expect(authority.execute(request(1, 'confirm', salvage))).toEqual(sold);
+});

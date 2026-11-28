@@ -4,9 +4,9 @@ import type { CoreLoopFeedbackTokens, FontTokens, GachaTokens, RarityDropTokens 
 
 /** The designer's runtime/ui-tokens.json is imported verbatim; these typed reads fail to compile if a field we rely on moves. */
 describe('ui tokens', () => {
-  it('types the newer gacha fields (shape cue, legendary beam, audio pity)', () => {
+  it('types the newer gacha fields (shape cue, gate timings, audio pity)', () => {
     const gacha: GachaTokens = CONFIG.ui.gacha;
-    expect(typeof gacha.legendaryBeam.growMs).toBe('string'); // prose spec for now ("burst [1360,1520], 18 px per 40 ms")
+    expect(gacha.chargeMs).toBeGreaterThan(0); expect(gacha.leakMs).toBeGreaterThan(0);
     expect(Object.keys(gacha.shapeCue)).toEqual(expect.arrayContaining(['common', 'rare', 'epic', 'legendary']));
     expect(gacha.single.beamRect).toBeDefined(); expect(gacha.audio.pity).toBeDefined();
   });

@@ -3,10 +3,12 @@ import { leapDisplayX } from './presentation';
 /** Screen x inside the field (do not add field.x). Slot 0 is the front of that side. */
 export function formationScreenX(side: 'hero' | 'enemy', slot: number, enemyCount: number, fieldWidth: number): number {
   const padL = 20;
-  const padR = 84;
+  // At 480 physical pixels and 2× zoom, all six slots share 240 source pixels.
+  const narrow = fieldWidth < 400;
+  const padR = narrow ? 20 : 84;
   const usable = Math.max(120, fieldWidth - padL - padR);
-  const center = Math.max(36, Math.floor(usable * 0.28));
-  const heroZone = Math.floor((usable - center) * 0.42);
+  const center = Math.max(36, Math.floor(usable * (narrow ? 0.20 : 0.28)));
+  const heroZone = Math.floor((usable - center) * (narrow ? 0.50 : 0.42));
   const enemyZone = usable - center - heroZone;
   const heroGap = heroZone / 2;
   const enemies = Math.max(1, enemyCount);

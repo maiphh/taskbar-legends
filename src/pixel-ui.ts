@@ -1,13 +1,14 @@
-﻿import { CONFIG, TICK_MS, heroConfig, raritySchema, stageConfig } from './config';
+﻿import { CONFIG, TICK_MS, heroConfig, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
-import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, motes, particles, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
-import type { CardFace } from './reveal-timeline';
-import { BODY, HEADING, LINE_BOX, fitSize, fontFor, loadFonts, slotOffsetY } from './font';
+import { FlashLimiter, awayLabel, burstCue, chestSlot, countUp, particles, revealFrame, revealSchedule, rewardLabel, welcomeDoneMs } from './reveal-timeline';
+import type { CardFace, FlyingCard, RevealSchedule } from './reveal-timeline';
+import { drawGate, spark } from './summoning-gate';
+import { BODY, HEADING, LINE_BOX, fitSize, CSS_FONT_STACK, loadFonts, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
 import type { Action, GameState, ItemId } from './core/model';
 import { compactLaneLayout } from './compact-lane-layout';
-import { campaignPresentation } from './core/selectors';
+import { stageCue } from './core/selectors';
 import { getPartyHeroDefinition } from './core/party-definitions';
 import { welcomeLayout } from './welcome-layout';
 import { ellipsize } from './text-fit';
@@ -15,23 +16,33 @@ import { drawRoleIcon } from './management/role-icons';
 
 export type PanelTab = 'heroes' | 'gear' | 'recruit';
 export interface Rect { x: number; y: number; width: number; height: number }
-/** Standalone reveal canvas: the expanded Recruit panel size (ui.md Â§4). */
 /** compactMenu.shortName: drop a leading 'Medieval ' and 'Martial Hero' â†’ 'Martial' (cards and compact pull cards). */
 export function shortHeroName(heroId: string): string {
   return heroConfig(heroId).name.replace(' (recolored Wizard)', '').replace(/\s*\([^)]*\)/g, '').trim().replace(/^Medieval /, '').replace(/^Martial Hero\b/, 'Martial');
 }
-export const REVEAL_STAGE = { width: CONFIG.ui.expanded.panelWidth, height: CONFIG.ui.expanded.panelHeight, top: 72 } as const;
+export const REVEAL_STAGE = { width: 896, height: 452 } as const;
 export interface SourceHitRegion extends Rect { kind: 'hud' | 'panel'; id: string }
 interface Control extends Rect { id: string; label: string; disabled: boolean; click(): void; tooltip: string; cardIndex?: number; layer?: number }
 /** One recruit result as the reveal shows it (gacha.md Â§9: badge kind from the post-pull star count, pity from the event). */
 export interface RevealPull { heroId: string; rarity: Rarity; pity: boolean; badge: 'new' | 'star' | 'gold'; gold: number }
-interface Reveal { count: 1 | 10; pulls: RevealPull[]; startedAt: number; skipped: boolean; cued: boolean; flash: boolean | null }
+interface Reveal { plan: RevealSchedule; count: 1 | 10; pulls: RevealPull[]; startedAt: number; skipped: boolean; cued: boolean; flash: boolean | null }
 /** What the welcome-back panel shows: the offline result (already credited) plus the farm stage and best item. */
 export interface WelcomeData { seconds: number; rawSeconds: number; capped: boolean; clears: number; gold: number; xp: number; chests: number;
   heroes: readonly { id: string; levelBefore: number; levelAfter: number }[]; expeditionChests?: number; tickets?: number; stage: number; partialClears?: number;
   earned: boolean; farmReason: 'no-earned-clear' | 'formation-or-combat-changed' | null;
   best: { rarity: Rarity; slot: string } | null; choices: number }
 export interface AudioControls { muted: boolean; volume: number }
+// Face centers in the padded idle portraits. Weapons and spell particles contribute
+// to the atlas bounds, so the geometric center often misses the face in a 16px crop.
+const portraitFocus: Readonly<Record<string, readonly [number, number]>> = {
+  'hero-knight': [25, 16], 'hero-knight-2': [22, 10],
+  'medieval-king-pack': [15, 9], 'medieval-king-pack-2': [22, 10],
+  'medieval-warrior-pack': [12, 9], 'medieval-warrior-pack-2': [22, 9], 'medieval-warrior-pack-3': [25, 9],
+  'fantasy-warrior': [18, 9], 'martial-hero': [25, 24], 'martial-hero-2': [21, 10], 'martial-hero-3': [22, 13],
+  huntress: [18, 11], 'huntress-2': [29, 11], 'wizard-pack': [17, 12], priest: [17, 12],
+  'evil-wizard': [17, 17], 'evil-wizard-2': [16, 55], 'evil-wizard-3': [10, 10],
+};
+const counter = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
 const palette = CONFIG.ui.palette;
 const feedback = CONFIG.ui.coreLoopFeedback;
 /** Text options retain `exactY` for caller compatibility; active text has no optical y offset. */
@@ -47,8 +58,7 @@ export function setPresentationReducedMotionPreference(enabled: boolean): void {
   window.dispatchEvent(new CustomEvent('presentation-reduced-motion-change', { detail: enabled }));
 }
 export class PixelUI {
-  /** Management-only reveal typography; the taskbar lane keeps its original catalog-name layout. */
-  managementReveal = false;
+  managementReducedMotion = false;
   /** Shared low-rate management idle clock; reveal transition timing continues on `clock`. */
   managementIdleClock: (() => number) | null = null;
   panel: PanelTab | null = null;
@@ -62,7 +72,8 @@ export class PixelUI {
   private measureContext: CanvasRenderingContext2D | null = null;
   private readonly badgeMemory = new Map<string, { on: boolean; pulseTick: number; seen: boolean }>();
   private readonly badgesDrawn = new Set<string>();
-  get reducedMotion(): boolean { return (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
+  animationFrozen = false;
+  get reducedMotion(): boolean { return this.animationFrozen || this.managementReducedMotion || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) || presentationReducedMotionPreference(); }
   private readonly buttons = new Map<string, HTMLButtonElement>();
   private readonly surfaces = new Map<string, HTMLDivElement>();
   private pressed = '';
@@ -70,7 +81,6 @@ export class PixelUI {
   private current: GameState | null = null;
   private width = CONFIG.view.defaultWidth;
   private compactMode = true;
-  private sourceHeight = CONFIG.ui.closed.height;
   private scaleToCss = 1;
   private hovered = '';
   private focused = '';
@@ -79,7 +89,6 @@ export class PixelUI {
   private reveal: Reveal | null = null;
   /** Standalone reveal (the DOM management menu hosts its own PixelUI that only draws the reveal for pulls it committed). */
   private standalone = false;
-  private revealStageWidth: number = REVEAL_STAGE.width;
   onRevealAgain: (count: 1 | 10) => void = () => undefined;
   onRevealClose: () => void = () => undefined;
   welcome: WelcomeData | null = null;
@@ -110,6 +119,7 @@ export class PixelUI {
     window.addEventListener('keydown', event => {
       if (this.welcome && (event.code === 'Escape' || event.code === 'Enter')) { event.preventDefault(); this.collect(); return; }
       if (this.reveal && (this.panel === 'recruit' || this.standalone) && (event.code === 'Enter' || event.code === 'Space' || event.code === 'NumpadEnter')) {
+        if (event.target instanceof HTMLElement && event.target.closest('[data-control^="reveal-"]')) return;
         event.preventDefault(); event.stopImmediatePropagation();
         if (this.revealMs() < Infinity && !this.revealDone()) this.skipReveal(); else if (event.code !== 'Space') this.finishReveal(true);
         return;
@@ -119,7 +129,7 @@ export class PixelUI {
   private async load(): Promise<void> {
     try {
       await loadFonts();
-      const files = ['panel-9slice.png', 'button-9slice.png', 'button-hover-9slice.png', 'button-pressed-9slice.png', 'button-disabled-9slice.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png'];
+      const files = ['dungeon/panel.png', 'dungeon/button.png', 'dungeon/hover.png', 'dungeon/pressed.png', 'dungeon/disabled.png', 'icon-sword.png', 'icon-armor.png', 'icon-chest.png', 'icon-potion.png', 'icon-gold.png', 'dungeon/insignia.png', 'dungeon/corridor.png', 'dungeon/summoning-hall.png'];
       await Promise.all(files.map(async file => { const image = new Image(); image.src = new URL(file, rootUrl()).href; await image.decode(); this.images.set(file, image); }));
       this.readyFlag = true;
     } catch (error) { this.errors.push(String(error)); }
@@ -157,55 +167,112 @@ export class PixelUI {
   private revealMs(): number { return !this.reveal ? 0 : this.reveal.skipped ? Infinity : this.clock() - this.reveal.startedAt; }
   private revealDone(): boolean {
     const reveal = this.reveal; if (!reveal) return true;
-    const ms = this.revealMs(), first = reveal.pulls[0];
-    return reveal.count === 1 ? !!first && singleFrame(first.rarity, ms, this.reducedMotion).done : tenFrame(reveal.pulls.map(pull => pull.rarity), ms, this.reducedMotion).done;
+    return this.reducedMotion || this.revealMs() >= reveal.plan.doneAt;
   }
-  /** The pull that plays the burst cue: the single card, or the highest-rarity card of a 10-pull (ties: first). */
-  private cuePull(): RevealPull | undefined { const reveal = this.reveal; return reveal ? reveal.pulls[reveal.count === 1 ? 0 : highestCard(reveal.pulls.map(pull => pull.rarity))] : undefined; }
   private skipReveal(silent = false): void {
     const reveal = this.reveal; if (!reveal || reveal.skipped) return;
-    if (this.clock() - reveal.startedAt < CONFIG.ui.gacha.skipGuardMs) return;
     reveal.skipped = true;
     if (!silent) this.onCue(CONFIG.ui.gacha.audio.click);
     // The rarity is still heard once: a skip before the burst plays the deferred burst cue, never the flash or shake.
-    const pull = this.cuePull(); if (!reveal.cued && pull) { reveal.cued = true; this.onCue(burstCue(pull.rarity, pull.pity)); }
+    const pull = reveal.pulls[reveal.plan.highlight]; if (!reveal.cued && pull) { reveal.cued = true; this.onCue(burstCue(pull.rarity, pull.pity)); }
     this.onRedraw();
   }
   private finishReveal(ok: boolean): void { if (ok) { this.onCue(CONFIG.ui.gacha.audio.click); } this.reveal = null; this.onRedraw(); if (this.standalone) this.onRevealClose(); }
   /** Standalone: play the reveal for pulls the caller already committed (badges from the pre-pull star counts). */
-  playReveal(count: 1 | 10, pulls: RevealPull[]): void {
+  playReveal(count: 1 | 10, pulls: RevealPull[], firstPullIndex: number): void {
     this.standalone = true; if (!pulls.length) return;
-    this.reveal = { count, pulls, startedAt: this.clock(), skipped: false, cued: false, flash: null };
+    this.reveal = { plan: revealSchedule(pulls, firstPullIndex), count, pulls, startedAt: this.clock(), skipped: false, cued: false, flash: null };
     this.onCue(CONFIG.ui.gacha.audio.pull); this.onRedraw();
   }
   /** Standalone: drop the reveal without cues (tab change, menu close). */
   clearReveal(): void { if (this.reveal && !this.revealDone()) this.skipReveal(true); this.reveal = null; this.syncControls(); }
   revealState(): { count: 1 | 10; done: boolean; pulls: RevealPull[] } | null { const reveal = this.reveal; return reveal ? { count: reveal.count, done: this.revealDone(), pulls: structuredClone(reveal.pulls) } : null; }
-  /** Standalone: the 720Ã—400 Recruit panel's reveal (same layout, tokens and timings as the lane panel), drawn from y=72 down. */
-  /**
-   * `stageWidth` 624 = the docked browser panel at W=640: the 10-pull uses compactMenu.tenPullCompact (5Ã—2 of 104Ã—96) and
-   * the single reveal keeps its standard card, centred; 720 (and the native window) keep gacha.tenPull / gacha.single.
-   */
-  drawRevealStage(ctx: CanvasRenderingContext2D, tickets: number, scaleToCss: number, stageWidth: number = REVEAL_STAGE.width): void {
-    this.standalone = true; this.revealStageWidth = stageWidth; this.width = stageWidth; this.scaleToCss = scaleToCss; this.controls.clear();
+  drawRevealStage(ctx: CanvasRenderingContext2D, tickets: number): void {
+    this.standalone = true; this.scaleToCss = 1; this.controls.clear();
     ctx.clearRect(0, 0, REVEAL_STAGE.width, REVEAL_STAGE.height);
-    if (!this.readyFlag) { this.syncControls(); return; }
-    const panel = { x: 0, y: 0, ...REVEAL_STAGE, width: stageWidth };
-    // The host's PARTY CAMP header and tabs stay visible above y=72; the reveal owns the rest of the panel.
-    ctx.fillStyle = palette.panel; ctx.fillRect(0, REVEAL_STAGE.top, stageWidth, REVEAL_STAGE.height - REVEAL_STAGE.top);
-    if (this.reveal) this.drawReveal(ctx, tickets, panel, this.reveal);
+    if (this.reveal) this.drawReveal(ctx, tickets, this.reveal);
     this.syncControls();
   }
   /** Compact lane edit mode (compact-menu.md Â§2.2): the stage heading shifts right of the Move handle. */
   compactEditing = false;
-  /** Compact lane HUD: full-bleed field with a short stage id; Menu is the only DOM control. */
-  private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, _paused: boolean): void {
-    void _paused;
-    const width = this.width, coreY = this.sourceHeight - CONFIG.ui.closed.coreHeight;
-    const campaign = campaignPresentation(state.progress, _paused);
-    const color = campaign.tone === 'boss' ? palette.red : campaign.tone === 'complete' ? palette.green : palette.gold;
-    // Sit above the bottom-lane health bars; the battlefield is empty at this height.
-    this.text(ctx, campaign.lane, 8, Math.max(0, coreY - 40), color, BODY, true, Math.max(0, width - 16), { exactY: true });
+  /** Source pixels occupied by the controls and their trailing inset. */
+  compactControlInset = 52;
+  drawCorridor(ctx: CanvasRenderingContext2D, width: number, floor: number, offset: number, tick: number): void {
+    const tile = this.images.get('dungeon/corridor.png');
+    if (!tile) return;
+    const top = floor - 103;
+    for (let x = -(offset % tile.width); x < width; x += tile.width) {
+      ctx.drawImage(tile, x, top);
+      if (tick % 7 < 3) {
+        ctx.fillStyle = '#ffd285';
+        for (const torch of [86, 214]) ctx.fillRect(x + torch, top + 33, 2, 3);
+      }
+    }
+  }
+  /** One fixed rail reserves the remaining 128px for combat and boss warnings. */
+  private drawCompactLane(ctx: CanvasRenderingContext2D, state: GameState, paused: boolean): void {
+    const width = this.width, coreY = this.coreY, y = coreY - 80;
+    const railEnd = width - this.compactControlInset - 5;
+    const slot = railEnd < 240 ? 18 : 26;
+    this.frame(ctx, { x: 0, y, width, height: 32 });
+    state.party.forEach((unit, i) => {
+      const x = 5 + i * (slot + 2);
+      ctx.fillStyle = '#666370'; ctx.fillRect(x, y + 3, slot, 26);
+      ctx.fillStyle = '#151b27'; ctx.fillRect(x + 1, y + 4, slot - 2, 24);
+      const key = CONFIG.view.heroAssets[unit.sourceId as keyof typeof CONFIG.view.heroAssets];
+      const portrait = key && this.atlas.portrait(key);
+      if (portrait) {
+        const w = Math.min(slot - 2, portrait.width), h = Math.min(19, portrait.height);
+        const [faceX, faceY] = portraitFocus[key] ?? [Math.floor(portrait.width / 2), 9];
+        const left = Math.max(0, Math.min(portrait.width - w, faceX - Math.floor(w / 2)));
+        const top = Math.max(0, Math.min(portrait.height - h, faceY - Math.floor(h / 2)));
+        ctx.drawImage(portrait, left, top, w, h, x + Math.floor((slot - w) / 2), y + 5, w, h);
+      }
+      ctx.fillStyle = palette.green; ctx.fillRect(x + 2, y + 25, Math.round((slot - 4) * unit.hp / unit.maxHp), 2);
+    });
+    const gold = counter.format(state.gold), tickets = counter.format(state.tickets);
+    const goldWidth = 18 + Math.ceil(this.measureText(gold));
+    const ticketWidth = 18 + Math.ceil(this.measureText(tickets));
+    const start = 7 + 3 * (slot + 2);
+    const stackedWallet = railEnd - start - goldWidth - ticketWidth < 166;
+    const walletX = railEnd - (stackedWallet ? Math.max(goldWidth, ticketWidth) : goldWidth + 8 + ticketWidth);
+    const ticketX = stackedWallet ? walletX : railEnd - ticketWidth;
+    const goldY = y + (stackedWallet ? 0 : 8), ticketY = y + (stackedWallet ? 15 : 8);
+    this.icon(ctx, 'gold', walletX, goldY);
+    this.text(ctx, gold, walletX + 16, goldY + 2, palette.gold);
+    const icons = this.images.get('dungeon/insignia.png');
+    if (icons) ctx.drawImage(icons, 112, 0, 16, 16, ticketX, ticketY, 16, 16);
+    this.text(ctx, tickets, ticketX + 16, ticketY + 2);
+
+    const progress = state.progress, cue = stageCue(state);
+    const betweenStages = state.phase.kind === 'rest' && state.phase.next === 'encounter';
+    const cleared = betweenStages && cue?.kind === 'clear';
+    const stage = cleared ? cue.stage : progress.kind === 'BOSS_READY' ? progress.bossStage : progress.stage;
+    const info = stageConfig(stage), current = (stage - 1) % 10;
+    const space = walletX - start - 5, narrow = space < 152;
+    const wave = `${state.wave}/${info.waves.length}`;
+    const label = cleared ? (narrow ? 'Clear' : 'Stage clear') : progress.kind === 'BOSS_READY' ? (narrow ? 'Ready' : 'Boss ready')
+      : progress.kind === 'BOSS_FIGHT' ? (narrow ? 'Boss' : 'Boss fight') : progress.kind === 'COMPLETE' ? (narrow ? 'Done' : 'Complete')
+      : betweenStages ? (narrow ? 'Next' : 'Up next') : progress.kind === 'FARMING' ? (narrow ? 'Farm' : 'Farming') : `${narrow ? 'W' : 'Wave'} ${wave}`;
+    const heading = narrow ? info.id : `Stage ${info.id}`;
+    this.text(ctx, heading, start, y + 2, palette.gold, BODY, true);
+    this.text(ctx, label, narrow ? start : start + Math.ceil(this.measureText(heading, BODY, true)) + 10,
+      y + (narrow ? 15 : 2), info.isBoss ? '#ffac8d' : palette.text);
+    const barWidth = narrow ? Math.max(1, Math.min(5, Math.floor(space / 10) - 1)) : 8;
+    const gap = narrow ? 1 : 2, barY = y + (narrow ? 28 : 22);
+    for (let i = 0; i < 10; i++) {
+      ctx.fillStyle = i === 9 ? palette.red : i <= current ? palette.gold : palette.edge;
+      ctx.fillRect(start + i * (barWidth + gap), barY, barWidth, narrow ? 2 : 4);
+    }
+    if (!betweenStages && !info.isBoss && !narrow) {
+      ctx.fillStyle = '#b5d7bc';
+      ctx.fillRect(start + current * (barWidth + gap), barY + 3, Math.ceil(barWidth * state.wave / info.waves.length), 2);
+    }
+    if (!narrow && !info.isBoss) this.text(ctx, 'Boss 10', start + 102, y + 16, palette.red);
+    if (paused && space >= 164) {
+      ctx.fillStyle = palette.muted;
+      ctx.fillRect(walletX - 10, y + 13, 2, 7); ctx.fillRect(walletX - 6, y + 13, 2, 7);
+    }
     if (this.compactEditing) {
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameInk; ctx.fillRect(0, coreY, width, 1); ctx.fillRect(0, coreY + 79, width, 1); ctx.fillRect(0, coreY, 1, 80); ctx.fillRect(width - 1, coreY, 1, 80);
       ctx.fillStyle = CONFIG.ui.compactMenu.editMode.frameColor; ctx.fillRect(1, coreY + 1, width - 2, 1); ctx.fillRect(1, coreY + 78, width - 2, 1); ctx.fillRect(1, coreY + 1, 1, 78); ctx.fillRect(width - 2, coreY + 1, 1, 78);
@@ -222,7 +289,7 @@ export class PixelUI {
     return { x: Math.max(8, this.width - width - CONFIG.ui.expanded.panelRightInset), y: 0, width, height: CONFIG.ui.expanded.panelHeight };
   }
   sourceRegions(): SourceHitRegion[] {
-    if (this.standalone) return [{ kind: 'panel', id: 'reveal-stage', x: 0, y: REVEAL_STAGE.top, width: this.revealStageWidth, height: REVEAL_STAGE.height - REVEAL_STAGE.top }];
+    if (this.standalone) return [{ kind: 'panel', id: 'reveal-stage', x: 0, y: 0, ...REVEAL_STAGE }];
     if (this.welcome) return [{ kind: 'panel', id: 'welcome', ...this.panelRect() }];
     if (this.compactMode) {
       const dy = this.height() - CONFIG.ui.closed.coreHeight - CONFIG.ui.closed.coreY, layout = compactLaneLayout(this.width);
@@ -240,7 +307,7 @@ export class PixelUI {
     if (this.isOpen()) regions.push({ ...this.panelRect(), kind: 'panel', id: 'management' });
     return regions;
   }
-  private frame(ctx: CanvasRenderingContext2D, rect: Rect, file = 'panel-9slice.png'): void {
+  private frame(ctx: CanvasRenderingContext2D, rect: Rect, file = 'dungeon/panel.png'): void {
     const image = this.images.get(file);
     if (!image) { ctx.fillStyle = palette.panel; ctx.fillRect(rect.x, rect.y, rect.width, rect.height); return; }
     const corner = CONFIG.ui.nineSlice.insets.left, source = CONFIG.ui.nineSlice.sourceSize[0] ?? 48;
@@ -255,18 +322,18 @@ export class PixelUI {
   text(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, color = palette.text, size = BODY, bold = false, maxWidth?: number, options: TextOptions = {}): void {
     if (!this.readyFlag) return;
     if (maxWidth !== undefined) size = fitSize(this.measureText(value, size, bold), maxWidth, size);
-    const family = fontFor(value, size, bold);
+    const family = CSS_FONT_STACK;
     // textBaseline 'top' at whole pixels; layout slots get the per-size optical offset.
     y = Math.round(y) + (options.exactY ? 0 : slotOffsetY(size, bold));
-    const key = `${family}|${bold ? 600 : 400}|${size}|${color}|${value}`;
+    const key = `${family}|${bold ? 700 : 400}|${size}|${color}|${value}`;
     let raster = this.textCache.get(key);
     if (!raster) {
       raster = document.createElement('canvas'); const measure = raster.getContext('2d', { willReadFrequently: true }); if (!measure) return;
-      measure.font = `${bold ? 600 : 400} ${size}px ${family}`;
+      measure.font = `${bold ? 700 : 400} ${size}px ${family}`;
       const metrics = measure.measureText(value), ascent = Math.ceil(metrics.actualBoundingBoxAscent || size), descent = Math.ceil(metrics.actualBoundingBoxDescent || Math.ceil(size / 4));
       raster.width = Math.ceil(metrics.width) + 2; raster.height = ascent + descent + 2;
       // Assigning canvas dimensions resets every context property, including the font.
-      measure.font = `${bold ? 600 : 400} ${size}px ${family}`;
+      measure.font = `${bold ? 700 : 400} ${size}px ${family}`;
       measure.textBaseline = 'alphabetic'; measure.fillStyle = color; measure.fillText(value, 1, ascent + 1);
       this.textCache.set(key, raster);
       if (this.textCache.size > CONFIG.runtime.textCacheLimit) { const first = this.textCache.keys().next().value; if (first !== undefined) this.textCache.delete(first); }
@@ -279,7 +346,7 @@ export class PixelUI {
   measureText(value: string, size = BODY, bold = false): number {
     this.measureContext ??= document.createElement('canvas').getContext('2d');
     if (!this.measureContext) return 0;
-    this.measureContext.font = `${bold ? 600 : 400} ${size}px ${fontFor(value, size, bold)}`;
+    this.measureContext.font = `${bold ? 700 : 400} ${size}px ${CSS_FONT_STACK}`;
     return this.measureContext.measureText(value).width;
   }
   private icon(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, scale = 1): void {
@@ -289,7 +356,7 @@ export class PixelUI {
     const disabled = options.disabled ?? false;
     const hover = this.hovered === id, focus = this.focused === id;
     this.controls.set(id, { ...rect, id, label, disabled, click, tooltip: options.tooltip ?? label, ...(options.cardIndex === undefined ? {} : { cardIndex: options.cardIndex }) });
-    this.frame(ctx, rect, disabled ? 'button-disabled-9slice.png' : this.pressed === id ? 'button-pressed-9slice.png' : hover ? 'button-hover-9slice.png' : 'button-9slice.png');
+    this.frame(ctx, rect, disabled ? 'dungeon/disabled.png' : this.pressed === id ? 'dungeon/pressed.png' : hover ? 'dungeon/hover.png' : 'dungeon/button.png');
     if (options.selected) { ctx.fillStyle = palette.gold; ctx.fillRect(rect.x + 3, rect.y + rect.height - 3, rect.width - 6, 2); }
     if (options.badge) this.badge(ctx, id, rect, options.badge, hover || focus);
     if (options.icon) this.icon(ctx, options.icon, rect.x + 6, rect.y + Math.floor((rect.height - 16) / 2));
@@ -375,7 +442,7 @@ export class PixelUI {
   }
   draw(ctx: CanvasRenderingContext2D, state: GameState, width: number, coreY: number, paused: boolean, scaleToCss: number): void {
     this.badgesDrawn.clear();
-    this.current = state; this.width = width; this.coreY = coreY; this.sourceHeight = this.height(); this.scaleToCss = scaleToCss; this.controls.clear();
+    this.current = state; this.width = width; this.coreY = coreY; this.scaleToCss = scaleToCss; this.controls.clear();
     if (!this.readyFlag) { this.syncControls(); return; }
     for (const event of state.events) if (event.seq > this.lastPullSeq && event.data.type === 'pull') {
       this.history.unshift(`${heroConfig(event.data.heroId).name} · ${event.data.rarity}${event.data.duplicate ? ' · duplicate +star/gold' : ' · NEW'}`);
@@ -395,148 +462,169 @@ export class PixelUI {
     for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) { const cell = map[y]?.[x]; if (cell && cell !== '.') { ctx.fillStyle = colors[cell] ?? '#ffffff'; ctx.fillRect(x0 + x, y0 + y, 1, 1); } }
   }
   private drawBadge(ctx: CanvasRenderingContext2D, kind: 'new' | 'duplicateStar' | 'duplicateGold' | 'pity', x: number, y: number, gold = 0, alignRight = false): void {
-    const spec = CONFIG.ui.badges[kind], label = spec.label.replace('{gold}', String(gold)), width = this.measureText(label, BODY, true) + 8, left = alignRight ? x - width : x;
+    const spec = CONFIG.ui.badges[kind], label = (kind === 'duplicateStar' || kind === 'duplicateGold' ? 'DUPE ' : '') + spec.label.replace('{gold}', String(gold)), width = this.measureText(label, BODY, true) + 8, left = alignRight ? x - width : x;
     ctx.fillStyle = spec.fill; ctx.fillRect(left, y, width, CONFIG.ui.badges.heightPx);
     this.text(ctx, label, left + 4, y + 1, spec.ink, BODY, true, undefined, { exactY: true });
   }
-  /** Card face (gacha.md Â§3): back = raised 9-slice with a "?" plate; front = 2 px rarity frame, fill and 16 px floor band. */
-  private drawCard(ctx: CanvasRenderingContext2D, face: CardFace, tier: Rarity, heroId: string, rect: Rect, artHeight: number, floorY: number): void {
-    if (rect.width <= 0) return;
-    const colors = CONFIG.ui.rarity[tier];
-    if (face === 'back') {
-      if (rect.width >= 24) this.frame(ctx, rect, 'button-9slice.png'); else { ctx.fillStyle = palette.edge; ctx.fillRect(rect.x, rect.y, rect.width, rect.height); }
-      if (rect.width >= 20) { const px = rect.x + Math.floor(rect.width / 2) - 8, py = rect.y + Math.floor(artHeight / 2) - 8; ctx.fillStyle = palette.ink; ctx.fillRect(px, py, 16, 16); this.text(ctx, '?', px + 5, py + 1, palette.gold, BODY, true, undefined, { exactY: true }); }
+  private readonly silhouettes = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+
+  private drawSummonedHero(ctx: CanvasRenderingContext2D, pull: RevealPull, face: CardFace, cx: number, floor: number, width: number, height: number): void {
+    const key = Object.entries(CONFIG.view.heroAssets).find(([id]) => id === pull.heroId)?.[1];
+    if (!key || face === 'back') return;
+    const age = this.reducedMotion ? 0 : this.managementIdleClock?.() ?? 0;
+    const sprite = this.atlas.portraitFrame(key, this.atlas.idleFrameIndex(key, age));
+    if (!sprite) return;
+    const scale = Math.max(1, Math.min(4, Math.floor(width / sprite.width), Math.floor(height / sprite.height)));
+    let art = sprite;
+    if (face === 'silhouette') {
+      let mask = this.silhouettes.get(sprite);
+      if (!mask) {
+        mask = document.createElement('canvas'); mask.width = sprite.width; mask.height = sprite.height;
+        const ink = mask.getContext('2d'); if (!ink) return;
+        ink.drawImage(sprite, 0, 0); ink.globalCompositeOperation = 'source-in';
+        ink.fillStyle = CONFIG.ui.rarity[pull.rarity].frame; ink.fillRect(0, 0, mask.width, mask.height);
+        this.silhouettes.set(sprite, mask);
+      }
+      art = mask;
+    }
+    const w = sprite.width * scale, h = sprite.height * scale;
+    if (w > 0) ctx.drawImage(art, cx - Math.floor(w / 2), floor - h, w, h);
+  }
+
+  private drawOutcome(ctx: CanvasRenderingContext2D, pull: RevealPull, right: number, y: number): void {
+    this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', right, y, pull.gold, true);
+  }
+
+  private drawReveal(ctx: CanvasRenderingContext2D, tickets: number, reveal: Reveal): void {
+    const ms = this.reducedMotion ? Infinity : this.revealMs();
+    const { plan } = reveal;
+    const frame = revealFrame(plan, ms);
+    const { done, phase } = frame, group = reveal.count === 10;
+    const cue = reveal.pulls[plan.highlight]!;
+    if (!reveal.cued && ms >= plan.cueAt && !reveal.skipped) {
+      reveal.cued = true; this.onCue(burstCue(cue.rarity, cue.pity));
+    }
+    if (this.reducedMotion) reveal.skipped = true;
+    if (reveal.flash === null && frame.flash) reveal.flash = this.flashes.request(this.clock());
+
+    this.frame(ctx, { x: 0, y: 0, ...REVEAL_STAGE });
+    const inGrid = frame.cards.length > 0;
+    this.text(ctx, inGrid && done ? 'Recruited heroes' : 'Summoning Hall', 22, 14, '#f6dcad', 24, true);
+    const newCount = reveal.pulls.filter(pull => pull.badge === 'new').length;
+    const header = group && done ? `${newCount} NEW   /   ${reveal.pulls.length - newCount} DUPLICATES` : `RECRUIT  ×${reveal.count}`;
+    this.text(ctx, header, 872 - this.measureText(header, BODY, true), 23, palette.gold, BODY, true);
+
+    const hall = this.images.get('dungeon/summoning-hall.png');
+    ctx.save();
+    ctx.beginPath(); ctx.rect(12, 56, 872, 306); ctx.clip();
+    // Zoom around the astrolabe in whole-pixel steps. The source stays nearest-neighbour.
+    const push = phase === 'charge' ? frame.amount : phase === 'open' ? 1 - frame.amount : phase === 'leak' ? 1 : 0;
+    const zoom = Math.floor(push * 5);
+    if (hall && !(group && done)) ctx.drawImage(hall, 12 - zoom * 4, 56 - zoom, 872 + zoom * 8, 304 + zoom * 3);
+    if (reveal.flash) ctx.translate(frame.shakeX, 0);
+    if (phase === 'charge' || phase === 'leak' || phase === 'open') {
+      drawGate(ctx, phase, frame.color, frame.amount, ms);
+    } else if (inGrid) {
+      this.drawTen(ctx, reveal, frame.cards);
+    } else {
+      this.drawSummonedHero(ctx, cue, phase === 'silhouette' ? 'silhouette' : 'front', 448, 294, 232, 202);
+      if (frame.burstAge !== null) {
+        for (const dot of particles(cue.rarity, 0, frame.burstAge)) {
+          spark(ctx, 448 + dot.x * 3, 186 + dot.y * 2, dot.size * 2 + 1, dot.color);
+        }
+      }
+    }
+    if (reveal.flash && frame.flash) {
+      // One local accent on the highlighted burst, governed by the shared flash limiter.
+      const cx = group ? 100 + (plan.highlight % 5) * 174 : 448;
+      const cy = group ? 116 + Math.floor(plan.highlight / 5) * 156 : 186;
+      spark(ctx, cx, cy, group ? 14 : 28, '#fff0c4');
+    }
+    ctx.restore();
+    const status = done ? group ? 'Pull breakdown' : shortHeroName(cue.heroId)
+      : phase === 'charge' ? 'Charging the gate…' : phase === 'leak' ? 'Light breaks through…'
+      : phase === 'open' ? 'Opening the gate…' : group ? 'Revealing heroes…' : 'A hero approaches…';
+    this.text(ctx, status, 22, 382, palette.text, HEADING, true);
+    if (!group && done) {
+      const role = getPartyHeroDefinition(cue.heroId).role;
+      this.drawShape(ctx, cue.rarity, 30, 424);
+      this.text(ctx, cue.rarity.toUpperCase(), 44, 417, CONFIG.ui.rarity[cue.rarity].label, BODY, true);
+      this.drawManagementRole(ctx, role, 146, 414);
+      this.text(ctx, role.toUpperCase(), 170, 417, palette.text, BODY);
+      this.drawOutcome(ctx, cue, 330, 414);
+      if (cue.pity) this.drawBadge(ctx, 'pity', 342, 414);
+    } else if (group && done) {
+      const tally = [...CONFIG.ui.rarity.order].reverse().map(tier => {
+        const n = reveal.pulls.filter(pull => pull.rarity === tier).length;
+        return n ? `${n} ${tier}` : '';
+      }).filter(Boolean).join('  ·  ');
+      this.text(ctx, tally, 22, 418, palette.muted);
+    } else if (inGrid) {
+      const count = frame.cards.filter(card => card.face === 'front').length;
+      this.text(ctx, `${count} of ${reveal.pulls.length}`, 22, 418, palette.muted);
+    }
+    const buttonY = 390;
+    if (!done) {
+      this.hotspot(ctx, 'reveal-stage-skip', { x: 12, y: 56, width: 872, height: 306 }, () => this.skipReveal(), 'Skip reveal', 0);
+      this.button(ctx, 'reveal-skip', 'Skip reveal', { x: 732, y: buttonY, width: 142, height: 40 }, () => this.skipReveal());
       return;
     }
-    ctx.fillStyle = colors.frame; ctx.fillRect(rect.x, rect.y, rect.width, artHeight);
-    ctx.fillStyle = colors.fill; ctx.fillRect(rect.x + 2, rect.y + 2, rect.width - 4, artHeight - 4);
-    ctx.fillStyle = colors.floor; ctx.fillRect(rect.x + 2, rect.y + artHeight - 18, rect.width - 4, 16);
-    if (rect.width < 64) return;
-    ctx.save(); ctx.beginPath(); ctx.rect(rect.x + 2, rect.y + 2, rect.width - 4, artHeight - 4); ctx.clip();
-    const key = Object.entries(CONFIG.view.heroAssets).find(([id]) => id === heroId)?.[1], cx = rect.x + Math.floor(rect.width / 2);
-    if (key && face === 'silhouette') {
-      const mask = document.createElement('canvas'); mask.width = rect.width; mask.height = artHeight;
-      const m = mask.getContext('2d');
-      if (m) { m.imageSmoothingEnabled = false; this.atlas.draw(m, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, Math.floor(rect.width / 2), floorY - rect.y, false, 1, true); m.globalCompositeOperation = 'source-in'; m.fillStyle = colors.frame; m.fillRect(0, 0, mask.width, mask.height); ctx.drawImage(mask, rect.x, rect.y); }
-    } else if (key) this.atlas.draw(ctx, key, 'idle', this.managementReveal ? this.managementIdleAge() : 0, cx, floorY, false, 1);
-    ctx.restore();
+    const cost = CONFIG.gacha.costTickets * reveal.count;
+    if (tickets < cost) this.text(ctx, `Tickets ${tickets} · Again needs ${cost}`, 562, 430, palette.muted);
+    this.button(ctx, 'reveal-again', `Again ×${reveal.count}`, { x: 562, y: buttonY, width: 164, height: 40 }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
+      { icon: 'chest', disabled: tickets < cost, tooltip: `Recruit ×${reveal.count} for ${cost} ticket${cost === 1 ? '' : 's'}` });
+    this.button(ctx, 'reveal-ok', 'Back to Recruit', { x: 732, y: buttonY, width: 142, height: 40 }, () => this.finishReveal(true), { primary: true, bold: true });
   }
-  private managementIdleAge(): number { return this.reducedMotion ? 0 : this.managementIdleClock ? Math.max(0, this.managementIdleClock()) : Math.max(0, this.clock() - (this.reveal?.startedAt ?? this.clock())); }
-  private drawRim(ctx: CanvasRenderingContext2D, rect: Rect, color: string, alpha: number): void {
-    if (alpha <= 0) return;
-    ctx.save(); ctx.globalAlpha = alpha / 255; ctx.fillStyle = color;
-    ctx.fillRect(rect.x - 2, rect.y - 2, rect.width + 4, 2); ctx.fillRect(rect.x - 2, rect.y + rect.height, rect.width + 4, 2);
-    ctx.fillRect(rect.x - 2, rect.y, 2, rect.height); ctx.fillRect(rect.x + rect.width, rect.y, 2, rect.height); ctx.restore();
-  }
-  /** Gacha reveal (ui/gacha.md): single at the stage, or the 10-card summary. The legendary beam is PR (5). */
-  private drawReveal(ctx: CanvasRenderingContext2D, tickets: number, panel: Rect, reveal: Reveal): void {
-    const x = panel.x, ms = this.revealMs(), spec = CONFIG.ui.gacha, done = this.revealDone(), now = this.clock();
-    const cue = this.cuePull(), cueAt = reveal.count === 1 ? burstStartMs(cue?.rarity ?? 'common') : tenFrame(reveal.pulls.map(pull => pull.rarity), 0).burstCueAt;
-    if (!reveal.cued && cue && ms >= cueAt && !reveal.skipped) { reveal.cued = true; this.onCue(burstCue(cue.rarity, cue.pity)); }
-    if (reveal.flash === null && cue?.rarity === 'legendary' && ms >= cueAt && !reveal.skipped && !this.reducedMotion) reveal.flash = this.flashes.request(now);
-    if (!done) this.hotspot(ctx, 'reveal-skip', { x: x + 8, y: 72, width: panel.width - 16, height: 320 }, () => this.skipReveal(), 'Click anywhere to skip', 0);
-    const compact = this.standalone && panel.width < REVEAL_STAGE.width, small = CONFIG.ui.compactMenu.tenPullCompact;
-    // Compact: the 720-wide single stage is centred in the 624 body (it fits), the 10-pull switches to the 104Ã—96 grid.
-    if (reveal.count === 1) this.drawSingle(ctx, compact ? { ...panel, x: x + Math.floor((panel.width - REVEAL_STAGE.width) / 2) } : panel, reveal, ms); else this.drawTen(ctx, panel, reveal, ms, compact);
-    if (!done) { this.text(ctx, 'Click anywhere to skip', x + 16, 368, palette.muted, BODY); return; }
-    const cost = CONFIG.gacha.costTickets * reveal.count, short10 = tickets < cost;
-    if (reveal.count === 1) this.text(ctx, 'Click a button or press Enter', x + 16, 368, palette.muted, BODY, false, 370);
-    else this.text(ctx, `Tickets ${tickets}${short10 ? ` · Again needs ${cost}` : ''}`, x + 16, 368, palette.muted, BODY, false, 370);
-    const [ax = 400, ay = 364, aw = 152, ah = 28] = compact ? small.againRect : reveal.count === 1 ? spec.single.againRect : spec.tenPull.againRect, [ox = 560, oy = 364, ow = 144] = compact ? small.okRect : reveal.count === 1 ? spec.single.okRect : spec.tenPull.okRect;
-    const actionY = this.managementReveal ? 348 : ay, actionH = this.managementReveal ? 40 : ah;
-    this.button(ctx, 'reveal-again', `Again x${reveal.count}`, { x: x + ax, y: actionY, width: aw, height: actionH }, () => { this.reveal = null; this.onRevealAgain(reveal.count); },
-      { icon: 'chest', disabled: short10, tooltip: short10 ? `Need ${cost} ticket${cost === 1 ? '' : 's'}` : `Recruit x${reveal.count} again: ${cost} ticket${cost === 1 ? '' : 's'}` });
-    this.button(ctx, 'reveal-ok', 'OK', { x: x + ox, y: this.managementReveal ? actionY : oy, width: ow, height: actionH }, () => this.finishReveal(true), { primary: true, bold: true, tooltip: 'Back to Recruit (Enter)' });
-  }
-  private drawSingle(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number): void {
-    const pull = reveal.pulls[0]; if (!pull) return;
-    const x = panel.x, spec = CONFIG.ui.gacha.single, frame = singleFrame(pull.rarity, ms, this.reducedMotion), tier = CONFIG.ui.rarity[pull.rarity];
-    const [sx = 176, sy = 84, sw = 368, sh = 212] = spec.stageRect, [cx0 = 312, cy0 = 160, cw = 96, ch = 128] = spec.cardRect;
-    this.text(ctx, 'RECRUIT x1', x + 16, 80, palette.text, BODY, true);
-    ctx.save(); ctx.translate(frame.flash || frame.shakeX ? (reveal.flash ? frame.shakeX : 0) : 0, 0);
-    const stage = { x: x + sx, y: sy, width: sw, height: sh };
-    ctx.fillStyle = '#141c26'; ctx.fillRect(stage.x, stage.y, stage.width, stage.height);
-    ctx.save(); ctx.beginPath(); ctx.rect(stage.x, stage.y, stage.width, stage.height); ctx.clip();
-    const card = { x: x + cx0 + Math.floor((cw - frame.cardWidth) / 2), y: cy0 + frame.dropY, width: frame.cardWidth, height: ch };
-    if (frame.motes) { ctx.fillStyle = tier.frame; for (const mote of motes(pull.rarity, ms, cw + 40)) ctx.fillRect(x + cx0 - 20 + mote.x, cy0 + ch - 8 + mote.y, mote.size, mote.size); }
-    this.drawRim(ctx, card, frame.flash && reveal.flash ? '#fff0ac' : tier.frame, frame.flash && reveal.flash ? 255 : frame.rimAlpha);
-    this.drawCard(ctx, frame.face, pull.rarity, pull.heroId, card, ch, card.y + 112);
-    if (frame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, 0, frame.burstAge)) { ctx.fillStyle = dot.color; ctx.fillRect(x + cx0 + cw / 2 + dot.x, cy0 + ch / 2 + dot.y, dot.size, dot.size); }
-    ctx.restore();
-    if (frame.burstAge !== null || frame.done) {
-      const [shx = 360, shy = 152] = spec.shapeSlotCenter;
-      this.drawShape(ctx, pull.rarity, x + shx, shy, pull.rarity === 'rare' && !this.reducedMotion && frame.burstAge !== null && frame.burstAge < 40);
-      if (pull.pity) this.drawBadge(ctx, 'pity', card.x + 4, card.y + 4);
-    }
-    const name = heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-    if (frame.showName) this.text(ctx, name, x + sx + Math.floor((sw - this.measureText(name, BODY, true)) / 2), spec.nameY, palette.text, BODY, true);
-    if (frame.showRarity) { const label = pull.rarity.toUpperCase(); this.text(ctx, label, x + sx + Math.floor((sw - this.measureText(label, BODY, true)) / 2), spec.rarityY, tier.label, BODY, true); }
-    if (this.managementReveal && frame.done) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, x + sx + 8, sy + sh - 18);
-    ctx.restore();
-  }
-  private drawTen(ctx: CanvasRenderingContext2D, panel: Rect, reveal: Reveal, ms: number, compact = false): void {
-    const x = panel.x, spec = CONFIG.ui.gacha.tenPull, small = CONFIG.ui.compactMenu.tenPullCompact, rarities = reveal.pulls.map(pull => pull.rarity), frame = tenFrame(rarities, ms, this.reducedMotion);
-    const [hx = 16, hy = 88] = small.header;
-    this.text(ctx, 'RECRUIT x10 RESULTS', x + 16, compact ? hy : 80, palette.text, BODY, true);
-    const tally = [...raritySchema.options].reverse().map(tier => [tier, rarities.filter(r => r === tier).length] as const).filter(([, n]) => n > 0).map(([tier, n]) => `${n} ${tier.toUpperCase()}`).join(' ');
-    if (frame.done) this.text(ctx, tally, x + (compact ? small.tallyMaxX : 704) - this.measureText(tally), compact ? hy : 80, palette.muted, BODY);
-    void hx;
-    ctx.save(); ctx.translate(reveal.flash ? frame.shakeX : 0, 0);
-    reveal.pulls.forEach((pull, index) => {
-      const cardFrame = frame.cards[index]; if (!cardFrame) return;
-      if (compact) { this.drawTenCompactCard(ctx, x, pull, index, cardFrame, frame); return; }
-      const [rx = 24, ry = 100, rw = 128, rh = 120] = spec.cardRects[index] ?? [];
-      const tier = CONFIG.ui.rarity[pull.rarity], rect = { x: x + rx + Math.floor((rw - cardFrame.width) / 2), y: ry + cardFrame.dropY, width: cardFrame.width, height: rh };
-      const highlight = index === frame.highlight && (cardFrame.rimAlpha > 0 || frame.done) && ['epic', 'legendary'].includes(pull.rarity);
-      if (highlight) this.drawRim(ctx, rect, frame.flash && reveal.flash ? '#fff0ac' : tier.frame, 255);
-      if (cardFrame.face === 'back') { this.drawCard(ctx, 'back', pull.rarity, pull.heroId, rect, rh, rect.y + 80); return; }
-      this.drawCard(ctx, cardFrame.face, pull.rarity, pull.heroId, { ...rect, height: 84 }, 84, rect.y + 80);
-      ctx.fillStyle = palette.ink; ctx.fillRect(rect.x, rect.y + 84, rect.width, 36);
-      ctx.fillStyle = tier.fill; ctx.fillRect(rect.x + 1, rect.y + 85, rect.width - 2, 35); ctx.fillStyle = tier.frame; ctx.fillRect(rect.x, rect.y + 84, rect.width, 1);
-      if (rect.width < 128) return;
-      if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + 64 + dot.x, rect.y + 42 + dot.y, dot.size, dot.size); }
-      let name = this.managementReveal ? shortHeroName(pull.heroId) : heroConfig(pull.heroId).name.replace(' (recolored Wizard)', '');
-      if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + 84, 128);
-      else { name = ellipsize(name, 124, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((128 - this.measureText(name)) / 2), rect.y + 84, palette.text, BODY); }
-      const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((128 - this.measureText(label, BODY, true)) / 2), rect.y + 101, tier.label, BODY, true);
-      this.drawShape(ctx, pull.rarity, rect.x + 12, rect.y + rh - 12);
-      if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + 66);
-      if (frame.badges) {
-        this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
-        if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
+
+  private drawTen(ctx: CanvasRenderingContext2D, reveal: Reveal, cards: readonly FlyingCard[]): void {
+    const hall = this.images.get('dungeon/summoning-hall.png');
+    const cardW = 168, cardH = 150;
+    reveal.pulls.forEach((pull, i) => {
+      const card = cards[i]; if (!card || card.travel === 0) return;
+      const gridX = 100 + (i % 5) * 174, gridY = 56 + Math.floor(i / 5) * 156;
+      const t = 1 - (1 - card.travel) ** 2;
+      const cx = Math.round(448 + (gridX - 448) * t);
+      const height = Math.round(cardH * (0.12 + 0.88 * t));
+      const width = Math.round(cardW * (0.12 + 0.88 * t) * card.width);
+      const y = Math.round(186 + (gridY + cardH / 2 - 186) * t - 80 * t * (1 - t) - height / 2);
+      const x = cx - Math.floor(width / 2);
+      if (!width) return;
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, width, height); ctx.clip();
+      const tier = CONFIG.ui.rarity[pull.rarity];
+      if (card.face === 'back') {
+        ctx.fillStyle = tier.floor; ctx.fillRect(x, y, width, height);
+        ctx.fillStyle = tier.frame; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+        ctx.fillStyle = tier.fill; ctx.fillRect(x + 4, y + 4, width - 8, height - 8);
+        ctx.fillStyle = tier.floor; ctx.fillRect(x + 8, y + 8, width - 16, height - 16);
+        ctx.fillStyle = '#302b39'; ctx.fillRect(x + 10, y + 10, width - 20, height - 20);
+        const cy = y + Math.floor(height / 2), radius = Math.max(2, Math.round(22 * t));
+        spark(ctx, cx, cy, radius, tier.floor); spark(ctx, cx, cy, Math.ceil(radius / 2), tier.frame);
+      } else {
+        ctx.fillStyle = tier.frame; ctx.fillRect(x, y, width, cardH);
+        ctx.fillStyle = tier.fill; ctx.fillRect(x + 2, y + 2, width - 4, 100);
+        if (hall) {
+          ctx.globalAlpha = 0.48;
+          ctx.drawImage(hall, 136, 17, 164, 100, cx - 82, y + 2, 164, 100);
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = '#201f2c'; ctx.fillRect(x + 2, y + 104, width - 4, 44);
+        this.drawSummonedHero(ctx, pull, card.face, cx, y + 102, 144, 82);
+        if (card.burstAge !== null) {
+          for (const dot of particles(pull.rarity, i, card.burstAge, i === reveal.plan.highlight ? 1 : 0.25)) {
+            spark(ctx, cx + dot.x, y + 60 + dot.y, dot.size + 1, dot.color);
+          }
+        }
+        if (width === cardW && card.face === 'front') {
+          this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, x + 8, y + 112);
+          this.text(ctx, shortHeroName(pull.heroId), x + 30, y + 113, palette.text, BODY, true);
+          this.drawShape(ctx, pull.rarity, x + 17, y + 138);
+          this.text(ctx, pull.rarity.toUpperCase(), x + 30, y + 131, tier.label);
+          this.drawOutcome(ctx, pull, x + width - 6, y + 6);
+          if (pull.pity) this.drawBadge(ctx, 'pity', x + 6, y + 6);
+        }
       }
+      ctx.restore();
     });
-    ctx.restore();
-  }
-  /** compactMenu.tenPullCompact card: 104Ã—96, art (0,0,104,68), label strip (0,68,104,28), short name â‰¤ 96 px. */
-  private drawTenCompactCard(ctx: CanvasRenderingContext2D, x: number, pull: RevealPull, index: number, cardFrame: ReturnType<typeof tenFrame>['cards'][number], frame: ReturnType<typeof tenFrame>): void {
-    const small = CONFIG.ui.compactMenu.tenPullCompact, [rx = 36, ry = 108, rw = 104, rh = 96] = small.cardRects[index] ?? [], [, , , artH = 68] = small.artArea;
-    const tier = CONFIG.ui.rarity[pull.rarity], width = Math.round(cardFrame.width * rw / 128), full = cardFrame.width >= 128;
-    const rect = { x: x + rx + Math.floor((rw - width) / 2), y: ry + cardFrame.dropY, width, height: rh };
-    const highlight = index === frame.highlight && (cardFrame.rimAlpha > 0 || frame.done) && ['epic', 'legendary'].includes(pull.rarity);
-    if (highlight) this.drawRim(ctx, rect, tier.frame, 255);
-    if (cardFrame.face === 'back') { this.drawCard(ctx, 'back', pull.rarity, pull.heroId, rect, rh, rect.y + artH - 4); return; }
-    this.drawCard(ctx, cardFrame.face, pull.rarity, pull.heroId, { ...rect, height: artH }, artH, rect.y + artH - 4);
-    ctx.fillStyle = palette.ink; ctx.fillRect(rect.x, rect.y + artH, rect.width, rh - artH);
-    ctx.fillStyle = tier.fill; ctx.fillRect(rect.x + 1, rect.y + artH + 1, rect.width - 2, rh - artH - 1); ctx.fillStyle = tier.frame; ctx.fillRect(rect.x, rect.y + artH, rect.width, 1);
-    if (!full) return;
-    if (cardFrame.burstAge !== null && !this.reducedMotion) for (const dot of particles(pull.rarity, index, cardFrame.burstAge, 0.25)) { ctx.fillStyle = dot.color; ctx.fillRect(rect.x + rw / 2 + dot.x, rect.y + artH / 2 + dot.y, dot.size, dot.size); }
-    let name = shortHeroName(pull.heroId);
-    if (this.managementReveal) this.drawManagementRevealName(ctx, name, rect.x, rect.y + small.nameYInCard, rw);
-    else { name = ellipsize(name, small.nameMaxPx, value => this.measureText(value)); this.text(ctx, name, rect.x + Math.floor((rw - this.measureText(name)) / 2), rect.y + small.nameYInCard, palette.text, BODY); }
-    const label = pull.rarity.toUpperCase(); this.text(ctx, label, rect.x + Math.floor((rw - this.measureText(label, BODY, true)) / 2), rect.y + small.rarityYInCard, tier.label, BODY, true);
-    this.drawShape(ctx, pull.rarity, rect.x + 10, rect.y + small.rarityYInCard + 6);
-    if (this.managementReveal) this.drawManagementRole(ctx, getPartyHeroDefinition(pull.heroId).role, rect.x + 4, rect.y + artH - 16);
-    if (frame.badges) {
-      this.drawBadge(ctx, pull.badge === 'new' ? 'new' : pull.badge === 'star' ? 'duplicateStar' : 'duplicateGold', rect.x + rect.width - 4, rect.y + 5, pull.gold, true);
-      if (pull.pity) this.drawBadge(ctx, 'pity', rect.x + 4, rect.y + 5);
-    }
-  }
-  private drawManagementRevealName(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, width: number): void {
-    ctx.save(); ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = palette.text;
-    ctx.font = '12px GamePixel, GameSymbols, monospace';
-    if (ctx.measureText(name).width > width - 8) ctx.font = '10px GameMeta, GameSymbols, monospace';
-    ctx.fillText(name, Math.round(x + width / 2), Math.round(y)); ctx.restore();
   }
   /** Welcome back (ui/offline-rewards.md): rewards are already in the save; Collect acknowledges. */
   drawWelcome(ctx: CanvasRenderingContext2D, state: GameState, data: WelcomeData): void {
@@ -556,7 +644,7 @@ export class PixelUI {
     ctx.fillStyle = palette.gold; ctx.fillRect(x + layout.capBar.x + 1, layout.capBar.y + 1, Math.round((layout.capBar.width - 2) * Math.min(1, data.seconds / (capH * 3600))), layout.capBar.height - 2);
 
     const row = (area: Rect, icon: string, label: string, value: string, color: string): void => {
-      this.frame(ctx, { ...area, x: x + area.x }, 'button-9slice.png');
+      this.frame(ctx, { ...area, x: x + area.x }, 'dungeon/button.png');
       const iconX = area.x + (layout.compact ? 8 : 16), labelX = area.x + (layout.compact ? 34 : 64);
       this.icon(ctx, icon, x + iconX, area.y + (layout.compact ? 8 : 16), layout.compact ? 1 : 2);
       const textWidth = area.width - (labelX - area.x) - 8;
@@ -568,7 +656,7 @@ export class PixelUI {
 
     const expedition = data.expeditionChests !== undefined;
     const chest = layout.chest, title = expedition ? `EXPEDITION ${data.chests}/${max}` : `CHESTS ${data.chests}/${max}`;
-    this.frame(ctx, { ...chest, x: x + chest.x }, 'button-9slice.png');
+    this.frame(ctx, { ...chest, x: x + chest.x }, 'dungeon/button.png');
     this.text(ctx, title, x + layout.chestTitle.x, layout.chestTitle.y, palette.text, BODY, true);
     const titleWidth = this.measureText(title, BODY, true);
     const rule = expedition ? `${CONFIG.v14.offline.expeditionChestsPerHour} per hour · max ${max} · best of ${CONFIG.v14.offline.expeditionBestOf}` : `1 per ${CONFIG.idle.offlineChestEveryHours}h · max ${max}`;
@@ -586,7 +674,7 @@ export class PixelUI {
         continue;
       }
       const lift = shown.pop ? -1 : 0, iconScale = grid.size >= 32 ? 2 : 1;
-      this.frame(ctx, { x: sxp, y: syp + lift, width: grid.size, height: grid.size }, 'button-9slice.png');
+      this.frame(ctx, { x: sxp, y: syp + lift, width: grid.size, height: grid.size }, 'dungeon/button.png');
       this.icon(ctx, 'chest', sxp + Math.floor((grid.size - 16 * iconScale) / 2), syp + lift + Math.floor((grid.size - 16 * iconScale) / 2), iconScale);
     }
     const sent = data.choices > 0 ? `${data.choices} pick-1-of-2 waiting in Gear` : 'Gear sent to inventory';

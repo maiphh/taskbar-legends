@@ -1,31 +1,105 @@
 // M3 presentation logic: gacha reveal timeline (ui/gacha.md), welcome-back count-up (ui/offline-rewards.md), audio rules.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AUDIO_STORAGE_KEY, GroupGate, PRIMING_OFFSETS, chooseFormat, clipGain, createAudio, eventCues, loopWindow, parseSettings } from '../src/audio';
-import { FlashLimiter, awayLabel, burstCue, chestSlot, chestStaggerMs, countUp, highestCard, particles, rewardLabel, singleFrame, tenFrame, tenSchedule, tierTotalMs, welcomeChestGrid, welcomeDoneMs } from '../src/reveal-timeline';
+import { FlashLimiter, awayLabel, burstCue, chestSlot, chestStaggerMs, countUp, particles, revealFrame, revealSchedule, rewardLabel, welcomeChestGrid, welcomeDoneMs } from '../src/reveal-timeline';
 import manifest from '../src/audio-manifest.json';
 
-describe('gacha single reveal', () => {
-  it('runs 1000 / 1280 / 1600 / 2000 ms by tier and ends with labels and the footer', () => {
-    expect((['common', 'rare', 'epic', 'legendary'] as const).map(tierTotalMs)).toEqual([1000, 1280, 1600, 2000]);
-    expect(singleFrame('rare', 1279).done).toBe(false); expect(singleFrame('rare', 1280)).toMatchObject({ done: true, face: 'front', showName: true, showRarity: true });
+import { CONFIG } from '../src/config';
+import type { Rarity } from '../src/config';
+import * as rng from '../src/core/rng';
+
+const gate = CONFIG.ui.gacha;
+const roll = (rarity: Rarity, heroId: string = rarity) => ({ heroId, rarity });
+
+describe('Summoning Hall reveal', () => {
+  it('charges identically for all tiers and both pull sizes, then leaks the best tier (first on ties)', () => {
+    for (const best of ['common', 'rare', 'epic', 'legendary'] as const) {
+      for (const rolls of [[roll(best, 'mk2')], Array.from({ length: 10 }, (_, i) => roll(i === 2 || i === 7 ? best : 'common'))]) {
+        const schedule = revealSchedule(rolls);
+        expect(schedule.highlight).toBe(rolls.length === 1 || best === 'common' ? 0 : 2);
+        for (const ms of [0, 720, gate.chargeMs - 1]) {
+          expect(revealFrame(schedule, ms)).toEqual(revealFrame(revealSchedule([roll('common')]), ms));
+          expect(revealFrame(schedule, ms)).toMatchObject({ phase: 'charge', color: null, cards: [], flash: false, shakeX: 0 });
+        }
+        for (const ms of [schedule.leakAt, schedule.openAt - 1]) {
+          expect(revealFrame(schedule, ms)).toMatchObject({ phase: 'leak', color: best, cards: [] });
+        }
+        expect(schedule.openAt - schedule.leakAt).toBe(1000);
+      }
+    }
   });
-  it('drops the back −8/−4/0, ramps the rim monotonically, flips 96→48→0→48→96 in 40 ms steps', () => {
-    expect([0, 40, 80, 120].map(ms => singleFrame('common', ms).dropY)).toEqual([-8, -4, 0, 0]);
-    const rims = Array.from({ length: 11 }, (_, i) => singleFrame('rare', 120 + i * 40).rimAlpha);
-    expect(rims.every((alpha, i) => i === 0 || alpha >= (rims[i - 1] ?? 0))).toBe(true); expect(rims.at(-1)).toBe(153);
-    expect(singleFrame('common', 200).rimAlpha).toBe(0);
-    expect([360, 400, 440, 480, 520].map(ms => [singleFrame('common', ms).cardWidth, singleFrame('common', ms).face])).toEqual([[48, 'back'], [0, 'back'], [48, 'front'], [96, 'front'], [96, 'front']]);
+  it('replays an upgrade from just the ordered pull results without drawing random numbers', () => {
+    const draws = vi.spyOn(rng, 'random');
+    const cosmeticDraws = vi.spyOn(Math, 'random');
+    try {
+      for (const pulls of [[roll('legendary', 'ew3')], [roll('legendary', 'mk2')], [roll('epic', 'ew3')]]) {
+        const plan = revealSchedule(pulls);
+        expect(revealSchedule(structuredClone(pulls))).toEqual(plan);
+        const upgrade = pulls[0]!.heroId === 'ew3' && plan.best === 'legendary';
+        expect(plan.preview).toBe(upgrade ? 'rare' : null);
+        expect(plan.leakAt - gate.chargeMs).toBe(upgrade ? 600 : 0);
+        for (let ms = gate.chargeMs; ms < plan.openAt; ms += gate.frameStepMs) {
+          expect(revealFrame(plan, ms).color).toBe(ms < plan.leakAt ? plan.preview : plan.best);
+        }
+      }
+      const outcomes = new Set();
+      for (let index = 0; index < 20; index++) {
+        const pulls = [roll('legendary', 'ew3')];
+        const plan = revealSchedule(pulls, index);
+        expect(revealSchedule(pulls, index)).toEqual(plan);
+        outcomes.add(plan.preview);
+      }
+      expect(outcomes).toEqual(new Set([null, 'rare', 'epic']));
+      expect(draws).not.toHaveBeenCalled(); expect(cosmeticDraws).not.toHaveBeenCalled();
+    } finally { draws.mockRestore(); cosmeticDraws.mockRestore(); }
   });
-  it('shows the silhouette for Epic+ until the burst, motes only before it; legendary flashes 80 ms and shakes [+1,−1,+1,−1,0]', () => {
-    expect(singleFrame('epic', 1000).face).toBe('silhouette'); expect(singleFrame('epic', 1120).face).toBe('front');
-    expect(singleFrame('epic', 500).motes).toBe(true); expect(singleFrame('rare', 500).motes).toBe(false);
-    expect([1360, 1400, 1440].map(ms => singleFrame('legendary', ms).flash)).toEqual([true, true, false]);
-    expect([1360, 1400, 1440, 1480, 1520].map(ms => singleFrame('legendary', ms).shakeX)).toEqual([1, -1, 1, -1, 0]);
-    expect(singleFrame('legendary', 1360, true)).toMatchObject({ flash: false, shakeX: 0, motes: false });
+  it('reaches results within the wall-clock budgets, including fake-outs and ten high cards', () => {
+    for (const [rarity, min, max] of [['common', 2800, 3500], ['rare', 2800, 3500], ['epic', 4500, 5500], ['legendary', 5000, 7000]] as const) {
+      for (const id of ['ew3', 'mk2']) {
+        const one = revealSchedule([roll(rarity, id)]);
+        expect(one.doneAt).toBeGreaterThanOrEqual(min); expect(one.doneAt).toBeLessThanOrEqual(max);
+        const ten = revealSchedule(Array.from({ length: 10 }, () => roll(rarity, id)));
+        expect(ten.doneAt).toBeGreaterThanOrEqual(9000); expect(ten.doneAt).toBeLessThanOrEqual(12000);
+      }
+    }
   });
-  it('labels: name at the labels beat, rarity 80 ms later; a skip (Infinity) is the final state', () => {
-    expect([singleFrame('epic', 1280).showName, singleFrame('epic', 1280).showRarity, singleFrame('epic', 1360).showRarity]).toEqual([true, false, true]);
-    expect(singleFrame('legendary', Infinity)).toMatchObject({ done: true, flash: false, shakeX: 0, burstAge: null });
+  it('opens onto a tinted silhouette, bursts once and settles with no residual effects', () => {
+    const plan = revealSchedule([roll('legendary', 'ew3')]);
+    expect(revealFrame(plan, plan.openAt).phase).toBe('open');
+    expect(revealFrame(plan, plan.openedAt)).toMatchObject({ phase: 'silhouette', color: 'legendary' });
+    expect(revealFrame(plan, plan.cueAt - 1).phase).toBe('silhouette');
+    expect([0, 40, 80].map(age => revealFrame(plan, plan.cueAt + age).flash)).toEqual([true, true, false]);
+    expect([0, 40, 80, 120, 160].map(age => revealFrame(plan, plan.cueAt + age).shakeX)).toEqual([1, -1, 1, -1, 0]);
+    expect(revealFrame(plan, plan.doneAt - 1).phase).toBe('burst');
+    expect(revealFrame(plan, plan.doneAt)).toMatchObject({ phase: 'result', burstAge: null, flash: false, shakeX: 0 });
+  });
+  it('lands all ten backs, then pauses before every epic and legendary flip, in roll order', () => {
+    const pulls = (['rare', 'common', 'epic', 'legendary', 'rare', 'legendary', 'common', 'common', 'rare', 'epic'] as const).map(r => roll(r));
+    const plan = revealSchedule(pulls), ten = gate.tenPull;
+    const flight = revealFrame(plan, plan.openedAt + ten.flightMs);
+    expect(flight.phase).toBe('flight');
+    expect(flight.cards[0]!.travel).toBe(1); expect(flight.cards[9]!.travel).toBeLessThan(1);
+    const backs = revealFrame(plan, plan.landedAt).cards;
+    expect(backs).toHaveLength(10);
+    expect(backs.every(card => card.face === 'back' && card.travel === 1)).toBe(true);
+    let next = plan.landedAt + ten.faceDownMs;
+    pulls.forEach(({ rarity }, i) => {
+      const at = plan.flipAt[i]!;
+      expect(at - next).toBe(ten.pauseBeforeMs[rarity]);
+      const flipped = revealFrame(plan, at + ten.flipMs);
+      expect(flipped.cards.filter(card => card.face === 'front')).toHaveLength(i + 1);
+      expect(flipped.flash).toBe(i === plan.highlight);
+      next = at + ten.flipMs + ten.readMs;
+    });
+  });
+  it('returns the normal final frame on skip or reduced motion at every beat', () => {
+    for (const size of [1, 10]) {
+      const plan = revealSchedule(Array.from({ length: size }, () => roll('legendary', 'ew3')));
+      const final = revealFrame(plan, plan.doneAt);
+      expect(final.done).toBe(true);
+      expect(revealFrame(plan, Infinity)).toEqual(final);
+      for (let ms = 0; ms <= plan.doneAt; ms += gate.frameStepMs) expect(revealFrame(plan, ms, true)).toEqual(final);
+    }
   });
   it('burst cue rule: legendary → sting; else pity → gacha_pity; else gacha_reveal_<rarity>', () => {
     expect([burstCue('legendary', true), burstCue('epic', true), burstCue('rare', false)]).toEqual(['gacha_legendary_sting', 'gacha_pity', 'gacha_reveal_rare']);
@@ -33,21 +107,6 @@ describe('gacha single reveal', () => {
   it('particles are seeded and deterministic, clipped to their life', () => {
     expect(particles('epic', 3, 80)).toEqual(particles('epic', 3, 80)); expect(particles('epic', 3, 80)).toHaveLength(16);
     expect(particles('epic', 3, 320)).toHaveLength(0); expect(particles('common', 0, 0, 0.25)).toHaveLength(2);
-  });
-});
-
-describe('gacha 10-pull', () => {
-  const plain = ['common', 'rare', 'common', 'rare', 'common', 'common', 'rare', 'common', 'common', 'rare'] as const;
-  it('flips card i at 120 + i×120; badges at last flip + 160 = 1360 ms with nothing Epic+ (gacha.md §8 table; its prose says 1480)', () => {
-    const schedule = tenSchedule(plain); expect(schedule.flipAt).toEqual([120, 240, 360, 480, 600, 720, 840, 960, 1080, 1200]); expect(schedule.badgesAt).toBe(1360);
-    expect(tenFrame(plain, 1360).done).toBe(true); expect(tenFrame(plain, 1359).badges).toBe(false);
-  });
-  it('holds 400 ms after the highest Epic+ card (ties: first); only a legendary highest card flashes/shakes', () => {
-    const rarities = ['common', 'epic', 'rare', 'legendary', 'rare', 'legendary', 'common', 'common', 'common', 'common'] as const;
-    expect(highestCard(rarities)).toBe(3);
-    const schedule = tenSchedule(rarities); expect(schedule.flipAt[4]! - schedule.flipAt[3]!).toBe(520); expect(schedule.badgesAt).toBe(1360 + 400);
-    expect(tenFrame(rarities, schedule.flipAt[3]! + 160).flash).toBe(true);
-    expect(tenFrame(plain, 500).flash).toBe(false);
   });
 });
 

@@ -53,48 +53,48 @@
     "sampling": "nearest"
   },
   "font": {
-    "family": "Noto Sans",
+    "family": "Galmuri11",
     "licence": "OFL-1.1",
-    "source": "https://github.com/notofonts/noto-fonts",
-    "files": "../fonts/ (NotoSans-Regular.ttf, NotoSans-SemiBold.ttf, Galmuri11.ttf symbol fallback)",
-    "note": "Noto Sans Regular and SemiBold are the primary antialiased text faces; GameSymbols supplies explicit local symbol fallback before system-ui.",
+    "source": "https://github.com/quiple/galmuri",
+    "files": "public/fonts/Galmuri11.ttf and Galmuri11-Bold.ttf",
+    "note": "Shared canvas and DOM face.",
     "body": {
-      "face": "Noto Sans Regular",
+      "face": "Galmuri11",
       "cssPx": 12,
       "capPx": 9,
       "capTopPx": 2,
       "lineBoxPx": 16
     },
     "bodyBold": {
-      "face": "Noto Sans SemiBold",
+      "face": "Galmuri11 Bold",
       "cssPx": 12,
       "capPx": 9,
       "capTopPx": 2,
       "lineBoxPx": 16
     },
     "heading": {
-      "face": "Noto Sans SemiBold",
+      "face": "Galmuri11 Bold",
       "cssPx": 22,
       "capPx": 16,
       "capTopPx": 3,
       "lineBoxPx": 26
     },
     "small": {
-      "face": "Noto Sans Regular",
+      "face": "Galmuri11",
       "cssPx": 11,
       "capPx": 8,
       "capTopPx": 2,
       "lineBoxPx": 14,
       "use": "non-essential hints only"
     },
-    "render": "textBaseline alphabetic; measure exact face and weight; retain grayscale antialias alpha; padded raster includes accent and descender bounds",
+    "render": "Nearest-neighbour canvas raster at whole-pixel positions.",
     "slotOffsetY": {
       "body": 0,
       "bodyBold": 0,
       "heading": 0,
       "small": 0
     },
-    "slotOffsetNote": "Legacy positions remain in older design notes. Active Noto rendering uses no optical slot correction.",
+    "slotOffsetNote": "All text slots use source pixels.",
     "glyphs": {
       "middot": "U+00B7 present",
       "plus": "present",
@@ -102,18 +102,17 @@
       "star": "U+2605 present (12x11 ink at 12px)",
       "times": "U+00D7 present",
       "arrow": "U+2192 present"
-    },
-    "boldCoverageWarning": "Both Noto weights cover supported Vietnamese and Cyrillic."
+    }
   },
   "palette": {
-    "ink": "#0d121b",
-    "base": "#17212d",
-    "panel": "#202c39",
-    "raised": "#293948",
-    "edge": "#536276",
-    "text": "#f2e9cf",
-    "muted": "#b0bcc8",
-    "gold": "#e9bd68",
+    "ink": "#12151e",
+    "base": "#191d29",
+    "panel": "#222634",
+    "raised": "#343949",
+    "edge": "#555766",
+    "text": "#f4e9ce",
+    "muted": "#bcb8bf",
+    "gold": "#edc486",
     "green": "#90c99b",
     "red": "#de7c80",
     "blue": "#8dbfe3",
@@ -323,8 +322,10 @@
   },
   "gacha": {
     "frameStepMs": 40,
-    "labelRarityDelayMs": 80,
-    "skipGuardMs": 120,
+    "chargeMs": 1480,
+    "leakMs": 1000,
+    "fakeoutMs": 600,
+    "openMs": 240,
     "particleSeed": 7,
     "flashLimiter": {
       "minGapMs": 400,
@@ -371,118 +372,10 @@
       ]
     },
     "tiers": {
-      "common": {
-        "totalMs": 1000,
-        "silhouette": false,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            360
-          ],
-          "flip": [
-            360,
-            520
-          ],
-          "burst": [
-            520,
-            640
-          ],
-          "labels": [
-            640,
-            1000
-          ]
-        }
-      },
-      "rare": {
-        "totalMs": 1280,
-        "silhouette": false,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            560
-          ],
-          "flip": [
-            560,
-            720
-          ],
-          "burst": [
-            720,
-            880
-          ],
-          "labels": [
-            880,
-            1280
-          ]
-        }
-      },
-      "epic": {
-        "totalMs": 1600,
-        "silhouette": true,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            760
-          ],
-          "flip": [
-            760,
-            920
-          ],
-          "silhouetteHold": [
-            920,
-            1120
-          ],
-          "burst": [
-            1120,
-            1280
-          ],
-          "labels": [
-            1280,
-            1600
-          ]
-        }
-      },
-      "legendary": {
-        "totalMs": 2000,
-        "silhouette": true,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            960
-          ],
-          "flip": [
-            960,
-            1120
-          ],
-          "silhouetteHold": [
-            1120,
-            1360
-          ],
-          "burst": [
-            1360,
-            1520
-          ],
-          "labels": [
-            1520,
-            2000
-          ]
-        }
-      }
+      "common": { "silhouetteMs": 240, "burstMs": 240 },
+      "rare": { "silhouetteMs": 320, "burstMs": 280 },
+      "epic": { "silhouetteMs": 1520, "burstMs": 520 },
+      "legendary": { "silhouetteMs": 2040, "burstMs": 600 }
     },
     "audio": {
       "pull": "gacha_pull",
@@ -496,10 +389,12 @@
       "burstRule": "legendary -> gacha_legendary_sting (fallback gacha_reveal_legendary); else pity -> gacha_pity; else gacha_reveal_<rarity>"
     },
     "tenPull": {
-      "staggerMs": 120,
-      "backsInMs": 120,
+      "flightMs": 560,
+      "launchStaggerMs": 40,
+      "faceDownMs": 520,
       "flipMs": 160,
-      "highlightHoldMs": 400,
+      "readMs": 360,
+      "pauseBeforeMs": { "common": 0, "rare": 0, "epic": 160, "legendary": 200 },
       "cardRects": [
         [
           24,
@@ -587,11 +482,6 @@
       "legendary": "crown + beam",
       "stampAt": "burst start",
       "source": "rarityDrop.shapes"
-    },
-    "legendaryBeam": {
-      "growMs": "burst [1360,1520], 18 px per 40 ms",
-      "hold": "static until the reveal is dismissed",
-      "reducedMotion": "static from burst start"
     }
   },
   "offlineRewards": {
@@ -1471,7 +1361,7 @@
   },
   "compactMenu": {
     "source": "ui/compact-menu.md; feat/enhancement 235dd9e restyle",
-    "font": "Noto Sans Regular/SemiBold 12/22 and 11px metadata; real draw y, no slot correction",
+    "font": "Galmuri11 Regular / Bold",
     "lane": {
       "width": 640,
       "height": 160,

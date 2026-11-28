@@ -198,6 +198,9 @@ export function isEquipped(state: GameState, id: ItemId): boolean {
 export function lockedCount(state: GameState): number {
   return state.inventory.filter(item => item.locked).length;
 }
+export function salvageGold(item: Gear): number {
+  return Math.round(item.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[item.rarity]);
+}
 /** Adds an item to the inventory; over the cap the lowest-score candidate is salvaged. */
 export function addGear(state: GameState, item: Gear): void {
   state.inventory.push(item); state.economyRevision += 1;
@@ -209,7 +212,7 @@ export function addGear(state: GameState, item: Gear): void {
   const lowest = [...candidates].sort((a, b) => gearScore(a) - gearScore(b) || compareItemIds(a.id, b.id))[0];
   if (!lowest) return;
   const equipped = isEquipped(state, lowest.id);
-  const gold = Math.round(lowest.spent * CONFIG.runtime.salvageSpentPct + CONFIG.runtime.salvageBase * CONFIG.gear.rarityMult[lowest.rarity]);
+  const gold = salvageGold(lowest);
   state.inventory = state.inventory.filter(entry => entry.id !== lowest.id);
   for (const hero of state.roster) for (const slot of slotSchema.options) if (hero.equipment[slot] === lowest.id) hero.equipment[slot] = null;
   goldChange(state, gold, 'salvage');

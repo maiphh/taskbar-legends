@@ -1,14 +1,14 @@
-import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, stageConfig, statusEffectsConfig, ticksForSeconds } from './config';
+import { CONFIG, TICK_MS, heroConfig, isBossEnemyId, statusEffectsConfig, ticksForSeconds } from './config';
 import { AtlasLibrary } from './atlas';
 import type { AnimationName } from './atlas';
 import { PixelUI, roundHalfEven } from './pixel-ui';
 import { BODY, loadFonts } from './font';
-import { bannerFrame, popupFrame } from './motion';
+import { popupFrame } from './motion';
 import { itemId } from './core/model';
 import type { GameEvent, GameState, Unit } from './core/model';
-import { bossHpBar, stageCue, upgradePopups } from './core/selectors';
+import { bossHpBar, upgradePopups } from './core/selectors';
 import { ellipsize } from './text-fit';
-import { enemyFormationX, presentationCombatTime } from './core/party-combat';
+import { PARTY_V2, enemyFormationX, presentationCombatTime } from './core/party-combat';
 import { activePartyEffects } from './core/party-effects';
 import { getPartyEnemyDefinition } from './core/party-enemies';
 import { isStatusBoss } from './core/status-effects';
@@ -23,6 +23,7 @@ import { easeReturn } from './core/turn/presentation';
 import { gaugeRatio } from './core/turn/action-bar';
 import { stepCombatCamera, type CombatCameraInput } from './party-camera';
 import { compactLaneLayout } from './compact-lane-layout';
+import { DungeonEffects } from './dungeon-effects';
 import { LegendaryEffects } from './legendary-effects';
 import { consumeNewEvents, triggerLegendaryEvent } from './legendary-events';
 import { effectRandom } from './legendary-effects';
@@ -50,9 +51,13 @@ export class Renderer {
   readonly atlases = new AtlasLibrary();
   readonly ui: PixelUI;
   readonly legendaryEffects = new LegendaryEffects();
+  private readonly bursts = new DungeonEffects();
+  private marchOffset = 0;
+  private previousTick = 0;
+  private marching = false;
   private effectEventSeq = 0;
   private effectEventsInitialized = false;
-  baselineLegendaryEvents(seq: number): void { this.effectEventSeq = seq; this.effectEventsInitialized = true; this.legendaryEffects.clear(); this.laneClock.reset(); this.lanePositions.reset(); }
+  baselineLegendaryEvents(seq: number): void { this.effectEventSeq = seq; this.effectEventsInitialized = true; this.legendaryEffects.clear(); this.bursts.clear(); this.previousTick = 0; this.marchOffset = 0; this.laneClock.reset(); this.lanePositions.reset(); }
   private holySheet: HTMLImageElement | null = null;
   private signatureSheet: HTMLImageElement | null = null;
   private treasureSheet: HTMLImageElement | null = null;
@@ -63,7 +68,7 @@ export class Renderer {
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) throw new Error('Canvas 2D is unavailable');
     this.ctx = ctx; this.ui = new PixelUI(this.atlases, controls);
-    void loadFonts().then(() => document.fonts.load('700 16px GamePixel')).then(() => { this.pixelFontReady = true; this.ui.onRedraw?.(); }).catch(() => { /* no FontFace (tests/headless): keep fallback font */ });
+    void loadFonts().then(() => document.fonts.load('700 16px Galmuri11')).then(() => { this.pixelFontReady = true; this.ui.onRedraw?.(); }).catch(() => { /* no FontFace (tests/headless): keep fallback font */ });
     this.holySheet = this.loadVfx('holy-smite'); this.signatureSheet = this.loadVfx('pvfx-crit-hit-gold'); this.treasureSheet = this.loadVfx('treasure-glint');
     this.legendarySword = this.loadUiIcon('sword'); this.legendaryArmor = this.loadUiIcon('armor'); this.legendaryCharm = this.loadUiIcon('potion');
   }
@@ -261,7 +266,7 @@ export class Renderer {
     }
     const hurt = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
     if (age(hurt) < (key ? this.atlases.durationMs(key, 'hit') ?? CONFIG.view.hurtFallbackMs : CONFIG.view.hurtFallbackMs)) return { name: 'hit', ageMs: age(hurt) };
-    return { name: unit.moving ? 'run' : 'idle', ageMs: Math.max(0, now - (unit.nativeBornTick ?? unit.bornTick)) * TICK_MS };
+    return { name: unit.moving || (this.marching && unit.side === 'hero') ? 'run' : 'idle', ageMs: Math.max(0, now - (unit.nativeBornTick ?? unit.bornTick)) * TICK_MS };
   }
   render(state: GameState, paused = false): void {
     this.rendering = true;
@@ -271,33 +276,54 @@ export class Renderer {
     this.lanePositions.beginFrame();
     this.lanePresentationTime(state);
     const ctx = this.ctx, view = CONFIG.view, palette = CONFIG.ui.palette, height = this.ui.height();
+    const still = this.ui.reducedMotion;
+    const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
+    this.marching = !still && (state.phase.kind === 'rest' || state.enemies.some(unit => unit.moving && unit.hp > 0));
+    if (this.marching) this.marchOffset = (this.marchOffset + Math.min(3, Math.max(0, state.tick - this.previousTick))) % 256;
+    this.previousTick = state.tick;
+    if (still) this.bursts.clear();
     if (!this.effectEventsInitialized) { this.effectEventSeq = state.eventSeq; this.effectEventsInitialized = true; }
     this.effectEventSeq = consumeNewEvents(state.eventSeq, this.effectEventSeq, state.events, event => {
       triggerLegendaryEvent(event, state.party, state.enemies, value => this.legendaryEffects.trigger(value.kind, performance.now(), value.label, value));
+      const data = event.data;
+      if (still || state.tick - event.tick >= 8) return;
+      if (data.type !== 'hit' && data.type !== 'death' && data.type !== 'heal' && data.type !== 'gear') return;
+      const targetId = data.type === 'gear' ? state.party[0]?.id : data.type === 'death' ? data.unitId : data.targetId;
+      const unit = state.party.find(u => u.id === targetId) ?? state.enemies.find(u => u.id === targetId);
+      if (unit) {
+        const bossHit = data.type === 'hit' && (unit.boss || state.enemies.some(u => u.boss && u.id === data.attackerId));
+        this.bursts.add(data.type, this.position(unit, state), baselineY - (data.type === 'death' ? 8 : 24),
+          event.tick, unit.side === 'hero' ? -1 : 1, Boolean(bossHit));
+      }
     });
-    const coreY = height - CONFIG.ui.closed.coreHeight, baselineY = coreY + CONFIG.ui.closed.baselineCoreLocalY;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.zoom, 0, 0, this.zoom, 0, 0);
     ctx.fillStyle = palette.base; ctx.fillRect(0, coreY, this.width, CONFIG.ui.closed.coreHeight);
     ctx.fillStyle = palette.edge; ctx.fillRect(0, coreY, this.width, 1);
     const field = this.field();
     ctx.save(); ctx.beginPath(); ctx.rect(field.x, 0, field.width, height); ctx.clip();
-    ctx.fillStyle = '#293c35'; ctx.fillRect(field.x, coreY + 48, field.width, 32);
-    ctx.fillStyle = '#3f5542'; ctx.fillRect(field.x, coreY + 48, field.width, 2);
-    for (let x = field.x + 5; x < field.x + field.width; x += 28) { ctx.fillStyle = x % 3 ? '#52664a' : '#223d32'; ctx.fillRect(x, coreY + 51, 2, 2); ctx.fillRect(x + 12, coreY + 65, 3, 1); }
+    ctx.translate(this.bursts.shake(state.tick), 0);
+    this.ui.drawCorridor(ctx, this.width, baselineY - 4, this.marchOffset, still ? 0 : state.tick);
     const bossBar = bossHpBar(state);
-    // Boss plate sits at the top of the effects ceiling so scale-2 sprites keep the core strip
-    // and party HP / status rows (around coreY - 6) never collide with the name or telegraph.
-    const bossBarX = Math.round(field.x + 24), bossBarW = Math.max(120, Math.round(field.width - 48));
-    const bossBarH = Math.max(14, BODY + 2);
-    const bossTelegraphGap = 2;
-    const bossTelegraphH = bossBar?.telegraph ? BODY + 2 : 0;
-    const bossPlateBlock = bossBarH + (bossTelegraphH > 0 ? bossTelegraphGap + bossTelegraphH : 0);
-    const bossBarY = bossBar ? 8 : coreY;
-    const bossPlateBottom = bossBar ? bossBarY + bossPlateBlock : coreY;
+    const arena = { top: coreY - 32, bottom: height - (bossBar ? 18 : 0) };
     const unitHpBaseY = coreY + CONFIG.ui.unitHpBars.coreLocalY;
     const enemies = state.enemies;
     const units = [...state.party, ...enemies].sort((a, b) => this.position(a, state) - this.position(b, state));
+    // Paint marked floor tiles behind the party so target warnings leave the sprites and icons intact.
+    for (const enemy of enemies) {
+      const mark = enemy.specialAction;
+      if (mark?.state !== 'areaMark') continue;
+      const pulse = !still && state.tick % 8 < 4;
+      ctx.fillStyle = mark.global ? (pulse ? '#e1795f' : '#b3615c') : (pulse ? '#efbe70' : '#c18d54');
+      for (const ally of state.party) {
+        if (ally.hp <= 0) continue;
+        if (!mark.global && Math.abs(ally.x - mark.centerX) > mark.radius + (ally.radius ?? PARTY_V2.radius.normal)) continue;
+        const x = this.position(ally, state), radius = 20;
+        const y = baselineY - ally.slot * 4;
+        ctx.fillRect(x - radius, y, radius * 2, 2);
+        for (let dx = -radius; dx < radius; dx += 8) ctx.fillRect(x + dx, y + 2, 3, 2);
+      }
+    }
     for (const unit of units) {
       const x = this.position(unit, state);
       const depth = unit.side === 'hero' ? unit.slot * 4 : 0;
@@ -311,7 +337,7 @@ export class Renderer {
       const anim = this.animation(state, unit, key);
       const lastHit = this.latest(state, event => event.data.type === 'hit' && event.data.targetId === unit.id);
       const lastHitAge = lastHit && lastHit.combatEncounter === state.encounter ? this.lanePresentationTime(state) - (lastHit.combatTick ?? lastHit.tick) : null;
-      const flash = lastHit !== undefined && lastHitAge !== null && lastHitAge * TICK_MS < view.hitFlashMs;
+      const flash = !still && lastHit !== undefined && lastHitAge !== null && lastHitAge >= 0 && lastHitAge * TICK_MS < view.hitFlashMs;
       const flip = anim.returning ? unit.side === 'hero' : unit.facing === -1;
       const bossScale = unit.boss && enemyDef?.scale ? Math.max(1, Math.round(enemyDef.scale)) : 1;
       const isLaneBoss = !!(unit.boss && isBossEnemyId(unit.sourceId));
@@ -320,20 +346,20 @@ export class Renderer {
         ctx.fillStyle = enemyDef.outline;
         ctx.fillRect(Math.round(x - 18 * bossScale), unitBaseline - 2, Math.round(36 * bossScale), 3);
       }
-      // Plate is painted after units, so scale-2 bosses stay unclipped and read as large.
       const tint = isLaneBoss ? enemyDef?.tint : undefined;
-      const outline = isLaneBoss ? enemyDef?.outline : undefined;
-      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline)) {
+      const warning = isLaneBoss && bossBar && (bossBar.enraged || bossBar.telegraph);
+      const outline = warning ? (!still && state.tick % 12 < 4 ? '#ffcf82' : '#e69668') : isLaneBoss ? enemyDef?.outline : undefined;
+      // Boss art can extend behind the HUD rail at its configured scale.
+      const lane = unit.boss ? undefined : arena;
+      if (!key || !this.atlases.draw(ctx, key, anim.name, anim.ageMs, x, unitBaseline, flip, bossScale, flash, tint, outline, lane)) {
         const w = unit.boss ? view.bossWidth * bossScale : view.heroWidth, h = unit.boss ? view.bossHeight * bossScale : view.heroHeight;
         ctx.fillStyle = unit.hp <= 0 ? '#52616b' : (enemyDef?.tint ?? color);
         ctx.fillRect(x - w / 2, unitBaseline - h, w, h);
       }
       if (unit.hp <= 0) continue;
       const hpWidth = unit.side === 'hero' ? 34 : 32;
-      // Boss status icons hang just under the plate; party bars keep their usual ceiling slot.
-      const statusClearance = (statusEffectsConfig()?.display.rowOffsetAboveHpPx ?? 13) + 2;
-      const hpY = isLaneBoss ? bossPlateBottom + statusClearance : unitHpBaseY - depth;
-      // Boss uses the top-of-lane HP plate; skip the tiny per-unit bar, but still draw status icons.
+      const hpY = unitHpBaseY - depth;
+      // Boss uses the floor-level HP plate; skip the tiny per-unit bar, but still draw status icons.
       if (!isLaneBoss) {
         ctx.fillStyle = palette.ink; ctx.fillRect(x - hpWidth / 2, hpY, hpWidth, CONFIG.ui.unitHpBars.height);
         ctx.fillStyle = '#29362e'; ctx.fillRect(x - hpWidth / 2 + 1, hpY + 1, hpWidth - 2, CONFIG.ui.unitHpBars.height - 2);
@@ -352,32 +378,7 @@ export class Renderer {
         }
         if (unit.shield > 0) { ctx.strokeStyle = palette.blue; ctx.strokeRect(x - 17.5, unitBaseline - 49.5, 35, 50); }
       }
-      this.drawStatusRow(ctx, state, unit, x, hpY);
-    }
-    if (bossBar) {
-      const barX = bossBarX, barW = bossBarW, barY = bossBarY, barH = bossBarH;
-      const measure = (value: string): number => this.ui.measureText(value, BODY, true);
-      ctx.fillStyle = palette.ink; ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
-      ctx.fillStyle = '#1a1014'; ctx.fillRect(barX, barY, barW, barH);
-      ctx.fillStyle = bossBar.enraged ? '#ff6b3d' : '#d44a4a';
-      ctx.fillRect(barX, barY, Math.max(0, Math.round(barW * bossBar.ratio)), barH);
-      ctx.fillStyle = '#3a2024'; ctx.fillRect(barX, barY + barH - 2, barW, 2);
-      const hpRaw = `${bossBar.hp}/${bossBar.maxHp}${bossBar.enraged ? '  ENRAGED' : ''}`;
-      const hpText = ellipsize(hpRaw, barW, measure);
-      const hpWidth = measure(hpText);
-      const nameMax = Math.max(0, barW - hpWidth - 8);
-      const nameText = ellipsize(bossBar.name, nameMax > 0 ? nameMax : barW, measure);
-      const textY = barY + Math.round((barH - BODY) / 2);
-      this.ui.text(ctx, nameText, barX + 2, textY, '#f2e9cf', BODY, true);
-      this.ui.text(ctx, hpText, barX + barW - hpWidth - 2, textY, '#f2e9cf', BODY, true);
-      if (bossBar.telegraph) {
-        const telegraphY = barY + barH + bossTelegraphGap;
-        const telegraphWidth = measure(bossBar.telegraph);
-        const telegraphX = barX + Math.round((barW - telegraphWidth) / 2);
-        ctx.fillStyle = 'rgba(40,12,12,.92)';
-        ctx.fillRect(Math.max(barX, telegraphX - 6), telegraphY, Math.min(barW, telegraphWidth + 12), bossTelegraphH);
-        this.ui.text(ctx, bossBar.telegraph, telegraphX, telegraphY + Math.round((bossTelegraphH - BODY) / 2), '#ffd16e', BODY, true);
-      }
+      if (!isLaneBoss) this.drawStatusRow(ctx, state, unit, x, hpY);
     }
     {
       const allUnits = [...state.party, ...state.enemies];
@@ -393,11 +394,6 @@ export class Renderer {
           let telegraphLabel = special.global ? 'GLOBAL' : null;
           if (enemyDef.enrage && special.abilityId === enemyDef.enrage.abilityId) telegraphLabel = enemyDef.enrage.telegraphLabel;
           else if (enemyDef.special && (enemyDef.special.kind === 'bossLocal' || enemyDef.special.kind === 'bossGlobal')) telegraphLabel = enemyDef.special.telegraphLabel;
-          if (special.global) {
-            for (const ally of state.party.filter(unit => unit.hp > 0)) { const allyX = this.position(ally, state); ctx.beginPath(); ctx.arc(allyX, baselineY - 18, 20, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-          } else {
-            ctx.beginPath(); ctx.arc(sx(special.centerX), baselineY - 18, special.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          }
           // Boss plate already owns the telegraph label; skip the world cue so it cannot overlap the name.
           if (telegraphLabel && !plateOwnsTelegraph) {
             const labelX = Math.max(field.x + 30, Math.min(field.x + field.width - 30, sx(special.centerX)));
@@ -462,6 +458,7 @@ export class Renderer {
         ctx.fillStyle = '#f4d37e'; ctx.fillRect(targetX - 2, coreY + 11, 4, 2); ctx.fillRect(targetX - 1, coreY + 13, 2, 2);
       }
     }
+    this.bursts.draw(ctx, state.tick);
     const lifetime = ticksForSeconds(CONFIG.runtime.damageLabelSeconds), bucket = ticksForSeconds(CONFIG.runtime.damageCoalesceSeconds);
     const labelClock = this.lanePresentationTime(state);
     const statusDisplay = statusEffectsConfig()?.display;
@@ -485,7 +482,7 @@ export class Renderer {
       counts.set(group.targetId, count + 1);
       const unit = units.find(unit => unit.id === group.targetId); if (!unit) continue;
       const age = labelClock - group.tick, x = this.position(unit, state) - 10 + count * 6;
-      const y = Math.max(8, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
+      const y = Math.max(arena.top + 1, baselineY - 64 - Math.round(CONFIG.runtime.damageRisePx * age / lifetime) - count * 10);
       const label = `${group.heal ? '+' : '-'}${group.amount}`;
       for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) this.ui.text(ctx, label, x + (dx ?? 0), y + (dy ?? 0), palette.ink, BODY, true);
       const color = group.heal
@@ -510,15 +507,35 @@ export class Renderer {
       this.ui.text(ctx, text, x, y, color, BODY, true);
     }
     ctx.restore();
-    this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
-    this.drawFeedback(ctx, state, units, field, coreY);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, coreY - 48, this.width, 128); ctx.clip();
+    this.drawFeedback(ctx, state, units, coreY);
     this.drawLegendaryEffect(ctx, state, field, coreY);
+    ctx.restore();
+    this.ui.draw(ctx, state, this.width, coreY, paused, this.zoom / this.dpr);
+    if (bossBar && !this.ui.welcome) {
+      const x = 4, y = height - 18, w = this.width - 8;
+      const accent = bossBar.enraged ? '#ff9761' : '#ce7473';
+      ctx.fillStyle = '#151922'; ctx.fillRect(x, y, w, 18);
+      ctx.fillStyle = '#604049'; ctx.fillRect(x, y, w, 1);
+      ctx.fillStyle = '#4c333b'; ctx.fillRect(x + 2, y + 14, w - 4, 3);
+      ctx.fillStyle = accent; ctx.fillRect(x + 2, y + 14, Math.round((w - 4) * bossBar.ratio), 3);
+      const hp = `${bossBar.hp}/${bossBar.maxHp}`;
+      const hpX = this.width - 10 - Math.ceil(this.ui.measureText(hp));
+      this.ui.text(ctx, hp, hpX, y, palette.text);
+      const warning = bossBar.telegraph ?? (bossBar.enraged ? 'ENRAGED' : '');
+      const warningX = hpX - 12 - Math.ceil(this.ui.measureText(warning, BODY, true));
+      this.ui.text(ctx, warning, warningX, y, '#ffd68a', BODY, true);
+      const boss = enemies.find(unit => unit.id === bossBar.unitId);
+      const nameEnd = boss ? this.drawStatusRow(ctx, state, boss, warningX - 8, y + 14, true) : warningX;
+      this.ui.text(ctx, ellipsize(bossBar.name, nameEnd - 14, v => this.ui.measureText(v, BODY, true)), 10, y, accent, BODY, true);
+    }
     this.lanePositions.endFrame();
     this.rendering = false; this.frameLaneTime = null;
   }
-  private drawStatusRow(ctx: CanvasRenderingContext2D, state: GameState, unit: Unit, x: number, hpY: number): void {
+  private drawStatusRow(ctx: CanvasRenderingContext2D, state: GameState, unit: Unit, x: number, hpY: number, alignRight = false): number {
     const config = statusEffectsConfig();
-    if (!config) return;
+    if (!config) return x;
     const display = config.display;
     const iconPx = display.iconPx, gap = display.gapPx;
     const maxVisible = isStatusBoss(unit) ? display.maxVisibleBoss : display.maxVisible;
@@ -583,7 +600,7 @@ export class Renderer {
     const visible = overflow > 0 ? items.slice(0, maxVisible - 1) : items.slice(0, maxVisible);
     const chipW = overflow > 0 ? 7 : 0;
     const rowW = visible.length * iconPx + Math.max(0, visible.length - 1) * gap + (overflow > 0 ? gap + chipW : 0);
-    const rowLeft = Math.round(x - rowW / 2);
+    const rowLeft = Math.max(1, Math.min(this.width - rowW - 1, Math.round(x - (alignRight ? rowW : rowW / 2))));
     const rowTop = Math.round(hpY - display.rowOffsetAboveHpPx);
     let cursor = rowLeft;
     for (const item of visible) {
@@ -607,11 +624,12 @@ export class Renderer {
       cursor += iconPx + gap;
     }
     if (overflow > 0) drawOverflowChip(ctx, overflow, cursor, rowTop);
+    return rowLeft;
   }
 
   private drawLegendaryEffect(ctx: CanvasRenderingContext2D, state: GameState, field: { x: number; width: number }, coreY: number): void {
     const reducedMotion = this.ui.reducedMotion;
-    const effect = this.legendaryEffects.current(performance.now(), reducedMotion); if (!effect) return;
+    const effect = this.legendaryEffects.current(performance.now(), reducedMotion); if (!effect || (this.compact && effect.kind === 'drop')) return;
     const gold = CONFIG.ui.rarity.legendary.frame;
     const bannerX = Math.floor(field.x + field.width / 2);
     const anchor = effect.anchorId ? [...state.party, ...state.enemies].find(unit => unit.id === effect.anchorId) : undefined;
@@ -623,7 +641,7 @@ export class Renderer {
     if (shake && !reducedMotion) { const cadence = Number(shake.params.cadenceMs ?? 45), offset = Math.floor(effectRandom(effect.seed, Math.floor((effect.age - shake.startMs) / cadence)) * 5) - 2; ctx.translate(offset, 0); }
     if (reducedMotion) {
       if (effect.kind === 'drop') this.drawLegendaryDropCard(ctx, anchorX, cy + 23, gold, effect.slot, 48, true);
-      this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, 4, effect.age, effect.spec.durationMs, true);
+      this.drawLegendaryBanner(ctx, effect.label, bannerX, 32, gold, 4, effect.age, effect.spec.durationMs, true);
     } else {
       if (has('flash')) {
         const age = effect.age - has('flash')!.startMs;
@@ -645,7 +663,7 @@ export class Renderer {
         const rayLayer = has('rays'), particleLayer = has('particles');
         if (rayLayer || particleLayer) this.drawLegendaryBurst(ctx, anchorX, cy, effect, gold, rayLayer, particleLayer);
         const banner = has('banner');
-        this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1120), false);
+        this.drawLegendaryBanner(ctx, effect.label, bannerX, 32, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1120), false);
       } else {
         const beam = has('beam'); if (beam) this.drawDropBeam(ctx, anchorX, effect.age - beam.startMs, beam.endMs - beam.startMs, gold, Number(beam.params.width ?? 24));
         const sheet = has('sheet');
@@ -662,7 +680,7 @@ export class Renderer {
           ctx.save(); ctx.globalAlpha = alpha; this.drawLegendaryDropCard(ctx, anchorX, cy + 23, gold, effect.slot, stage, false, effect.age); ctx.restore();
         }
         const banner = has('banner');
-        this.drawLegendaryBanner(ctx, effect.label, bannerX, 8, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1450), false);
+        this.drawLegendaryBanner(ctx, effect.label, bannerX, 32, gold, this.bannerScale(effect.age - (banner?.startMs ?? 0), Number(banner?.params.stepMs ?? 48), Number(banner?.params.entranceMs ?? 240)), effect.age, Number(banner?.params.holdMs ?? 1450), false);
       }
     }
     ctx.restore();
@@ -670,15 +688,15 @@ export class Renderer {
   private bannerScale(age: number, stepMs: number, entranceMs: number): number { return age < entranceMs ? [0, 1, 2, 3, 4][Math.min(4, Math.floor(age / stepMs))]! : 4; }
   private drawLegendaryBanner(ctx: CanvasRenderingContext2D, label: string, cx: number, y: number, gold: string, stage: number, age: number, holdMs: number, staticMode: boolean): void {
     if (!this.pixelFontReady) return;
-    const width = Math.min(340, Math.max(208, label.length * 9 + 42)), height = 34, visibleWidth = Math.floor(width * stage / 4), x = Math.floor(cx - visibleWidth / 2);
+    const width = Math.min(340, Math.max(208, label.length * 9 + 42)), height = 16, visibleWidth = Math.floor(width * stage / 4), x = Math.floor(cx - visibleWidth / 2);
     if (!visibleWidth) return;
     ctx.save(); ctx.globalAlpha = staticMode ? 1 : age <= holdMs ? 1 : age < holdMs + 180 ? 0.5 : 0;
     ctx.beginPath(); ctx.rect(x, y, visibleWidth, height); ctx.clip();
     ctx.fillStyle = '#101c27'; ctx.fillRect(x, y, width, height); ctx.fillStyle = '#735329'; ctx.fillRect(x + 3, y + 3, width - 6, height - 6);
     ctx.fillStyle = '#202c39'; ctx.fillRect(x + 5, y + 5, width - 10, height - 10); ctx.fillStyle = gold; ctx.fillRect(x, y, width, 3); ctx.fillRect(x, y + height - 3, width, 3); ctx.fillRect(x, y, 3, height); ctx.fillRect(x + width - 3, y, 3, height);
     ctx.fillStyle = '#fff4bf'; ctx.fillRect(x + 8, y + 8, 3, 3); ctx.fillRect(x + width - 11, y + 8, 3, 3);
-    ctx.font = '700 9px "Galmuri11", monospace'; ctx.textBaseline = 'top'; ctx.fillStyle = '#fff4bf'; ctx.fillText('LEGENDARY', x + 12, y + 5);
-    ctx.font = '700 12px "Galmuri11", monospace'; const text = label.toUpperCase(), textWidth = ctx.measureText(text).width, tx = Math.floor(cx - textWidth / 2), ty = y + 17;
+    ctx.font = '700 12px "Galmuri11", monospace'; ctx.textBaseline = 'top';
+    const text = label.toUpperCase(), tx = Math.floor(cx - ctx.measureText(text).width / 2), ty = y + 1;
     ctx.fillStyle = '#101720'; for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) ctx.fillText(text, tx + dx!, ty + dy!);
     ctx.fillStyle = '#fff0b1'; ctx.fillText(text, tx, ty);
     if (!staticMode && age < 920) { ctx.globalAlpha = 0.8; ctx.fillStyle = '#fff'; const shineX = x + 8 + Math.floor((age % 460) / 460 * (width - 16)); ctx.fillRect(shineX, y + 5, 3, height - 10); }
@@ -732,7 +750,7 @@ export class Renderer {
    * Upgrade popups and stage/boss banners (ui.md §10, ui-tokens coreLoopFeedback). Everything is derived from the event log and
    * the sim tick, so a given tick always draws the same frame. Timings are specified on a 40 ms clock; the 20 Hz sim samples it.
    */
-  private drawFeedback(ctx: CanvasRenderingContext2D, state: GameState, units: Unit[], field: { x: number; width: number }, coreY: number): void {
+  private drawFeedback(ctx: CanvasRenderingContext2D, state: GameState, units: Unit[], coreY: number): void {
     const spec = CONFIG.ui.coreLoopFeedback, still = this.ui.reducedMotion, chip = this.ui.panel !== null;
     const popups = upgradePopups(state).sort((a, b) => b.seq - a.seq).slice(0, chip ? spec.upgradePopup.panelChip.maxVisible : spec.upgradePopup.maxStacked);
     for (const [index, popup] of popups.entries()) {
@@ -744,16 +762,10 @@ export class Renderer {
         const hero = units.find(unit => unit.side === 'hero' && unit.sourceId === popup.delta.heroId);
         const width = this.ui.popupWidth(segments), centre = hero ? this.position(hero, state) : this.ui.feedbackAnchorX(popup.delta.heroId ? 'heroes' : 'gear');
         const x = Math.max(spec.upgradePopup.clampMarginPx, Math.min(this.width - spec.upgradePopup.clampMarginPx - width, roundHalfEven(centre - width / 2)));
-        this.ui.drawPopupText(ctx, segments, x, coreY + spec.upgradePopup.startTopCoreLocal - frame.rise - index * spec.upgradePopup.stackGapPx);
+        const stackTop = coreY - 32 + 1 + (popups.length - 1) * spec.upgradePopup.stackGapPx;
+        const newestY = Math.max(stackTop, coreY + spec.upgradePopup.startTopCoreLocal - frame.rise);
+        this.ui.drawPopupText(ctx, segments, x, newestY - index * spec.upgradePopup.stackGapPx);
       }
-      ctx.restore();
-    }
-    const cue = chip ? null : stageCue(state), frame = cue ? bannerFrame(cue.age * CONFIG.view.stageCueSeconds * 1000, still) : null;
-    if (cue && frame) {
-      const banner = spec.stageBanner, boss = cue.kind === 'boss', id = stageConfig(cue.stage).id;
-      ctx.save(); ctx.globalAlpha = frame.alpha;
-      // Drawn last: tall sprite effects pass behind the plate. Window y is relative to the closed overlay's top.
-      this.ui.drawBanner(ctx, (boss ? banner.boss.label : banner.stage.label).replace('{id}', id), boss, field.width > 0 ? field.x + field.width / 2 : this.width / 2, coreY - CONFIG.ui.closed.coreHeight + frame.y);
       ctx.restore();
     }
   }

@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { chromium, type Page } from 'playwright';
 import { preview } from 'vite';
-import { CONFIG, setSalvageRules, setV14Rules } from '../src/config';
+import { setSalvageRules, setV14Rules } from '../src/config';
 import { addGear, setLocked } from '../src/core/economy';
 import { createState, step } from '../src/core/game';
 import { gearTemplateId, itemId } from '../src/core/model';
@@ -43,11 +43,12 @@ const inside = async (page: Page, id: string) => page.evaluate((target: string) 
 
 try {
   for (const width of [1280, 960]) {
-    const page = await browser.newPage({ viewport: { width, height: CONFIG.ui.expanded.height }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
+    const page = await browser.newPage({ viewport: { width, height: width === 1280 ? 720 : 640 }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
     page.on('pageerror', error => errors.push(String(error)));
     await page.goto(`http://127.0.0.1:4177${process.env.VITE_BASE_PATH || '/'}?shot`, { waitUntil: 'networkidle' });
     await page.evaluate(async (state: GameState) => { window.__game.pause(); await window.__game.whenReady(); window.__game.load(state); window.__game.openPanel('gear'); }, fixture);
-    await page.waitForFunction(() => !document.querySelector<HTMLElement>('#management')?.hidden && document.querySelector('#management [data-view="stash"]') && document.querySelector('#management [data-control="gear-lock"]'));
+    await page.locator('[data-gear-page="stash"]').click();
+    await page.locator('[data-control="gear-lock"]').waitFor();
     const before = await inside(page, 'gear-lock');
     await page.screenshot({ path: `shots/${width === 1280 ? 40 : 41}-gear-lock-${width}.png`, omitBackground: true });
     await page.click('[data-control="gear-lock"]');
@@ -60,19 +61,20 @@ try {
     await page.close();
     checks[String(width)] = { lockButton: before, afterClick: after, unlockButton: unlock };
   }
-  const capPage = await browser.newPage({ viewport: { width: 1280, height: CONFIG.ui.expanded.height }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
+  const capPage = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
   capPage.on('pageerror', error => errors.push(String(error)));
   await capPage.goto(`http://127.0.0.1:4177${process.env.VITE_BASE_PATH || '/'}?shot`, { waitUntil: 'networkidle' });
   await capPage.evaluate(async (state: GameState) => {
     window.__game.pause(); await window.__game.whenReady(); window.__game.load(state); window.__game.openPanel('gear');
   }, capFixture);
+  await capPage.locator('[data-gear-page="stash"]').click();
   // Select an unlocked item (the 31st) so Lock is shown disabled at the cap.
   const unlockedId = capFixture.inventory[30]?.id;
   if (unlockedId) {
     await capPage.waitForSelector(`[data-control="gear-${unlockedId}"]`);
     await capPage.click(`[data-control="gear-${unlockedId}"]`);
   }
-  await capPage.waitForFunction(() => document.querySelector('#management [data-view="stash"]') && document.querySelector('#management [data-control="gear-lock"]'));
+  await capPage.locator('[data-control="gear-lock"]').waitFor();
   const cap = await inside(capPage, 'gear-lock');
   const capText = await capPage.locator('#management').innerText();
   await capPage.screenshot({ path: 'shots/44-gear-lock-cap-1280.png', omitBackground: true });

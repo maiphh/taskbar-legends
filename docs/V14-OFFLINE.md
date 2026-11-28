@@ -21,15 +21,22 @@ is `{ expeditionChestsPerHour 0, expeditionBestOf 1, expeditionChestMax 0, ticke
   in the optional save field `offlineTicketFrac` (0 ≤ x < 1). A `tickets` event is emitted only for a whole amount > 0.
 - `avgWallFarmClearSec` is the mean of `metrics.farmClearSeconds` (wall time per farm clear), falling back to `idle.avgFarmClearSecDefault`.
 
-## Gacha reveal (ui/gacha.md, ui/rarity-drops.md, ui.md §11, `rarityDrop` tokens)
+## Gacha reveal
 
-- 1-pull: anticipation (rim per tier), flip (48/0/48/96 px), Epic+ silhouette, burst with motes, then the card. Tier totals 1000 /
-  1280 / 1600 / 2000 ms. Legendary: one 80 ms flash through the shared limiter (≥ 400 ms apart, ≤ 2 per s) and shake [1,−1,1,−1,0].
-- 10-pull: card i flips at 120 + i × 120 ms; +400 ms hold after the highest Epic+ card; then badges and the tally.
-- Skip (click/Enter/Space after 120 ms) snaps to the end state. Reduced motion shows the end state at once.
-- Pity pulls show a `PITY` tag and play `gacha_pity`; Legendary plays `gacha_legendary_sting` (falls back to `gacha_reveal_legendary`).
-- No legendary drop beam and no ultimates (PR 5).
-- Hotspots: `reveal-skip`, `reveal-again`, `reveal-ok`.
+The Summoning Hall charges in warm white for 1.48 seconds. The runes light in sequence. A beam then holds the best rarity in the pull for one second. Common gives a dim grey-white, rare blue, epic purple and legendary gold. Some legendary pulls first show blue or purple for an extra 0.60 seconds before turning gold. The ordered hero IDs and the pull index determine the upgrade.
+
+| Pull | From click to result |
+| --- | --- |
+| One common or rare | 3.20 or 3.32 s |
+| One epic | 4.76 s |
+| One legendary | 5.36 s, or 5.96 s with an upgrade |
+| Ten heroes | 9.36–11.96 s, depending on the cards and the upgrade |
+
+For one ticket, the doors part around a rarity-tinted silhouette. Epic and legendary silhouettes hold longer before the burst. For ten tickets, ten cards fly from the gate and land face down with colored rims. They flip in pull order with an extra pause before each epic or legendary. The summary lists new heroes, duplicates and pity.
+
+Tap the stage or use **Skip reveal** at any point to show the same results. Enter and Space also activate Skip. Reduced motion and frozen animations open directly on still results. The legendary burst uses the existing flash limiter (at most two flashes per rolling second, at least 400 ms apart). The first highest-rarity card plays the burst cue. Legendary uses the sting, other pity pulls use the pity cue.
+
+See the [illustrated walkthrough](../.grok-run/gacha-v2/w-gacha-v2.md).
 
 ## Welcome back (ui/offline-rewards.md)
 
