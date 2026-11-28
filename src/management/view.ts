@@ -406,7 +406,8 @@ export class ManagementView {
       if (!pulls.length || this.closed || this.tab !== 'recruit') return;
       const ui = this.ensureRevealUi();
       this.revealHost.hidden = false; this.root.classList.add('reveal-active');
-      ui.playReveal(count, pulls); this.updateRevealDescription(pulls); this.drawReveal();
+      this.updateRevealDescription([]);
+      ui.playReveal(count, pulls); this.drawReveal();
       this.revealHost.querySelector<HTMLButtonElement>('[data-control="reveal-skip"], [data-control="reveal-ok"]')?.focus({ preventScroll: true });
     } finally { this.pulling = false; }
   }
@@ -430,7 +431,10 @@ export class ManagementView {
     ui.managementReducedMotion = this.reducedMotionValue;
     ui.drawRevealStage(ctx, this.snapshotValue?.tickets ?? 0);
     window.cancelAnimationFrame(this.revealFrame);
-    if (ui.revealState()) this.revealFrame = window.requestAnimationFrame(() => this.drawReveal());
+    const reveal = ui.revealState();
+    if (!reveal) return;
+    if (reveal.done && !this.revealHost.querySelector('#recruit-result-description li')) this.updateRevealDescription(reveal.pulls);
+    this.revealFrame = window.requestAnimationFrame(() => this.drawReveal());
   }
   private updateRevealDescription(pulls: RevealPull[]): void {
     const list = this.revealHost.querySelector<HTMLUListElement>('#recruit-result-description'); if (!list) return;

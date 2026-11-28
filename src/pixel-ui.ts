@@ -1,8 +1,8 @@
 ﻿import { CONFIG, TICK_MS, heroConfig, stageConfig } from './config';
 import type { Rarity } from './config';
 import { pulseGrowPx } from './motion';
-import { FlashLimiter, awayLabel, burstCue, burstStartMs, chestSlot, countUp, highestCard, particles, SUMMON_GATE_MS, rewardLabel, singleFrame, tenFrame, welcomeDoneMs } from './reveal-timeline';
-import type { CardFace } from './reveal-timeline';
+import { FlashLimiter, awayLabel, burstCue, chestSlot, countUp, particles, revealFrame, revealSchedule, rewardLabel, welcomeDoneMs } from './reveal-timeline';
+import type { CardFace, FlyingCard, RevealSchedule } from './reveal-timeline';
 import { drawGate, spark } from './summoning-gate';
 import { BODY, HEADING, LINE_BOX, fitSize, CSS_FONT_STACK, loadFonts, slotOffsetY } from './font';
 import type { AtlasLibrary } from './atlas';
@@ -25,7 +25,7 @@ export interface SourceHitRegion extends Rect { kind: 'hud' | 'panel'; id: strin
 interface Control extends Rect { id: string; label: string; disabled: boolean; click(): void; tooltip: string; cardIndex?: number; layer?: number }
 /** One recruit result as the reveal shows it (gacha.md Â§9: badge kind from the post-pull star count, pity from the event). */
 export interface RevealPull { heroId: string; rarity: Rarity; pity: boolean; badge: 'new' | 'star' | 'gold'; gold: number }
-interface Reveal { count: 1 | 10; pulls: RevealPull[]; startedAt: number; skipped: boolean; cued: boolean; flash: boolean | null }
+interface Reveal { plan: RevealSchedule; count: 1 | 10; pulls: RevealPull[]; startedAt: number; skipped: boolean; cued: boolean; flash: boolean | null }
 /** What the welcome-back panel shows: the offline result (already credited) plus the farm stage and best item. */
 export interface WelcomeData { seconds: number; rawSeconds: number; capped: boolean; clears: number; gold: number; xp: number; chests: number;
   heroes: readonly { id: string; levelBefore: number; levelAfter: number }[]; expeditionChests?: number; tickets?: number; stage: number; partialClears?: number;
@@ -167,24 +167,21 @@ export class PixelUI {
   private revealMs(): number { return !this.reveal ? 0 : this.reveal.skipped ? Infinity : this.clock() - this.reveal.startedAt; }
   private revealDone(): boolean {
     const reveal = this.reveal; if (!reveal) return true;
-    const ms = this.revealMs(), first = reveal.pulls[0];
-    return reveal.count === 1 ? !!first && singleFrame(first.rarity, ms, this.reducedMotion).done : tenFrame(reveal.pulls.map(pull => pull.rarity), ms - SUMMON_GATE_MS, this.reducedMotion).done;
+    return this.reducedMotion || this.revealMs() >= reveal.plan.doneAt;
   }
-  /** The pull that plays the burst cue: the single card, or the highest-rarity card of a 10-pull (ties: first). */
-  private cuePull(): RevealPull | undefined { const reveal = this.reveal; return reveal ? reveal.pulls[reveal.count === 1 ? 0 : highestCard(reveal.pulls.map(pull => pull.rarity))] : undefined; }
   private skipReveal(silent = false): void {
     const reveal = this.reveal; if (!reveal || reveal.skipped) return;
     reveal.skipped = true;
     if (!silent) this.onCue(CONFIG.ui.gacha.audio.click);
     // The rarity is still heard once: a skip before the burst plays the deferred burst cue, never the flash or shake.
-    const pull = this.cuePull(); if (!reveal.cued && pull) { reveal.cued = true; this.onCue(burstCue(pull.rarity, pull.pity)); }
+    const pull = reveal.pulls[reveal.plan.highlight]; if (!reveal.cued && pull) { reveal.cued = true; this.onCue(burstCue(pull.rarity, pull.pity)); }
     this.onRedraw();
   }
   private finishReveal(ok: boolean): void { if (ok) { this.onCue(CONFIG.ui.gacha.audio.click); } this.reveal = null; this.onRedraw(); if (this.standalone) this.onRevealClose(); }
   /** Standalone: play the reveal for pulls the caller already committed (badges from the pre-pull star counts). */
   playReveal(count: 1 | 10, pulls: RevealPull[]): void {
     this.standalone = true; if (!pulls.length) return;
-    this.reveal = { count, pulls, startedAt: this.clock(), skipped: false, cued: false, flash: null };
+    this.reveal = { plan: revealSchedule(pulls), count, pulls, startedAt: this.clock(), skipped: false, cued: false, flash: null };
     this.onCue(CONFIG.ui.gacha.audio.pull); this.onRedraw();
   }
   /** Standalone: drop the reveal without cues (tab change, menu close). */
@@ -471,7 +468,7 @@ export class PixelUI {
   }
   private readonly silhouettes = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
 
-  private drawSummonedHero(ctx: CanvasRenderingContext2D, pull: RevealPull, face: CardFace, cx: number, floor: number, width: number, height: number, flip = 1): void {
+  private drawSummonedHero(ctx: CanvasRenderingContext2D, pull: RevealPull, face: CardFace, cx: number, floor: number, width: number, height: number): void {
     const key = Object.entries(CONFIG.view.heroAssets).find(([id]) => id === pull.heroId)?.[1];
     if (!key || face === 'back') return;
     const age = this.reducedMotion ? 0 : this.managementIdleClock?.() ?? 0;
@@ -490,7 +487,7 @@ export class PixelUI {
       }
       art = mask;
     }
-    const w = Math.round(sprite.width * scale * flip), h = sprite.height * scale;
+    const w = sprite.width * scale, h = sprite.height * scale;
     if (w > 0) ctx.drawImage(art, cx - Math.floor(w / 2), floor - h, w, h);
   }
 
@@ -500,50 +497,55 @@ export class PixelUI {
 
   private drawReveal(ctx: CanvasRenderingContext2D, tickets: number, reveal: Reveal): void {
     const ms = this.reducedMotion ? Infinity : this.revealMs();
-    const group = reveal.count === 10, gridMs = ms - SUMMON_GATE_MS;
-    const rarities = reveal.pulls.map(pull => pull.rarity);
-    const single = singleFrame(rarities[0]!, ms, this.reducedMotion);
-    const grid = group ? tenFrame(rarities, Math.max(0, gridMs), this.reducedMotion) : null;
-    const cue = reveal.pulls[grid?.highlight ?? 0]!;
-    const cueAt = grid ? SUMMON_GATE_MS + grid.burstCueAt : burstStartMs(cue.rarity);
-    const done = grid?.done ?? single.done;
-    if (!reveal.cued && ms >= cueAt && !reveal.skipped) {
+    const { plan } = reveal;
+    const frame = revealFrame(plan, ms);
+    const { done, phase } = frame, group = reveal.count === 10;
+    const cue = reveal.pulls[plan.highlight]!;
+    if (!reveal.cued && ms >= plan.cueAt && !reveal.skipped) {
       reveal.cued = true; this.onCue(burstCue(cue.rarity, cue.pity));
     }
     if (this.reducedMotion) reveal.skipped = true;
-    if (reveal.flash === null && cue.rarity === 'legendary' && ms >= cueAt && !done) reveal.flash = this.flashes.request(this.clock());
+    if (reveal.flash === null && frame.flash) reveal.flash = this.flashes.request(this.clock());
 
     this.frame(ctx, { x: 0, y: 0, ...REVEAL_STAGE });
-    const inGrid = grid !== null && gridMs >= 0;
+    const inGrid = frame.cards.length > 0;
     this.text(ctx, inGrid && done ? 'Recruited heroes' : 'Summoning Hall', 22, 14, '#f6dcad', 24, true);
     const newCount = reveal.pulls.filter(pull => pull.badge === 'new').length;
     const header = group && done ? `${newCount} NEW   /   ${reveal.pulls.length - newCount} DUPLICATES` : `RECRUIT  ×${reveal.count}`;
     this.text(ctx, header, 872 - this.measureText(header, BODY, true), 23, palette.gold, BODY, true);
 
-    if (inGrid) this.drawTen(ctx, reveal, grid);
-    else {
-      const hall = this.images.get('dungeon/summoning-hall.png');
-      if (hall) ctx.drawImage(hall, 12, 56, 872, 304);
-      ctx.save();
-      ctx.beginPath(); ctx.rect(12, 56, 872, 304); ctx.clip();
-      if (reveal.flash && !group) ctx.translate(single.shakeX, 0);
-      if (group || single.face === 'back') {
-        const length = group ? SUMMON_GATE_MS : burstStartMs(cue.rarity);
-        drawGate(ctx, 448, 186, cue.rarity, ms, Math.min(1, ms / length));
-      } else {
-        this.drawSummonedHero(ctx, cue, single.face, 448, 294, 232, 202, single.cardWidth / CONFIG.ui.gacha.single.cardRect[2]!);
-        if (single.burstAge !== null) {
-          for (const dot of particles(cue.rarity, 0, single.burstAge)) {
-            spark(ctx, 448 + dot.x * 3, 186 + dot.y * 2, dot.size * 2 + 1, dot.color);
-          }
+    const hall = this.images.get('dungeon/summoning-hall.png');
+    ctx.save();
+    ctx.beginPath(); ctx.rect(12, 56, 872, 306); ctx.clip();
+    // Zoom around the astrolabe in whole-pixel steps. The source stays nearest-neighbour.
+    const push = phase === 'charge' ? frame.amount : phase === 'open' ? 1 - frame.amount : phase === 'leak' ? 1 : 0;
+    const zoom = Math.floor(push * 5);
+    if (hall && !(group && done)) ctx.drawImage(hall, 12 - zoom * 4, 56 - zoom, 872 + zoom * 8, 304 + zoom * 3);
+    if (reveal.flash) ctx.translate(frame.shakeX, 0);
+    if (phase === 'charge' || phase === 'leak' || phase === 'open') {
+      drawGate(ctx, phase, frame.color, frame.amount, ms);
+    } else if (inGrid) {
+      this.drawTen(ctx, reveal, frame.cards);
+    } else {
+      this.drawSummonedHero(ctx, cue, phase === 'silhouette' ? 'silhouette' : 'front', 448, 294, 232, 202);
+      if (frame.burstAge !== null) {
+        for (const dot of particles(cue.rarity, 0, frame.burstAge)) {
+          spark(ctx, 448 + dot.x * 3, 186 + dot.y * 2, dot.size * 2 + 1, dot.color);
         }
       }
-      ctx.restore();
     }
-    const status = group ? done ? 'Pull breakdown' : inGrid ? 'Revealing heroes…' : 'Opening the gate…'
-      : single.showName ? shortHeroName(cue.heroId) : single.face === 'back' ? 'Opening the gate…' : 'A hero approaches…';
+    if (reveal.flash && frame.flash) {
+      // One local accent on the highlighted burst, governed by the shared flash limiter.
+      const cx = group ? 100 + (plan.highlight % 5) * 174 : 448;
+      const cy = group ? 116 + Math.floor(plan.highlight / 5) * 156 : 186;
+      spark(ctx, cx, cy, group ? 14 : 28, '#fff0c4');
+    }
+    ctx.restore();
+    const status = done ? group ? 'Pull breakdown' : shortHeroName(cue.heroId)
+      : phase === 'charge' ? 'Charging the gate…' : phase === 'leak' ? 'Light breaks through…'
+      : phase === 'open' ? 'Opening the gate…' : group ? 'Revealing heroes…' : 'A hero approaches…';
     this.text(ctx, status, 22, 382, palette.text, HEADING, true);
-    if (!group && single.showRarity) {
+    if (!group && done) {
       const role = getPartyHeroDefinition(cue.heroId).role;
       this.drawShape(ctx, cue.rarity, 30, 424);
       this.text(ctx, cue.rarity.toUpperCase(), 44, 417, CONFIG.ui.rarity[cue.rarity].label, BODY, true);
@@ -553,12 +555,12 @@ export class PixelUI {
       if (cue.pity) this.drawBadge(ctx, 'pity', 342, 414);
     } else if (group && done) {
       const tally = [...CONFIG.ui.rarity.order].reverse().map(tier => {
-        const n = rarities.filter(rarity => rarity === tier).length;
+        const n = reveal.pulls.filter(pull => pull.rarity === tier).length;
         return n ? `${n} ${tier}` : '';
       }).filter(Boolean).join('  ·  ');
       this.text(ctx, tally, 22, 418, palette.muted);
     } else if (inGrid) {
-      const count = grid.cards.filter(card => card.face === 'front').length;
+      const count = frame.cards.filter(card => card.face === 'front').length;
       this.text(ctx, `${count} of ${reveal.pulls.length}`, 22, 418, palette.muted);
     }
     const buttonY = 390;
@@ -574,21 +576,29 @@ export class PixelUI {
     this.button(ctx, 'reveal-ok', 'Back to Recruit', { x: 732, y: buttonY, width: 142, height: 40 }, () => this.finishReveal(true), { primary: true, bold: true });
   }
 
-  private drawTen(ctx: CanvasRenderingContext2D, reveal: Reveal, frame: ReturnType<typeof tenFrame>): void {
+  private drawTen(ctx: CanvasRenderingContext2D, reveal: Reveal, cards: readonly FlyingCard[]): void {
     const hall = this.images.get('dungeon/summoning-hall.png');
     const cardW = 168, cardH = 150;
     reveal.pulls.forEach((pull, i) => {
-      const card = frame.cards[i]; if (!card) return;
-      const cx = 100 + (i % 5) * 174, y = 56 + Math.floor(i / 5) * 156 + card.dropY;
-      const width = Math.round(cardW * card.width / 128), x = cx - Math.floor(width / 2);
+      const card = cards[i]; if (!card || card.travel === 0) return;
+      const gridX = 100 + (i % 5) * 174, gridY = 56 + Math.floor(i / 5) * 156;
+      const t = 1 - (1 - card.travel) ** 2;
+      const cx = Math.round(448 + (gridX - 448) * t);
+      const height = Math.round(cardH * (0.12 + 0.88 * t));
+      const width = Math.round(cardW * (0.12 + 0.88 * t) * card.width);
+      const y = Math.round(186 + (gridY + cardH / 2 - 186) * t - 80 * t * (1 - t) - height / 2);
+      const x = cx - Math.floor(width / 2);
       if (!width) return;
-      ctx.save(); ctx.beginPath(); ctx.rect(x, y, width, cardH); ctx.clip();
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, width, height); ctx.clip();
       const tier = CONFIG.ui.rarity[pull.rarity];
       if (card.face === 'back') {
-        this.frame(ctx, { x, y, width, height: cardH }, 'dungeon/button.png');
-        ctx.fillStyle = '#574a50'; ctx.fillRect(x + 8, y + 8, width - 16, cardH - 16);
-        ctx.fillStyle = '#302b39'; ctx.fillRect(x + 10, y + 10, width - 20, cardH - 20);
-        spark(ctx, cx, y + 74, 20, '#a77d57'); spark(ctx, cx, y + 74, 10, '#f2cf90');
+        ctx.fillStyle = tier.floor; ctx.fillRect(x, y, width, height);
+        ctx.fillStyle = tier.frame; ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+        ctx.fillStyle = tier.fill; ctx.fillRect(x + 4, y + 4, width - 8, height - 8);
+        ctx.fillStyle = tier.floor; ctx.fillRect(x + 8, y + 8, width - 16, height - 16);
+        ctx.fillStyle = '#302b39'; ctx.fillRect(x + 10, y + 10, width - 20, height - 20);
+        const cy = y + Math.floor(height / 2), radius = Math.max(2, Math.round(22 * t));
+        spark(ctx, cx, cy, radius, tier.floor); spark(ctx, cx, cy, Math.ceil(radius / 2), tier.frame);
       } else {
         ctx.fillStyle = tier.frame; ctx.fillRect(x, y, width, cardH);
         ctx.fillStyle = tier.fill; ctx.fillRect(x + 2, y + 2, width - 4, 100);
@@ -600,7 +610,7 @@ export class PixelUI {
         ctx.fillStyle = '#201f2c'; ctx.fillRect(x + 2, y + 104, width - 4, 44);
         this.drawSummonedHero(ctx, pull, card.face, cx, y + 102, 144, 82);
         if (card.burstAge !== null) {
-          for (const dot of particles(pull.rarity, i, card.burstAge, i === frame.highlight ? 1 : 0.25)) {
+          for (const dot of particles(pull.rarity, i, card.burstAge, i === reveal.plan.highlight ? 1 : 0.25)) {
             spark(ctx, cx + dot.x, y + 60 + dot.y, dot.size + 1, dot.color);
           }
         }
