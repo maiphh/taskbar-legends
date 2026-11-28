@@ -1,95 +1,83 @@
 import { CONFIG } from './config';
 import type { Rarity } from './config';
 
-/**
- * Pure timing for the M3 gacha reveal (ui/gacha.md §4, §8) and the welcome-back count-up (ui/offline-rewards.md).
- * Everything is on the 40 ms frame clock and whole pixels; the renderer only maps a frame to pixels.
- */
 const gacha = CONFIG.ui.gacha, STEP = gacha.frameStepMs;
 const frames = (ms: number): number => Math.floor(ms / STEP);
-type Span = readonly [number, number];
-const tiers: Record<Rarity, { totalMs: number; silhouette: boolean; timelineMs: Partial<Record<string, readonly number[]>> }> = gacha.tiers;
-const span = (tier: Rarity, beat: string): Span | undefined => { const value = tiers[tier].timelineMs[beat]; return value ? [value[0] ?? 0, value[1] ?? 0] : undefined; };
-
 export type CardFace = 'back' | 'silhouette' | 'front';
-export interface SingleFrame {
-  /** Card back drop offset (px, negative = above rest). */ dropY: number;
-  /** Card width in whole px, centred (flip). */ cardWidth: number;
-  face: CardFace;
-  /** 0..255 rim alpha (anticipation ramp; full from burst; legendary flash colour on its 2 flash frames). */ rimAlpha: number;
-  flash: boolean;
-  shakeX: number;
-  motes: boolean;
-  /** ms since burst start, or null before it (drives particles, the shape cue and the rare twinkle). */ burstAge: number | null;
-  showName: boolean; showRarity: boolean; done: boolean;
-}
-export function tierTotalMs(tier: Rarity): number { return tiers[tier].totalMs; }
-export function burstStartMs(tier: Rarity): number { return span(tier, 'burst')?.[0] ?? 0; }
-/** Single reveal frame at `ms` from the click. A skip is `ms = Infinity`. */
-export function singleFrame(tier: Rarity, ms: number, reducedMotion = false): SingleFrame {
-  const total = tierTotalMs(tier);
-  if (reducedMotion) ms = total;
-  const done = ms >= total;
-  const t = Math.min(ms, total), card = gacha.single.cardRect[2] ?? 96;
-  const pull = span(tier, 'pull') ?? [0, 120], anticipation = span(tier, 'anticipation') ?? [120, 360], flip = span(tier, 'flip') ?? [360, 520];
-  const burst = span(tier, 'burst') ?? [520, 640], labels = span(tier, 'labels') ?? [640, total];
-  const rimMax = CONFIG.ui.rarity[tier].rimAlphaMax;
-  const dropOffsets = [-8, -4, 0];
-  const dropY = reducedMotion || t >= pull[1] ? 0 : dropOffsets[Math.min(frames(t - pull[0]), dropOffsets.length - 1)] ?? 0;
-  // Anticipation: monotonic 40 ms ramp 0 → rimAlphaMax; stays at max through flip/silhouette, full after.
-  const rampSteps = Math.max(1, frames(anticipation[1] - anticipation[0]));
-  const rimAlpha = t < anticipation[0] ? 0 : t < anticipation[1] ? Math.round(rimMax * Math.min(1, (frames(t - anticipation[0]) + 1) / rampSteps)) : rimMax;
-  // Flip: widths 48 → 0 (back), 48 → 96 (front or silhouette); reduced motion swaps at flip start.
-  let cardWidth = card, face: CardFace = 'back';
-  const revealed: CardFace = tiers[tier].silhouette ? 'silhouette' : 'front';
-  if (t >= flip[0]) {
-    const f = frames(t - flip[0]), widths = [card / 2, 0, card / 2, card];
-    if (reducedMotion || t >= flip[1]) face = revealed; else { cardWidth = widths[f] ?? card; face = f < 2 ? 'back' : revealed; }
-  }
-  if (t >= burst[0]) face = 'front';
-  const burstAge = t >= burst[0] ? t - burst[0] : null;
-  const legendary = CONFIG.ui.rarity[tier];
-  const flash = !reducedMotion && !done && burstAge !== null && legendary.flash.count > 0 && burstAge < legendary.flash.durationMs;
-  const pattern = legendary.shake.patternPx as number[];
-  const shakeX = reducedMotion || done || burstAge === null ? 0 : pattern[frames(burstAge)] ?? 0;
-  const motes = !reducedMotion && !done && 'motes' in legendary && t >= anticipation[0] && t < burst[0];
-  return { dropY, cardWidth, face, rimAlpha, flash, shakeX, motes, burstAge: done ? null : burstAge, showName: t >= labels[0], showRarity: t >= labels[0] + gacha.labelRarityDelayMs, done };
-}
-export const SUMMON_GATE_MS = 640;
-/** Index of the highest-rarity card (ties: first), the card that plays the burst cue and gets the highlight hold. */
-export function highestCard(rarities: readonly Rarity[]): number {
+export type RevealPhase = 'charge' | 'leak' | 'open' | 'silhouette' | 'burst' | 'flight' | 'cards' | 'result';
+
+interface RolledHero { heroId: string; rarity: Rarity }
+
+/** All times are measured from the click, including the ten-card flight and individual flips. */
+export function revealSchedule(pulls: readonly RolledHero[]) {
+  if (!pulls.length) throw new Error('A reveal needs at least one rolled hero');
+  const rarities = pulls.map(pull => pull.rarity);
   const order = CONFIG.ui.rarity.order;
-  let best = 0; rarities.forEach((rarity, index) => { if (order.indexOf(rarity) > order.indexOf(rarities[best] ?? 'common')) best = index; });
-  return best;
+  const highlight = rarities.reduce((best, rarity, i) => order.indexOf(rarity) > order.indexOf(rarities[best]!) ? i : best, 0);
+  const best = rarities[highlight]!;
+  let preview: 'rare' | 'epic' | null = null;
+  if (best === 'legendary') {
+    // Hash the ordered hero IDs, including boundaries between IDs. No game or cosmetic RNG draws.
+    let hash = 2166136261;
+    for (const char of pulls.map(pull => pull.heroId).join('|')) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0;
+    if (hash % 3 === 0) preview = hash % 2 === 0 ? 'rare' : 'epic';
+  }
+
+  const leakAt = gacha.chargeMs + (preview ? gacha.fakeoutMs : 0);
+  const openAt = leakAt + gacha.leakMs;
+  const openedAt = openAt + gacha.openMs;
+  const tier = gacha.tiers[best], ten = gacha.tenPull;
+  const flipAt: number[] = [];
+  let cueAt = openedAt + tier.silhouetteMs;
+  let doneAt = cueAt + tier.burstMs;
+  const landedAt = openedAt + ten.flightMs + (pulls.length - 1) * ten.launchStaggerMs;
+  if (pulls.length > 1) {
+    let next = landedAt + ten.faceDownMs;
+    for (const rarity of rarities) {
+      next += ten.pauseBeforeMs[rarity];
+      flipAt.push(next);
+      next += ten.flipMs + ten.readMs;
+    }
+    cueAt = flipAt[highlight]! + ten.flipMs;
+    doneAt = next;
+  }
+  return { best, highlight, preview, leakAt, openAt, openedAt, landedAt, flipAt, cueAt, doneAt };
 }
-export interface TenFrame { cards: { dropY: number; width: number; face: CardFace; burstAge: number | null; rimAlpha: number }[]; badges: boolean; done: boolean; flash: boolean; shakeX: number; highlight: number; burstCueAt: number }
-/** 10-pull timeline (gacha.md §8): backs drop together, card i flips at 120 + i×120 (+400 ms hold after an Epic+ highest card). */
-export function tenSchedule(rarities: readonly Rarity[]): { flipAt: number[]; highlight: number; hold: number; badgesAt: number } {
-  const ten = gacha.tenPull, highlight = highestCard(rarities), epicPlus = ['epic', 'legendary'].includes(rarities[highlight] ?? 'common');
-  const hold = epicPlus ? ten.highlightHoldMs : 0;
-  const flipAt = rarities.map((_, index) => ten.backsInMs + index * ten.staggerMs + (index > highlight ? hold : 0));
-  return { flipAt, highlight, hold, badgesAt: (flipAt.at(-1) ?? 0) + ten.flipMs + (highlight === rarities.length - 1 ? hold : 0) };
+export type RevealSchedule = ReturnType<typeof revealSchedule>;
+
+function progress(age: number, duration: number): number {
+  return Math.max(0, Math.min(1, frames(age) * STEP / duration));
 }
-export function tenFrame(rarities: readonly Rarity[], ms: number, reducedMotion = false): TenFrame {
-  const ten = gacha.tenPull, schedule = tenSchedule(rarities);
-  if (reducedMotion) ms = schedule.badgesAt;
-  const done = ms >= schedule.badgesAt;
-  const dropOffsets = [-8, -4, 0];
-  const cards = rarities.map((_, index) => {
-    const at = schedule.flipAt[index] ?? 0, f = frames(ms - at), widths = [64, 0, 64, 128];
-    const dropY = reducedMotion || ms >= ten.backsInMs ? 0 : dropOffsets[Math.min(frames(ms), 2)] ?? 0;
-    let width = 128, face: CardFace = 'back';
-    if (ms >= at) { if (reducedMotion || ms >= at + ten.flipMs) face = 'front'; else { width = widths[f] ?? 128; face = f < 2 ? 'back' : 'front'; } }
-    const highlighted = index === schedule.highlight && schedule.hold > 0;
-    if (highlighted && ms >= at + ten.flipMs / 2 && ms < at + ten.flipMs + 200 && !done) face = 'silhouette';
-    const burstAge = !done && ms >= at + ten.flipMs ? ms - at - ten.flipMs : null;
-    return { dropY, width, face, burstAge, rimAlpha: highlighted && ms >= at ? 255 : 0 };
-  });
-  const hiAt = (schedule.flipAt[schedule.highlight] ?? 0) + ten.flipMs, legendary = rarities[schedule.highlight] === 'legendary';
-  const age = ms - hiAt, pattern = CONFIG.ui.rarity.legendary.shake.patternPx;
-  return { cards, badges: done, done, highlight: schedule.highlight, burstCueAt: hiAt,
-    flash: !reducedMotion && !done && legendary && age >= 0 && age < CONFIG.ui.rarity.legendary.flash.durationMs,
-    shakeX: !reducedMotion && !done && legendary && age >= 0 ? pattern[frames(age)] ?? 0 : 0 };
+export interface FlyingCard { travel: number; width: number; face: CardFace; burstAge: number | null }
+export function revealFrame(plan: RevealSchedule, elapsed: number, reducedMotion = false) {
+  const ms = reducedMotion ? plan.doneAt : Math.max(0, Math.min(elapsed, plan.doneAt));
+  const done = ms >= plan.doneAt, group = plan.flipAt.length > 0, ten = gacha.tenPull;
+  let phase: RevealPhase;
+  let amount = 1;
+  let color: Rarity | null = plan.best;
+  if (done) phase = 'result';
+  else if (ms < gacha.chargeMs) {
+    phase = 'charge'; color = null; amount = progress(ms, gacha.chargeMs);
+  } else if (ms < plan.openAt) {
+    phase = 'leak';
+    if (ms < plan.leakAt) color = plan.preview;
+    amount = progress(ms - (ms < plan.leakAt ? gacha.chargeMs : plan.leakAt), ms < plan.leakAt ? gacha.fakeoutMs : gacha.leakMs);
+  } else if (ms < plan.openedAt) {
+    phase = 'open'; amount = progress(ms - plan.openAt, gacha.openMs);
+  } else if (group) phase = ms < plan.landedAt ? 'flight' : 'cards';
+  else phase = ms < plan.cueAt ? 'silhouette' : 'burst';
+
+  const cards: FlyingCard[] = group && ms >= plan.openedAt ? plan.flipAt.map((at, i) => {
+    const travel = progress(ms - plan.openedAt - i * ten.launchStaggerMs, ten.flightMs);
+    const flip = progress(ms - at, ten.flipMs);
+    return { travel, width: Math.abs(1 - 2 * flip), face: flip > 0.5 ? 'front' : 'back',
+      burstAge: !done && ms >= at + ten.flipMs ? ms - at - ten.flipMs : null };
+  }) : [];
+  const burstAge = !done && ms >= plan.cueAt ? ms - plan.cueAt : null;
+  const { flash, shake } = CONFIG.ui.rarity[plan.best];
+  return { phase, amount, color, cards, done, burstAge,
+    flash: burstAge !== null && flash.count > 0 && burstAge < flash.durationMs,
+    shakeX: burstAge === null ? 0 : shake.patternPx[Math.floor(burstAge / shake.stepMs)] ?? 0 };
 }
 /** Burst cue rule (gacha.md §7): legendary → sting; else pity → gacha_pity; else gacha_reveal_<rarity>. */
 export function burstCue(rarity: Rarity, pity: boolean): string {
@@ -121,17 +109,6 @@ export function particles(tier: Rarity, seedIndex: number, ageMs: number, scale 
     const angle = (i / count) * Math.PI * 2 + next() * 0.5, speed = (spec.speedPxPerSec[0] ?? 40) + next() * ((spec.speedPxPerSec[1] ?? 70) - (spec.speedPxPerSec[0] ?? 40));
     const radius = spec.startRadiusPx + speed * (frames(ageMs) * STEP) / 1000;
     out.push({ x: Math.round(Math.cos(angle) * radius), y: Math.round(Math.sin(angle) * radius), size: ageMs < spec.lifeMs / 2 ? spec.sizePx[0] ?? 2 : spec.sizePx[1] ?? 1, color: spec.colors[i % spec.colors.length] ?? '#ffffff' });
-  }
-  return out;
-}
-/** Rising seeded motes (anticipation tell for Epic+): offsets inside a w×h stage area. */
-export function motes(tier: Rarity, ms: number, width: number): { x: number; y: number; size: number }[] {
-  const spec = CONFIG.ui.rarity[tier];
-  if (!('motes' in spec)) return [];
-  const m = spec.motes, out: { x: number; y: number; size: number }[] = [];
-  for (let i = 0; i < m.count; i += 1) {
-    const phase = (frames(ms) * STEP + i * Math.floor(m.periodMs / m.count)) % m.periodMs;
-    out.push({ x: Math.round(((i * 37) % 100) / 100 * width), y: -Math.round(phase / m.periodMs * m.risePx), size: m.sizePx });
   }
   return out;
 }

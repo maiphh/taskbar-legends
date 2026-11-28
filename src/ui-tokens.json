@@ -322,8 +322,10 @@
   },
   "gacha": {
     "frameStepMs": 40,
-    "labelRarityDelayMs": 80,
-    "skipGuardMs": 120,
+    "chargeMs": 1480,
+    "leakMs": 1000,
+    "fakeoutMs": 600,
+    "openMs": 240,
     "particleSeed": 7,
     "flashLimiter": {
       "minGapMs": 400,
@@ -370,118 +372,10 @@
       ]
     },
     "tiers": {
-      "common": {
-        "totalMs": 1000,
-        "silhouette": false,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            360
-          ],
-          "flip": [
-            360,
-            520
-          ],
-          "burst": [
-            520,
-            640
-          ],
-          "labels": [
-            640,
-            1000
-          ]
-        }
-      },
-      "rare": {
-        "totalMs": 1280,
-        "silhouette": false,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            560
-          ],
-          "flip": [
-            560,
-            720
-          ],
-          "burst": [
-            720,
-            880
-          ],
-          "labels": [
-            880,
-            1280
-          ]
-        }
-      },
-      "epic": {
-        "totalMs": 1600,
-        "silhouette": true,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            760
-          ],
-          "flip": [
-            760,
-            920
-          ],
-          "silhouetteHold": [
-            920,
-            1120
-          ],
-          "burst": [
-            1120,
-            1280
-          ],
-          "labels": [
-            1280,
-            1600
-          ]
-        }
-      },
-      "legendary": {
-        "totalMs": 2000,
-        "silhouette": true,
-        "timelineMs": {
-          "pull": [
-            0,
-            120
-          ],
-          "anticipation": [
-            120,
-            960
-          ],
-          "flip": [
-            960,
-            1120
-          ],
-          "silhouetteHold": [
-            1120,
-            1360
-          ],
-          "burst": [
-            1360,
-            1520
-          ],
-          "labels": [
-            1520,
-            2000
-          ]
-        }
-      }
+      "common": { "silhouetteMs": 240, "burstMs": 240 },
+      "rare": { "silhouetteMs": 320, "burstMs": 280 },
+      "epic": { "silhouetteMs": 1520, "burstMs": 520 },
+      "legendary": { "silhouetteMs": 2040, "burstMs": 600 }
     },
     "audio": {
       "pull": "gacha_pull",
@@ -495,10 +389,12 @@
       "burstRule": "legendary -> gacha_legendary_sting (fallback gacha_reveal_legendary); else pity -> gacha_pity; else gacha_reveal_<rarity>"
     },
     "tenPull": {
-      "staggerMs": 120,
-      "backsInMs": 120,
+      "flightMs": 560,
+      "launchStaggerMs": 40,
+      "faceDownMs": 520,
       "flipMs": 160,
-      "highlightHoldMs": 400,
+      "readMs": 360,
+      "pauseBeforeMs": { "common": 0, "rare": 0, "epic": 160, "legendary": 200 },
       "cardRects": [
         [
           24,
@@ -586,11 +482,6 @@
       "legendary": "crown + beam",
       "stampAt": "burst start",
       "source": "rarityDrop.shapes"
-    },
-    "legendaryBeam": {
-      "growMs": "burst [1360,1520], 18 px per 40 ms",
-      "hold": "static until the reveal is dismissed",
-      "reducedMotion": "static from burst start"
     }
   },
   "offlineRewards": {
